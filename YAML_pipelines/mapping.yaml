@@ -1,0 +1,115 @@
+Global_params:
+    Default_wait: 10
+    Qsub_path: /storage/SGE6U8/bin/lx24-amd64/
+    Qsub_q: bioinfo.q
+    Qsub_nodes: [node1,node2,node3]
+    Qsub_opts:  -V -cwd
+    module_path: 
+        - /path/to/modules2/
+        
+Step_params:
+    merge1:
+        module: merge
+        script_path: gzip -cd
+    trim1:
+        module: trimmo
+        base: merge1
+        script_path: java -jar trimmomatic-0.32.jar
+        qsub_params:
+            -pe: shared 20
+            node: [node1,node2]
+            queue:  queue.q
+        todo: LEADING:20 TRAILING:20
+        redirects:
+            -threads: 20
+    bwt1:
+        module: bowtie1_mapper
+        base: trim1
+        script_path: /path/to/bowtie
+        qsub_params:
+            -pe: shared 20
+        ebwt: /path/to/bowtie1_index/ref_genome
+        ref_genome: /path/to/ref_genome.fna
+        redirects:
+            -p: 20
+    bwt2_1:
+        module: bowtie2_mapper
+        base: trim1
+        script_path: /path/to/bowtie2
+        qsub_params:
+            -pe: shared 20
+        get_map_log: null
+        ref_genome: /path/to/ref_genome.fna
+        redirects:
+            -p: 20
+            -q: null
+            -x: /path/to/bowtie2_index/ref_genome
+    fqc_trim1:
+        module: fastqc_html
+        base: trim1
+        script_path: /path/to/FastQC/fastqc
+        qsub_params:
+            -pe: shared 15
+        redirects:
+            --threads: 15
+    sam_bwt1:
+        module: samtools
+        base: bwt1
+        script_path: /path/to/samtools/bin/samtools
+        qsub_params:
+            -pe: shared 20
+        del_sam: null
+        del_unsorted: null
+        flagstat: null
+        index: null
+        sort: -@ 20
+        stats: --remove-dups
+        view: -buh  -q 30 -@ 20 -F 4
+    sam_bwt2_1:
+        module: samtools
+        base: bwt2_1
+        script_path: /path/to/samtools/bin/samtools
+        qsub_params:
+            -pe: shared 20
+        del_sam: null
+        del_unsorted: null
+        flagstat: null
+        idxstats: null
+        index: null
+        sort: -@ 20
+        stats: --remove-dups
+        view: -buh  -q 30 -@ 20 -F 4
+    genCovBed_bwt1:
+        module: genomeCoverageBed
+        base: sam_bwt1
+        script_path: /path/to/bedtools/bin/genomeCoverageBed
+        redirects:
+            -bg: null
+            -g: /path/to/ref_genome/ref_genome.chrom.sizes
+    genCovBed_bwt2_1:
+        module: genomeCoverageBed
+        base: sam_bwt2_1
+        script_path: /path/to/bedtools/bin/bedtools genomecov
+        redirects:
+            -bg: null
+            -g: /path/to/ref_genome/ref_genome.chrom.sizes
+    UCSCmapfiles_bwt1:
+        module: UCSC_BW_wig
+        base: genCovBed_bwt1
+        script_path: /path/to/kentUtils/bin
+        bedGraphToBigWig_params: -blockSize 10 -itemsPerSlot 20
+        bigWigToWig_params: -chrom X1 -start X2 -end X3
+        genome: /path/to/ref_genome/ref_genome.chrom.sizes
+    UCSCmapfiles_bwt2_1:
+        module: UCSC_BW_wig
+        base: genCovBed_bwt2_1
+        script_path: /path/to/kentUtils/bin
+        bedGraphToBigWig_params: -blockSize 10 -itemsPerSlot 20
+        bigWigToWig_params: -chrom X1 -start X2 -end X3
+        genome: /path/to/ref_genome/ref_genome.chrom.sizes
+    firstMultQC:
+        module: Multiqc
+        base:
+        - sam_bwt2_1
+        - fqc_trim1
+        script_path: /path/to/multiqc

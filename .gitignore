@@ -1,0 +1,13 @@
+*.lnk
+*.ipynb*
+*.sh
+*.pyc
+git-gui*
+jupyter-notebook-Shortcut*
+pipe_dirs/
+doc/build/
+additional_modules
+jupyter/
+pull_commands.csh
+parameter_sets/
+comparison_with_others.docx

@@ -1,0 +1,110 @@
+Global_params:
+    Default_wait: 10
+    Main: CWD
+    Qsub_opts: -cwd
+    Qsub_q: bioinfo.q
+    module_path:  /path/to/external/modules
+
+Step_params:
+    merge1:
+        module: merge
+        script_path: gzip -cd
+    fqc_merge1:
+        module: fastqc_html
+        base: merge1
+        script_path: /path/to/fastqc
+        qsub_params:
+            -pe: shared 15
+            node: sge180
+        redirects:
+            --threads: 15
+    trim1:
+        module: trimmo
+        base: merge1
+        script_path: java -jar trimmomatic-0.32.jar
+        qsub_params:
+            -pe: shared 20
+            node: sge180
+        spec_dir: /path/to/Trimmomatic-0.32
+        todo: LEADING:20 TRAILING:20
+        redirects:
+            -threads: 20
+    bwt2_1:
+        module: bowtie2_mapper
+        base: trim1
+        script_path: /path/to/bowtie2
+        qsub_params:
+            -pe: shared 20
+        get_map_log: null
+        get_stderr: null
+        ref_genome: /path/to/GCF_000001635.24_GRCm38.p4_genomic.fna
+        redirects:
+            --end-to-end: null
+            -L: 32
+            -N: 1
+            -k: 2
+            -p: 20
+            -q: null
+            -x: /path/to/GCF_000001635.24_GRCm38.p4_genomic
+    fqc_trim1:
+        module: fastqc_html
+        base: trim1
+        script_path: /path/to/fastqc
+        qsub_params:
+            -pe: shared 15
+            node: sge180
+        redirects:
+            --threads: 15
+    sam_Z:
+        module: samtools
+        base: bwt2_1
+        script_path: /path/to/samtools
+        qsub_params:
+            -pe: shared 20
+        del_unsorted: null
+        index: null
+        sort: -@ 20
+        view: -buh  -q 30 -@ 20 -F 4
+    IGVcount1:
+        module: IGV_count
+        base: sam_Z
+        script_path: /path/to/java -Xmx1500m -jar /path/to/igvtools.jar count
+        format: tdf
+        genome: /path/to/genome.chrom.sizes
+    genCovBed:
+        module: genomeCoverageBed
+        base: sam_Z
+        script_path: /path/to/genomeCoverageBed
+        redirects:
+            -bg: null
+            -g: /gpfs0/bioinfo/databases/Reference_Genomes/Human/UCSC/hg19/hg19.chrom.sizes
+    macs1:
+        module: macs2_callpeak
+        base: sam_Z
+        script_path: /path/to/macs2 callpeak
+        bedToBigBed_path: /path/to/kentUtils/bin/bedToBigBed
+        chrom.sizes: /path/to/genome.chrom.sizes
+        getfasta: /path/to/bedtools getfasta -name -s
+        redirects:
+            --SPMR: null
+            --bdg: null
+            -g: mm
+    UCSCmap_bams:
+        module: UCSC_BW_wig
+        base: genCovBed
+        script_path: /path/to/kentUtils/bin
+        bedGraphToBigWig_params: -blockSize 10 -itemsPerSlot 20
+        bigWigToWig_params: -chrom X1 -start X2 -end X3
+        genome: /path/to/genome.chrom.sizes
+    macs1_Z_UCSC:
+        module: UCSC_BW_wig
+        base: macs1
+        script_path: /path/to/kentUtils/bin
+        bedGraphToBigWig_params: -blockSize 10 -itemsPerSlot 20
+        bigWigToWig_params: -chrom X1 -start X2 -end X3
+        genome: /path/to/genome.chrom.sizes
+    macs1_Z_tdf:
+        module: IGV_toTDF
+        base: macs1_Z_UCSC
+        script_path: /path/to/java -Xmx1500m -jar /path/to/igvtools.jar toTDF
+        genome: mm10

@@ -1,0 +1,11 @@
+The modules currently implemented in NeatSeq_Flow
+====================================================
+
+.. toctree::
+   :maxdepth: 2
+
+   modules/preparing
+   modules/searching
+   modules/mapping
+   modules/others
+

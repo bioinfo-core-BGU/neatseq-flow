@@ -1,0 +1,71 @@
+Global_params:
+    Qsub_q: queue.q
+    Qsub_opts: -V -cwd
+    Qsub_path: /path/to/qstat
+    Default_wait: 100
+    job_limit: /path/to/job_limit.txt
+    module_path:  /path/to/external/modules
+Step_params:
+    merge1:
+        module: merge
+        script_path: gzip -cd
+    fqc_merge1:
+        module: fastqc_html
+        base: merge1
+        script_path: /path/to/FastQC/fastqc
+        qsub_params:
+            -pe: shared 15
+        redirects:
+            --threads: 15
+    trim1:
+        module: trimmo
+        base: merge1
+        script_path: java -jar trimmomatic-0.32.jar
+        qsub_params:
+            -pe: shared 20
+            node: node1
+        spec_dir: /path/to/Trimmomatic_dir/
+        todo: LEADING:20 TRAILING:20
+        redirects:
+            -threads: 20
+    fqc_trim1:
+        module: fastqc_html
+        base: trim1
+        script_path: /path/to/FastQC/fastqc
+        qsub_params:
+            -pe: shared 15
+        redirects:
+            --threads: 15
+    spades1:
+        module: spades_assembl
+        base: trim1
+        script_path: /path/to/spades.py
+        scope: sample
+        qsub_params:
+            node: sge180  sge213
+        truncate_names: null
+        redirects:
+            --careful: null
+    mkblst1:
+        module: makeblastdb
+        base: spades1
+        script_path: /path/to/makeblastdb
+        scope: sample
+        redirects:
+            -dbtype: nucl
+    tbl_blst_ext:
+        module: blast
+        base: mkblst1
+        script_path: /path/to/blastx
+        fasta2use: nucl
+        scope: sample
+        redirects:
+            -db: /path/to/blasdb.ind
+    tbl_blst_int:
+        module: blast
+        base: mkblst1
+        script_path: /path/to/blastx
+        fasta2use: nucl
+        scope: sample
+        redirects:
+            -query: /path/to/query.fasta
