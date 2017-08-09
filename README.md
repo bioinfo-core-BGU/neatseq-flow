@@ -51,4 +51,4 @@ Check out `workflow_dirs` for the workflow directories and scripts.
 
 Citation
 ----------
-Sklarz, Menachem, et al. (2017) **NeatSeq-Flow: A Lightweight Software for Efficient Execution of High Throughput Sequencing Workflows**. bioRxiv doi: 10.1101/173005
+Sklarz, Menachem, et al. (2017) **NeatSeq-Flow: A Lightweight Software for Efficient Execution of High Throughput Sequencing Workflows**. [bioRxiv doi: 10.1101/173005](http://www.biorxiv.org/content/early/2017/08/08/173005)
