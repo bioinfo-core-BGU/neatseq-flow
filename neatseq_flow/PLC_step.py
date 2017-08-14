@@ -438,10 +438,10 @@ class Step:
         # self.script = qsub_header + self.script
         # With logging:
         self.script = "\n".join([qsub_header,                                           \
-                                self.create_log_lines(self.spec_qsub_name,"Started"),   \
+                                self.create_log_lines(self.spec_qsub_name,"Started", level="low"),   \
                                 self.script,                                            \
                                 self.register_files(self.spec_qsub_name),      \
-                                self.create_log_lines(self.spec_qsub_name,"Finished")])
+                                self.create_log_lines(self.spec_qsub_name,"Finished", level="low")])
         
 
 
@@ -512,7 +512,7 @@ perl -e 'use Env qw(USER); open(my $fh, "<", "%(limit_file)s"); ($l,$s) = <$fh>=
         # Adding high-level jid to jid_list
         self.add_jid_to_jid_list()
         
-        script = script + self.create_log_lines(self.high_spec_qsub_name, "Started")
+        script = script + self.create_log_lines(self.high_spec_qsub_name, "Started", level = "high")
         
         with open(self.high_level_script_name, "w") as script_fh:
             script_fh.write(script)        
@@ -531,7 +531,7 @@ perl -e 'use Env qw(USER); open(my $fh, "<", "%(limit_file)s"); ($l,$s) = <$fh>=
 
         script = "sleep %d\n\ncsh %s98.qalter_all.csh\n\n" % (self.pipe_data["Default_wait"], self.pipe_data["scripts_dir"])
 
-        script = script + self.create_log_lines(self.high_spec_qsub_name, "Finished")
+        script = script + self.create_log_lines(self.high_spec_qsub_name, "Finished", level="high")
         
         with open(self.high_level_script_name, "a") as script_fh:
             script_fh.write(script)        
@@ -575,10 +575,10 @@ perl -e 'use Env qw(USER); open(my $fh, "<", "%(limit_file)s"); ($l,$s) = <$fh>=
         # self.script = qsub_header +  self.script
         # New, with host reporting and time logging:
         self.script = "\n".join([qsub_header, \
-                        self.create_log_lines(self.spec_qsub_name, "Started"), \
+                        self.create_log_lines(self.spec_qsub_name, "Started", level="prelim"), \
                         self.script, \
                         self.register_files(self.spec_qsub_name),      \
-                        self.create_log_lines(self.spec_qsub_name, "Finished")])
+                        self.create_log_lines(self.spec_qsub_name, "Finished", level="prelim")])
 
 
         with open(self.spec_script_name, "w") as script_fh:
@@ -639,10 +639,10 @@ perl -e 'use Env qw(USER); open(my $fh, "<", "%(limit_file)s"); ($l,$s) = <$fh>=
         # self.script = qsub_header +  self.script
         # New, with host reporting and time logging:
         self.script = "\n".join([qsub_header, \
-                        self.create_log_lines(self.spec_qsub_name, "Started"), \
+                        self.create_log_lines(self.spec_qsub_name, "Started", level="wrapping"), \
                         self.script, \
                         self.register_files(self.spec_qsub_name),      \
-                        self.create_log_lines(self.spec_qsub_name, "Finished")])
+                        self.create_log_lines(self.spec_qsub_name, "Finished", level="wrapping")])
 
 
         with open(self.spec_script_name, "w") as script_fh:
@@ -661,7 +661,8 @@ perl -e 'use Env qw(USER); open(my $fh, "<", "%(limit_file)s"); ($l,$s) = <$fh>=
         # Adding to qsub_names_dict:
         self.qsub_names_dict["low_qsubs"].append(self.spec_qsub_name)
 
-        
+
+            
     def create_all_scripts(self):
         """ Contains code to be done after build_scripts()
         """
@@ -742,39 +743,36 @@ perl -e 'use Env qw(USER); open(my $fh, "<", "%(limit_file)s"); ($l,$s) = <$fh>=
             return "\n".join([qsub_shell,qsub_queue,qsub_name,qsub_stderr,qsub_stdout,qsub_holdjids]) + "\n\n"
 
             
-    def create_log_lines(self, qsub_name, type = "Started"):
+    def create_log_lines(self, qsub_name, type = "Started", level = "high"):
         """ Create logging lines. Added before and after script to return start and end times
         """
 
+        log_cols_dict = {"type"        : type,                                        \
+        "step"       : self.get_step_step(),                        \
+        "stepname"   : self.get_step_name(),                        \
+        "stepID"     : qsub_name,                                   \
+        "qstat_path" : self.pipe_data["qsub_params"]["qstat_path"], \
+        "level"      : level, \
+        "file"       : self.pipe_data["log_file"]}
         
         if self.shell=="csh":
         
             script = """
 if ($?JOB_ID) then 
     # Adding line to log file:  Date    Step    Host
-    echo `date '+%%d/%%m/%%Y %%H:%%M:%%S'`'\\t%(type)s\\t%(step)s\\t%(stepname)s\\t%(stepID)s\\t'$HOSTNAME'\\t'`%(qstat_path)s -j $JOB_ID | grep maxvmem | cut -d = -f 6` >> %(file)s
+    echo `date '+%%d/%%m/%%Y %%H:%%M:%%S'`'\\t%(type)s\\t%(step)s\\t%(stepname)s\\t%(stepID)s\\t%(level)s\\t'$HOSTNAME'\\t'`%(qstat_path)s -j $JOB_ID | grep maxvmem | cut -d = -f 6` >> %(file)s
 endif
 ####\n\n
-""" % {"type"        : type,                                        \
-        "step"       : self.get_step_step(),                        \
-        "stepname"   : self.get_step_name(),                        \
-        "stepID"     : qsub_name,                                   \
-        "qstat_path" : self.pipe_data["qsub_params"]["qstat_path"], \
-        "file"       : self.pipe_data["log_file"]}
+""" % log_cols_dict
         
         elif self.shell == "bash":
             script = """
 if [ ! -z "$JOB_ID" ]; then
     # Adding line to log file:  Date    Step    Host
-    echo -e $(date '+%%d/%%m/%%Y %%H:%%M:%%S')'\\t%(type)s\\t%(step)s\\t%(stepname)s\\t%(stepID)s\\t'$HOSTNAME'\\t'$(%(qstat_path)s -j $JOB_ID | grep maxvmem | cut -d = -f 6) >> %(file)s
+    echo -e $(date '+%%d/%%m/%%Y %%H:%%M:%%S')'\\t%(type)s\\t%(step)s\\t%(stepname)s\\t%(stepID)s\\t%(level)s\\t'$HOSTNAME'\\t'$(%(qstat_path)s -j $JOB_ID | grep maxvmem | cut -d = -f 6) >> %(file)s
 fi
 ####\n\n
-""" % {"type"        : type,                                        \
-        "step"       : self.get_step_step(),                        \
-        "stepname"   : self.get_step_name(),                        \
-        "stepID"     : qsub_name,                                   \
-        "qstat_path" : self.pipe_data["qsub_params"]["qstat_path"], \
-        "file"       : self.pipe_data["log_file"]}
+""" % log_cols_dict
 
         else:
             script = ""
