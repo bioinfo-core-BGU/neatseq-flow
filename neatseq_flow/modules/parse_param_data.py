@@ -4,7 +4,7 @@
 """
 
 __author__ = "Menachem Sklarz"
-__version__ = "0.2.0"
+__version__ = "1.0.1"
 import os, sys, re, yaml
 from pprint import pprint as pp
 import collections
@@ -132,10 +132,24 @@ def get_param_data_YAML(filelines):
  
     filelines = remove_comments(filelines)
     
-    # sys.exit("\n\n" + "\n".join(filelines))
 
-    
+    # Read params with pyyaml package:
     yaml_params = yaml.load("\n".join(filelines))
+    
+    # If there is a Variables section, interpolate any appearance of the variables in the params
+    if "Vars" in yaml_params.keys():
+        # Prepare the bunch for variable interpolation:
+        from bunch import Bunch 
+        from var_interpol_defs import make_interpol_func, walk
+
+        variables_bunch = Bunch.fromDict({"Vars":yaml_params["Vars"]})
+        print variables_bunch
+        f_interpol = make_interpol_func(variables_bunch)
+
+        # Actual code to run when 'Vars' exists:
+        # Walk over params dict and interpolate strings:
+        yaml_params = walk(yaml_params, variables_bunch, callback= f_interpol)
+        
     
     
     param_data = dict()
@@ -157,84 +171,20 @@ def get_param_data_YAML(filelines):
             pass # OK
         else:
             raise Exception("Unrecognised 'module_path' format. 'module_path' in 'Global_params' must be a single path or a list. \n")
+    # Converting single Qsub_nodes into single element list
+    if "Qsub_nodes" in param_data["Global"]:
+        if isinstance(param_data["Global"]["Qsub_nodes"],str):
+            # Convert to list by splitting by comma.
+            # Remove extra spaces from around node names, if these exist (e.g. 'node1 , node2')
+            param_data["Global"]["Qsub_nodes"] = [node.strip() for node in param_data["Global"]["Qsub_nodes"].split(",")]
+        elif isinstance(param_data["Global"]["Qsub_nodes"],list):
+            pass # OK
+        else:
+            raise Exception("Unrecognised 'Qsub_nodes' format. 'Qsub_nodes' in 'Global_params' must be a single path or a list. \n")
     
     # Extract step-wise parameter dict from lines:
     param_data["Step"] = convert_param_format(yaml_params["Step_params"])
     
-    
-    # Defined helper functions:
-    
-    # var_re = re.compile("\{([\w\.]+?)\}")
-    # def interpol_atom(atom, variables_bunch):
-        # if isinstance(atom, str):
-            
-            # # a="{Vars.paths.samtools} -q -b {Vars.sdsdsd}"
-            # m = var_re.search(atom)
-            # # print atom
-            # while (m):
-                # print "in here: %s\n" % atom
-                # print "variables_bunch.%s\n" % m.group(1)
-                # try:
-                    # atom = var_re.sub(eval("variables_bunch.%s" % m.group(1)),atom,count=1)
-                # except AttributeError:
-                    # raise Exception("Unrecognised variable %s" % m.group(1))
-                # m = var_re.search(atom)
-            # # print atom                
-
-        # return atom
-
-    # def walk(node, variables_bunch, callback):
-        
-        # if isinstance(node,dict):
-            # # print "in 1\n"
-            # for key, item in node.items():
-                # if isinstance(item, collections.Iterable):
-                    # node[key] = walk(item, variables_bunch, callback)
-                # elif isinstance(item, str):
-                    # # node[key] = interpol_atom(item, variables_bunch)
-                    # node[key] = callback(item)
-                # else:
-                    # # node[key] = item
-                    # pass
-        # elif isinstance(node,list):
-            # # print "in 2\n"
-            # for i in range(0,len(node)):
-                # if isinstance(node[i], collections.Iterable):
-                    # node[i] = walk(node[i], variables_bunch, callback)
-                # elif isinstance(item, str):
-                    # # node[i] = interpol_atom(node[i], variables_bunch)
-                    # node[i] = callback(node[i])
-                # else:
-                    # pass
-        # else:
-            # # print "in 3\n"
-            # if isinstance(node, str):
-                # # node = interpol_atom(node, variables_bunch)
-                # node = callback(node)
-            # else:
-                # pass
-    # #        raise Exception("walk() works on dicts and lists only")
-        # return node
-
-
-    # If there is a Variables section, interpolate any appearance of the variables in the Step params
-    if "Vars" in yaml_params.keys():
-        # Prepare the bunch for variable interpolation:
-        from bunch import Bunch 
-        from var_interpol_defs import make_interpol_func, walk
-
-        variables_bunch = Bunch.fromDict({"Vars":yaml_params["Vars"]})
-        f_interpol = make_interpol_func(variables_bunch)
-
-        # Actual code to run when 'Vars' exists:
-        # Walk over params dict and interpolate strings:
-        param_data = walk(param_data, variables_bunch, callback= f_interpol)
-        
-        
-        
-
-    # pp(param_data)
-    # sys.exit()  
     
     param_data_testing(param_data)
       

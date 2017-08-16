@@ -6,7 +6,7 @@ Actual work is done by calling other class types: PLCStep and PLCName
 """
 
 __author__ = "Menachem Sklarz"
-__version__ = "0.2.0"
+__version__ = "1.0.1"
 import os, sys, json, shutil, time, yaml
 
 
@@ -95,8 +95,12 @@ class neatseq_flow:
         self.pipe_data["qsub_params"] = {}
         
         self.pipe_data["qsub_params"]["queue"] = self.param_data["Global"]["Qsub_q"]    # This is required by assertion in parse_param_data()
+        # if "Qsub_nodes" in self.param_data["Global"].keys():
+            # self.pipe_data["qsub_params"]["node"] = ",".join(list(set(self.param_data["Global"]["Qsub_nodes"])))
+        # else:
+            # self.pipe_data["qsub_params"]["node"] = None
         if "Qsub_nodes" in self.param_data["Global"].keys():
-            self.pipe_data["qsub_params"]["node"] = ",".join(list(set(self.param_data["Global"]["Qsub_nodes"])))
+            self.pipe_data["qsub_params"]["node"] = list(set(self.param_data["Global"]["Qsub_nodes"]))
         else:
             self.pipe_data["qsub_params"]["node"] = None
 

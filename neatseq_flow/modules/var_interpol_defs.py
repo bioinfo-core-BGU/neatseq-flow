@@ -1,3 +1,9 @@
+""" Helper functions for parsing and interpolating variables in parameter file
+"""
+
+__author__ = "Menachem Sklarz"
+__version__ = "1.0.1"
+
 import re, sys, collections
 from pprint import pprint as pp
 
@@ -8,6 +14,7 @@ def make_interpol_func(variables_bunch):
     # Define a regular expression for variables (any contiguous alphanumeric or period between {})
     var_re = re.compile("\{([\w\.]+?)\}")
     loc_variables_bunch = variables_bunch
+    
     global loc_variables_bunch
     # Define function to return:
     def interpol_atom(atom):

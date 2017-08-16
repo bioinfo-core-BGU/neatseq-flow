@@ -13,7 +13,7 @@ from  modules.global_defs import ZIPPED_EXTENSIONS, ARCHIVE_EXTENSIONS, KNOWN_FI
 
 
 __author__ = "Menachem Sklarz"
-__version__ = "0.2.0"
+__version__ = "1.0.1"
 
 # A dict for conversion of types of sample data to positions in fasta structure:
 fasta_types_dict = {"Nucleotide":"nucl","Protein":"prot"}
