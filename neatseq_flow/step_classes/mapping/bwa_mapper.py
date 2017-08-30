@@ -61,12 +61,12 @@ Lines for parameter file
     bwa_mem_1:
         module: bwa_mapper
         base: trim1
-        script_path: /path/to/bowtie2
+        script_path: /path/to/bwa
         mod: mem
         qsub_params:
             -pe: shared 20
         ref_genome: /path/to/ref_genome.fna
-        ref_index: /path/to/bowtie2_index/ref_genome
+        ref_index: /path/to/bwa_index/ref_genome
         redirects:
             -t: 20
 
@@ -82,16 +82,16 @@ Lines for parameter file
         qsub_params:
             -pe: shared 20
         ref_genome: /path/to/ref_genome.fna
-        ref_index: /path/to/bowtie2_index/ref_genome
+        ref_index: /path/to/bwa_index/ref_genome
         redirects:
             -t: 20
     bwa_samse_1:
         module: bwa_mapper
         base: bwt2_1
-        script_path: /path/to/bowtie2
+        script_path: /path/to/bwa
         mod: samse
         ref_genome: /path/to/ref_genome.fna
-        ref_index: /path/to/bowtie2_index/ref_genome
+        ref_index: /path/to/bwa_index/ref_genome
         
 
 **For project bwa index:**
@@ -193,10 +193,10 @@ class Step_bwa_mapper(Step):
                 for sample in self.sample_data["samples"]:
                     if self.params["scope"] == "project":
                         # Set project wide reference:
-                        self.sample_data[sample]["fastq"]["mapping"]["reference"] = self.sample_data["bowtie2"]["fasta"]
+                        self.sample_data[sample]["fastq"]["mapping"]["reference"] = self.sample_data["bwa"]["fasta"]
                     elif self.params["scope"] == "sample":
                         # Set per-sample reference:
-                        self.sample_data[sample]["fastq"]["mapping"]["reference"] = self.sample_data[sample]["bowtie2"]["fasta"]
+                        self.sample_data[sample]["fastq"]["mapping"]["reference"] = self.sample_data[sample]["bwa"]["fasta"]
                     else:
                         raise AssertionExcept("Scope must be either 'sample' or 'project'")
                 
@@ -274,7 +274,7 @@ class Step_bwa_mapper(Step):
 
                         
                         # Add ref_index (depends on scope)
-                        if "scope" in self.params:  # If scope was passed, include either project or sample bowtie2 index
+                        if "scope" in self.params:  # If scope was passed, include either project or sample bwa index
                             if self.params["scope"] == "project":
                                 self.script += "%s \\\n\t" % self.sample_data["bwa"]["index"]
                             else:
@@ -308,8 +308,6 @@ class Step_bwa_mapper(Step):
                 
                 
                 # Define location of output file:
-                # output_prefix = sample + "_bowtie2_map"
-                # output_prefix = use_dir + output_prefix
                 output_filename = "%s.bwa.sam" % (sample)
 
                 # Get constant part of script:
@@ -328,7 +326,7 @@ class Step_bwa_mapper(Step):
                     pass
                 
                 # Add ref_index (depends on scope)
-                if "scope" in self.params:  # If scope was passed, include either project or sample bowtie2 index
+                if "scope" in self.params:  # If scope was passed, include either project or sample bwa index
                     if self.params["scope"] == "project":
                         self.script += "%s \\\n\t" % self.sample_data["bwa"]["index"]
                     else:
