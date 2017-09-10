@@ -44,6 +44,8 @@ class Step:
         # Searching module paths passed by user in parameter file:
         if "module_path" in param_data["Global"]:
             for module_path in param_data["Global"]["module_path"]:#.split(" "):
+                # Remove trainling '/' from dir name. For some reason that botches things up!
+                module_path = module_path.rstrip(os.sep)
                 # Check the dir exists:
                 if not os.path.isdir(module_path):
                     sys.stderr.write("Path %s from module_path does not exist. Skipping...\n" % module_path)
@@ -64,7 +66,11 @@ class Step:
                         sys.path.append(os.path.abspath(module_path))
 
                     # For what this does, see below (# Build module name)...
-                    return (level[0].split(module_path)[1].partition(os.sep)[2].replace(os.sep,".") + "." + mod_t).lstrip(".")
+
+                    retval = (level[0].split(module_path)[1].partition(os.sep)[2].replace(os.sep,".") + "." + mod_t).lstrip(".")
+                    print retval
+                    return retval
+
 
         # If not found, do the same with self.Cwd:
         mod_t = step
@@ -82,7 +88,10 @@ class Step:
         # 3. partition by os.sep to remove leading os.sep
         # 4. replace remaining os.sep's by ".". 
         # 5. Add .
-        return level[0].split(self.Cwd)[1].partition(os.sep)[2].replace(os.sep,".") + "." + mod_t
+        retval = level[0].split(self.Cwd)[1].partition(os.sep)[2].replace(os.sep,".") + "." + mod_t
+        print retval
+        return retval
+        # return level[0].split(self.Cwd)[1].partition(os.sep)[2].replace(os.sep,".") + "." + mod_t
 
         
     def __init__(self,name,step_type,params,pipe_data):
