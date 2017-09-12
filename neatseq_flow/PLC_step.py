@@ -68,7 +68,6 @@ class Step:
                     # For what this does, see below (# Build module name)...
 
                     retval = (level[0].split(module_path)[1].partition(os.sep)[2].replace(os.sep,".") + "." + mod_t).lstrip(".")
-                    print retval
                     return retval
 
 
@@ -89,7 +88,6 @@ class Step:
         # 4. replace remaining os.sep's by ".". 
         # 5. Add .
         retval = level[0].split(self.Cwd)[1].partition(os.sep)[2].replace(os.sep,".") + "." + mod_t
-        print retval
         return retval
         # return level[0].split(self.Cwd)[1].partition(os.sep)[2].replace(os.sep,".") + "." + mod_t
 
