@@ -7,5 +7,6 @@ The modules currently implemented in NeatSeq_Flow
    modules/preparing
    modules/searching
    modules/mapping
+   modules/assembly
    modules/others
 

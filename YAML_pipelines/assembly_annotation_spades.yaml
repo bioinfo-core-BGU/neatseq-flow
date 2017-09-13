@@ -46,6 +46,14 @@ Step_params:
         truncate_names: null
         redirects:
             --careful: null
+    quast1:
+        module: quast
+        base: spades1
+        script_path: /path/to/quast.py
+        compare_mode: null
+        scope: sample
+        redirects:
+            --fast: null
     mkblst1:
         module: makeblastdb
         base: spades1
