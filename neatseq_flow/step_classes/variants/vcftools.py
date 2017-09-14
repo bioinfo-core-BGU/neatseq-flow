@@ -34,15 +34,19 @@ Output
 
 .. Note:: 
 
-    Output type is set by redirecting the required type, *i.e.* **one** of the following list of types.
+    Output type is set by redirecting the required type, *i.e.* any number of the following list of types.
     
     For extracting several INFO fields, set ``--get-INFO`` to a list of INFO elements to extract (instead of passing ``--get-INFO`` several times). See examples below.
+    
+    If several output types are passed, each type will be created in parallel with a different vcftools script.
     
     See the vcftools manual for details (https://vcftools.github.io/man_latest.html).
     
     ``"--freq"``, ``"--freq2"``, ``"--counts"``, ``"--counts2"``, ``"--depth"``, ``"--site-depth"``, ``"--site-mean-depth"``, ``"--geno-depth"``, ``"--hap-r2"``, ``"--geno-r2"``, ``"--geno-chisq"``, ``"--hap-r2-positions"``, ``"--geno-r2-positions"``, ``"--interchrom-hap-r2"``, ``"--interchrom-geno-r2"``, ``"--TsTv"``, ``"--TsTv-summary"``, ``"--TsTv-by-count"``, ``"--TsTv-by-qual"``, ``"--FILTER-summary"``, ``"--site-pi"``, ``"--window-pi"``, ``"--weir-fst-pop"``, ``"--het"``, ``"--hardy"``, ``"--TajimaD"``, ``"--indv-freq-burden"``, ``"--LROH"``, ``"--relatedness"``, ``"--relatedness2"``, ``"--site-quality"``, ``"--missing-indv"``, ``"--missing-site"``, ``"--SNPdensity"``, ``"--kept-sites"``, ``"--removed-sites"``, ``"--singletons"``, ``"--hist-indel-len"``, ``"--hapcount"``, ``"--mendel"``, ``"--extract-FORMAT-info"``, ``"--get-INFO"``, ``"--recode"``, ``"--recode-bcf"``, ``"--12"``, ``"--IMPUTE"``, ``"--ldhat"``, ``"--ldhat-geno"``, ``"--BEAGLE-GL"``, ``"--BEAGLE-PL"``, ``"--plink"``, ``"--plink-tped"``.
 
-
+.. Warning::
+    
+    At the moment, you can't pass more than one ``extract-FORMAT-info`` option at once. For more than one ``extract-FORMAT-info``, create more than one instance of ``vcftools``.
 
 
 Parameters that can be set
@@ -68,30 +72,11 @@ Lines for parameter file
         input: vcf
         redirects:
             --recode:
-
-::
-
-    vcftools1:
-        module: vcftools
-        base: freebayes1
-        script_path: /path/to/vcftools
-        scope: project
-        input: vcf
-        redirects:
             --extract-FORMAT-info: GT
-
-::
-
-    vcftools1:
-        module: vcftools
-        base: freebayes1
-        script_path: /path/to/vcftools
-        scope: project
-        input: vcf
-        redirects:
             --get-INFO:
                 - NS
                 - DB
+
 """
 
 import os
@@ -221,7 +206,9 @@ class Step_vcftools(Step):
                 else:
                     input_file = self.sample_data[sample]["variants"]["gzVCF"]
                 
-                output_prefix = (use_dir + self.get_step_name() + sample)
+                output_prefix = "{dir}{step_name}_{sample}".format(dir = use_dir, \
+                                                                   step_name = self.get_step_name(), \
+                                                                   sample = sample)
 
                 for output_type in self.output_types:
                     # Name of specific script:
@@ -448,7 +435,7 @@ class Step_vcftools(Step):
                     if "--extract-FORMAT-info" in self.output_types:
                         self.sample_data[sample]["variants"]["extract-FORMAT-info"] = \
                             "{prefix}.{info}.{suffix}".format(prefix = output_prefix, \
-                                                              info = self.params["redir_params"]["--extract-FORMAT-info"],\
+                                                              info = self.output_types["--extract-FORMAT-info"],\
                                                               suffix = "FORMAT") 
                         self.stamp_file(self.sample_data[sample]["variants"]["extract-FORMAT-info"])
 
@@ -706,7 +693,7 @@ class Step_vcftools(Step):
                 if "--extract-FORMAT-info" in self.output_types:
                     self.sample_data["variants"]["extract-FORMAT-info"] = \
                         "{prefix}.{info}.{suffix}".format(prefix = output_prefix, \
-                                                          info = self.params["redir_params"]["--extract-FORMAT-info"],\
+                                                          info = self.output_types["--extract-FORMAT-info"],\
                                                           suffix = "FORMAT") 
                     self.stamp_file(self.sample_data["variants"]["extract-FORMAT-info"])
 
