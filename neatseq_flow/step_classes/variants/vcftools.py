@@ -489,7 +489,7 @@ class Step_vcftools(Step):
                 del self.params["redir_params"][output_type]
                 
                 
-                if output_type == --recode:
+                if output_type == "--recode":
                     self.sample_data["variants"]["VCF"] = "{prefix}.{suffix}".format(prefix = output_prefix, suffix = "recode.vcf") 
                     self.stamp_file(self.sample_data["variants"]["VCF"])
                 if output_type == "--recode-bcf":
