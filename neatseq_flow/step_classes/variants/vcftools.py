@@ -231,215 +231,215 @@ class Step_vcftools(Step):
                     del self.params["redir_params"][output_type]
                                     
                     
-                    if "--recode" in self.output_types:
+                    if output_type == "--recode":
                         self.sample_data[sample]["variants"]["VCF"] = "{prefix}.{suffix}".format(prefix = output_prefix, suffix = "recode.vcf") 
                         self.stamp_file(self.sample_data[sample]["variants"]["VCF"])
-                    if "--recode-bcf" in self.output_types:
+                    if output_type == "--recode-bcf":
                         self.sample_data[sample]["variants"]["BCF"] = "{prefix}.{suffix}".format(prefix = output_prefix, suffix = "recode.bcf") 
                         self.stamp_file(self.sample_data[sample]["variants"]["BCF"])
-                    if "--012" in self.output_types:
+                    if output_type == "--012":
                         self.sample_data[sample]["variants"]["012"] = "{prefix}.{suffix}".format(prefix = output_prefix, suffix = "012") 
                         self.sample_data[sample]["variants"]["012_indv"] = "{prefix}.{suffix}".format(prefix = output_prefix, suffix = "012.indv") 
                         self.sample_data[sample]["variants"]["012_pos"] = "{prefix}.{suffix}".format(prefix = output_prefix, suffix = "012.pos") 
                         self.stamp_file(self.sample_data[sample]["variants"]["012"])
                         self.stamp_file(self.sample_data[sample]["variants"]["012_indv"])
                         self.stamp_file(self.sample_data[sample]["variants"]["012_pos"])
-                    if "--IMPUTE" in self.output_types:
+                    if output_type == "--IMPUTE":
                         self.sample_data[sample]["variants"]["impute.hap"] = "{prefix}.{suffix}".format(prefix = output_prefix, suffix = "impute.hap") 
                         self.sample_data[sample]["variants"]["impute.hap.legend"] = "{prefix}.{suffix}".format(prefix = output_prefix, suffix = "impute.hap.legend") 
                         self.sample_data[sample]["variants"]["impute.hap.indv"] = "{prefix}.{suffix}".format(prefix = output_prefix, suffix = "impute.hap.indv") 
                         self.stamp_file(self.sample_data[sample]["variants"]["impute.hap"])
                         self.stamp_file(self.sample_data[sample]["variants"]["impute.hap.legend"])
                         self.stamp_file(self.sample_data[sample]["variants"]["impute.hap.indv"])
-                    if "--ldhat" in self.output_types or "--ldhat-geno" in self.output_types:
+                    if output_type == "--ldhat" or output_type == "--ldhat-geno":
                         self.sample_data[sample]["variants"]["ldhat.sites"] = "{prefix}.{suffix}".format(prefix = output_prefix, suffix = "ldhat.sites") 
                         self.sample_data[sample]["variants"]["ldhat.locs"] = "{prefix}.{suffix}".format(prefix = output_prefix, suffix = "ldhat.locs") 
                         self.stamp_file(self.sample_data[sample]["variants"]["ldhat.sites"])
                         self.stamp_file(self.sample_data[sample]["variants"]["ldhat.locs"])
-                    if "--BEAGLE-GL" in self.output_types:
+                    if output_type == "--BEAGLE-GL":
                         self.sample_data[sample]["variants"]["BEAGLE.GL"] = "{prefix}.{suffix}".format(prefix = output_prefix, suffix = "BEAGLE.GL") 
                         self.stamp_file(self.sample_data[sample]["variants"]["BEAGLE.GL"])
-                    if "--BEAGLE-PL" in self.output_types:
+                    if output_type == "--BEAGLE-PL":
                         self.sample_data[sample]["variants"]["BEAGLE.PL"] = "{prefix}.{suffix}".format(prefix = output_prefix, suffix = "BEAGLE.PL") 
                         self.stamp_file(self.sample_data[sample]["variants"]["BEAGLE.PL"])
-                    if "--plink" in self.output_types:
+                    if output_type == "--plink":
                         self.sample_data[sample]["variants"]["ped"] = "{prefix}.{suffix}".format(prefix = output_prefix, suffix = "ped") 
                         self.sample_data[sample]["variants"]["map"] = "{prefix}.{suffix}".format(prefix = output_prefix, suffix = "map") 
                         self.stamp_file(self.sample_data[sample]["variants"]["ped"])
                         self.stamp_file(self.sample_data[sample]["variants"]["map"])
-                    if "--plink-tped" in self.output_types:
+                    if output_type == "--plink-tped":
                         self.sample_data[sample]["variants"]["tped"] = "{prefix}.{suffix}".format(prefix = output_prefix, suffix = "tped") 
                         self.sample_data[sample]["variants"]["tfam"] = "{prefix}.{suffix}".format(prefix = output_prefix, suffix = "tfam") 
                         self.stamp_file(self.sample_data[sample]["variants"]["tped"])
                         self.stamp_file(self.sample_data[sample]["variants"]["tfam"])
-                    if "--freq" in self.output_types:
+                    if output_type == "--freq":
                         self.sample_data[sample]["variants"]["freq"] = "{prefix}.{suffix}".format(prefix = output_prefix, suffix = "frq") 
                         self.stamp_file(self.sample_data[sample]["variants"]["freq"])
 
-                    if "--freq2" in self.output_types:
+                    if output_type == "--freq2":
                         self.sample_data[sample]["variants"]["freq2"] = "{prefix}.{suffix}".format(prefix = output_prefix, suffix = "frq") 
                         self.stamp_file(self.sample_data[sample]["variants"]["freq2"])
 
-                    if "--counts" in self.output_types:
+                    if output_type == "--counts":
                         self.sample_data[sample]["variants"]["counts"] = "{prefix}.{suffix}".format(prefix = output_prefix, suffix = "frq.count") 
                         self.stamp_file(self.sample_data[sample]["variants"]["counts"])
 
-                    if "--counts2" in self.output_types:
+                    if output_type == "--counts2":
                         self.sample_data[sample]["variants"]["counts2"] = "{prefix}.{suffix}".format(prefix = output_prefix, suffix = "frq.count") 
                         self.stamp_file(self.sample_data[sample]["variants"]["counts2"])
 
-                    if "--depth" in self.output_types:
+                    if output_type == "--depth":
                         self.sample_data[sample]["variants"]["depth"] = "{prefix}.{suffix}".format(prefix = output_prefix, suffix = "idepth") 
                         self.stamp_file(self.sample_data[sample]["variants"]["depth"])
 
-                    if "--site-depth" in self.output_types:
+                    if output_type == "--site-depth":
                         self.sample_data[sample]["variants"]["site-depth"] = "{prefix}.{suffix}".format(prefix = output_prefix, suffix = "ldepth") 
                         self.stamp_file(self.sample_data[sample]["variants"]["site-depth"])
 
-                    if "--site-mean-depth" in self.output_types:
+                    if output_type == "--site-mean-depth":
                         self.sample_data[sample]["variants"]["site-mean-depth"] = "{prefix}.{suffix}".format(prefix = output_prefix, suffix = "ldepth.mean") 
                         self.stamp_file(self.sample_data[sample]["variants"]["site-mean-depth"])
 
-                    if "--geno-depth" in self.output_types:
+                    if output_type == "--geno-depth":
                         self.sample_data[sample]["variants"]["geno-depth"] = "{prefix}.{suffix}".format(prefix = output_prefix, suffix = "gdepth") 
                         self.stamp_file(self.sample_data[sample]["variants"]["geno-depth"])
 
-                    if "--hap-r2" in self.output_types:
+                    if output_type == "--hap-r2":
                         self.sample_data[sample]["variants"]["hap-r2"] = "{prefix}.{suffix}".format(prefix = output_prefix, suffix = "hap.ld") 
                         self.stamp_file(self.sample_data[sample]["variants"]["hap-r2"])
 
-                    if "--geno-r2" in self.output_types:
+                    if output_type == "--geno-r2":
                         self.sample_data[sample]["variants"]["geno-r2"] = "{prefix}.{suffix}".format(prefix = output_prefix, suffix = "geno.ld") 
                         self.stamp_file(self.sample_data[sample]["variants"]["geno-r2"])
 
-                    if "--geno-chisq" in self.output_types:
+                    if output_type == "--geno-chisq":
                         self.sample_data[sample]["variants"]["geno-chisq"] = "{prefix}.{suffix}".format(prefix = output_prefix, suffix = "geno.chisq") 
                         self.stamp_file(self.sample_data[sample]["variants"]["geno-chisq"])
 
-                    if "--hap-r2-positions" in self.output_types:
+                    if output_type == "--hap-r2-positions":
                         self.sample_data[sample]["variants"]["hap-r2-positions"] = "{prefix}.{suffix}".format(prefix = output_prefix, suffix = "list.hap.ld") 
                         self.stamp_file(self.sample_data[sample]["variants"]["hap-r2-positions"])
 
-                    if "--geno-r2-positions" in self.output_types:
+                    if output_type == "--geno-r2-positions":
                         self.sample_data[sample]["variants"]["geno-r2-positions"] = "{prefix}.{suffix}".format(prefix = output_prefix, suffix = "list.geno.ld") 
                         self.stamp_file(self.sample_data[sample]["variants"]["geno-r2-positions"])
 
-                    if "--interchrom-hap-r2" in self.output_types:
+                    if output_type == "--interchrom-hap-r2":
                         self.sample_data[sample]["variants"]["interchrom-hap-r2"] = "{prefix}.{suffix}".format(prefix = output_prefix, suffix = "interchrom.hap.ld") 
                         self.stamp_file(self.sample_data[sample]["variants"]["interchrom-hap-r2"])
 
-                    if "--interchrom-geno-r2" in self.output_types:
+                    if output_type == "--interchrom-geno-r2":
                         self.sample_data[sample]["variants"]["interchrom-geno-r2"] = "{prefix}.{suffix}".format(prefix = output_prefix, suffix = "interchrom.geno.ld") 
                         self.stamp_file(self.sample_data[sample]["variants"]["interchrom-geno-r2"])
 
-                    if "--TsTv" in self.output_types:
+                    if output_type == "--TsTv":
                         self.sample_data[sample]["variants"]["TsTv"] = "{prefix}.{suffix}".format(prefix = output_prefix, suffix = "TsTv") 
                         self.stamp_file(self.sample_data[sample]["variants"]["TsTv"])
 
-                    if "--TsTv-summary" in self.output_types:
+                    if output_type == "--TsTv-summary":
                         self.sample_data[sample]["variants"]["TsTv-summary"] = "{prefix}.{suffix}".format(prefix = output_prefix, suffix = "TsTv.summary") 
                         self.stamp_file(self.sample_data[sample]["variants"]["TsTv-summary"])
 
-                    if "--TsTv-by-count" in self.output_types:
+                    if output_type == "--TsTv-by-count":
                         self.sample_data[sample]["variants"]["TsTv-by-count"] = "{prefix}.{suffix}".format(prefix = output_prefix, suffix = "TsTv.count") 
                         self.stamp_file(self.sample_data[sample]["variants"]["TsTv-by-count"])
 
-                    if "--TsTv-by-qual" in self.output_types:
+                    if output_type == "--TsTv-by-qual":
                         self.sample_data[sample]["variants"]["TsTv-by-qual"] = "{prefix}.{suffix}".format(prefix = output_prefix, suffix = "TsTv.qual") 
                         self.stamp_file(self.sample_data[sample]["variants"]["TsTv-by-qual"])
 
-                    if "--FILTER-summary" in self.output_types:
+                    if output_type == "--FILTER-summary":
                         self.sample_data[sample]["variants"]["FILTER-summary"] = "{prefix}.{suffix}".format(prefix = output_prefix, suffix = "FILTER.summary") 
                         self.stamp_file(self.sample_data[sample]["variants"]["FILTER-summary"])
 
-                    if "--site-pi" in self.output_types:
+                    if output_type == "--site-pi":
                         self.sample_data[sample]["variants"]["site-pi"] = "{prefix}.{suffix}".format(prefix = output_prefix, suffix = "sites.pi") 
                         self.stamp_file(self.sample_data[sample]["variants"]["site-pi"])
 
-                    if "--window-pi" in self.output_types:
+                    if output_type == "--window-pi":
                         self.sample_data[sample]["variants"]["window-pi"] = "{prefix}.{suffix}".format(prefix = output_prefix, suffix = "windowed.pi") 
                         self.stamp_file(self.sample_data[sample]["variants"]["window-pi"])
 
-                    if "--weir-fst-pop" in self.output_types:
+                    if output_type == "--weir-fst-pop":
                         self.sample_data[sample]["variants"]["weir-fst-pop"] = "{prefix}.{suffix}".format(prefix = output_prefix, suffix = "weir.fst") 
                         self.stamp_file(self.sample_data[sample]["variants"]["weir-fst-pop"])
 
-                    if "--het" in self.output_types:
+                    if output_type == "--het":
                         self.sample_data[sample]["variants"]["het"] = "{prefix}.{suffix}".format(prefix = output_prefix, suffix = "het") 
                         self.stamp_file(self.sample_data[sample]["variants"]["het"])
 
-                    if "--hardy" in self.output_types:
+                    if output_type == "--hardy":
                         self.sample_data[sample]["variants"]["hardy"] = "{prefix}.{suffix}".format(prefix = output_prefix, suffix = "hwe") 
                         self.stamp_file(self.sample_data[sample]["variants"]["hardy"])
 
-                    if "--TajimaD" in self.output_types:
+                    if output_type == "--TajimaD":
                         self.sample_data[sample]["variants"]["TajimaD"] = "{prefix}.{suffix}".format(prefix = output_prefix, suffix = "Tajima.D") 
                         self.stamp_file(self.sample_data[sample]["variants"]["TajimaD"])
 
-                    if "--indv-freq-burden" in self.output_types:
+                    if output_type == "--indv-freq-burden":
                         self.sample_data[sample]["variants"]["indv-freq-burden"] = "{prefix}.{suffix}".format(prefix = output_prefix, suffix = "ifreqburden") 
                         self.stamp_file(self.sample_data[sample]["variants"]["indv-freq-burden"])
 
-                    if "--LROH" in self.output_types:
+                    if output_type == "--LROH":
                         self.sample_data[sample]["variants"]["LROH"] = "{prefix}.{suffix}".format(prefix = output_prefix, suffix = "LROH") 
                         self.stamp_file(self.sample_data[sample]["variants"]["LROH"])
 
-                    if "--relatedness" in self.output_types:
+                    if output_type == "--relatedness":
                         self.sample_data[sample]["variants"]["relatedness"] = "{prefix}.{suffix}".format(prefix = output_prefix, suffix = "relatedness") 
                         self.stamp_file(self.sample_data[sample]["variants"]["relatedness"])
 
-                    if "--relatedness2" in self.output_types:
+                    if output_type == "--relatedness2":
                         self.sample_data[sample]["variants"]["relatedness2"] = "{prefix}.{suffix}".format(prefix = output_prefix, suffix = "relatedness2") 
                         self.stamp_file(self.sample_data[sample]["variants"]["relatedness2"])
 
-                    if "--site-quality" in self.output_types:
+                    if output_type == "--site-quality":
                         self.sample_data[sample]["variants"]["site-quality"] = "{prefix}.{suffix}".format(prefix = output_prefix, suffix = "lqual") 
                         self.stamp_file(self.sample_data[sample]["variants"]["site-quality"])
 
-                    if "--missing-indv" in self.output_types:
+                    if output_type == "--missing-indv":
                         self.sample_data[sample]["variants"]["missing-indv"] = "{prefix}.{suffix}".format(prefix = output_prefix, suffix = "imiss") 
                         self.stamp_file(self.sample_data[sample]["variants"]["missing-indv"])
 
-                    if "--missing-site" in self.output_types:
+                    if output_type == "--missing-site":
                         self.sample_data[sample]["variants"]["missing-site"] = "{prefix}.{suffix}".format(prefix = output_prefix, suffix = "lmiss") 
                         self.stamp_file(self.sample_data[sample]["variants"]["missing-site"])
 
-                    if "--SNPdensity" in self.output_types:
+                    if output_type == "--SNPdensity":
                         self.sample_data[sample]["variants"]["SNPdensity"] = "{prefix}.{suffix}".format(prefix = output_prefix, suffix = "snpden") 
                         self.stamp_file(self.sample_data[sample]["variants"]["SNPdensity"])
 
-                    if "--kept-sites" in self.output_types:
+                    if output_type == "--kept-sites":
                         self.sample_data[sample]["variants"]["kept-sites"] = "{prefix}.{suffix}".format(prefix = output_prefix, suffix = "kept.sites") 
                         self.stamp_file(self.sample_data[sample]["variants"]["kept-sites"])
 
-                    if "--removed-sites" in self.output_types:
+                    if output_type == "--removed-sites":
                         self.sample_data[sample]["variants"]["removed-sites"] = "{prefix}.{suffix}".format(prefix = output_prefix, suffix = "removed.sites") 
                         self.stamp_file(self.sample_data[sample]["variants"]["removed-sites"])
 
-                    if "--singletons" in self.output_types:
+                    if output_type == "--singletons":
                         self.sample_data[sample]["variants"]["singletons"] = "{prefix}.{suffix}".format(prefix = output_prefix, suffix = "singletons") 
                         self.stamp_file(self.sample_data[sample]["variants"]["singletons"])
 
-                    if "--hist-indel-len" in self.output_types:
+                    if output_type == "--hist-indel-len":
                         self.sample_data[sample]["variants"]["hist-indel-len"] = "{prefix}.{suffix}".format(prefix = output_prefix, suffix = "indel.hist") 
                         self.stamp_file(self.sample_data[sample]["variants"]["hist-indel-len"])
 
-                    if "--hapcount" in self.output_types:
+                    if output_type == "--hapcount":
                         self.sample_data[sample]["variants"]["hapcount"] = "{prefix}.{suffix}".format(prefix = output_prefix, suffix = "hapcount") 
                         self.stamp_file(self.sample_data[sample]["variants"]["hapcount"])
 
-                    if "--mendel" in self.output_types:
+                    if output_type == "--mendel":
                         self.sample_data[sample]["variants"]["mendel"] = "{prefix}.{suffix}".format(prefix = output_prefix, suffix = "mendel") 
                         self.stamp_file(self.sample_data[sample]["variants"]["mendel"])
 
-                    if "--extract-FORMAT-info" in self.output_types:
+                    if output_type == "--extract-FORMAT-info":
                         self.sample_data[sample]["variants"]["extract-FORMAT-info"] = \
                             "{prefix}.{info}.{suffix}".format(prefix = output_prefix, \
                                                               info = self.output_types["--extract-FORMAT-info"],\
                                                               suffix = "FORMAT") 
                         self.stamp_file(self.sample_data[sample]["variants"]["extract-FORMAT-info"])
 
-                    if "--get-INFO" in self.output_types:
+                    if output_type == "--get-INFO":
                         self.sample_data[sample]["variants"]["get-INFO"] = "{prefix}.{suffix}".format(prefix = output_prefix, suffix = "INFO") 
                         self.stamp_file(self.sample_data[sample]["variants"]["get-INFO"])
 
@@ -489,215 +489,215 @@ class Step_vcftools(Step):
                 del self.params["redir_params"][output_type]
                 
                 
-                if "--recode" in self.output_types:
+                if output_type == --recode:
                     self.sample_data["variants"]["VCF"] = "{prefix}.{suffix}".format(prefix = output_prefix, suffix = "recode.vcf") 
                     self.stamp_file(self.sample_data["variants"]["VCF"])
-                if "--recode-bcf" in self.output_types:
+                if output_type == "--recode-bcf":
                     self.sample_data["variants"]["BCF"] = "{prefix}.{suffix}".format(prefix = output_prefix, suffix = "recode.bcf") 
                     self.stamp_file(self.sample_data["variants"]["BCF"])
-                if "--012" in self.output_types:
+                if output_type == "--012":
                     self.sample_data["variants"]["012"] = "{prefix}.{suffix}".format(prefix = output_prefix, suffix = "012") 
                     self.sample_data["variants"]["012_indv"] = "{prefix}.{suffix}".format(prefix = output_prefix, suffix = "012.indv") 
                     self.sample_data["variants"]["012_pos"] = "{prefix}.{suffix}".format(prefix = output_prefix, suffix = "012.pos") 
                     self.stamp_file(self.sample_data["variants"]["012"])
                     self.stamp_file(self.sample_data["variants"]["012_indv"])
                     self.stamp_file(self.sample_data["variants"]["012_pos"])
-                if "--IMPUTE" in self.output_types:
+                if output_type == "--IMPUTE":
                     self.sample_data["variants"]["impute.hap"] = "{prefix}.{suffix}".format(prefix = output_prefix, suffix = "impute.hap") 
                     self.sample_data["variants"]["impute.hap.legend"] = "{prefix}.{suffix}".format(prefix = output_prefix, suffix = "impute.hap.legend") 
                     self.sample_data["variants"]["impute.hap.indv"] = "{prefix}.{suffix}".format(prefix = output_prefix, suffix = "impute.hap.indv") 
                     self.stamp_file(self.sample_data["variants"]["impute.hap"])
                     self.stamp_file(self.sample_data["variants"]["impute.hap.legend"])
                     self.stamp_file(self.sample_data["variants"]["impute.hap.indv"])
-                if "--ldhat" in self.output_types or "--ldhat-geno" in self.output_types:
+                if output_type == "--ldhat" or output_type == "--ldhat-geno":
                     self.sample_data["variants"]["ldhat.sites"] = "{prefix}.{suffix}".format(prefix = output_prefix, suffix = "ldhat.sites") 
                     self.sample_data["variants"]["ldhat.locs"] = "{prefix}.{suffix}".format(prefix = output_prefix, suffix = "ldhat.locs") 
                     self.stamp_file(self.sample_data["variants"]["ldhat.sites"])
                     self.stamp_file(self.sample_data["variants"]["ldhat.locs"])
-                if "--BEAGLE-GL" in self.output_types:
+                if output_type == "--BEAGLE-GL":
                     self.sample_data["variants"]["BEAGLE.GL"] = "{prefix}.{suffix}".format(prefix = output_prefix, suffix = "BEAGLE.GL") 
                     self.stamp_file(self.sample_data["variants"]["BEAGLE.GL"])
-                if "--BEAGLE-PL" in self.output_types:
+                if output_type == "--BEAGLE-PL":
                     self.sample_data["variants"]["BEAGLE.PL"] = "{prefix}.{suffix}".format(prefix = output_prefix, suffix = "BEAGLE.PL") 
                     self.stamp_file(self.sample_data["variants"]["BEAGLE.PL"])
-                if "--plink" in self.output_types:
+                if output_type == "--plink":
                     self.sample_data["variants"]["ped"] = "{prefix}.{suffix}".format(prefix = output_prefix, suffix = "ped") 
                     self.sample_data["variants"]["map"] = "{prefix}.{suffix}".format(prefix = output_prefix, suffix = "map") 
                     self.stamp_file(self.sample_data["variants"]["ped"])
                     self.stamp_file(self.sample_data["variants"]["map"])
-                if "--plink-tped" in self.output_types:
+                if output_type == "--plink-tped":
                     self.sample_data["variants"]["tped"] = "{prefix}.{suffix}".format(prefix = output_prefix, suffix = "tped") 
                     self.sample_data["variants"]["tfam"] = "{prefix}.{suffix}".format(prefix = output_prefix, suffix = "tfam") 
                     self.stamp_file(self.sample_data["variants"]["tped"])
                     self.stamp_file(self.sample_data["variants"]["tfam"])
-                if "--freq" in self.output_types:
+                if output_type == "--freq":
                     self.sample_data["variants"]["freq"] = "{prefix}.{suffix}".format(prefix = output_prefix, suffix = "frq") 
                     self.stamp_file(self.sample_data["variants"]["freq"])
 
-                if "--freq2" in self.output_types:
+                if output_type == "--freq2":
                     self.sample_data["variants"]["freq2"] = "{prefix}.{suffix}".format(prefix = output_prefix, suffix = "frq") 
                     self.stamp_file(self.sample_data["variants"]["freq2"])
 
-                if "--counts" in self.output_types:
+                if output_type == "--counts":
                     self.sample_data["variants"]["counts"] = "{prefix}.{suffix}".format(prefix = output_prefix, suffix = "frq.count") 
                     self.stamp_file(self.sample_data["variants"]["counts"])
 
-                if "--counts2" in self.output_types:
+                if output_type == "--counts2":
                     self.sample_data["variants"]["counts2"] = "{prefix}.{suffix}".format(prefix = output_prefix, suffix = "frq.count") 
                     self.stamp_file(self.sample_data["variants"]["counts2"])
 
-                if "--depth" in self.output_types:
+                if output_type == "--depth":
                     self.sample_data["variants"]["depth"] = "{prefix}.{suffix}".format(prefix = output_prefix, suffix = "idepth") 
                     self.stamp_file(self.sample_data["variants"]["depth"])
 
-                if "--site-depth" in self.output_types:
+                if output_type == "--site-depth":
                     self.sample_data["variants"]["site-depth"] = "{prefix}.{suffix}".format(prefix = output_prefix, suffix = "ldepth") 
                     self.stamp_file(self.sample_data["variants"]["site-depth"])
 
-                if "--site-mean-depth" in self.output_types:
+                if output_type == "--site-mean-depth":
                     self.sample_data["variants"]["site-mean-depth"] = "{prefix}.{suffix}".format(prefix = output_prefix, suffix = "ldepth.mean") 
                     self.stamp_file(self.sample_data["variants"]["site-mean-depth"])
 
-                if "--geno-depth" in self.output_types:
+                if output_type == "--geno-depth":
                     self.sample_data["variants"]["geno-depth"] = "{prefix}.{suffix}".format(prefix = output_prefix, suffix = "gdepth") 
                     self.stamp_file(self.sample_data["variants"]["geno-depth"])
 
-                if "--hap-r2" in self.output_types:
+                if output_type == "--hap-r2":
                     self.sample_data["variants"]["hap-r2"] = "{prefix}.{suffix}".format(prefix = output_prefix, suffix = "hap.ld") 
                     self.stamp_file(self.sample_data["variants"]["hap-r2"])
 
-                if "--geno-r2" in self.output_types:
+                if output_type == "--geno-r2":
                     self.sample_data["variants"]["geno-r2"] = "{prefix}.{suffix}".format(prefix = output_prefix, suffix = "geno.ld") 
                     self.stamp_file(self.sample_data["variants"]["geno-r2"])
 
-                if "--geno-chisq" in self.output_types:
+                if output_type == "--geno-chisq":
                     self.sample_data["variants"]["geno-chisq"] = "{prefix}.{suffix}".format(prefix = output_prefix, suffix = "geno.chisq") 
                     self.stamp_file(self.sample_data["variants"]["geno-chisq"])
 
-                if "--hap-r2-positions" in self.output_types:
+                if output_type == "--hap-r2-positions":
                     self.sample_data["variants"]["hap-r2-positions"] = "{prefix}.{suffix}".format(prefix = output_prefix, suffix = "list.hap.ld") 
                     self.stamp_file(self.sample_data["variants"]["hap-r2-positions"])
 
-                if "--geno-r2-positions" in self.output_types:
+                if output_type == "--geno-r2-positions":
                     self.sample_data["variants"]["geno-r2-positions"] = "{prefix}.{suffix}".format(prefix = output_prefix, suffix = "list.geno.ld") 
                     self.stamp_file(self.sample_data["variants"]["geno-r2-positions"])
 
-                if "--interchrom-hap-r2" in self.output_types:
+                if output_type == "--interchrom-hap-r2":
                     self.sample_data["variants"]["interchrom-hap-r2"] = "{prefix}.{suffix}".format(prefix = output_prefix, suffix = "interchrom.hap.ld") 
                     self.stamp_file(self.sample_data["variants"]["interchrom-hap-r2"])
 
-                if "--interchrom-geno-r2" in self.output_types:
+                if output_type == "--interchrom-geno-r2":
                     self.sample_data["variants"]["interchrom-geno-r2"] = "{prefix}.{suffix}".format(prefix = output_prefix, suffix = "interchrom.geno.ld") 
                     self.stamp_file(self.sample_data["variants"]["interchrom-geno-r2"])
 
-                if "--TsTv" in self.output_types:
+                if output_type == "--TsTv":
                     self.sample_data["variants"]["TsTv"] = "{prefix}.{suffix}".format(prefix = output_prefix, suffix = "TsTv") 
                     self.stamp_file(self.sample_data["variants"]["TsTv"])
 
-                if "--TsTv-summary" in self.output_types:
+                if output_type == "--TsTv-summary":
                     self.sample_data["variants"]["TsTv-summary"] = "{prefix}.{suffix}".format(prefix = output_prefix, suffix = "TsTv.summary") 
                     self.stamp_file(self.sample_data["variants"]["TsTv-summary"])
 
-                if "--TsTv-by-count" in self.output_types:
+                if output_type == "--TsTv-by-count":
                     self.sample_data["variants"]["TsTv-by-count"] = "{prefix}.{suffix}".format(prefix = output_prefix, suffix = "TsTv.count") 
                     self.stamp_file(self.sample_data["variants"]["TsTv-by-count"])
 
-                if "--TsTv-by-qual" in self.output_types:
+                if output_type == "--TsTv-by-qual":
                     self.sample_data["variants"]["TsTv-by-qual"] = "{prefix}.{suffix}".format(prefix = output_prefix, suffix = "TsTv.qual") 
                     self.stamp_file(self.sample_data["variants"]["TsTv-by-qual"])
 
-                if "--FILTER-summary" in self.output_types:
+                if output_type == "--FILTER-summary":
                     self.sample_data["variants"]["FILTER-summary"] = "{prefix}.{suffix}".format(prefix = output_prefix, suffix = "FILTER.summary") 
                     self.stamp_file(self.sample_data["variants"]["FILTER-summary"])
 
-                if "--site-pi" in self.output_types:
+                if output_type == "--site-pi":
                     self.sample_data["variants"]["site-pi"] = "{prefix}.{suffix}".format(prefix = output_prefix, suffix = "sites.pi") 
                     self.stamp_file(self.sample_data["variants"]["site-pi"])
 
-                if "--window-pi" in self.output_types:
+                if output_type == "--window-pi":
                     self.sample_data["variants"]["window-pi"] = "{prefix}.{suffix}".format(prefix = output_prefix, suffix = "windowed.pi") 
                     self.stamp_file(self.sample_data["variants"]["window-pi"])
 
-                if "--weir-fst-pop" in self.output_types:
+                if output_type == "--weir-fst-pop":
                     self.sample_data["variants"]["weir-fst-pop"] = "{prefix}.{suffix}".format(prefix = output_prefix, suffix = "weir.fst") 
                     self.stamp_file(self.sample_data["variants"]["weir-fst-pop"])
 
-                if "--het" in self.output_types:
+                if output_type == "--het":
                     self.sample_data["variants"]["het"] = "{prefix}.{suffix}".format(prefix = output_prefix, suffix = "het") 
                     self.stamp_file(self.sample_data["variants"]["het"])
 
-                if "--hardy" in self.output_types:
+                if output_type == "--hardy":
                     self.sample_data["variants"]["hardy"] = "{prefix}.{suffix}".format(prefix = output_prefix, suffix = "hwe") 
                     self.stamp_file(self.sample_data["variants"]["hardy"])
 
-                if "--TajimaD" in self.output_types:
+                if output_type == "--TajimaD":
                     self.sample_data["variants"]["TajimaD"] = "{prefix}.{suffix}".format(prefix = output_prefix, suffix = "Tajima.D") 
                     self.stamp_file(self.sample_data["variants"]["TajimaD"])
 
-                if "--indv-freq-burden" in self.output_types:
+                if output_type == "--indv-freq-burden":
                     self.sample_data["variants"]["indv-freq-burden"] = "{prefix}.{suffix}".format(prefix = output_prefix, suffix = "ifreqburden") 
                     self.stamp_file(self.sample_data["variants"]["indv-freq-burden"])
 
-                if "--LROH" in self.output_types:
+                if output_type == "--LROH":
                     self.sample_data["variants"]["LROH"] = "{prefix}.{suffix}".format(prefix = output_prefix, suffix = "LROH") 
                     self.stamp_file(self.sample_data["variants"]["LROH"])
 
-                if "--relatedness" in self.output_types:
+                if output_type == "--relatedness":
                     self.sample_data["variants"]["relatedness"] = "{prefix}.{suffix}".format(prefix = output_prefix, suffix = "relatedness") 
                     self.stamp_file(self.sample_data["variants"]["relatedness"])
 
-                if "--relatedness2" in self.output_types:
+                if output_type == "--relatedness2":
                     self.sample_data["variants"]["relatedness2"] = "{prefix}.{suffix}".format(prefix = output_prefix, suffix = "relatedness2") 
                     self.stamp_file(self.sample_data["variants"]["relatedness2"])
 
-                if "--site-quality" in self.output_types:
+                if output_type == "--site-quality":
                     self.sample_data["variants"]["site-quality"] = "{prefix}.{suffix}".format(prefix = output_prefix, suffix = "lqual") 
                     self.stamp_file(self.sample_data["variants"]["site-quality"])
 
-                if "--missing-indv" in self.output_types:
+                if output_type == "--missing-indv":
                     self.sample_data["variants"]["missing-indv"] = "{prefix}.{suffix}".format(prefix = output_prefix, suffix = "imiss") 
                     self.stamp_file(self.sample_data["variants"]["missing-indv"])
 
-                if "--missing-site" in self.output_types:
+                if output_type == "--missing-site":
                     self.sample_data["variants"]["missing-site"] = "{prefix}.{suffix}".format(prefix = output_prefix, suffix = "lmiss") 
                     self.stamp_file(self.sample_data["variants"]["missing-site"])
 
-                if "--SNPdensity" in self.output_types:
+                if output_type == "--SNPdensity":
                     self.sample_data["variants"]["SNPdensity"] = "{prefix}.{suffix}".format(prefix = output_prefix, suffix = "snpden") 
                     self.stamp_file(self.sample_data["variants"]["SNPdensity"])
 
-                if "--kept-sites" in self.output_types:
+                if output_type == "--kept-sites":
                     self.sample_data["variants"]["kept-sites"] = "{prefix}.{suffix}".format(prefix = output_prefix, suffix = "kept.sites") 
                     self.stamp_file(self.sample_data["variants"]["kept-sites"])
 
-                if "--removed-sites" in self.output_types:
+                if output_type == "--removed-sites":
                     self.sample_data["variants"]["removed-sites"] = "{prefix}.{suffix}".format(prefix = output_prefix, suffix = "removed.sites") 
                     self.stamp_file(self.sample_data["variants"]["removed-sites"])
 
-                if "--singletons" in self.output_types:
+                if output_type == "--singletons":
                     self.sample_data["variants"]["singletons"] = "{prefix}.{suffix}".format(prefix = output_prefix, suffix = "singletons") 
                     self.stamp_file(self.sample_data["variants"]["singletons"])
 
-                if "--hist-indel-len" in self.output_types:
+                if output_type == "--hist-indel-len":
                     self.sample_data["variants"]["hist-indel-len"] = "{prefix}.{suffix}".format(prefix = output_prefix, suffix = "indel.hist") 
                     self.stamp_file(self.sample_data["variants"]["hist-indel-len"])
 
-                if "--hapcount" in self.output_types:
+                if output_type == "--hapcount":
                     self.sample_data["variants"]["hapcount"] = "{prefix}.{suffix}".format(prefix = output_prefix, suffix = "hapcount") 
                     self.stamp_file(self.sample_data["variants"]["hapcount"])
 
-                if "--mendel" in self.output_types:
+                if output_type == "--mendel":
                     self.sample_data["variants"]["mendel"] = "{prefix}.{suffix}".format(prefix = output_prefix, suffix = "mendel") 
                     self.stamp_file(self.sample_data["variants"]["mendel"])
 
-                if "--extract-FORMAT-info" in self.output_types:
+                if output_type == "--extract-FORMAT-info":
                     self.sample_data["variants"]["extract-FORMAT-info"] = \
                         "{prefix}.{info}.{suffix}".format(prefix = output_prefix, \
                                                           info = self.output_types["--extract-FORMAT-info"],\
                                                           suffix = "FORMAT") 
                     self.stamp_file(self.sample_data["variants"]["extract-FORMAT-info"])
 
-                if "--get-INFO" in self.output_types:
+                if output_type == "--get-INFO":
                     self.sample_data["variants"]["get-INFO"] = "{prefix}.{suffix}".format(prefix = output_prefix, suffix = "INFO") 
                     self.stamp_file(self.sample_data["variants"]["get-INFO"])
 
