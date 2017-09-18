@@ -38,7 +38,7 @@ Step_params:
     trin_tags1:
         module: add_trinity_tags
         base: trim1
-        script_path: NOT_USED
+        script_path: 
     trinity1:
         module: trinity
         base: trin_tags1

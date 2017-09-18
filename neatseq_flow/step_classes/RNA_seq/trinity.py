@@ -43,10 +43,10 @@ Lines for parameter file
 
 ::
 
-    trinity1
+    trinity1:
         module:     trinity
         base:       trin_tags1
-        script_path /path/to/Trinity
+        script_path: /path/to/Trinity
         qsub_params:
             node:      sge213
             -pe:       shared 20

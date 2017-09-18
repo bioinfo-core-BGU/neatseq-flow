@@ -1,8 +1,49 @@
-""" A class defining a pipeline.
+""" 
+A class that defines a module for adding the tags required by Trinity to the ends of the read names.
+See the `Strand specific assembly`_ section of the Trinity manual.
 
-This class takes input files: samples and parameters, and creates a qsub pipeline, including dependencies
-Actual work is done by calling other class types: PLCStep and PLCName
+The module uses awk, so you don't need to pass a ``script_path``. 
+Since you must pass a ``script_path``, just leave it blank. 
+
+
+.. _Strand specific assembly: https://github.com/trinityrnaseq/trinityrnaseq/wiki/Running-Trinity#strand_specific_assembly
+ 
+Requires
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    
+    * ``fastq`` files in at least one of the following slots:
+        
+        * ``sample_data[<sample>]["fastqc"]["readsF"]``
+        * ``sample_data[<sample>]["fastqc"]["readsR"]``
+        * ``sample_data[<sample>]["fastqc"]["readsS"]``
+
+    
+Output:
+~~~~~~~~~~~~~
+
+    * puts ``fastq`` output files (with added tags) in the following slots:
+        
+        * ``sample_data[<sample>]["fastqc"]["readsF"]``
+        * ``sample_data[<sample>]["fastqc"]["readsR"]``
+        * ``sample_data[<sample>]["fastqc"]["readsS"]``
+
+                
+    
+    
+Lines for parameter file
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+::
+
+    trintags:
+        module:      add_trinity_tags
+        base:        trim1
+        script_path: NOT_USED
+
 """
+
+
+
 import os
 import sys
 import re
@@ -19,16 +60,7 @@ __version__ = "1.0.1"
 fasta_types_dict = {"Nucleotide":"nucl","Protein":"prot"}
 
 class Step_add_trinity_tags(Step):
-    """ A module for adding \1 and \2 tags to sequences for analysis by Trinity:
-        requires:
-            fastq files in one of the following slots:
-                sample_data[<sample>]["fastq"]["readF"|"readR"|"readS"]
-            
-        output:
-            puts fastq output files in the following slots:
-                self.sample_data[<sample>]["fastq"]["readF"|"readR"|"readS"]
-            
-    """
+
     
     def step_specific_init(self):
         self.shell = "csh"      # Can be set to "bash" by inheriting instances
@@ -37,10 +69,12 @@ class Step_add_trinity_tags(Step):
     def step_sample_initiation(self):
         """ A place to do initiation stages following setting of sample_data
         """
-        
-        
-        pass
 
+        # Assert that all samples have reads files:
+        for sample in self.sample_data["samples"]:    
+            if not {"readsF", "readsR", "readsS"} & set(self.sample_data[sample]["fastq"].keys()):
+                raise AssertionExcept("No read files\n",sample)
+         
 
     def create_spec_wrapping_up_script(self):
         """ Add stuff to check and agglomerate the output data
