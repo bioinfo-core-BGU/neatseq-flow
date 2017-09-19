@@ -379,6 +379,24 @@ class Step:
         self.spec_qsub_name = "_".join([self.step,self.name,self.pipe_data["run_code"]])
         return self.spec_qsub_name
         
+    def set_spec_script_name(self,sample=None):
+        """ Sets the current spec_script_name to a regular name, i.e.:
+                sample level: "_".join([self.step,self.name,sample])
+                project level: "_".join([self.step,self.name,self.sample_data["Title"]])
+            In the build_scripts function, run:
+                sample level: self.set_spec_script_name(sample)
+                project level: self.set_spec_script_name()
+            If using a different level of paralleization, see e.g. VCFtools, 
+                you can create your own self.spec_script_name.
+        """
+        
+        if sample:
+            self.spec_script_name = "_".join([self.step,self.name,sample])
+        else:
+            self.spec_script_name = "_".join([self.step,self.name,self.sample_data["Title"]])
+            
+        
+        
         
     def add_jid_to_jid_list(self):
         """ Adds a jid for a sub process (e.g. a sample-specific script) to the jid list of the current step

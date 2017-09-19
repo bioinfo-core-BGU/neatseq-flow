@@ -30,7 +30,19 @@ Output
 .. note:: In the *merge* parameters, set the *script_path* parameter according to the type of raw files you've got. 
     e.g., if they are gzipped, it should be ``gzip -cd``, etc.
 
+.. note:: If you want to do something more complex with the combined files, you can use the ``pipe`` parameter to send extra commands to be piped on the files after the main command.
+
+    e.g.: You can get files from a remote location by setting ``script_path`` to ``curl`` and ``pipe`` to ``gzip -cd``. This will download the files with curl, unzip them and concatenate them into the target file.  In the sample file, specify remote URLs instead of local pathes.
     
+Parameters that can be set
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. csv-table:: 
+    :header: "Parameter", "Values", "Comments"
+    :widths: 15, 10, 10
+
+    "pipe", "", "Additional commands to be piped on the files before writing to file."
+
 Lines for parameter file
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -39,6 +51,13 @@ Lines for parameter file
     merge1:
         module: merge
         script_path: gzip -cd
+
+::
+
+    merge1:
+        module: merge
+        script_path: curl
+        pipe:  gzip -cd
         
 """
 
@@ -120,7 +139,10 @@ class Step_merge(Step):
                         self.script += self.params["script_path"] + " \\\n\t"
                         # The following line concatenates all the files in the direction separated by a " "
                         self.script += " ".join(self.sample_data[sample]["fastq"][direction]) 
-                        self.script += " > %s%s \n\n"  % (use_dir, fq_fn)
+                        self.script += " \\\n\t"
+                        if "pipe" in self.params:
+                            self.script += "| {pipe} \\\n\t".format(pipe = self.params["pipe"])
+                        self.script += "> %s%s \n\n"  % (use_dir, fq_fn)
     
                         # Move all files from temporary local dir to permanent base_dir
                         self.local_finish(use_dir,self.base_dir)       # Sees to copying local files to final destination (and other stuff)
@@ -167,7 +189,10 @@ class Step_merge(Step):
                     self.script += self.params["script_path"] + " \\\n\t"
                     # The following line concatenates all the files in the direction separated by a " "
                     self.script += " ".join(self.sample_data[sample]["fasta"][direction]) 
-                    self.script += " > %s%s \n\n"  % (use_dir, fq_fn)
+                    self.script += " \\\n\t"
+                    if "pipe" in self.params:
+                        self.script += "| {pipe} \\\n\t".format(pipe = self.params["pipe"])
+                    self.script += "> %s%s \n\n"  % (use_dir, fq_fn)
 
                     
                     # # Store file in active file for sample:
@@ -217,6 +242,9 @@ class Step_merge(Step):
                     self.script += self.params["script_path"] + " \\\n\t"
                     # The following line concatenates all the files in the direction separated by a " "
                     self.script += " ".join(self.sample_data[sample]["mapping"][direction]) 
+                    self.script += " \\\n\t"
+                    if "pipe" in self.params:
+                        self.script += "| {pipe} \\\n\t".format(pipe = self.params["pipe"])
                     self.script += " > %s%s \n\n"  % (use_dir, fq_fn)
 
                     
