@@ -1,5 +1,5 @@
-Description of NeatSeq-Flow output directory structure
-======================================================
+Output directory structure
+==========================
 
 .. contents::
 
@@ -60,8 +60,10 @@ The backup directory contains a history of workflow sample and parameter files.
    The backups directory created by NeatSeq-Flow
 
  
-The logs directory contains various logging files
-----------------------------------------------------------
+The logs directory
+-------------------
+
+The logs directory contains various logging files:
 
 1. **version_list**. A list of all the versions of the workflow with equivalent comments 
 2. **file_registration**. A list of files produced, including md5 signatures, and the script and workflow version that produced them

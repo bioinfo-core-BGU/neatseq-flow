@@ -1,5 +1,5 @@
-The concept behind NeatSeq-Flow
-======================================================
+NeatSeq-Flow concept 
+=====================
 
 
 **Author:** Menachem Sklarz
@@ -8,7 +8,7 @@ The concept behind NeatSeq-Flow
 
 .. contents::
 
-General description
+Introduction
 --------------------
 
 Usage of NeatSeq-Flow works at three levels:
@@ -21,7 +21,7 @@ Usage of NeatSeq-Flow works at three levels:
 .. _Basic_usage: 
 
 Basic usage
-~~~~~~~~~~~~
+--------------------
 
 Basic usage does not require much. 
 
@@ -33,7 +33,7 @@ Basic usage does not require much.
 .. _workflow_contruction:
 
 Workflow construction
-~~~~~~~~~~~~~~~~~~~~~~
+-----------------------
 
 In order to construct workflows, one needs to combine modules in such a way that files are transferred seamlessly between them. 
 
@@ -63,7 +63,7 @@ Sometimes, modules *overwrite* existing slots. This **does not mean the files wi
 .. _adding_modules:
     
 Adding modules
-~~~~~~~~~~~~~~~~~~~~~~
+--------------------
 
 Adding modules is the most difficult part of creating a workflow. Please make sure a module does not already exist for the program you want to run before trying to create a module.
 

@@ -4,6 +4,8 @@
 For the programmer - Adding modules
 ====================================================
 
+.. toctree::
+   :maxdepth: 2
 
 Preparing the file that will hold the step code
 -------------------------------------------------
@@ -22,7 +24,7 @@ Preparing the file that will hold the step code
 4. Change the class name to ``Step_<module_name>`` in the line beginning with ``class Step_...``. Make sure ``<module_name>`` here is identical to the one you used to name the file in 3 above.
 
 
-Things to modify in the actual code:
+Things to modify in the actual code
 -------------------------------------
 
 1. In ``step_specific_init()``, set ``self.shell`` to `csh` or `bash`, depending on the shell language you want your scripts to be coded in.
@@ -32,7 +34,7 @@ Things to modify in the actual code:
 5. In ``create_spec_preliminary_script()`` you create the code for a script that will be run before all other step scripts are executed. If not defined or returns nothing, it will be ignored (i.e. you can set it to ``pass``). This is useful if you need to prepare a database, for example, before the other scripts use it.
 6. In ``create_spec_wrapping_up_script()`` you create the code for a script that will be run after all other step scripts are executed. If not defined or returns nothing, it will be ignored (i.e. you can set it to "pass"). This is the place to call ``make_sample_file_index()`` to create an index of the files produced in this step; and to call a script that takes the index file and does some kind of data agglomeration.
 
-Instructions for ``build_scripts()`` function:
+Instructions for ``build_scripts()`` function
 ------------------------------------------------
 
 - If sample-level scripts are required, the function should contain a loop::

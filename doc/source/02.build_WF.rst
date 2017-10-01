@@ -1,5 +1,5 @@
-Basic Usage of neatseq_flow - Building a workflow
-======================================================
+Building a workflow
+====================
 
 **Author:** Menachem Sklarz
 
