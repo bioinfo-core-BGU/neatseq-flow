@@ -156,7 +156,7 @@ def parse_classic_sample_data(lines):
     reads = {direct:files for direct,files in reads.iteritems() if files != []}
     # Create dict for storing full sequences, e.g. genomes and proteins. Will be searching for 'Nucleotide' and 'Protein' keywords
     if reads:
-        sample_x_data["fastq"] = reads
+        sample_x_data.update(reads)
     
     ## Read fasta files:
     fasta = {alldirect:[(filename) for (direction,filename) in \
@@ -166,7 +166,7 @@ def parse_classic_sample_data(lines):
     fasta = {direct:files for direct,files in fasta.iteritems() if files != []}
     # Put these files in a separate entry in the reads structure called "fasta"
     if fasta:
-        sample_x_data["fasta"] = fasta
+        sample_x_data.update(fasta)
     
     ## Read BAM/SAM files:
     bam_sam = {alldirect:[(filename) for (direction,filename) in \
@@ -186,7 +186,7 @@ def parse_classic_sample_data(lines):
         
         # Put these files in a separate entry in the reads structure called "mapping"
         if bam_sam:
-            sample_x_data["mapping"] = bam_sam
+            sample_x_data.update(bam_sam)
     
 
     return sample_x_data
@@ -229,16 +229,23 @@ def check_sample_constancy(sample_data):
     # For each file type in each sample, get a list of extension types:
     ext_types = set()
     for sample in sample_data["samples"]:      # Getting list of samples out of samples_hash
-        for type in sample_data[sample].keys():
-            if type in ["type"]:
-                continue
-            for direction in sample_data[sample][type].keys():
-                # Get a list of file extensions (chars to the RHS of the last period in the filename)
-                extensions = list(set([os.path.splitext(fn)[1] for fn in sample_data[sample][type][direction]]))
-                # Convert file extension to 'zip' or 'regular', depending on the extension:
-                # Keep only unique values (using set: {}) and adding to ext_types
-                ext_types = ext_types | {"zip" if ext in ZIPPED_EXTENSIONS else "regular" for ext in extensions}
-
+        # for type in sample_data[sample].keys():
+            # if type in ["type"]:
+                # continue
+            # for direction in sample_data[sample][type].keys():
+                # # Get a list of file extensions (chars to the RHS of the last period in the filename)
+                # extensions = list(set([os.path.splitext(fn)[1] for fn in sample_data[sample][type][direction]]))
+                # # Convert file extension to 'zip' or 'regular', depending on the extension:
+                # # Keep only unique values (using set: {}) and adding to ext_types
+                # ext_types = ext_types | {"zip" if ext in ZIPPED_EXTENSIONS else "regular" for ext in extensions}
+        for direction in sample_data[sample].keys():
+            # Get a list of file extensions (chars to the RHS of the last period in the filename)
+            # extensions = list(set([os.path.splitext(fn)[1] for fn in sample_data[sample][type][direction]]))
+            extensions = map(lambda fn: os.path.splitext(fn)[1], sample_data[sample][direction])
+            # Convert file extension to 'zip' or 'regular', depending on the extension:
+            # Keep only unique values (using set: {}) and adding to ext_types
+            ext_types = ext_types | set(map(lambda ext: "zip" if ext in ZIPPED_EXTENSIONS else "regular", extensions)) #{"zip" if ext in ZIPPED_EXTENSIONS else "regular" for ext in extensions}
+        
     if len(ext_types) > 1:
         sys.exit("At the moment, you can't mix zipped and unzipped files!")
         
@@ -335,40 +342,53 @@ def parse_tabular_sample_data(sample_lines):
     for line in sample_lines:
         line_data = re.split("\s+", line)
         
-        if line_data[1] in ["Forward", "Reverse","Single"]:   # fastq files
-            # Initialize a "fastq" slot if does not exist
-            if "fastq" not in sample_x_dict.keys():
-                sample_x_dict["fastq"] = dict()
-            if line_data[1] in sample_x_dict["fastq"]:
+        if line_data[1] in ["Forward", "Reverse","Single", "Nucleotide", "Protein", "SAM", "BAM", "REFERENCE"]:   
+            if line_data[1] in sample_x_dict.keys():
+                if line_data[1] == "REFERENCE":
+                    sys.exit("Only one REFERENCE permitted per sample")
                 # If type exists, append path to list
-                sample_x_dict["fastq"][line_data[1]].append(line_data[2])
+                sample_x_dict[line_data[1]].append(line_data[2])
             else:
                 # If not, create list with path
-                sample_x_dict["fastq"][line_data[1]] = [line_data[2]]
-        
-        elif line_data[1] in ["Nucleotide", "Protein"]:   # fasta files
-            if "fasta" not in sample_x_dict.keys():
-                sample_x_dict["fasta"] = dict()
-            if line_data[1] in sample_x_dict["fasta"]:
-                # If type exists, append path to list
-                sample_x_dict["fasta"][line_data[1]].append(line_data[2])
-            else:
-                # If not, create list with path
-                sample_x_dict["fasta"][line_data[1]] = [line_data[2]]
-        # Experimental: Getting SAM or BAM files:
-        elif line_data[1] in ["SAM", "BAM"]:   # fasta files
-            if "fastq" not in sample_x_dict.keys():
-                sample_x_dict["fastq"] = dict()
-            if "mapping" not in sample_x_dict["fastq"].keys():
-                sample_x_dict["fastq"]["mapping"] = dict()
-            if line_data[1] in sample_x_dict["fastq"]["mapping"]:
-                # If type exists, append path to list
-                sample_x_dict["fastq"]["mapping"][line_data[1]].append(line_data[2])
-            else:
-                # If not, create list with path
-                sample_x_dict["fastq"]["mapping"][line_data[1]] = [line_data[2]]
+                sample_x_dict[line_data[1]] = [line_data[2]]
+
         else:
             sys.exit("Unrecognised file type in line %s" % line)
+
+        # if line_data[1] in ["Forward", "Reverse","Single"]:   # fastq files
+            # # Initialize a "fastq" slot if does not exist
+            # if "fastq" not in sample_x_dict.keys():
+                # sample_x_dict["fastq"] = dict()
+            # if line_data[1] in sample_x_dict["fastq"]:
+                # # If type exists, append path to list
+                # sample_x_dict["fastq"][line_data[1]].append(line_data[2])
+            # else:
+                # # If not, create list with path
+                # sample_x_dict["fastq"][line_data[1]] = [line_data[2]]
+        
+        # elif line_data[1] in ["Nucleotide", "Protein"]:   # fasta files
+            # if "fasta" not in sample_x_dict.keys():
+                # sample_x_dict["fasta"] = dict()
+            # if line_data[1] in sample_x_dict["fasta"]:
+                # # If type exists, append path to list
+                # sample_x_dict["fasta"][line_data[1]].append(line_data[2])
+            # else:
+                # # If not, create list with path
+                # sample_x_dict["fasta"][line_data[1]] = [line_data[2]]
+        # # Experimental: Getting SAM or BAM files:
+        # elif line_data[1] in ["SAM", "BAM"]:   # fasta files
+            # if "fastq" not in sample_x_dict.keys():
+                # sample_x_dict["fastq"] = dict()
+            # if "mapping" not in sample_x_dict["fastq"].keys():
+                # sample_x_dict["fastq"]["mapping"] = dict()
+            # if line_data[1] in sample_x_dict["fastq"]["mapping"]:
+                # # If type exists, append path to list
+                # sample_x_dict["fastq"]["mapping"][line_data[1]].append(line_data[2])
+            # else:
+                # # If not, create list with path
+                # sample_x_dict["fastq"]["mapping"][line_data[1]] = [line_data[2]]
+        # else:
+            # sys.exit("Unrecognised file type in line %s" % line)
 
     return(sample_x_dict)
     

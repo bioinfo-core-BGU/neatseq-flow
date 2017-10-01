@@ -115,3 +115,34 @@ Step_params:
         - sam_bwt2_1
         - fqc_trim1
         script_path: /path/to/multiqc
+    
+    bwa_mem_1:
+        module: bwa_mapper
+        base: trim1
+        script_path: /path/to/bwa
+        mod: mem
+        qsub_params:
+            -pe: shared 20
+        ref_genome: /path/to/ref_genome.fna
+        ref_index: /path/to/bwa_index/ref_genome
+        redirects:
+            -t: 20
+
+    bwa_aln_1:
+        module: bwa_mapper
+        base: trim1
+        script_path: /path/to/bwa_mapper
+        mod: aln
+        qsub_params:
+            -pe: shared 20
+        ref_genome: /path/to/ref_genome.fna
+        ref_index: /path/to/bwa_index/ref_genome
+        redirects:
+            -t: 20
+    bwa_samse_1:
+        module: bwa_mapper
+        base: bwa_aln_1
+        script_path: /path/to/bwa
+        mod: samse
+        ref_genome: /path/to/ref_genome.fna
+        ref_index: /path/to/bwa_index/ref_genome

@@ -54,11 +54,6 @@ Step_params:
             --grid_conf: /path/to/SGE_Trinity_conf.txt
             --min_kmer_cov: 2
             --seqType: fq
-    bwt2_build:
-        module: bowtie2_builder
-        base: trinity1
-        script_path: /path/to/bowtie2-build
-        scope: project
     mkblst1:
         module: makeblastdb
         base: trinity1
@@ -94,6 +89,11 @@ Step_params:
             -outfmt: '"6 qseqid sallseqid qlen slen qstart qend sstart send length
                 evalue bitscore score pident qframe"'
             -query: /path/to/query.fasta
+    bwt2_build:
+        module: bowtie2_builder
+        base: trinity1
+        script_path: /path/to/bowtie2-build
+        scope: project
     bwt2_map:
         module: bowtie2_mapper
         base: bwt2_build
