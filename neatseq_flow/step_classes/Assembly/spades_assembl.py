@@ -80,7 +80,7 @@ class Step_spades_assembl(Step):
 
         # Assert that all samples have reads files:
         for sample in self.sample_data["samples"]:    
-            if not {"readsF", "readsR", "readsS"} & set(self.sample_data[sample]["fastq"].keys()):
+            if not {"readsF", "readsR", "readsS"} & set(self.sample_data[sample].keys()):
                 raise AssertionExcept("No read files\n",sample)
          
         if "scope" in self.params:
@@ -89,23 +89,23 @@ class Step_spades_assembl(Step):
                 raise AssertionExcept("project wide scope is not defined yet\n")
 
             elif self.params["scope"]=="sample":
-                
-                for sample in self.sample_data["samples"]:      # Getting list of samples out of samples_hash
-                    # Making sure each sample has an "assembly" slot to store contigs and scaffolds
-                    try:
-                        self.sample_data[sample]["assembly"]
-                    except KeyError:
-                        self.sample_data[sample]["assembly"] = {}
-                    try:
-                        self.sample_data[sample]["assembly"][self.step]
-                    except KeyError:
-                        self.sample_data[sample]["assembly"][self.step] = {}
+                pass
+                # for sample in self.sample_data["samples"]:      # Getting list of samples out of samples_hash
+                    # # Making sure each sample has an "assembly" slot to store contigs and scaffolds
+                    # try:
+                        # self.sample_data[sample]["assembly"]
+                    # except KeyError:
+                        # self.sample_data[sample]["assembly"] = {}
+                    # try:
+                        # self.sample_data[sample]["assembly"][self.step]
+                    # except KeyError:
+                        # self.sample_data[sample]["assembly"][self.step] = {}
 
-                    # Making sure a "fasta" slot exists to store contigs:
-                    try:
-                        self.sample_data[sample]["fasta"]
-                    except KeyError:
-                        self.sample_data[sample]["fasta"] = {}
+                    # # Making sure a "fasta" slot exists to store contigs:
+                    # try:
+                        # self.sample_data[sample]["fasta"]
+                    # except KeyError:
+                        # self.sample_data[sample]["fasta"] = {}
             else:
                 raise AssertionExcept("'scope' must be either 'sample' or 'project'")
         else:
@@ -155,14 +155,14 @@ class Step_spades_assembl(Step):
 
 
                 if "PE" in self.sample_data[sample]["type"]:
-                    self.script += "--pe1-1 %s \\\n\t" % self.sample_data[sample]["fastq"]["readsF"]
-                    self.script += "--pe1-2 %s \n\n" % self.sample_data[sample]["fastq"]["readsR"]
+                    self.script += "--pe1-1 %s \\\n\t" % self.sample_data[sample]["readsF"]
+                    self.script += "--pe1-2 %s \n\n" % self.sample_data[sample]["readsR"]
                 elif "SE" in self.sample_data[sample]["type"]:
-                    self.script += "--s1 %s \n\n" % self.sample_data[sample]["fastq"]["readsS"]
+                    self.script += "--s1 %s \n\n" % self.sample_data[sample]["readsS"]
                 elif "PE" in self.sample_data[sample]["type"] and "SE" in self.sample_data[sample]["type"]:       # Mixed!!
-                    self.script += "--pe1-1 %s \\\n\t" % self.sample_data[sample]["fastq"]["readsF"]
-                    self.script += "--pe1-2 %s \\\n\t" % self.sample_data[sample]["fastq"]["readsR"]
-                    self.script += "--s1 %s \n\n" % self.sample_data[sample]["fastq"]["readsS"]
+                    self.script += "--pe1-1 %s \\\n\t" % self.sample_data[sample]["readsF"]
+                    self.script += "--pe1-2 %s \\\n\t" % self.sample_data[sample]["readsR"]
+                    self.script += "--s1 %s \n\n" % self.sample_data[sample]["readsS"]
                 else:
                     raise AssertionExcept("Strange type configuration for sample\n" ,sample)
                     
@@ -175,12 +175,13 @@ cat %(contigs)s  | cut -f 1-2 -d '_' > %(shortnames)s
 mv -f %(shortnames)s %(contigs)s \n\n""" % {"contigs":sample_dir + "contigs.fasta", "shortnames":sample_dir + "contigs.shortIDs.fasta"}
                         
                 # Store results to fasta and assembly slots:
-                self.sample_data[sample]["fasta"]["nucl"] = sample_dir + "contigs.fasta"
-                self.sample_data[sample]["assembly"]["spades_assembl"]["contigs"] = sample_dir + "contigs.fasta"
-                self.sample_data[sample]["assembly"]["spades_assembl"]["scaffolds"] = sample_dir + "scaffolds.fasta"
+                self.sample_data[sample]["fasta"] = sample_dir + "contigs.fasta"
+                self.sample_data[sample]["nucl"]  = sample_dir + "contigs.fasta"
+                self.sample_data[sample][self.get_step_step() + "_contigs"] = sample_dir + "contigs.fasta"
+                self.sample_data[sample][self.get_step_step() + "_scaffolds"] = sample_dir + "scaffolds.fasta"
 
-                self.stamp_file(self.sample_data[sample]["assembly"]["spades_assembl"]["scaffolds"])
-                self.stamp_file(self.sample_data[sample]["assembly"]["spades_assembl"]["contigs"])
+                self.stamp_file(self.sample_data[sample][self.get_step_step() + "_scaffolds"])
+                self.stamp_file(self.sample_data[sample][self.get_step_step() + "_contigs"])
 
                     
                 # Wrapping up function. Leave these lines at the end of every iteration:

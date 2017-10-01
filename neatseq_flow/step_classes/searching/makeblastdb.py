@@ -99,29 +99,29 @@ class Step_makeblastdb(Step):
             # Make sure a file exists in the sample equivalent to dbtype:
             try:
                 dbtype = self.params["redir_params"]["-dbtype"]
-                self.sample_data[sample]["fasta"][dbtype]
+                self.sample_data[sample][dbtype]
             except KeyError:
                 raise AssertionExcept("No file exists in sample for specified -dbtype (%s)\n" % dbtype, sample)
-            # initialize blast and blastdb slots for sample:
-            if not "blast" in self.sample_data[sample].keys():
-                self.sample_data[sample]["blast"] = dict()
-            if not "blastdb" in self.sample_data[sample]["blast"].keys():
-                self.sample_data[sample]["blast"]["blastdb"] = dict()
+            # # initialize blast and blastdb slots for sample:
+            # if not "blast" in self.sample_data[sample].keys():
+                # self.sample_data[sample]["blast"] = dict()
+            # if not "blastdb" in self.sample_data[sample]["blast"].keys():
+                # self.sample_data[sample]["blast"]["blastdb"] = dict()
 
     def step_sample_initiation_byproject(self):
 
         # Make sure a file exists in the sample equivalent to dbtype:
         try:
             dbtype = self.params["redir_params"]["-dbtype"]
-            self.sample_data["fasta"][dbtype]
+            self.sample_data[dbtype]
         except KeyError:
             raise AssertionExcept("No file exists in project for specified -dbtype (%s)\n" % dbtype)
             
-            # Creating holder for output:
-        if not "blast" in self.sample_data.keys():
-            self.sample_data["blast"] = dict()
-        if not "blastdb" in self.sample_data["blast"].keys():
-            self.sample_data["blast"]["blastdb"] = dict()
+        # # Creating holder for output:
+        # if not "blast" in self.sample_data.keys():
+            # self.sample_data["blast"] = dict()
+        # if not "blastdb" in self.sample_data["blast"].keys():
+            # self.sample_data["blast"]["blastdb"] = dict()
                 
         
     def create_spec_wrapping_up_script(self):
@@ -185,15 +185,17 @@ class Step_makeblastdb(Step):
 
             self.script += self.get_script_const()
             self.script += "-out %s \\\n\t" % output_filename
-            self.script += "-in %s \\\n\t" % self.sample_data[sample]["fasta"][dbtype]
+            self.script += "-in %s \\\n\t" % self.sample_data[sample][dbtype]
             self.script += "-title %s \\\n\t" % blastdb_title
             self.script += "-logfile %s \n\n" % "%s.log" % output_filename
 
             
                 
-            self.sample_data[sample]["blast"]["blastdb"][dbtype] = (sample_dir + os.path.basename(output_filename))
-            self.sample_data[sample]["blast"]["blastdb"][dbtype+"_log"] = "%s.log" % (sample_dir + os.path.basename(output_filename))
-                
+            self.sample_data[sample]["blastdb_" + dbtype] = (sample_dir + os.path.basename(output_filename))
+            self.sample_data[sample]["blastdb_" + dbtype + "_log"] = "%s.log" % (sample_dir + os.path.basename(output_filename))
+
+            self.sample_data[sample]["blastdb"] = self.sample_data[sample]["blastdb_" + dbtype]
+            
             # self.stamp_dir_files(sample_dir)
             
             # Move all files from temporary local dir to permanent base_dir
@@ -241,15 +243,16 @@ class Step_makeblastdb(Step):
 
         self.script += self.get_script_const()
         self.script += "-out %s \\\n\t" % output_filename
-        self.script += "-in %s \\\n\t" % self.sample_data["fasta"][dbtype]
+        self.script += "-in %s \\\n\t" % self.sample_data[dbtype]
         self.script += "-title %s \\\n\t" % blastdb_title
         self.script += "-logfile %s.log \n\n" % output_filename
 
         
             
-        self.sample_data["blast"]["blastdb"][dbtype] = (self.base_dir + os.path.basename(output_filename))
-        self.sample_data["blast"]["blastdb"][dbtype+"_log"] = "%s.log" % (self.base_dir + os.path.basename(output_filename))
-            
+        self.sample_data["blastdb_" + dbtype] = (self.base_dir + os.path.basename(output_filename))
+        self.sample_data["blastdb_" + dbtype + "_log"] = "%s.log" % (self.base_dir + os.path.basename(output_filename))
+        
+        self.sample_data["blastdb"] = self.sample_data["blastdb_" + dbtype]
         # self.stamp_dir_files(self.base_dir)
             
         # Wrapping up function. Leave these lines at the end of every iteration:

@@ -68,7 +68,7 @@ class Step_trimmo(Step):
         
         # Assert that all samples have reads files:
         for sample in self.sample_data["samples"]:    
-            if not {"readsF", "readsR", "readsS"} & set(self.sample_data[sample]["fastq"].keys()):
+            if not {"readsF", "readsR", "readsS"} & set(self.sample_data[sample].keys()):
                 raise AssertionExcept("No read files defined\n",sample)
 
         pass
@@ -92,7 +92,7 @@ class Step_trimmo(Step):
         for sample in self.sample_data["samples"]:      # Getting list of samples out of samples_hash
 
 
-            if "readsF" in self.sample_data[sample]["fastq"] and "readsR" in self.sample_data[sample]["fastq"]:
+            if "readsF" in self.sample_data[sample] and "readsR" in self.sample_data[sample]:
                 #################### Start PE
                 self.spec_script_name = "_".join([self.step,self.name,sample,"PE"])
                 self.script = ""
@@ -115,8 +115,8 @@ class Step_trimmo(Step):
 
                 # Here we do the script constructing for paired end
                 # Define target filenames:
-                basename_F = os.path.basename(self.sample_data[sample]["fastq"]["readsF"])
-                basename_R = os.path.basename(self.sample_data[sample]["fastq"]["readsR"])
+                basename_F = os.path.basename(self.sample_data[sample]["readsF"])
+                basename_R = os.path.basename(self.sample_data[sample]["readsR"])
                 # TODO: Remove ".fq" in middle of file name
                 # Setting filenames before adding output arguments to script
                 fq_fn_F = use_dir + ".".join([basename_F, self.file_tag])  #The filename containing the end result. Used both in script and to set reads in $sample_params
@@ -131,8 +131,8 @@ class Step_trimmo(Step):
 
                 self.script +=  "PE \\\n\t";
                 self.script += self.get_redir_parameters_script()
-                self.script += "%s \\\n\t" % (" \\\n\t".join([self.sample_data[sample]["fastq"]["readsF"],  \
-                                                              self.sample_data[sample]["fastq"]["readsR"],  \
+                self.script += "%s \\\n\t" % (" \\\n\t".join([self.sample_data[sample]["readsF"],  \
+                                                              self.sample_data[sample]["readsR"],  \
                                                               fq_fn_F,                                      \
                                                               fq_fn_F_UP,                                   \
                                                               fq_fn_R,                                      \
@@ -141,16 +141,16 @@ class Step_trimmo(Step):
                 self.script +=  self.params["todo"] + "\n\n";
                                                                                       
                 # Set current active sequence files to tagged files
-                self.sample_data[sample]["fastq"]["readsF"]     = self.base_dir + fq_fn_F_bn
-                self.sample_data[sample]["fastq"]["readsR"]     = self.base_dir + fq_fn_R_bn
-                self.sample_data[sample]["fastq"]["readsF_UP"]  = self.base_dir + fq_fn_F_UP_bn
-                self.sample_data[sample]["fastq"]["readsR_UP"]  = self.base_dir + fq_fn_R_UP_bn
+                self.sample_data[sample]["readsF"]     = self.base_dir + fq_fn_F_bn
+                self.sample_data[sample]["readsR"]     = self.base_dir + fq_fn_R_bn
+                self.sample_data[sample]["readsF_UP"]  = self.base_dir + fq_fn_F_UP_bn
+                self.sample_data[sample]["readsR_UP"]  = self.base_dir + fq_fn_R_UP_bn
 
                 # md5sum-stamp output files:
-                self.stamp_file(self.sample_data[sample]["fastq"]["readsF"])
-                self.stamp_file(self.sample_data[sample]["fastq"]["readsR"])
-                self.stamp_file(self.sample_data[sample]["fastq"]["readsF_UP"])
-                self.stamp_file(self.sample_data[sample]["fastq"]["readsR_UP"])
+                self.stamp_file(self.sample_data[sample]["readsF"])
+                self.stamp_file(self.sample_data[sample]["readsR"])
+                self.stamp_file(self.sample_data[sample]["readsF_UP"])
+                self.stamp_file(self.sample_data[sample]["readsR_UP"])
                                                                                       
                                                                                           
  
@@ -165,7 +165,7 @@ class Step_trimmo(Step):
                 self.create_low_level_script()
                 #################### End PE
 
-            if "readsS" in self.sample_data[sample]["fastq"]:
+            if "readsS" in self.sample_data[sample]:
                 #################### Start SE
                 self.spec_script_name = "_".join([self.step,self.name,sample,"SE"])
                 self.script = ""
@@ -187,7 +187,7 @@ class Step_trimmo(Step):
 
                 # Here we do the script constructing for single end
                 # Define target filenames:
-                basename_S = os.path.basename(self.sample_data[sample]["fastq"]["readsS"])
+                basename_S = os.path.basename(self.sample_data[sample]["readsS"])
                 # TODO: Remove ".fq" in middle of file name
                 
                 fq_fn_S = use_dir + ".".join([basename_S, self.file_tag])          #The filename containing the end result. Used both in script and to set reads in $sample_params
@@ -196,13 +196,13 @@ class Step_trimmo(Step):
                 self.script +=  "SE \\\n\t";
                 self.script += self.get_redir_parameters_script()
                 
-                self.script += "%s \\\n\t" % (" \\\n\t".join([self.sample_data[sample]["fastq"]["readsS"],fq_fn_S]))
+                self.script += "%s \\\n\t" % (" \\\n\t".join([self.sample_data[sample]["readsS"],fq_fn_S]))
                 # Add TODO line
                 self.script +=  self.params["todo"] + "\n\n";
                                                                                       
-                self.sample_data[sample]["fastq"]["readsS"] = self.base_dir + fq_fn_S_bn
+                self.sample_data[sample]["readsS"] = self.base_dir + fq_fn_S_bn
                 # md5sum-stamp output files:
-                self.stamp_file(self.sample_data[sample]["fastq"]["readsS"])
+                self.stamp_file(self.sample_data[sample]["readsS"])
                                                                                       
                                                                                           
  

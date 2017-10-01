@@ -55,20 +55,7 @@ from PLC_step import Step,AssertionExcept
 __author__ = "Menachem Sklarz"
 __version__ = "1.0.1"
 class Step_genomeCoverageBed(Step):
-    """ A module for running bowtie2 mapper:
-        requires:
-            fastq file in 
-            sample_data[<sample>]["fasta"]["nucl"]
-            or bam file in 
-            self.sample_data[sample]["fastq"]["mapping"]["bam"]
-
-        output:
-            puts output index files in the following slots:
-            self.sample_data[<sample>]["bowtie2"]["index"]
-            or
-            self.sample_data["bowtie2"]["index"]
-    """
-   
+  
     
     def step_specific_init(self):
         self.shell = "csh"      # Can be set to "bash" by inheriting instances
@@ -92,10 +79,8 @@ class Step_genomeCoverageBed(Step):
         # Assert there is mapping data and a sorted bam in particular:
         for sample in self.sample_data["samples"]:      #Getting list of samples out of samples_hash
             
-            if not "mapping" in self.sample_data[sample]["fastq"]:
-                raise AssertionExcept("No mapping data defined\n", sample)
-            if not "bam" in self.sample_data[sample]["fastq"]["mapping"].keys():
-                raise AssertionExcept("No BAM file defined in mapping data.\nDid you run samtools first?\n", sample)
+            if not "bam" in self.sample_data[sample].keys():
+                raise AssertionExcept("No BAM file defined.\nDid you run samtools first?\n", sample)
 
             
         pass
@@ -134,7 +119,7 @@ class Step_genomeCoverageBed(Step):
             use_dir = self.local_start(sample_dir)
 
             # Define input file
-            input_file = self.sample_data[sample]["fastq"]["mapping"]["bam"]
+            input_file = self.sample_data[sample]["bam"]
             
             output_file = "%s.bdg" % os.path.basename(input_file)
 
@@ -144,8 +129,8 @@ class Step_genomeCoverageBed(Step):
             self.script += "%s\n\n" % (use_dir + output_file)
             
             
-            self.sample_data[sample]["fastq"]["mapping"]["bdg"] = "%s%s" % (sample_dir, output_file)
-            self.stamp_file(self.sample_data[sample]["fastq"]["mapping"]["bdg"])
+            self.sample_data[sample]["bdg"] = "%s%s" % (sample_dir, output_file)
+            self.stamp_file(self.sample_data[sample]["bdg"])
             
     
         

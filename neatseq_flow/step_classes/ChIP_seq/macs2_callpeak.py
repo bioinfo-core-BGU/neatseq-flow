@@ -93,17 +93,15 @@ class Step_macs2_callpeak(Step):
         # Initializing a "mapping" dict for each sample:
         for sample in self.sample_data["samples"]:      # Getting list of samples out of samples_hash
 
-            # Make sure there is a mapping dict
-            try:
-                self.sample_data[sample]["fastq"]["mapping"]
-            except KeyError:
-                raise AssertionExcept("Mapping dict does not exist for sample. samtools can not run without a mapping\n", sample)
+            # # Make sure there is a mapping dict
+            # try:
+                # self.sample_data[sample]["fastq"]["mapping"]
+            # except KeyError:
+                # raise AssertionExcept("Mapping dict does not exist for sample. samtools can not run without a mapping\n", sample)
+            
             # Make sure there is a bam file
-
-            # assert "bam" in self.sample_data[sample]["mapping"].keys(),"Sample %s does not have a bam file!\n" % sample
-
             try:
-                self.sample_data[sample]["fastq"]["mapping"]["bam"]
+                self.sample_data[sample]["bam"]
             except KeyError:
                 raise AssertionExcept("Sample does not have a bam file!\n" ,sample)
 
@@ -113,15 +111,15 @@ class Step_macs2_callpeak(Step):
         except KeyError:
             raise AssertionExcept("You must define sample:control pairs\n")
             
-        for sample in self.sample_data["Controls"].keys():      # Getting list of samples out of Controls dict.
-            # Create "chip_seq" dict for results, if does not exist
-            # Only in samples. Not in controls....
-            try:
-                self.sample_data[sample]["fastq"]["chip_seq"]
-            except KeyError:
-                self.sample_data[sample]["fastq"]["chip_seq"] = {}
-            else:
-                self.write_warning("chip_seq dict exists for sample %s. Double peak calling steps?\n", sample)
+        # for sample in self.sample_data["Controls"].keys():      # Getting list of samples out of Controls dict.
+            # # Create "chip_seq" dict for results, if does not exist
+            # # Only in samples. Not in controls....
+            # try:
+                # self.sample_data[sample]["fastq"]["chip_seq"]
+            # except KeyError:
+                # self.sample_data[sample]["fastq"]["chip_seq"] = {}
+            # else:
+                # self.write_warning("chip_seq dict exists for sample %s. Double peak calling steps?\n", sample)
 
 
         pass
@@ -168,46 +166,48 @@ class Step_macs2_callpeak(Step):
             self.script += self.get_script_const()
                 
             # Add lines for sample mapping files:
-            self.script += "-t %s \\\n\t" % self.sample_data[sample]["fastq"]["mapping"]["bam"]
+            self.script += "-t %s \\\n\t" % self.sample_data[sample]["bam"]
             if not "nocontrol" in self.params.keys():
-                self.script += "-c %s \\\n\t" % self.sample_data[control]["fastq"]["mapping"]["bam"]
+                self.script += "-c %s \\\n\t" % self.sample_data[control]["bam"]
         
             # Add output directory
             self.script += "--name %s \n\n" % output_filename
             self.script += "--outdir %s \n\n" % use_dir
             
-            # Storing the output file in $samples_hash
-            self.sample_data[sample]["fastq"]["chip_seq"]["prefix"] = "".join([sample_dir, output_filename])
-            self.sample_data[sample]["fastq"]["chip_seq"]["peak_bed"] = "".join([sample_dir, output_filename, "_peaks.bed"])
-            self.sample_data[sample]["fastq"]["chip_seq"]["peak_xls"] = "".join([sample_dir, output_filename, "_peaks.xls"])
-            self.sample_data[sample]["fastq"]["chip_seq"]["summit_bed"] = "".join([sample_dir, output_filename, "_summits.bed"])
-            
-            self.stamp_file(self.sample_data[sample]["fastq"]["chip_seq"]["prefix"])
-            self.stamp_file(self.sample_data[sample]["fastq"]["chip_seq"]["peak_bed"])
-            self.stamp_file(self.sample_data[sample]["fastq"]["chip_seq"]["peak_xls"])
-            self.stamp_file(self.sample_data[sample]["fastq"]["chip_seq"]["summit_bed"])
+            # Storing the output file in samples_data
+            self.sample_data[sample]["macs2_prefix"] = "".join([sample_dir, output_filename])
+            self.sample_data[sample]["peak_bed"] = "".join([sample_dir, output_filename, "_peaks.bed"])
+            self.sample_data[sample]["peak_xls"] = "".join([sample_dir, output_filename, "_peaks.xls"])
+            self.sample_data[sample]["summit_bed"] = "".join([sample_dir, output_filename, "_summits.bed"])
+
+            # Set active bed to peak_bed. Maybe let user decide?
+            self.sample_data[sample]["bed"] = self.sample_data[sample]["peak_bed"] 
+
+            self.stamp_file(self.sample_data[sample]["peak_bed"])
+            self.stamp_file(self.sample_data[sample]["peak_xls"])
+            self.stamp_file(self.sample_data[sample]["summit_bed"])
 
             # Storing bedgraph files if should exist:
             
             if "--bdg" in self.params["redir_params"] or "-B" in self.params["redir_params"]:
-                self.sample_data[sample]["fastq"]["chip_seq"]["control_lambda"] = "".join([sample_dir, output_filename, "_control_lambda.bdg"])
-                self.sample_data[sample]["fastq"]["chip_seq"]["treat_pileup"] = "".join([sample_dir, output_filename, "_treat_pileup.bdg"])
+                self.sample_data[sample]["control_lambda"] = "".join([sample_dir, output_filename, "_control_lambda.bdg"])
+                self.sample_data[sample]["treat_pileup"] = "".join([sample_dir, output_filename, "_treat_pileup.bdg"])
                 # Saving the treatment pileup bdg file as the main mapping bdg
                 # (saving in mapping because it is a derivation of the mapping data)
-                self.sample_data[sample]["fastq"]["mapping"]["bdg"] = "".join([sample_dir, output_filename, "_treat_pileup.bdg"])
+                self.sample_data[sample]["bdg"] = "".join([sample_dir, output_filename, "_treat_pileup.bdg"])
                 # Saving the control pileup bdg file as the main control bdg
-                self.sample_data[control]["fastq"]["mapping"]["bdg"] = "".join([sample_dir, output_filename, "_control_lambda.bdg"])
+                self.sample_data[control]["bdg"] = "".join([sample_dir, output_filename, "_control_lambda.bdg"])
                 # Stamping all bdg files
-                self.stamp_file(self.sample_data[sample]["fastq"]["chip_seq"]["control_lambda"])
-                self.stamp_file(self.sample_data[sample]["fastq"]["chip_seq"]["treat_pileup"])
+                self.stamp_file(self.sample_data[sample]["control_lambda"])
+                self.stamp_file(self.sample_data[sample]["treat_pileup"])
             
             ##############################
             # # Add conversion of peak bed to bigbed
             if "bedToBigBed_path" in self.params.keys():
                 if not "chrom.sizes" in self.params.keys():
                     raise AssertionExcept("If bedToBigBed_path is passed, you also must sepcify a 'chrom.sizes' path")
-                out_bed_filename = "%s.cut.bed" % self.sample_data[sample]["fastq"]["chip_seq"]["peak_bed"]
-                out_bb_filename = "%s.cut.bb" % self.sample_data[sample]["fastq"]["chip_seq"]["peak_bed"]
+                out_bed_filename = "%s.cut.bed" % self.sample_data[sample]["bed"]
+                out_bb_filename = "%s.cut.bb" % self.sample_data[sample]["bed"]
 
 # Probably better to use the following perl one-liner:
 # perl -e 'while($line=<>){$line=~s/((?:\S*\s*){3})\.\d*(\s.*)/$1$2/; print $line}' bed_file                
@@ -235,21 +235,21 @@ then
         %(out_bb)s
 fi
 
-                        """ % {"in_bed"      : self.sample_data[sample]["fastq"]["chip_seq"]["peak_bed"],   \
+                        """ % {"in_bed"      : self.sample_data[sample]["bed"],   \
                                "exec_path"   : self.params["bedToBigBed_path"],                    \
                                "chrom_sizes" : self.params["chrom.sizes"],                         \
                                "out_bb"      : out_bb_filename,                                    \
                                "out_bed"     : out_bed_filename}
                 
-                self.sample_data[sample]["fastq"]["chip_seq"]["bb"] = out_bb_filename
+                self.sample_data[sample]["bb"] = out_bb_filename
                 # Stamping bb file
-                self.stamp_file(self.sample_data[sample]["fastq"]["chip_seq"]["bb"])
+                self.stamp_file(self.sample_data[sample]["bb"])
                 
             ##############################
             # # Add extration of peak fasta sequences
             if "getfasta" in self.params.keys():
                 try:
-                    self.sample_data[sample]["fastq"]["mapping"]["reference"]
+                    self.sample_data[sample]["reference"]
                 except KeyError:
                     self.write_warning("In %s: No reference exists, but you asked for a fasta file for the peaks. \n\tIn order to get the file you have to set a reference genome in the mapping step (Bowtie in particular)\n")
 
@@ -266,14 +266,15 @@ then
         -bed %(bed_file)s  > %(bed_file)s.fasta
 fi
 
-                        """ % {"peaks" :     self.sample_data[sample]["fastq"]["chip_seq"]["peak_bed"],          \
+                        """ % {"peaks" :     self.sample_data[sample]["peak_bed"],          \
                                "exec_path" : self.params["getfasta"],                                   \
-                               "ref_fasta" : self.sample_data[sample]["fastq"]["mapping"]["reference"], \
-                               "bed_file"  : self.sample_data[sample]["fastq"]["chip_seq"]["peak_bed"]}
+                               "ref_fasta" : self.sample_data[sample]["reference"], \
+                               "bed_file"  : self.sample_data[sample]["bed"]}
            
-                self.sample_data[sample]["fastq"]["chip_seq"]["peak_fasta"] = "%s.fasta" % self.sample_data[sample]["fastq"]["chip_seq"]["peak_bed"]
+                self.sample_data[sample]["peak_fasta"] = "%s.fasta" % self.sample_data[sample]["bed"]
+                self.sample_data[sample]["fasta"] = self.sample_data[sample]["peak_fasta"]
                 # Stamping bb file
-                self.stamp_file(self.sample_data[sample]["fastq"]["chip_seq"]["peak_fasta"])
+                self.stamp_file(self.sample_data[sample]["peak_fasta"])
 
         
         
@@ -295,10 +296,10 @@ fi
             for sample in self.sample_data["Controls"].keys():      # Getting list of samples out of Controls dict.
                 control = self.sample_data["Controls"][sample]
                 index_fh.write("%s,%s,%s,%s,%s,%s\n" % (sample,\
-                                    self.sample_data[sample]["fastq"]["mapping"]["bam"],\
+                                    self.sample_data[sample]["bam"],\
                                     control,\
-                                    self.sample_data[control]["fastq"]["mapping"]["bam"],\
-                                    self.sample_data[sample]["fastq"]["chip_seq"]["peak_xls"],\
+                                    self.sample_data[control]["bam"],\
+                                    self.sample_data[sample]["peak_xls"],\
                                     "macs"))
                                     
         self.sample_data["DiffBind_files_index"] = self.base_dir + "DiffBind_files_index.txt"

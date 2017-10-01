@@ -110,7 +110,7 @@ class Step_UCSC_BW_wig(Step):
 
             
             # Define input and output files
-            input_file = self.sample_data[sample]["fastq"]["mapping"]["bdg"]
+            input_file = self.sample_data[sample]["bdg"]
             
             output_file_bw  = "%s.bw"  % os.path.basename(input_file)
             output_file_wig = "%s.wig" % os.path.basename(input_file)
@@ -140,12 +140,12 @@ class Step_UCSC_BW_wig(Step):
             self.script += "%s\n\n" % (use_dir + output_file_wig)
             
             
-            self.sample_data[sample]["fastq"]["mapping"]["bw"]  = "%s%s" % (sample_dir, output_file_bw)
-            self.sample_data[sample]["fastq"]["mapping"]["wig"] = "%s%s" % (sample_dir, output_file_wig)
+            self.sample_data[sample]["bw"]  = "%s%s" % (sample_dir, output_file_bw)
+            self.sample_data[sample]["wig"] = "%s%s" % (sample_dir, output_file_wig)
     
             # Stamping output files:
-            self.stamp_file(self.sample_data[sample]["fastq"]["mapping"]["bw"])
-            self.stamp_file(self.sample_data[sample]["fastq"]["mapping"]["wig"])
+            self.stamp_file(self.sample_data[sample]["bw"])
+            self.stamp_file(self.sample_data[sample]["wig"])
         
             # Move all files from temporary local dir to permanent base_dir
             self.local_finish(use_dir,sample_dir)       # Sees to copying local files to final destination (and other stuff)

@@ -88,32 +88,33 @@ class Step_trinity(Step):
         
         # Assert that all samples have reads files:
         for sample in self.sample_data["samples"]:    
-            if not {"readsF", "readsR", "readsS"} & set(self.sample_data[sample]["fastq"].keys()):
+            if not {"readsF", "readsR", "readsS"} & set(self.sample_data[sample].keys()):
                 raise AssertionExcept("No read files\n",sample)
          
         if "scope" in self.params:
           
             if self.params["scope"]=="project":
-                # Prepare "fasta" slot for output
-                if "fasta" not in self.sample_data.keys():
-                    self.sample_data["fasta"] = dict()
-                if "assembly" not in self.sample_data.keys():
-                    self.sample_data["assembly"] = dict()
-                    self.sample_data["assembly"][self.step] = dict()
-                    
+                # # Prepare "fasta" slot for output
+                # if "fasta" not in self.sample_data.keys():
+                    # self.sample_data["fasta"] = dict()
+                # if "assembly" not in self.sample_data.keys():
+                    # self.sample_data["assembly"] = dict()
+                    # self.sample_data["assembly"][self.step] = dict()
+                pass
 
             elif self.params["scope"]=="sample":
                 
                 for sample in self.sample_data["samples"]:      # Getting list of samples out of samples_hash
-                    # Making sure each sample has an "assembly" slot to store contigs and scaffolds
-                    if "assembly" not in self.sample_data[sample]:
-                        self.sample_data[sample]["assembly"] = {}
-                    if self.step not in self.sample_data[sample]["assembly"]:
-                        self.sample_data[sample]["assembly"][self.step] = {}
+                    # # Making sure each sample has an "assembly" slot to store contigs and scaffolds
+                    # if "assembly" not in self.sample_data[sample]:
+                        # self.sample_data[sample]["assembly"] = {}
+                    # if self.step not in self.sample_data[sample]["assembly"]:
+                        # self.sample_data[sample]["assembly"][self.step] = {}
 
-                    # Making sure a "fasta" slot exists to store contigs:
-                    if "fasta" not in self.sample_data[sample]:
-                        self.sample_data[sample]["fasta"] = {}
+                    # # Making sure a "fasta" slot exists to store contigs:
+                    # if "fasta" not in self.sample_data[sample]:
+                        # self.sample_data[sample]["fasta"] = {}
+                    pass
             else:
                 raise AssertionExcept("'scope' must be either 'sample' or 'project'")
         else:
@@ -162,11 +163,11 @@ class Step_trinity(Step):
         for sample in self.sample_data["samples"]:      # Getting list of samples out of samples_hash
             # If both F and R reads exist, adding them to forward and reverse
             # Assuming upstream input testing to check that if there are F reads then there are also R reads.
-            if "readsF" in self.sample_data[sample]["fastq"].keys():
-                forward.append(self.sample_data[sample]["fastq"]["readsF"])
-                reverse.append(self.sample_data[sample]["fastq"]["readsR"])
-            if "readsS" in self.sample_data[sample]["fastq"].keys():
-                single.append(self.sample_data[sample]["fastq"]["readsS"])
+            if "readsF" in self.sample_data[sample].keys():
+                forward.append(self.sample_data[sample]["readsF"])
+                reverse.append(self.sample_data[sample]["readsR"])
+            if "readsS" in self.sample_data[sample].keys():
+                single.append(self.sample_data[sample]["readsS"])
 
         # Concatenate all filenames separated by commas:
         single  = ",".join(single)   if (len(single) > 0) else None
@@ -190,11 +191,12 @@ class Step_trinity(Step):
             self.script += "--single %s \n\n" % single
         
         
+
         # Store results to fasta and assembly slots:
-        self.sample_data["fasta"]["nucl"] = "%s%s%s%s" % (self.base_dir, os.sep, self.sample_data["Title"], self.file_tag)
-        self.sample_data["assembly"][self.step]["contigs"] = "%s%s%s%s" % (self.base_dir, os.sep, self.sample_data["Title"], self.file_tag)
-        
-        self.stamp_file(self.sample_data["assembly"][self.step]["contigs"])
+        self.sample_data["nucl"] = "%s%s%s%s" % (self.base_dir, os.sep, self.sample_data["Title"], self.file_tag)
+        self.sample_data[self.get_step_step() + "_contigs"] = self.sample_data["nucl"]
+
+        self.stamp_file(self.sample_data[self.get_step_step() + "_contigs"])
 
        
         # Move all files from temporary local dir to permanent base_dir
@@ -226,20 +228,20 @@ class Step_trinity(Step):
 
             self.script += "--output %s \\\n\t" % use_dir
             
-            if "readsF" in self.sample_data[sample]["fastq"].keys():
-                self.script += "--left %s \\\n\t" % self.sample_data[sample]["fastq"]["readsF"]
-                self.script += "--right %s \\\n\t" % self.sample_data[sample]["fastq"]["readsR"]
-            if "readsS" in self.sample_data[sample]["fastq"].keys():
-                self.script += "--single %s \n\n" % self.sample_data[sample]["fastq"]["readsS"]
+            if "readsF" in self.sample_data[sample].keys():
+                self.script += "--left %s \\\n\t" % self.sample_data[sample]["readsF"]
+                self.script += "--right %s \\\n\t" % self.sample_data[sample]["readsR"]
+            if "readsS" in self.sample_data[sample].keys():
+                self.script += "--single %s \n\n" % self.sample_data[sample]["readsS"]
 
             # If there is an extra "\\\n\t" at the end of the script, remove it.
             self.script = self.script.rstrip("\\\n\t") + "\n\n"
 
             # Store results to fasta and assembly slots:
-            self.sample_data[sample]["fasta"]["nucl"] = sample_dir + "Trinity.fasta"
-            self.sample_data[sample]["assembly"][self.step]["contigs"] = sample_dir + "Trinity.fasta"
+            self.sample_data[sample]["nucl"] = sample_dir + "Trinity.fasta"
+            self.sample_data[sample][self.get_step_step() + "_contigs"] = sample_dir + "Trinity.fasta"
 
-            self.stamp_file(self.sample_data[sample]["assembly"][self.step]["contigs"])
+            self.stamp_file(self.sample_data[sample][self.get_step_step() + "_contigs"])
 
                 
             # Wrapping up function. Leave these lines at the end of every iteration:

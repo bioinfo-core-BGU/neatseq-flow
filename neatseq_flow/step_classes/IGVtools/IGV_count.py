@@ -73,11 +73,8 @@ class Step_IGV_count(Step):
 
         # Assert there is mapping data and a sorted bam in particular:
         for sample in self.sample_data["samples"]:      #Getting list of samples out of samples_hash
-            if not "mapping" in self.sample_data[sample]["fastq"]:
-                raise AssertionExcept("No mapping data exists\n", sample)
-
-
-        pass
+            if not "sam" in self.sample_data[sample] and not "bam" in self.sample_data[sample]:
+                raise AssertionExcept("No BAM/SAM files exist\n", sample)
         
     def create_spec_wrapping_up_script(self):
         """ Add stuff to check and agglomerate the output data
@@ -113,10 +110,10 @@ class Step_IGV_count(Step):
             use_dir = self.local_start(sample_dir)
 
             # Define input file
-            if "bam" in self.sample_data[sample]["fastq"]["mapping"]:
-                input_file = self.sample_data[sample]["fastq"]["mapping"]["bam"]
-            elif "sam" in self.sample_data[sample]["fastq"]["mapping"]:
-                input_file = self.sample_data[sample]["fastq"]["mapping"]["sam"]            
+            if "bam" in self.sample_data[sample]:
+                input_file = self.sample_data[sample]["bam"]
+            elif "sam" in self.sample_data[sample]:
+                input_file = self.sample_data[sample]["sam"]            
             else:
                 raise AssertionExcept("No sam or bam found for sample\n", sample)
             
@@ -133,8 +130,8 @@ class Step_IGV_count(Step):
             self.script += "%s \n\n" % self.params["genome"]
 
 
-            self.sample_data[sample]["fastq"]["mapping"][self.params["format"]] = "%s%s.%s" % (sample_dir, output_file, self.params["format"])
-            self.stamp_file(self.sample_data[sample]["fastq"]["mapping"][self.params["format"]])
+            self.sample_data[sample][self.params["format"]] = "%s%s.%s" % (sample_dir, output_file, self.params["format"])
+            self.stamp_file(self.sample_data[sample][self.params["format"]])
         
             # Move all files from temporary local dir to permanent base_dir
             self.local_finish(use_dir,sample_dir)       # Sees to copying local files to final destination (and other stuff)

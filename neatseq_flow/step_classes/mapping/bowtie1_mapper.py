@@ -94,15 +94,15 @@ class Step_bowtie1_mapper(Step):
         """ A place to do initiation stages following setting of sample_data
         """
         
-        # Initializing a "mapping" dict for each sample:
-        for sample in self.sample_data["samples"]:      # Getting list of samples out of samples_hash
+        # # Initializing a "mapping" dict for each sample:
+        # for sample in self.sample_data["samples"]:      # Getting list of samples out of samples_hash
 
-            try:
-                self.sample_data[sample]["fastq"]["mapping"]
-            except KeyError:
-                self.sample_data[sample]["fastq"]["mapping"] = {}
-            else:
-                self.write_warning("mapping dict exists for sample. Double mapping steps?\n", sample)
+            # try:
+                # self.sample_data[sample]["fastq"]["mapping"]
+            # except KeyError:
+                # self.sample_data[sample]["fastq"]["mapping"] = {}
+            # else:
+                # self.write_warning("mapping dict exists for sample. Double mapping steps?\n", sample)
 
         # Require either 'scope' or 'ebwt':
         if "scope" in self.params:
@@ -115,10 +115,10 @@ class Step_bowtie1_mapper(Step):
                 for sample in self.sample_data["samples"]:
                     if self.params["scope"] == "project":
                         # Set project wide reference:
-                        self.sample_data[sample]["fastq"]["mapping"]["reference"] = self.sample_data["bowtie1"]["fasta"]
+                        self.sample_data[sample]["reference"] = self.sample_data["bowtie1_fasta"]
                     elif self.params["scope"] == "sample":
                         # Set per-sample reference:
-                        self.sample_data[sample]["fastq"]["mapping"]["reference"] = self.sample_data[sample]["bowtie1"]["fasta"]
+                        self.sample_data[sample]["reference"] = self.sample_data[sample]["bowtie1_fasta"]
                     else:
                         raise AssertionExcept("Scope must be either 'sample' or 'project'\n" )
                 
@@ -129,7 +129,7 @@ class Step_bowtie1_mapper(Step):
             if "ref_genome" in self.params.keys():
                 self.write_warning("ref_genome was passed, and 'scope' was defined. Ignoring ref_genome\n")
         else:
-            # If scope is not defined, require '-x'
+            # If scope is not defined, require 'ebwt'
             if not "ebwt" in self.params.keys():
                 raise AssertionExcept("Neither 'scope' nor 'ebwt' specified.\n")
 
@@ -138,10 +138,10 @@ class Step_bowtie1_mapper(Step):
             if "ref_genome" in self.params.keys():
                 for sample in self.sample_data["samples"]:
                     # If reference already exists, ignore ref_genome
-                    if "reference" in self.sample_data[sample]["fastq"]["mapping"]:
+                    if "reference" in self.sample_data[sample]:
                         self.write_warning("ref_genome was passed, but a reference already exists. Setting reference to 'ref_genome'\n")
                 
-                    self.sample_data[sample]["fastq"]["mapping"]["reference"] = self.params["ref_genome"]
+                    self.sample_data[sample]["reference"] = self.params["ref_genome"]
             else:
                 self.write_warning("No reference given. It is highly recommended to give one!\n")
                 
@@ -204,9 +204,9 @@ class Step_bowtie1_mapper(Step):
             #    Id that dosent exist either, throw up and balk away:
             try:  # If scope was passed, include either project or sample bowtie2 index
                 if self.params["scope"] == "project":
-                    self.script += "%s \\\n\t" % self.sample_data["bowtie1"]["index"]
+                    self.script += "%s \\\n\t" % self.sample_data["bowtie1_index"]
                 else:
-                    self.script += "%s \\\n\t" % self.sample_data[sample]["bowtie1"]["index"]
+                    self.script += "%s \\\n\t" % self.sample_data[sample]["bowtie1_index"]
             except KeyError:  # Otherwise do nothing - '-x' is included through redirect params
                 self.script += "%s \\\n\t" % self.params["ebwt"]
 
@@ -214,38 +214,38 @@ class Step_bowtie1_mapper(Step):
                 # self.script += "%s \\\n\t" % self.params["ebwt"]
             # else:
                 # if "bowtie1" in self.sample_data.keys():  # A bowtie1 index has been created in self.sample_data["bowtie1"]
-                    # self.script += "%s \\\n\t" % self.sample_data["bowtie1"]["index"]
+                    # self.script += "%s \\\n\t" % self.sample_data["bowtie1_index"]
                     # self.sample_data[sample]["fastq"]["mapping"]["reference"] = self.sample_data["bowtie1"]["fasta"]
                 # elif "bowtie1" in self.sample_data[sample]:  # A bowtie1 index has been created in self.sample_data[sample]["bowtie1"]
-                    # self.script += "%s \\\n\t" % self.sample_data[sample]["bowtie1"]["index"]
+                    # self.script += "%s \\\n\t" % self.sample_data[sample]["bowtie1_index"]
                     # self.sample_data[sample]["fastq"]["mapping"]["reference"] = self.sample_data[sample]["bowtie1"]["fasta"]
                 # else:
                     # raise AssertionExcept("In %s: Sample %s does not have a reference defined, nor did you pass one with 'ebwt' parameter...\n" % (self.name, sample))
 
                     
             # assert set("readsF","readsR","readsS") & self.sample_data["sample"].keys(), "There are no reads for sample %s" % sample
-            if "readsF" in self.sample_data[sample]["fastq"].keys():
-                self.script += "-1 %s \\\n\t-2 %s\\\n\t" % (self.sample_data[sample]["fastq"]["readsF"],self.sample_data[sample]["fastq"]["readsR"])
-            if "readsS" in self.sample_data[sample]["fastq"].keys():
-                self.script += "%s \\\n\t" % self.sample_data[sample]["fastq"]["readsS"]
+            if "readsF" in self.sample_data[sample].keys():
+                self.script += "-1 %s \\\n\t-2 %s\\\n\t" % (self.sample_data[sample]["readsF"],self.sample_data[sample]["readsR"])
+            if "readsS" in self.sample_data[sample].keys():
+                self.script += "%s \\\n\t" % self.sample_data[sample]["readsS"]
 
             self.script += "%s.sam \n\n" % output_prefix
 
 
-            self.sample_data[sample]["fastq"]["mapping"]["sam"] = "%s.sam" % output_prefix
-            self.stamp_file(self.sample_data[sample]["fastq"]["mapping"]["sam"])
+            self.sample_data[sample]["sam"] = "%s.sam" % output_prefix
+            self.stamp_file(self.sample_data[sample]["sam"])
             
             # Storing name of mapper. might be useful:
-            self.sample_data[sample]["fastq"]["mapping"]["mapper"] = self.get_step_step()  
+            self.sample_data[sample]["mapper"] = self.get_step_step()  
             
             # Storing reference genome for use by downstream steps:
             if "ref_genome" in self.params.keys():
                 # If reference already exists, ignore ref_genome
-                if "reference" in self.sample_data[sample]["fastq"]["mapping"]:
-                    self.write_warning("ref_genome was passed, but no bowtie1 index was given with 'ebwt'.\n\tIgnoring ref_genome and using the following fasta file instead:\n\t%s" % self.sample_data[sample]["fastq"]["mapping"]["reference"])
+                if "reference" in self.sample_data[sample]:
+                    self.write_warning("ref_genome was passed, but no bowtie1 index was given with 'ebwt'.\n\tIgnoring ref_genome and using the following fasta file instead:\n\t%s" % self.sample_data[sample]["reference"])
                     
                 else:
-                    self.sample_data[sample]["fastq"]["mapping"]["reference"] = self.params["ref_genome"]
+                    self.sample_data[sample]["reference"] = self.params["ref_genome"]
             else:
                 self.write_warning("No reference given. It is highly recommended to give one!\n")
         

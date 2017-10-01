@@ -153,28 +153,28 @@ class Step_bwa_mapper(Step):
         # Initializing a "mapping" dict for each sample:
         for sample in self.sample_data["samples"]:      # Getting list of samples out of samples_hash
 
-            if "mapping" in self.sample_data[sample]["fastq"]:
-                self.write_warning("mapping dict exists for sample. Double mapping steps?\n", sample)
-            else:
-                self.sample_data[sample]["fastq"]["mapping"] = {}
+            if "sam" in self.sample_data[sample]:
+                self.write_warning("SAM file exists for sample. Double mapping steps?\n", sample)
+            # else:
+                # self.sample_data[sample]["fastq"]["mapping"] = {}
 
-            # If mod is "aln", initiate a "bwa" slot for the sample, in does not exist
-            if self.params["mod"] in ["aln"]:
-                if "bwa" not in self.sample_data[sample]:
-                    self.sample_data[sample]["bwa"] = dict()
+            # # If mod is "aln", initiate a "bwa" slot for the sample, in does not exist
+            # if self.params["mod"] in ["aln"]:
+                # if "bwa" not in self.sample_data[sample]:
+                    # self.sample_data[sample]["bwa"] = dict()
             # If mod is "samse" or "sampe", require a "bwa" slot for the sample, and require relevant sai files
             if self.params["mod"] in ["samse"]:
                 try:
-                    self.sample_data[sample]["bwa"]["saiS"]
-                    self.sample_data[sample]["fastq"]["readsS"]
+                    self.sample_data[sample]["saiS"]
+                    self.sample_data[sample]["readsS"]
                 except KeyError:
                     raise AssertionExcept("'samse' requires sai and single-end fatsq files for the sample. Make sure you have a bwa aln step before this step and 'Single' files in the sample file.", sample)
             if self.params["mod"] in ["sampe"]:
                 try:
-                    self.sample_data[sample]["bwa"]["saiF"]
-                    self.sample_data[sample]["bwa"]["saiR"]
-                    self.sample_data[sample]["fastq"]["readsF"]
-                    self.sample_data[sample]["fastq"]["readsR"]
+                    self.sample_data[sample]["saiF"]
+                    self.sample_data[sample]["saiR"]
+                    self.sample_data[sample]["readsF"]
+                    self.sample_data[sample]["readsR"]
 
                 except KeyError:
                     raise AssertionExcept("'sampe' requires sai and paired-end fatsq files for the sample. Make sure you have a bwa aln step before this step and 'Forward' and 'Reverse' files in the sample file.", sample)
@@ -193,10 +193,10 @@ class Step_bwa_mapper(Step):
                 for sample in self.sample_data["samples"]:
                     if self.params["scope"] == "project":
                         # Set project wide reference:
-                        self.sample_data[sample]["fastq"]["mapping"]["reference"] = self.sample_data["bwa"]["fasta"]
+                        self.sample_data[sample]["reference"] = self.sample_data["bwa_fasta"]
                     elif self.params["scope"] == "sample":
                         # Set per-sample reference:
-                        self.sample_data[sample]["fastq"]["mapping"]["reference"] = self.sample_data[sample]["bwa"]["fasta"]
+                        self.sample_data[sample]["reference"] = self.sample_data[sample]["bwa_fasta"]
                     else:
                         raise AssertionExcept("Scope must be either 'sample' or 'project'")
                 
@@ -214,11 +214,11 @@ class Step_bwa_mapper(Step):
             if "ref_genome" in self.params.keys():
                 for sample in self.sample_data["samples"]:
                     # If reference already exists, ignore ref_genome
-                    if "reference" in self.sample_data[sample]["fastq"]["mapping"]:
+                    if "reference" in self.sample_data[sample]:
                         self.write_warning("ref_genome was passed, but a reference already exists. Setting reference to 'ref_genome'\n")
                         
                 
-                    self.sample_data[sample]["fastq"]["mapping"]["reference"] = self.params["ref_genome"]
+                    self.sample_data[sample]["reference"] = self.params["ref_genome"]
             else:
                 self.write_warning("No reference given. It is highly recommended to give one!\n")
 
@@ -252,53 +252,53 @@ class Step_bwa_mapper(Step):
             
             if self.params["mod"] in ["aln"]:
                 
-                for direction in ["readsF","readsR","readsS"]:
-                    if direction in self.sample_data[sample]["fastq"]:
-                        self.script = ""
-                        direction_tag = direction[-1] # Get last letter in direction
-                        # Name of specific script:
-                        self.spec_script_name = "_".join([self.step,self.name,sample,direction_tag]) 
-                        self.script = ""
+                for direction in filter(lambda x: x in ["readsF","readsR","readsS"], self.sample_data[sample].keys()):
 
-                        
+                    self.script = ""
+                    direction_tag = direction[-1] # Get last letter in direction
+                    # Name of specific script:
+                    self.spec_script_name = "_".join([self.step,self.name,sample,direction_tag]) 
+                    self.script = ""
 
-                        output_filename = "%s.%s.bwa.sai" % (sample, direction)
+                    
 
-                        
-                        # Get constant part of script:
-                        self.script = self.get_script_env_path()
-                        # Add mod:
-                        self.script += "%s \\\n\t" % self.params["mod"]
-                        # Add redir_params:
-                        self.script += self.get_redir_parameters_script()
+                    output_filename = "%s.%s.bwa.sai" % (sample, direction)
 
-                        
-                        # Add ref_index (depends on scope)
-                        if "scope" in self.params:  # If scope was passed, include either project or sample bwa index
-                            if self.params["scope"] == "project":
-                                self.script += "%s \\\n\t" % self.sample_data["bwa"]["index"]
-                            else:
-                                self.script += "%s \\\n\t" % self.sample_data[sample]["bwa"]["index"]
-                        else:  # Otherwise add ref_index
-                            self.script += "%s \\\n\t" % self.params["ref_index"]
+                    
+                    # Get constant part of script:
+                    self.script = self.get_script_env_path()
+                    # Add mod:
+                    self.script += "%s \\\n\t" % self.params["mod"]
+                    # Add redir_params:
+                    self.script += self.get_redir_parameters_script()
 
-                        # Add reads
-                        self.script += "%s \\\n\t" % self.sample_data[sample]["fastq"][direction]
+                    
+                    # Add ref_index (depends on scope)
+                    if "scope" in self.params:  # If scope was passed, include either project or sample bwa index
+                        if self.params["scope"] == "project":
+                            self.script += "%s \\\n\t" % self.sample_data["bwa_index"]
+                        else:
+                            self.script += "%s \\\n\t" % self.sample_data[sample]["bwa_index"]
+                    else:  # Otherwise add ref_index
+                        self.script += "%s \\\n\t" % self.params["ref_index"]
 
-                        # Add output:
-                        self.script += "> %s\n\n" % (use_dir + output_filename)
+                    # Add reads
+                    self.script += "%s \\\n\t" % self.sample_data[sample][direction]
 
-                        
-                        self.sample_data[sample]["bwa"]["saiS"] = (sample_dir + output_filename)
-                        self.stamp_file(self.sample_data[sample]["bwa"]["saiS"])
-                        
-                        # Storing name of mapper. might be useful:
-                        self.sample_data[sample]["fastq"]["mapping"]["mapper"] = self.get_step_step()  
-                        
-                        # Move all files from temporary local dir to permanent base_dir
-                        self.local_finish(use_dir,self.base_dir)       # Sees to copying local files to final destination (and other stuff)
-                        
-                        self.create_low_level_script()
+                    # Add output:
+                    self.script += "> %s\n\n" % (use_dir + output_filename)
+
+                    file_code = "sai%s" % direction_tag
+                    self.sample_data[sample][file_code] = (sample_dir + output_filename)
+                    self.stamp_file(self.sample_data[sample][file_code])
+                    
+                    # Storing name of mapper. might be useful:
+                    self.sample_data[sample]["mapper"] = self.get_step_step()  
+                    
+                    # Move all files from temporary local dir to permanent base_dir
+                    self.local_finish(use_dir,self.base_dir)       # Sees to copying local files to final destination (and other stuff)
+                    
+                    self.create_low_level_script()
                            
             else:  # Not 'aln': one of the mods that create sam files.
                 
@@ -328,48 +328,48 @@ class Step_bwa_mapper(Step):
                 # Add ref_index (depends on scope)
                 if "scope" in self.params:  # If scope was passed, include either project or sample bwa index
                     if self.params["scope"] == "project":
-                        self.script += "%s \\\n\t" % self.sample_data["bwa"]["index"]
+                        self.script += "%s \\\n\t" % self.sample_data["bwa_index"]
                     else:
-                        self.script += "%s \\\n\t" % self.sample_data[sample]["bwa"]["index"]
+                        self.script += "%s \\\n\t" % self.sample_data[sample]["bwa_index"]
                 else:  # Otherwise add ref_index
                     self.script += "%s \\\n\t" % self.params["ref_index"]
 
                 # Add reads
                 if self.params["mod"] in ["mem"]:
-                    if "readsF" in self.sample_data[sample]["fastq"].keys():
+                    if "readsF" in self.sample_data[sample].keys():
                         self.script += "%s \\\n\t%s\\\n\t" % \
-                            (self.sample_data[sample]["fastq"]["readsF"],
-                            self.sample_data[sample]["fastq"]["readsR"])
-                    elif "readsS" in self.sample_data[sample]["fastq"].keys():
-                        self.script += "%s \\\n\t" % self.sample_data[sample]["fastq"]["readsS"]
+                            (self.sample_data[sample]["readsF"],
+                            self.sample_data[sample]["readsR"])
+                    elif "readsS" in self.sample_data[sample].keys():
+                        self.script += "%s \\\n\t" % self.sample_data[sample]["readsS"]
                     else:
                         pass
-                    if "readsF" in self.sample_data[sample]["fastq"] and "readsS" in self.sample_data[sample]["fastq"]:
+                    if "readsF" in self.sample_data[sample] and "readsS" in self.sample_data[sample]:
                         self.write_warning("Both paired- and single-end sequence files exists for sample. Using only paired data\n", sample)
                     
                     
                     
                 if self.params["mod"] in ["samse"]:
                     self.script += "%s \\\n\t%s\\\n\t" % \
-                        (self.sample_data[sample]["bwa"]["saiS"],\
-                         self.sample_data[sample]["fastq"]["readsS"])
+                        (self.sample_data[sample]["saiS"],\
+                         self.sample_data[sample]["readsS"])
                 if self.params["mod"] in ["sampe"]:
                     self.script += "%s \\\n\t%s\\\n\t%s \\\n\t%s\\\n\t" % \
-                        (self.sample_data[sample]["bwa"]["saiF"], \
-                        self.sample_data[sample]["bwa"]["saiR"], \
-                        self.sample_data[sample]["fastq"]["readsF"],
-                        self.sample_data[sample]["fastq"]["readsR"])
+                        (self.sample_data[sample]["saiF"], \
+                        self.sample_data[sample]["saiR"], \
+                        self.sample_data[sample]["readsF"],
+                        self.sample_data[sample]["readsR"])
 
                 # Add output:
                 self.script += "> %s\n\n" % (use_dir + output_filename)
 
                 
                 
-                self.sample_data[sample]["fastq"]["mapping"]["sam"] = (sample_dir + output_filename)
-                self.stamp_file(self.sample_data[sample]["fastq"]["mapping"]["sam"])
+                self.sample_data[sample]["sam"] = (sample_dir + output_filename)
+                self.stamp_file(self.sample_data[sample]["sam"])
                 
                 # Storing name of mapper. might be useful:
-                self.sample_data[sample]["fastq"]["mapping"]["mapper"] = self.get_step_step()  
+                self.sample_data[sample]["mapper"] = self.get_step_step()  
                 
 
        

@@ -77,7 +77,7 @@ class Step_bowtie1_builder(Step):
         if "scope" not in self.params.keys():
             # Try guessing scope:
             try:  # Does a nucl fasta exist for project?
-                self.sample_data["fasta"]["nucl"]
+                self.sample_data["nucl"]
             except KeyError:
                 self.params["scope"] = "sample"
             else:
@@ -91,13 +91,9 @@ class Step_bowtie1_builder(Step):
             # Initializing a "mapping" dict \\for each sample:
             for sample in self.sample_data["samples"]:      # Getting list of samples out of samples_hash
                 try:
-                    self.sample_data[sample]["fasta"]["nucl"]
+                    self.sample_data[sample]["nucl"]
                 except KeyError:
                     raise AssertionExcept("Sample does not have a nucl fasta defined. Can't build index\n", sample)
-                else:
-                    self.sample_data[sample]["bowtie1"] = dict()
-        else:   # Scope == "project"
-            self.sample_data["bowtie1"] = dict()
 
 
 
@@ -120,11 +116,12 @@ class Step_bowtie1_builder(Step):
             # self.spec_script_name
             # self.script
         
-        try:    # Check if fasta nucl exists:
-            self.sample_data["fasta"]["nucl"]
+        # try:    # Check if fasta nucl exists:
+            # self.sample_data["fasta"]["nucl"]
             
-        except KeyError:   # If not, search in samples
+        # except KeyError:   # If not, search in samples
         
+        if self.params["scope"] == "sample":
         
             for sample in self.sample_data["samples"]:      # Getting list of samples out of samples_hash
 
@@ -146,12 +143,12 @@ class Step_bowtie1_builder(Step):
                 # Get constant part of script:
                 self.script += self.get_script_const()
                 
-                self.script += "%s \\\n\t" % self.sample_data[sample]["fasta"]["nucl"]
+                self.script += "%s \\\n\t" % self.sample_data[sample]["nucl"]
                 self.script += "%s \n\n" % output_prefix
 
 
-                self.sample_data[sample]["bowtie1"]["index"] = output_prefix
-                self.sample_data[sample]["bowtie1"]["fasta"] = self.sample_data[sample]["fasta"]["nucl"]
+                self.sample_data[sample]["bowtie1_index"] = output_prefix
+                self.sample_data[sample]["bowtie1_fasta"] = self.sample_data[sample]["nucl"]
                 # self.stamp_dir_files(sample_dir)
         
             
@@ -180,12 +177,12 @@ class Step_bowtie1_builder(Step):
             # Get constant part of script:
             self.script += self.get_script_const()
             
-            self.script += "%s \\\n\t" % self.sample_data["fasta"]["nucl"]
+            self.script += "%s \\\n\t" % self.sample_data["nucl"]
             self.script += "%s \n\n" % output_prefix
 
 
-            self.sample_data["bowtie1"]["index"] = output_prefix
-            self.sample_data["bowtie1"]["fasta"] = self.sample_data["fasta"]["nucl"]
+            self.sample_data["bowtie1_index"] = output_prefix
+            self.sample_data["bowtie1_fasta"] = self.sample_data["nucl"]
             # self.stamp_dir_files(self.sample_data["bowtie1"]["index"])
         
             # Move all files from temporary local dir to permanent base_dir

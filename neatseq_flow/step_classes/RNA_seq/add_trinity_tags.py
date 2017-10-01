@@ -72,7 +72,7 @@ class Step_add_trinity_tags(Step):
 
         # Assert that all samples have reads files:
         for sample in self.sample_data["samples"]:    
-            if not {"readsF", "readsR", "readsS"} & set(self.sample_data[sample]["fastq"].keys()):
+            if not {"readsF", "readsR", "readsS"} & set(self.sample_data[sample].keys()):
                 raise AssertionExcept("No read files\n",sample)
          
 
@@ -92,7 +92,7 @@ class Step_add_trinity_tags(Step):
             # Adding tags to Forward and Reverse files only
             for direction in ["Forward","Reverse","Single"]:
                 file_slot = "reads" + direction[0]  # file_slot is "readsF", "readsR" and "readS" for "Forward", "Reverse" and "Single" resepctively
-                if (file_slot in self.sample_data[sample]["fastq"].keys()):
+                if (file_slot in self.sample_data[sample].keys()):
                     self.script = ""
                     direction_tag = direction[0] # Get first letter in direction
                     # Name of specific script:
@@ -103,7 +103,7 @@ class Step_add_trinity_tags(Step):
                     use_dir = self.local_start(self.base_dir)
 
                     
-                    baseFN = os.path.basename(self.sample_data[sample]["fastq"][file_slot])
+                    baseFN = os.path.basename(self.sample_data[sample][file_slot])
                     # TODO: Remove ".fq" in middle of file name
                     # Setting filenames before adding output arguments to script
                     fq_fn = ".".join([baseFN, self.file_tag])  #The filename containing the end result. Used both 
@@ -113,7 +113,7 @@ class Step_add_trinity_tags(Step):
                     # self.script += self.get_script_const()
                     ""
                     self.script += "awk '{ if (NR%%4==1) { gsub(\" \",\"_\"); print $0\"%(tag)s\" } else { print } }' \\\n\t" % {"tag" : {"R":"/2","F":"/1","S":""}[direction[0]]}
-                    self.script += "%s \\\n\t" % self.sample_data[sample]["fastq"][file_slot]
+                    self.script += "%s \\\n\t" % self.sample_data[sample][file_slot]
                     self.script += "> %s\n\n" % (use_dir + fq_fn)
 
                     
@@ -122,8 +122,8 @@ class Step_add_trinity_tags(Step):
 
                     
                     # Store file in active file for sample:
-                    self.sample_data[sample]["fastq"][file_slot] = (self.base_dir + fq_fn)
-                    self.stamp_file(self.sample_data[sample]["fastq"][file_slot])
+                    self.sample_data[sample][file_slot] = (self.base_dir + fq_fn)
+                    self.stamp_file(self.sample_data[sample][file_slot])
                     
                     self.create_low_level_script()
         

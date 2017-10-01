@@ -23,19 +23,19 @@ The samtools programs included in the module are the following:
 
 * A SAM file in the following location:
 
-    * ``sample_data[<sample>]["fastq"]["mapping"]["sam"]``
+    * ``sample_data[<sample>]["sam"]``
 
 **Output**:
 
 * Depending on the parameters, will put files in the following locations:
 
-    * ``sample_data[<sample>]["fastq"]["mapping"]["bam"]``
-    * ``sample_data[<sample>]["fastq"]["mapping"]["index"]``
-    * ``sample_data[<sample>]["fastq"]["mapping"]["unfiltered_bam"]``
-    * ``sample_data[<sample>]["fastq"]["mapping"]["unsorted_bam"]``
-    * ``sample_data[<sample>]["fastq"]["mapping"]["flagstat"]``
-    * ``sample_data[<sample>]["fastq"]["mapping"]["stats"]``
-    * ``sample_data[<sample>]["fastq"]["mapping"]["idxstats"]``
+    * ``sample_data[<sample>]["bam"]``
+    * ``sample_data[<sample>]["index"]``
+    * ``sample_data[<sample>]["unfiltered_bam"]``
+    * ``sample_data[<sample>]["unsorted_bam"]``
+    * ``sample_data[<sample>]["flagstat"]``
+    * ``sample_data[<sample>]["stats"]``
+    * ``sample_data[<sample>]["idxstats"]``
 
 .. csv-table:: Parameters that can be set:
     :header: "Parameter", "Values", "Comments"
@@ -94,15 +94,10 @@ class Step_samtools(Step):
         # Checking a "mapping" exists for each sample:
         for sample in self.sample_data["samples"]:      # Getting list of samples out of samples_hash
 
-            # Check that a mapping slot exists
-            try:
-                self.sample_data[sample]["fastq"]["mapping"]
-            except KeyError:
-                raise AssertionExcept("mapping dict does not exist for sample. samtools can not run without a mapping\n", sample)
             # Check that a sam or bam exists
-            if "bam" in self.sample_data[sample]["fastq"]["mapping"]:
+            if "bam" in self.sample_data[sample]:
                 self.file2use = "bam"
-            elif "sam" in self.sample_data[sample]["fastq"]["mapping"]:
+            elif "sam" in self.sample_data[sample]:
                 self.file2use = "sam"
             else:
                 raise AssertionExcept("Neither BAM nor SAM file exist for sample.\n", sample)
@@ -141,9 +136,9 @@ class Step_samtools(Step):
             
             
 
-            # sam_file = self.sample_data[sample]["fastq"]["mapping"]["sam"]
-            input_file = self.sample_data[sample]["fastq"]["mapping"][self.file2use]
-            # bam_name = self.sample_data[sample]["fastq"]["mapping"]["sam"] + ".bam"
+            # sam_file = self.sample_data[sample]["sam"]
+            input_file = self.sample_data[sample][self.file2use]
+            # bam_name = self.sample_data[sample]["sam"] + ".bam"
             bam_name = os.path.basename(input_file) + ".bam"
             output_sam_name = os.path.basename(input_file) + ".sam" #might be used...
             
@@ -164,11 +159,11 @@ class Step_samtools(Step):
                 tobam = re.search("\-\w*b",self.params["view"])
                 if tobam:
                     self.script += "-o %s \\\n\t %s\n\n" % (use_dir + bam_name,input_file)
-                    self.sample_data[sample]["fastq"]["mapping"]["bam"] = sample_dir + bam_name
+                    self.sample_data[sample]["bam"] = sample_dir + bam_name
                 else:
                     self.script += "-o %s \\\n\t %s\n\n" % (use_dir + output_sam_name,input_file)
-                    self.sample_data[sample]["fastq"]["mapping"]["sam"] = sample_dir + output_sam_name
-                    self.stamp_file(self.sample_data[sample]["fastq"]["mapping"]["sam"])
+                    self.sample_data[sample]["sam"] = sample_dir + output_sam_name
+                    self.stamp_file(self.sample_data[sample]["sam"])
 
                     self.write_warning("Output from samtools view is SAM. Not proceeding further.\nTo produce a BAM, make sure to include the -b flag in the samtools view parameters.\n")
                     # If sam output, can't proceed with rest of commands which require bam input_file:
@@ -184,7 +179,7 @@ class Step_samtools(Step):
                 self.script += "\n\n"
                 self.script += "%s view \\\n\t" % self.get_script_env_path()
                 self.script += "-h \\\n\t" 
-                self.script += "%s | \\\n\t" % self.sample_data[sample]["fastq"]["mapping"]["bam"]
+                self.script += "%s | \\\n\t" % self.sample_data[sample]["bam"]
                 self.script += "awk '$0 ~\"(^@)|(%s)\"' | \\\n\t" % self.params["filter_by_tag"]
                 self.script += "%s view \\\n\t" % self.get_script_env_path()
                 self.script += "-bh \\\n\t" 
@@ -197,8 +192,8 @@ class Step_samtools(Step):
                     self.script += "\n\nrm -rf %s\n\n" % (use_dir + bam_name)
 
                 # Stroing filtered and unfiltered bams:
-                self.sample_data[sample]["fastq"]["mapping"]["unfiltered_bam"] = sample_dir + bam_name
-                self.sample_data[sample]["fastq"]["mapping"]["bam"] = sample_dir + filtered_name
+                self.sample_data[sample]["unfiltered_bam"] = sample_dir + bam_name
+                self.sample_data[sample]["bam"] = sample_dir + filtered_name
 
                 # The following is so that sort will work on the filtered file without playing around with the sort code:
                 bam_name = filtered_name
@@ -208,10 +203,10 @@ class Step_samtools(Step):
                 if "view" in self.params.keys():
                     bam_name = use_dir + bam_name
                 else:
-                    if "bam" in self.sample_data[sample]["fastq"]["mapping"].keys():
-                        bam_name = self.sample_data[sample]["fastq"]["mapping"]["bam"]
-                    elif "sam" in self.sample_data[sample]["fastq"]["mapping"].keys():
-                        bam_name = self.sample_data[sample]["fastq"]["mapping"]["sam"]
+                    if "bam" in self.sample_data[sample].keys():
+                        bam_name = self.sample_data[sample]["bam"]
+                    elif "sam" in self.sample_data[sample].keys():
+                        bam_name = self.sample_data[sample]["sam"]
                         self.write_warning("Can't find BAM but found SAM for sample. Using it instead of a BAM.\n", sample)
                     else:
                         raise AssertionExcept("Can't run sort without BAM file. Either include 'view' or use other BAM creating steps.\n",sample)
@@ -222,8 +217,8 @@ class Step_samtools(Step):
                 self.script += "-o %s \\\n\t" % (use_dir + sort_name)
                 self.script += "%s\n\n" % (bam_name)
                 # Storing sorted bam in 'bam' slot and unsorted bam in unsorted_bam slot
-                self.sample_data[sample]["fastq"]["mapping"]["unsorted_bam"] = sample_dir + os.path.basename(bam_name)
-                self.sample_data[sample]["fastq"]["mapping"]["bam"] = sample_dir + sort_name
+                self.sample_data[sample]["unsorted_bam"] = sample_dir + os.path.basename(bam_name)
+                self.sample_data[sample]["bam"] = sample_dir + sort_name
 
                 # If user requires than unsorted bam be removed:
                 if "del_unsorted" in self.params.keys():
@@ -238,14 +233,14 @@ class Step_samtools(Step):
                 if self.params["index"]:
                     self.script += "%s \\\n\t" % self.params["index"]
                 self.script += "%s\n\n" % (use_dir + bam_name)
-                self.sample_data[sample]["fastq"]["mapping"]["index"] = sample_dir + index_name
+                self.sample_data[sample]["index"] = sample_dir + index_name
         
             if "flagstat" in self.params.keys():
                 self.script += "###########\n# Calculating BAM statistics:\n#----------------\n"
                 self.script += "%s flagstat \\\n\t" % self.get_script_env_path()
                 self.script += "%s \\\n\t" % (use_dir + bam_name)
                 self.script += "> %s.flagstat \n\n" % (use_dir + bam_name)
-                self.sample_data[sample]["fastq"]["mapping"]["flagstat"] = "%s%s.flagstat" % (sample_dir, bam_name)
+                self.sample_data[sample]["flagstat"] = "%s%s.flagstat" % (sample_dir, bam_name)
         
             if "stats" in self.params.keys():
                 self.script += "###########\n# Calculating BAM statistics:\n#----------------\n"
@@ -254,7 +249,7 @@ class Step_samtools(Step):
                     self.script += "%s \\\n\t" % self.params["stats"]
                 self.script += "%s \\\n\t" % (use_dir + bam_name)
                 self.script += "> %s.stats \n\n" % (use_dir + bam_name)
-                self.sample_data[sample]["fastq"]["mapping"]["stats"] = "%s%s.stats" % (sample_dir, bam_name)
+                self.sample_data[sample]["stats"] = "%s%s.stats" % (sample_dir, bam_name)
                 
             if "idxstats" in self.params.keys():
                 self.script += "###########\n# Calculating index statistics (idxstats):\n#----------------\n"
@@ -262,13 +257,13 @@ class Step_samtools(Step):
                 # idxstats has no uder defined parameters...
                 self.script += "%s \\\n\t" % (use_dir + bam_name)
                 self.script += "> %s.idxstat.tab \n\n" % (use_dir + bam_name)
-                self.sample_data[sample]["fastq"]["mapping"]["stats"] = "%s%s.stats" % (sample_dir, bam_name)
-                self.sample_data[sample]["fastq"]["mapping"]["idxstats"] = "%s%s.idxstat.tab" % (sample_dir, bam_name)
+                self.sample_data[sample]["stats"] = "%s%s.stats" % (sample_dir, bam_name)
+                self.sample_data[sample]["idxstats"] = "%s%s.idxstat.tab" % (sample_dir, bam_name)
                 
                 
-            if "del_sam" in self.params.keys() and "sam" in self.sample_data[sample]["fastq"]["mapping"]:
+            if "del_sam" in self.params.keys() and "sam" in self.sample_data[sample]:
                 self.script += "###########\n# Removing SAM\n#----------------\n\n"
-                self.script += "rm -rf %s\n\n" % self.sample_data[sample]["fastq"]["mapping"]["sam"]
+                self.script += "rm -rf %s\n\n" % self.sample_data[sample]["sam"]
 
             
 

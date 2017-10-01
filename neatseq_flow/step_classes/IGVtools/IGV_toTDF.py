@@ -66,9 +66,9 @@ class Step_IGV_toTDF(Step):
 
         # Assert there is mapping data and a sorted bam in particular:
         for sample in self.sample_data["samples"]:      #Getting list of samples out of samples_hash
-            if not "mapping" in self.sample_data[sample]["fastq"]:
-                raise AssertionExcept("No mapping data exists\n", sample)
-            if not "wig" in self.sample_data[sample]["fastq"]["mapping"]:
+            if not "sam" in self.sample_data[sample] and not "bam" in self.sample_data[sample]:
+                raise AssertionExcept("No BAM/SAM files exist\n", sample)
+            if not "wig" in self.sample_data[sample]:
                 raise AssertionExcept("No wig file exists", sample)
             # This might change if it is to be run on a snp file...
 
@@ -109,7 +109,7 @@ class Step_IGV_toTDF(Step):
             use_dir = self.local_start(sample_dir)
 
             # Define input file (in future might work on snp files. this will have to be user-controlled?)
-            input_file = self.sample_data[sample]["fastq"]["mapping"]["wig"]
+            input_file = self.sample_data[sample]["wig"]
             
             output_file = os.path.basename(input_file)
 
@@ -124,8 +124,8 @@ class Step_IGV_toTDF(Step):
             self.script += "%s \n\n" % self.params["genome"]
 
 
-            self.sample_data[sample]["fastq"]["mapping"]["tdf"] = "%s%s.%s" % (sample_dir, output_file, "tdf")
-            self.stamp_file(self.sample_data[sample]["fastq"]["mapping"]["tdf"])
+            self.sample_data[sample]["tdf"] = "%s%s.%s" % (sample_dir, output_file, "tdf")
+            self.stamp_file(self.sample_data[sample]["tdf"])
     
         
             # Move all files from temporary local dir to permanent base_dir

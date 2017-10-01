@@ -79,15 +79,16 @@ class Step_quast(Step):
         if "scope" in self.params.keys():
             if self.params["scope"] == "project":
                 try:  # Is there a mega-assembly?
-                    self.sample_data["fasta"]["nucl"]
+                    self.sample_data["nucl"]
                 except KeyError:   # No. Check if all samples have assemblies:
                     raise AssertionExcept("No project wide assembly!")
                 else:
-                    try:   # Creating an assembly slot in case it does not exist
-                            # This can happen when running quast on a fasta file that was not assembled (=input)
-                        self.sample_data["assembly"]
-                    except KeyError:
-                        self.sample_data["assembly"] = {}
+                    pass
+                    # try:   # Creating an assembly slot in case it does not exist
+                            # # This can happen when running quast on a fasta file that was not assembled (=input)
+                        # self.sample_data["assembly"]
+                    # except KeyError:
+                        # self.sample_data["assembly"] = {}
                 if "compare_mode" in self.params.keys():
                     self.write_warning("Ignoring 'compare_mode' in project scope")
             
@@ -96,16 +97,17 @@ class Step_quast(Step):
                 
                     # Make sure each sample has a ["fasta"]["nucl"] slot 
                     try:
-                        self.sample_data[sample]["fasta"]["nucl"]
+                        self.sample_data[sample]["nucl"]
                         # self.sample_data["assembly"]  # Removed so that the step can be executed on fasta assembled elsewhere and loaded as fasta from sample file
                     except KeyError:
                         raise AssertionExcept("You are trying to run QUAST with no assembly.\n" , sample)
                     else:
-                        try:   # Creating an assembly slot in case it does not exist
-                                # This can happen when running quast on a fasta file that was not assembled (=input)
-                            self.sample_data[sample]["assembly"]
-                        except KeyError:
-                            self.sample_data[sample]["assembly"] = {}
+                        pass
+                        # try:   # Creating an assembly slot in case it does not exist
+                                # # This can happen when running quast on a fasta file that was not assembled (=input)
+                            # self.sample_data[sample]["assembly"]
+                        # except KeyError:
+                            # self.sample_data[sample]["assembly"] = {}
             else:
                 raise AssertionExcept("'scope' must be either 'project' or 'sample'")
             
@@ -116,13 +118,13 @@ class Step_quast(Step):
             self.write_warning("'scope' not passed. Will try guessing...")
 
             try:  # Is there a mega-assembly?
-                self.sample_data["fasta"]["nucl"]
+                self.sample_data["nucl"]
             except KeyError:   # No. Check if all samples have assemblies:
                 for sample in self.sample_data["samples"]:      # Getting list of samples out of samples_hash
                 
                     # Make sure each sample has a ["fasta"]["nucl"] slot 
                     try:
-                        self.sample_data[sample]["fasta"]["nucl"]
+                        self.sample_data[sample]["nucl"]
                         # self.sample_data["assembly"]  # Removed so that the step can be executed on fasta assembled elsewhere and loaded as fasta from sample file
                     except KeyError:
                         raise AssertionExcept("You are trying to run QUAST with no assembly.\n" , sample)
@@ -132,10 +134,10 @@ class Step_quast(Step):
             else:
                 self.write_warning("There is a project-wide assembly. Using it.\n")
 
-                try:   # Creating an assembly slot in case it does not exist
-                    self.sample_data["assembly"]
-                except KeyError:
-                    self.sample_data["assembly"] = {}
+                # try:   # Creating an assembly slot in case it does not exist
+                    # self.sample_data["assembly"]
+                # except KeyError:
+                    # self.sample_data["assembly"] = {}
         
                 self.params["scope"] = "project"
         
@@ -175,17 +177,17 @@ class Step_quast(Step):
                 
                 # Input file:
                 for sample in self.sample_data["samples"]:      # Getting list of samples out of samples_hash
-                    self.script += "%s \\\n\t" % self.sample_data[sample]["fasta"]["nucl"]
+                    self.script += "%s \\\n\t" % self.sample_data[sample]["nucl"]
 
                 self.script = self.script.rstrip("\\\n\t")
                 self.script += "\n\n"
                 
 
             
-                # Store BLAST result file:
-                if "assembly" not in self.sample_data.keys():
-                    self.sample_data["assembly"] = dict()
-                self.sample_data["assembly"]["quast"] = self.base_dir
+                # Store result file:
+                # if "assembly" not in self.sample_data.keys():
+                    # self.sample_data["assembly"] = dict()
+                self.sample_data["quast"] = self.base_dir
                 # self.stamp_dir_files(self.sample_data["assembly"]["quast"])
 
 
@@ -219,12 +221,12 @@ class Step_quast(Step):
                     self.script += "--output-dir %s \\\n\t" % sample_dir
                     
                     # Input file:
-                    self.script += "%s \n\n" % self.sample_data[sample]["fasta"]["nucl"]
+                    self.script += "%s \n\n" % self.sample_data[sample]["nucl"]
                     
 
                 
                     # Store BLAST result file:
-                    self.sample_data[sample]["assembly"]["quast"] = sample_dir
+                    self.sample_data[sample]["quast"] = sample_dir
 
                     # self.stamp_dir_files(self.sample_data[sample]["assembly"]["quast"])
 
@@ -255,12 +257,12 @@ class Step_quast(Step):
             self.script += "--output-dir %s \\\n\t" % use_dir
             
             # Input file:
-            self.script += "%s \n\n" % self.sample_data["fasta"]["nucl"]
+            self.script += "%s \n\n" % self.sample_data["nucl"]
             
 
         
             # Store BLAST result file:
-            self.sample_data["assembly"]["quast"] = self.base_dir
+            self.sample_data["quast"] = self.base_dir
             # self.stamp_dir_files(self.sample_data["assembly"]["quast"])
 
 

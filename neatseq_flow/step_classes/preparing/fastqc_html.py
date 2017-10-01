@@ -61,9 +61,9 @@ class Step_fastqc_html(Step):
         
         # Assert that all samples have reads files:
         for sample in self.sample_data["samples"]:    
-            if not "fastq" in self.sample_data[sample]:
-                raise AssertionExcept("No fastq files defined.\n", sample)
-            if not {"readsF", "readsR", "readsS"} & set(self.sample_data[sample]["fastq"].keys()):
+            # if not "fastq" in self.sample_data[sample]:
+                # raise AssertionExcept("No fastq files defined.\n", sample)
+            if not filter(lambda x: x in ["readsF", "readsR", "readsS"], self.sample_data[sample].keys()):
                 raise AssertionExcept("No read files defined\n", sample)
 
         
@@ -102,26 +102,27 @@ class Step_fastqc_html(Step):
             self.script += self.get_script_const()
 
             self.script += "--outdir " + use_dir
-            # Create temporary dict to store the output file names:
-            temp_dict = {}
+            
             for direction in ("readsF","readsR","readsS"):
-                if direction in self.sample_data[sample]["fastq"].keys():
-                    self.script += " \\\n\t" + self.sample_data[sample]["fastq"][direction] 
+                if direction in self.sample_data[sample].keys():
+                    self.script += " \\\n\t" + self.sample_data[sample][direction] 
             self.script += "\n\n";
             
             
+            # Create temporary dict to store the output file names:
+            temp_dict = {}
             for direction in ("readsF","readsR","readsS"):
-                if direction in self.sample_data[sample]["fastq"].keys():
-                    temp_dict[direction] = {}
-                    file_basename = os.path.basename(self.sample_data[sample]["fastq"][direction])
-                    temp_dict[direction]["html"] = self.base_dir + file_basename + "_fastqc.html"
-                    temp_dict[direction]["zip"] = self.base_dir + file_basename + "_fastqc.zip"
+                if direction in self.sample_data[sample].keys():
+                    # temp_dict[direction] = {}
+                    file_basename = os.path.basename(self.sample_data[sample][direction])
+                    for type in ["zip","html"]:
+                        slot_name = "fastqc_{direction}_{type}".format(direction=direction, type=type)
+                        self.sample_data[sample][slot_name] = self.base_dir + file_basename + "_fastqc.{type}".format(type=type) 
 
             
             # Move all files from temporary local dir to permanent base_dir
             self.local_finish(use_dir,self.base_dir)       # Sees to copying local files to final destination (and other stuff)
 
-            self.sample_data[sample]["fastq"]["fastqc"] = temp_dict
             
                     
             

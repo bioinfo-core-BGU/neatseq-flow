@@ -460,21 +460,22 @@ qsub -N %(step_step)s_%(step_name)s_%(run_code)s \\
             
             # Prepare holder for type:
             self.sample_data[sample]["type"] = list()
-            # IF fastq exists, add PE and SE to list, according to existing read types:
-            if "fastq" in self.sample_data[sample].keys():
-                directions = set(self.sample_data[sample]["fastq"].keys()) & {"Forward","Reverse","Single"}
-                if "Single" in directions:
-                    # Only one type of file: SE
-                    self.sample_data[sample]["type"].append("SE")
-                if "Forward" in directions and "Reverse" in directions:
-                    self.sample_data[sample]["type"].append("PE")
-                if "Forward" in directions and "Reverse" not in directions:
-                    sys.exit("You have only Forward for sample %s. Can't proceed!" % sample)
-                if "Reverse" in directions and "Forward" not in directions:
-                    sys.exit("You have only Reverse for sample %s. Can't proceed!" % sample)
+            if "Single" in self.sample_data[sample]:
+                # Only one type of file: SE
+                self.sample_data[sample]["type"].append("SE")
+            if "Forward" in self.sample_data[sample] and "Reverse" in self.sample_data[sample]:
+                self.sample_data[sample]["type"].append("PE")
+            if "Forward" in self.sample_data[sample] and "Reverse" not in self.sample_data[sample]:
+                sys.exit("You have only Forward for sample %s. Can't proceed!" % sample)
+            if "Reverse" in self.sample_data[sample] and "Forward" not in self.sample_data[sample]:
+                sys.exit("You have only Reverse for sample %s. Can't proceed!" % sample)
             # IF fasta exists, add to types list
-            if "fasta" in self.sample_data[sample].keys():
-                self.sample_data[sample]["type"].append("fasta")
+            if "nucl" in self.sample_data[sample]:
+                self.sample_data[sample]["type"].append("nucl")
+            if "prot" in self.sample_data[sample]:
+                self.sample_data[sample]["type"].append("prot")
+            if "bam" in self.sample_data[sample] or "sam" in self.sample_data[sample]:
+                self.sample_data[sample]["type"].append("mapping")
             
                 
     def create_qdel_script(self):

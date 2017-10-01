@@ -106,3 +106,54 @@ Step_params:
         redirects:
             -p: 20
             -q: null
+# --------- Sample-scope assembly and BLAST:
+    trinity_smp:
+        module: trinity
+        base: trin_tags1
+        script_path: /path/to/Trinity
+        qsub_params:
+            -pe: shared 20
+            node: sge213
+        scope: sample
+        redirects:
+            --CPU: 20
+            --JM: 140G
+            --full_cleanup: null
+            --grid_conf: /path/to/SGE_Trinity_conf.txt
+            --min_kmer_cov: 2
+            --seqType: fq
+    mkblst_smp:
+        module: makeblastdb
+        base: trinity_smp
+        script_path: /path/to/makeblastdb
+        scope: sample
+        redirects:
+            -dbtype: nucl
+    sprot_smp:
+        module: blast
+        base: trinity_smp
+        script_path: /path/to/blastx
+        scope: sample
+        redirects:
+            -db: /path/to/sprot
+            -evalue: 0.0001
+            -max_target_seqs: 5
+            -outfmt: '"6 qseqid sallseqid qlen slen qstart qend sstart send length
+                evalue bitscore score pident qframe"'
+    blastOnAssembl_smp:
+        module: blast
+        base: mkblst_smp
+        script_path: /path/to/blastn
+        qsub_params:
+            -pe: shared 40
+            node: sge102
+            queue: ess_all.q
+        fasta2use: nucl
+        scope: sample
+        redirects:
+            -evalue: 0.0001
+            -num_descriptions: 20
+            -num_threads: 40
+            -outfmt: '"6 qseqid sallseqid qlen slen qstart qend sstart send length
+                evalue bitscore score pident qframe"'
+            -query: /path/to/query.fasta

@@ -73,13 +73,11 @@ class Step_bwa_builder(Step):
         if self.params["scope"] == "project":
             # Initializing project bwa slot
             try:
-                self.sample_data["fasta"]["nucl"]
+                self.sample_data["nucl"]
             except KeyError:
                 raise AssertionExcept("Project does not have a nucl fasta defined. Check your 'scope'\n", sample)
             else:
-                if "bwa" not in self.sample_data.keys():
-                    self.sample_data["bwa"] = dict()
-                else:
+                if "bwa_index" in self.sample_data.keys():
                     raise AssertionExcept("bwa index already seems to exist.\n")
             
                 
@@ -87,13 +85,11 @@ class Step_bwa_builder(Step):
         elif self.params["scope"] == "sample":
             for sample in self.sample_data["samples"]:      # Getting list of samples out of samples_hash
                 try:
-                    self.sample_data[sample]["fasta"]["nucl"]
+                    self.sample_data[sample]["nucl"]
                 except KeyError:
                     raise AssertionExcept("Sample does not have a nucl fasta defined. Can't build index\n", sample)
                 else:
-                    if "bwa" not in self.sample_data[sample].keys():
-                        self.sample_data[sample]["bwa"] = dict()
-                    else:
+                    if "bwa_index" in self.sample_data[sample].keys():
                         raise AssertionExcept("bwa index already exists for sample.\n", sample)
             
         else:
@@ -145,11 +141,11 @@ class Step_bwa_builder(Step):
                 # Add target for index
                 self.script += "-p %s \\\n\t" % (use_dir + output_prefix)
                 # Add source for index
-                self.script += "%s \n\n" % self.sample_data[sample]["fasta"]["nucl"]
+                self.script += "%s \n\n" % self.sample_data[sample]["nucl"]
 
 
-                self.sample_data[sample]["bwa"]["index"] = (sample_dir + output_prefix)
-                self.sample_data[sample]["bwa"]["fasta"] = self.sample_data[sample]["fasta"]["nucl"]
+                self.sample_data[sample]["bwa_index"] = (sample_dir + output_prefix)
+                self.sample_data[sample]["bwa_fasta"] = self.sample_data[sample]["nucl"]
                 
             
                 # Move all files from temporary local dir to permanent base_dir
@@ -181,11 +177,11 @@ class Step_bwa_builder(Step):
             # Add target for index
             self.script += "-p %s \\\n\t" % (use_dir + output_prefix)
             # Add source for index
-            self.script += "%s \n\n" % self.sample_data["fasta"]["nucl"]
+            self.script += "%s \n\n" % self.sample_data["nucl"]
 
 
-            self.sample_data["bwa"]["index"] = (self.base_dir + output_prefix)
-            self.sample_data["bwa"]["fasta"] = self.sample_data["fasta"]["nucl"]
+            self.sample_data["bwa_index"] = (self.base_dir + output_prefix)
+            self.sample_data["bwa_fasta"] = self.sample_data["nucl"]
             
             
         
