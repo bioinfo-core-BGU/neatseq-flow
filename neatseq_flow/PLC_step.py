@@ -157,7 +157,9 @@ class Step:
                 "depends" : self.get_depend_list()}
         
     def write_warning(self, warning = "Unknown problem", sample = None):
-
+        """ Write a warning when doing something that might be foolish.
+            If the foolishness is sample-specific, pass the sample as an argument
+        """
     
     # def get_error_str(self, step_name):
         if sample: # If a sample was passed. The exception is specific to a sample
@@ -712,6 +714,15 @@ perl -e 'use Env qw(USER); open(my $fh, "<", "%(limit_file)s"); ($l,$s) = <$fh>=
             print assertErr.get_error_str(self.get_step_name())
             raise
     
+        if "stop_and_show" in self.params:
+            print "project slots:\n-------------"
+            pp(self.sample_data.keys())
+            print "sample slots:\n-------------"
+            # all_sample_keys = list()
+            # all_sample_keys = all_sample_keys.append(map(lambda x: self.sample_data[x].keys(), self.sample_data["samples"]))
+            pp(self.sample_data[self.sample_data["samples"][0]].keys())
+            # print all_sample_keys
+            
         
     def make_qsub_header(self, jid_list, script_lev = "low"):
         """ Make the first few lines for the scripts
@@ -834,9 +845,9 @@ fi
                 if isinstance(self.params["redir_params"][key],list):
                     self.write_warning("Passed %s twice as redirected parameter!" % key)
                     for keyval in self.params["redir_params"][key]:
-                        redir_param_script += "%s %s \\\n\t" % (key,keyval if self.params["redir_params"][key] else "")
+                        redir_param_script += "%s %s \\\n\t" % (key,keyval if self.params["redir_params"][key]!=None else "")
                 else:
-                    redir_param_script += "%s %s \\\n\t" % (key,self.params["redir_params"][key] if self.params["redir_params"][key] else "")
+                    redir_param_script += "%s %s \\\n\t" % (key,self.params["redir_params"][key] if self.params["redir_params"][key]!=None else "")
 
         return redir_param_script
 

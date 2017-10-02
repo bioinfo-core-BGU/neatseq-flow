@@ -134,7 +134,7 @@ def get_param_data_YAML(filelines):
     
 
     # Read params with pyyaml package:
-    yaml_params = yaml.load("\n".join(filelines))
+    yaml_params = yaml.load("\n".join(filelines),  Loader=yaml.SafeLoader)
     
     # If there is a Variables section, interpolate any appearance of the variables in the params
     if "Vars" in yaml_params.keys():
