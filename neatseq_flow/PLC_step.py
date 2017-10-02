@@ -2,9 +2,7 @@
 """ A class defining a step in the pipeline.
 
 """
-import os
-import sys
-import re
+import os, shutil, sys, re
 import traceback
 import datetime
 
@@ -37,7 +35,7 @@ class Step:
     Cwd = os.path.dirname(os.path.abspath(__file__))
 
     @classmethod
-    def find_step_module(self,step,param_data):
+    def find_step_module(self,step,param_data, pipe_data):
         """ A class method for finding the location of a module for a given step
         """
 
@@ -67,6 +65,12 @@ class Step:
 
                     # For what this does, see below (# Build module name)...
 
+                    # Backup module to backups dir:
+                    shutil.copyfile(level[0] + os.sep + mod_t + ".py", \
+                        "{bck_dir}{runcode}{ossep}{filename}".format(bck_dir = pipe_data["backups_dir"], \
+                                                                     runcode = pipe_data["run_code"], \
+                                                                     ossep = os.sep, \
+                                                                     filename = mod_t + ".py"))
                     retval = (level[0].split(module_path)[1].partition(os.sep)[2].replace(os.sep,".") + "." + mod_t).lstrip(".")
                     return retval
 
@@ -87,6 +91,13 @@ class Step:
         # 3. partition by os.sep to remove leading os.sep
         # 4. replace remaining os.sep's by ".". 
         # 5. Add .
+        
+        # Backup module to backups dir:
+        shutil.copyfile(level[0] + os.sep + mod_t + ".py", \
+                        "{bck_dir}{runcode}{ossep}{filename}".format(bck_dir = pipe_data["backups_dir"], \
+                                                                     runcode = pipe_data["run_code"], \
+                                                                     ossep = os.sep, \
+                                                                     filename = mod_t + ".py"))
         retval = level[0].split(self.Cwd)[1].partition(os.sep)[2].replace(os.sep,".") + "." + mod_t
         return retval
         # return level[0].split(self.Cwd)[1].partition(os.sep)[2].replace(os.sep,".") + "." + mod_t

@@ -124,6 +124,8 @@ class neatseq_flow:
         # Create file md5sum registration file:
         self.create_registration_file()
         
+        # Backup parameter and sample files:
+        self.backup_source_files(param_file, sample_file)
         
         # Create step instances:
         self.make_step_instances()
@@ -169,8 +171,6 @@ class neatseq_flow:
             json_fh.write(self.get_qsub_names_json_encoding())
             
         
-        # Backup parameter and sample files:
-        self.backup_source_files(param_file, sample_file)
         
         self.create_log_plotter()
         
@@ -436,7 +436,7 @@ qsub -N %(step_step)s_%(step_name)s_%(run_code)s \\
         step_params = self.get_step_param_data()[step_type][step_name]
         
         # Find the location of the step module in the file structure (see function find_step_module())
-        step_module_loc = Step.find_step_module(step_type, self.param_data)  # Passing param data because it contains the optional search path...
+        step_module_loc = Step.find_step_module(step_type, self.param_data, self.pipe_data)  # Passing param data because it contains the optional search path...
         # Import the module:
 
         exec "from %s import %s as StepClass" % (step_module_loc,'Step_' + step_type)
@@ -625,6 +625,9 @@ Date\tStep\tName\tScript\tFile\tmd5sum\n
                                                                 self.pipe_data["run_code"], \
                                                                 i))
             i += 1
+        
+        os.mkdir("{bck_dir}{run_code}".format(bck_dir = self.pipe_data["backups_dir"], \
+                                              run_code = self.pipe_data["run_code"]))
         pass
 
         
