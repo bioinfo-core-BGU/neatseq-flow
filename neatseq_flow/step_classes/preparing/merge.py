@@ -7,21 +7,21 @@ Requires
 
 * fastq files in one of the following slots:
 
-    * ``sample_data[<sample>][]["Forward"]``
-    * ``sample_data[<sample>][]["Reverse"]``
-    * ``sample_data[<sample>][]["Single"]``
+    * ``sample_data[<sample>]["Forward"]``
+    * ``sample_data[<sample>]["Reverse"]``
+    * ``sample_data[<sample>]["Single"]``
 
 * or fasta files in one of the following slots:
 
-    * ``sample_data[<sample>]["fasta"]["Nucleotide"]``
-    * ``sample_data[<sample>]["fasta"]["Protein"]``
+    * ``sample_data[<sample>]["Nucleotide"]``
+    * ``sample_data[<sample>]["Protein"]``
     
 Output
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 * puts fastq output files in the following slots:
 
-    * ``sample_data[<sample>][]["readF"|"readR"|"readS"]``
+    * ``sample_data[<sample>]["readF"|"readR"|"readS"]``
         
 * puts fasta output files in the following slots:
     
@@ -108,7 +108,6 @@ class Step_merge(Step):
             # General comment: If there is a parallel routine for each direction (forward, reverse), add this loop	
             # if  in self.sample_data[sample].keys():
 
-            print filter(lambda x: x in ["Forward","Reverse","Single"], self.sample_data[sample].keys())
             # Loop over all **existing** Forward, Reverse and Single slots:
             # The filter returns a list of keys in sample_data that are in the list ["Forward","Reverse","Single"]
             for direction in filter(lambda x: x in ["Forward","Reverse","Single"], self.sample_data[sample].keys()):
