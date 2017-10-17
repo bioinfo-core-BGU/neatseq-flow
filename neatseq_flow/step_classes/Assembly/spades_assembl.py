@@ -22,13 +22,13 @@ Output:
         
         * for sample-wise assembly:
         
-            * ``sample_data[<sample>]["fasta"]["nucl"]``
+            * ``sample_data[<sample>]["fasta.nucl"]``
             * ``sample_data[<sample>]["assembly"]["spades_assembl"]["contigs"]``
             * ``sample_data[<sample>]["assembly"]["spades_assembl"]["scaffolds"]``
         
         * for mega assembly (not defined yet):
         
-            * ``sample_data["fasta"]["nucl"]``
+            * ``sample_data["fasta.nucl"]``
             * ``sample_data["assembly"]["spades_assembl"]["contigs"]``
             * ``sample_data["assembly"]["spades_assembl"]["scaffolds"]``
 
@@ -176,7 +176,7 @@ mv -f %(shortnames)s %(contigs)s \n\n""" % {"contigs":sample_dir + "contigs.fast
                         
                 # Store results to fasta and assembly slots:
                 self.sample_data[sample]["fasta"] = sample_dir + "contigs.fasta"
-                self.sample_data[sample]["nucl"]  = sample_dir + "contigs.fasta"
+                self.sample_data[sample]["fasta.nucl"]  = sample_dir + "contigs.fasta"
                 self.sample_data[sample][self.get_step_step() + "_contigs"] = sample_dir + "contigs.fasta"
                 self.sample_data[sample][self.get_step_step() + "_scaffolds"] = sample_dir + "scaffolds.fasta"
 

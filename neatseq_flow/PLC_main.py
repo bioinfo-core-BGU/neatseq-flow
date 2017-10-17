@@ -470,11 +470,11 @@ qsub -N %(step_step)s_%(step_name)s_%(run_code)s \\
             if "Reverse" in self.sample_data[sample] and "Forward" not in self.sample_data[sample]:
                 sys.exit("You have only Reverse for sample %s. Can't proceed!" % sample)
             # IF fasta exists, add to types list
-            if "nucl" in self.sample_data[sample]:
+            if "Nucleotide" in self.sample_data[sample]:
                 self.sample_data[sample]["type"].append("nucl")
-            if "prot" in self.sample_data[sample]:
+            if "Protein" in self.sample_data[sample]:
                 self.sample_data[sample]["type"].append("prot")
-            if "bam" in self.sample_data[sample] or "sam" in self.sample_data[sample]:
+            if "BAM" in self.sample_data[sample] or "SAM" in self.sample_data[sample]:
                 self.sample_data[sample]["type"].append("mapping")
             
                 

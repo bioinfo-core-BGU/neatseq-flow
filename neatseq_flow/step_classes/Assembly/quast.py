@@ -12,8 +12,8 @@ Requires
 
 * fasta files in one of the following slots:
 
-    * ``sample_data["fasta"]["nucl"]``
-    * ``sample_data[<sample>]["fasta"]["nucl"]``
+    * ``sample_data["fasta.nucl"]``
+    * ``sample_data[<sample>]["fasta.nucl"]``
     
 
 Output
@@ -79,7 +79,7 @@ class Step_quast(Step):
         if "scope" in self.params.keys():
             if self.params["scope"] == "project":
                 try:  # Is there a mega-assembly?
-                    self.sample_data["nucl"]
+                    self.sample_data["fasta.nucl"]
                 except KeyError:   # No. Check if all samples have assemblies:
                     raise AssertionExcept("No project wide assembly!")
                 else:
@@ -95,9 +95,9 @@ class Step_quast(Step):
             elif self.params["scope"] == "sample":
                 for sample in self.sample_data["samples"]:      # Getting list of samples out of samples_hash
                 
-                    # Make sure each sample has a ["fasta"]["nucl"] slot 
+                    # Make sure each sample has a ["fasta.nucl"] slot 
                     try:
-                        self.sample_data[sample]["nucl"]
+                        self.sample_data[sample]["fasta.nucl"]
                         # self.sample_data["assembly"]  # Removed so that the step can be executed on fasta assembled elsewhere and loaded as fasta from sample file
                     except KeyError:
                         raise AssertionExcept("You are trying to run QUAST with no assembly.\n" , sample)
@@ -118,13 +118,13 @@ class Step_quast(Step):
             self.write_warning("'scope' not passed. Will try guessing...")
 
             try:  # Is there a mega-assembly?
-                self.sample_data["nucl"]
+                self.sample_data["fasta.nucl"]
             except KeyError:   # No. Check if all samples have assemblies:
                 for sample in self.sample_data["samples"]:      # Getting list of samples out of samples_hash
                 
-                    # Make sure each sample has a ["fasta"]["nucl"] slot 
+                    # Make sure each sample has a ["fasta.nucl"] slot 
                     try:
-                        self.sample_data[sample]["nucl"]
+                        self.sample_data[sample]["fasta.nucl"]
                         # self.sample_data["assembly"]  # Removed so that the step can be executed on fasta assembled elsewhere and loaded as fasta from sample file
                     except KeyError:
                         raise AssertionExcept("You are trying to run QUAST with no assembly.\n" , sample)
@@ -177,7 +177,7 @@ class Step_quast(Step):
                 
                 # Input file:
                 for sample in self.sample_data["samples"]:      # Getting list of samples out of samples_hash
-                    self.script += "%s \\\n\t" % self.sample_data[sample]["nucl"]
+                    self.script += "%s \\\n\t" % self.sample_data[sample]["fasta.nucl"]
 
                 self.script = self.script.rstrip("\\\n\t")
                 self.script += "\n\n"
@@ -221,7 +221,7 @@ class Step_quast(Step):
                     self.script += "--output-dir %s \\\n\t" % sample_dir
                     
                     # Input file:
-                    self.script += "%s \n\n" % self.sample_data[sample]["nucl"]
+                    self.script += "%s \n\n" % self.sample_data[sample]["fasta.nucl"]
                     
 
                 
@@ -257,7 +257,7 @@ class Step_quast(Step):
             self.script += "--output-dir %s \\\n\t" % use_dir
             
             # Input file:
-            self.script += "%s \n\n" % self.sample_data["nucl"]
+            self.script += "%s \n\n" % self.sample_data["fasta.nucl"]
             
 
         

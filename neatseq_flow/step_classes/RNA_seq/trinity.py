@@ -20,12 +20,12 @@ Output:
         
         * for sample-wise assembly:
         
-            * ``sample_data[<sample>]["fasta"]["nucl"]``
+            * ``sample_data[<sample>]["fasta.nucl"]``
             * ``sample_data[<sample>]["assembly"]["trinity_assembl"]["contigs"]``
         
         * for project-wise assembly:
         
-            * ``sample_data["fasta"]["nucl"]``
+            * ``sample_data["fasta.nucl"]``
             * ``sample_data["assembly"]["trinity_assembl"]["contigs"]``
 
                 
@@ -193,8 +193,8 @@ class Step_trinity(Step):
         
 
         # Store results to fasta and assembly slots:
-        self.sample_data["nucl"] = "%s%s%s%s" % (self.base_dir, os.sep, self.sample_data["Title"], self.file_tag)
-        self.sample_data[self.get_step_step() + "_contigs"] = self.sample_data["nucl"]
+        self.sample_data["fasta.nucl"] = "%s%s%s%s" % (self.base_dir, os.sep, self.sample_data["Title"], self.file_tag)
+        self.sample_data[self.get_step_step() + "_contigs"] = self.sample_data["fasta.nucl"]
 
         self.stamp_file(self.sample_data[self.get_step_step() + "_contigs"])
 
@@ -238,7 +238,7 @@ class Step_trinity(Step):
             self.script = self.script.rstrip("\\\n\t") + "\n\n"
 
             # Store results to fasta and assembly slots:
-            self.sample_data[sample]["nucl"] = sample_dir + "Trinity.fasta"
+            self.sample_data[sample]["fasta.nucl"] = sample_dir + "Trinity.fasta"
             self.sample_data[sample][self.get_step_step() + "_contigs"] = sample_dir + "Trinity.fasta"
 
             self.stamp_file(self.sample_data[sample][self.get_step_step() + "_contigs"])

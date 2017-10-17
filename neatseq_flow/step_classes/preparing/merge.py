@@ -21,11 +21,11 @@ Output
 
 * puts fastq output files in the following slots:
 
-    * ``sample_data[<sample>]["readF"|"readR"|"readS"]``
+    * ``sample_data[<sample>]["readsF"|"readsR"|"readsS"]``
         
 * puts fasta output files in the following slots:
     
-    * ``sample_data[<sample>]["fasta"]["nucl"|"prot"]``
+    * ``sample_data[<sample>]["fasta.nucl"|"fasta.prot"]``
 
 .. note:: In the *merge* parameters, set the *script_path* parameter according to the type of raw files you've got. 
     e.g., if they are gzipped, it should be ``gzip -cd``, etc.
@@ -74,7 +74,7 @@ __author__ = "Menachem Sklarz"
 __version__ = "1.0.1"
 
 # A dict for conversion of types of sample data to positions in fasta structure:
-fasta_types_dict = {"Nucleotide":"nucl","Protein":"prot"}
+fasta_types_dict = {"Nucleotide":"fasta.nucl","Protein":"fasta.prot"}
 sam_bam_dict     = {"SAM":"sam", "BAM":"bam", "REFERENCE":"reference"}
 
 class Step_merge(Step):

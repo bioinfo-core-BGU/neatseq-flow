@@ -12,25 +12,25 @@ Requires:
 
 * fasta files in one of the following slots for sample-wise blast:
 
-    * ``sample_data[<sample>]["fasta"]["nucl"]``
-    * ``sample_data[<sample>]["fasta"]["prot"]``
+    * ``sample_data[<sample>]["fasta.nucl"]``
+    * ``sample_data[<sample>]["fasta.prot"]``
 
 * or fasta files in one of the following slots for project-wise blast:
 
-    * ``sample_data["fasta"]["nucl"]``
-    * ``sample_data["fasta"]["prot"]``
+    * ``sample_data["fasta.nucl"]``
+    * ``sample_data["fasta.prot"]``
     
 * or a ``makeblastdb`` index in one of the following slots:
 
     * When 'scope' is set to 'project'
     
-        * ``sample_data["blast"]["blastdb"]["nucl"|"prot"]``
-        * ``sample_data["blast"]["blastdb"]["nucl_log"|"prot_log"]``
+        * ``sample_data["blastdb.nucl"|"blastdb.prot"]``
+        * ``sample_data["blastdb.log.nucl"|"blastdb.log.prot"]``
 
     * When 'scope' is set to 'sample'
 
-        * ``sample_data[<sample>]["blast"]["blastdb"]["nucl"|"prot"]``
-        * ``sample_data[<sample>]["blast"]["blastdb"]["nucl_log"|"prot_log"]``
+        * ``sample_data[<sample>]["blastdb.nucl"|"blastdb.prot"]``
+        * ``sample_data[<sample>]["blastdb.log.nucl"|"blastdb.log.prot"]``
 
     
     
@@ -39,11 +39,11 @@ Output:
 
 * puts BLAST output files in the following slots for sample-wise blast:
 
-    * ``sample_data[<sample>]["blast"]["nucl"|"prot"]``
+    * ``sample_data[<sample>]["blast.nucl"|"blast.prot"]``
 
 * puts fasta output files in the following slots for project-wise blast:
     
-    * ``sample_data["blast"]["nucl"|"prot"]``
+    * ``sample_data["blast.nucl"|"blast.prot"]``
 
 
 Parameters that can be set        
@@ -161,23 +161,24 @@ class Step_blast(Step):
                 # if not "fasta" in self.sample_data[sample].keys():
                     # raise AssertionExcept("No 'fasta' defined.\nIf the query is a project fasta, set parameter 'scope' to 'project'\n",sample)       
                 # Both nucl and prot exist:
-                if "nucl" in self.sample_data[sample] and "prot" in self.sample_data[sample]:
+                if "fasta.nucl" in self.sample_data[sample] and "fasta.prot" in self.sample_data[sample]:
                     raise AssertionExcept("There are both nucl and prot fasta files. You must supply a fasta2use param\n",sample)
                 # Neither nucl nor prot exist:
-                if "nucl" not in self.sample_data[sample] and "prot" not in self.sample_data[sample]:
+                if "fasta.nucl" not in self.sample_data[sample] and "fasta.prot" not in self.sample_data[sample]:
                     raise AssertionExcept("There are neither nucl nor prot fasta files.\nIf the query is a project fasta, set parameter 'scope' to 'project'\n",sample)
                 
                 
-                if "nucl" in self.sample_data[sample].keys():
+                if "fasta.nucl" in self.sample_data[sample].keys():
                     self.params["fasta2use"] = "nucl"
-                elif "prot" in self.sample_data[sample].keys():
+                elif "fasta.prot" in self.sample_data[sample].keys():
                     self.params["fasta2use"] = "prot"
                 else:
                     ""
                     
-            if "fasta2use" in self.params.keys():
-                if not self.params["fasta2use"] in self.sample_data[sample]:
-                    raise AssertionExcept("The type you passed in fasta2use ('%s') does not exist.\nIf the query is a project fasta, set parameter 'scope' to 'project'\n" % self.params["fasta2use"], sample)
+            # if "fasta2use" in self.params.keys():
+            self.fasta2use = self.params["fasta2use"]
+            if not "fasta." + self.fasta2use in self.sample_data[sample]:
+                raise AssertionExcept("The type you passed in fasta2use ('%s') does not exist.\nIf the query is a project fasta, set parameter 'scope' to 'project'\n" % self.params["fasta2use"], sample)
 
         pass
 
@@ -203,24 +204,25 @@ class Step_blast(Step):
         # This has holes. If some of the samples have only nucl and some only prot, it will not fail...
         if "fasta2use" not in self.params.keys():
             # If both nucl and prot exist:
-            if "nucl" in self.sample_data and "prot" in self.sample_data:
+            if "fasta.nucl" in self.sample_data and "fasta.prot" in self.sample_data:
                 raise AssertionExcept("There are both 'nucl' and 'prot' fasta files. You must supply a fasta2use param\n")       
             # If neither nucl or prot exist:
-            if "nucl" not in self.sample_data and "prot" not in self.sample_data:
+            if "fasta.nucl" not in self.sample_data and "fasta.prot" not in self.sample_data:
                 raise AssertionExcept("There are neither 'nucl' and 'prot' fasta files defined\n")      
 
-            if "nucl" in self.sample_data.keys():
+            if "fasta.nucl" in self.sample_data.keys():
                 self.params["fasta2use"] = "nucl"
-            elif "prot" in self.sample_data.keys():
+            elif "fasta.prot" in self.sample_data.keys():
                 self.params["fasta2use"] = "prot"
             else:
                 pass # Should'nt get here because of assertions above. Included elif "prot" for clarity
                 
-        if "fasta2use" in self.params.keys():
-            if not self.params["fasta2use"] in self.sample_data:
-                raise AssertionExcept("The type you passed in 'fasta2use' ('%s') does not exist for the project.\n\tIf the 'fasta' files are per sample, remove the 'projectBLAST' parameter.\n" % self.params["fasta2use"])
+        # if "fasta2use" in self.params.keys():
+        self.fasta2use = self.params["fasta2use"]
+        if not ("fasta." + self.fasta2use) in self.sample_data:
+            raise AssertionExcept("The type you passed in 'fasta2use' ('%s') does not exist for the project.\n\tIf the 'fasta' files are per sample, remove the 'projectBLAST' parameter.\n" % self.params["fasta2use"])
 
-        pass
+        # pass
         
     def create_spec_wrapping_up_script(self):
         """ Add stuff to check and agglomerate the output data
@@ -283,19 +285,19 @@ class Step_blast(Step):
             # Define query and db files:
             # If db is defined by user, set the query to the correct 'fasta2use'
             if "-db" in self.params["redir_params"].keys():
-                self.script += "-query %s \\\n\t" % self.sample_data[sample][self.params["fasta2use"]]
+                self.script += "-query %s \\\n\t" % self.sample_data[sample]["fasta." + self.fasta2use]
             # If -db is not defined by user, set the -db to the correct blastdb, with 'fasta2use'
             # -query must be set by user. assertion is made in step_specific_init()
             else:
-                self.script += "-db %s \\\n\t" % self.sample_data[sample]["blastdb_" + self.params["fasta2use"]]
+                self.script += "-db %s \\\n\t" % self.sample_data[sample]["blastdb." + self.fasta2use]
                 
             self.script += "-out %s\n\n" % output_filename
             
             # Store BLAST result file:
-            self.sample_data[sample]["blast_" + self.params["fasta2use"]] = (sample_dir + os.path.basename(output_filename))
-            self.stamp_file(self.sample_data[sample]["blast_" + self.params["fasta2use"]])
+            self.sample_data[sample]["blast." + self.fasta2use] = (sample_dir + os.path.basename(output_filename))
+            self.stamp_file(self.sample_data[sample]["blast." + self.fasta2use])
 
-            self.sample_data[sample]["blast"] = self.sample_data[sample]["blast_" + self.params["fasta2use"]]
+            self.sample_data[sample]["blast"] = self.sample_data[sample]["blast." + self.fasta2use]
             
             # Wrapping up function. Leave these lines at the end of every iteration:
             self.local_finish(use_dir,sample_dir)       # Sees to copying local files to final destination (and other stuff)
@@ -332,19 +334,19 @@ class Step_blast(Step):
         # Define query and db files:
         # If db is defined by user, set the query to the correct 'fasta2use'
         if "-db" in self.params["redir_params"].keys():
-            self.script += "-query %s \\\n\t" % self.sample_data[self.params["fasta2use"]]
+            self.script += "-query %s \\\n\t" % self.sample_data["fasta." + self.fasta2use]
         # If -db is not defined by user, set the -db to the correct blastdb, with 'fasta2use'
         # -query must be set by user. assertion is made in step_specific_init()
         else:
-            self.script += "-db %s \\\n\t" % self.sample_data["blastdb_" + self.params["fasta2use"]]
+            self.script += "-db %s \\\n\t" % self.sample_data["blastdb." + self.fasta2use]
                 
         self.script += "-out %s\n\n" % output_filename
             
         # Store BLAST result file:
-        self.sample_data["blast_" + self.params["fasta2use"]] = (self.base_dir + os.path.basename(output_filename))
-        self.stamp_file(self.sample_data["blast_" + self.params["fasta2use"]])
+        self.sample_data["blast." + self.fasta2use] = (self.base_dir + os.path.basename(output_filename))
+        self.stamp_file(self.sample_data["blast." + self.fasta2use])
 
-        self.sample_data["blast"] = self.sample_data["blast_" + self.params["fasta2use"]] 
+        self.sample_data["blast"] = self.sample_data["blast." + self.fasta2use] 
 
         # Wrapping up function. Leave these lines at the end of every iteration:
         self.local_finish(use_dir,self.base_dir)       # Sees to copying local files to final destination (and other stuff)
@@ -362,7 +364,7 @@ class Step_blast(Step):
         with open(self.base_dir + "BLAST_files_index.txt", "w") as index_fh:
             index_fh.write("Sample\tBLAST_report\n")
             for sample in self.sample_data["samples"]:      # Getting list of samples out of samples_hash
-                index_fh.write("%s\t%s\n" % (sample,self.sample_data[sample]["blast_" + self.params["fasta2use"]]))
+                index_fh.write("%s\t%s\n" % (sample,self.sample_data[sample]["blast." + self.fasta2use]))
                 
         self.sample_data["BLAST_files_index"] = self.base_dir + "BLAST_files_index.txt"
         
