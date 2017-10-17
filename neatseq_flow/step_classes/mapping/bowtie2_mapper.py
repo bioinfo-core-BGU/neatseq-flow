@@ -22,9 +22,9 @@ Requires
 
 * fastq files in one of the following slots:
 
-    * ``sample_data[<sample>]["fastqc"]["readsF"]``
-    * ``sample_data[<sample>]["fastqc"]["readsR"]``
-    * ``sample_data[<sample>]["fastqc"]["readsS"]``
+    * ``sample_data[<sample>]["fastqc"]["fastq.F"]``
+    * ``sample_data[<sample>]["fastqc"]["fastq.R"]``
+    * ``sample_data[<sample>]["fastqc"]["fastq.S"]``
     
 
 Output
@@ -212,11 +212,11 @@ class Step_bowtie2_mapper(Step):
                 pass
             
                 
-            # assert set("readsF","readsR","readsS") & self.sample_data["sample"].keys(), "There are no reads for sample %s" % sample
-            if "readsF" in self.sample_data[sample].keys():
-                self.script += "-1 %s \\\n\t-2 %s \\\n\t" % (self.sample_data[sample]["readsF"],self.sample_data[sample]["readsR"])
-            if "readsS" in self.sample_data[sample].keys():
-                self.script += "-U %s \\\n\t" % self.sample_data[sample]["readsS"]
+            # assert set("fastq.F","fastq.R","fastq.S") & self.sample_data["sample"].keys(), "There are no reads for sample %s" % sample
+            if "fastq.F" in self.sample_data[sample].keys():
+                self.script += "-1 %s \\\n\t-2 %s \\\n\t" % (self.sample_data[sample]["fastq.F"],self.sample_data[sample]["fastq.R"])
+            if "fastq.S" in self.sample_data[sample].keys():
+                self.script += "-U %s \\\n\t" % self.sample_data[sample]["fastq.S"]
 
             
             

@@ -9,16 +9,16 @@ Requires
     
 * fastq files in one of the following slots:
 
-    * ``sample_data[<sample>]["fastqc"]["readsF"]``
-    * ``sample_data[<sample>]["fastqc"]["readsR"]``
-    * ``sample_data[<sample>]["fastqc"]["readsS"]``
+    * ``sample_data[<sample>]["fastqc"]["fastq.F"]``
+    * ``sample_data[<sample>]["fastqc"]["fastq.R"]``
+    * ``sample_data[<sample>]["fastqc"]["fastq.S"]``
 
 Output
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     
 * puts fastqc output files in the following slots:
         
-    * ``sample_data[<sample>]["fastq"]["fastqc"]["readsF"|"readsR"|"readsS"]["html"|"zip"]``
+    * ``sample_data[<sample>]["fastq"]["fastqc"]["fastq.F"|"fastq.R"|"fastq.S"]["html"|"zip"]``
             
  
 
@@ -63,7 +63,7 @@ class Step_fastqc_html(Step):
         for sample in self.sample_data["samples"]:    
             # if not "fastq" in self.sample_data[sample]:
                 # raise AssertionExcept("No fastq files defined.\n", sample)
-            if not filter(lambda x: x in ["readsF", "readsR", "readsS"], self.sample_data[sample].keys()):
+            if not filter(lambda x: x in ["fastq.F", "fastq.R", "fastq.S"], self.sample_data[sample].keys()):
                 raise AssertionExcept("No read files defined\n", sample)
 
         
@@ -103,7 +103,7 @@ class Step_fastqc_html(Step):
 
             self.script += "--outdir " + use_dir
             
-            for direction in ("readsF","readsR","readsS"):
+            for direction in ("fastq.F","fastq.R","fastq.S"):
                 if direction in self.sample_data[sample].keys():
                     self.script += " \\\n\t" + self.sample_data[sample][direction] 
             self.script += "\n\n";
@@ -111,7 +111,7 @@ class Step_fastqc_html(Step):
             
             # Create temporary dict to store the output file names:
             temp_dict = {}
-            for direction in ("readsF","readsR","readsS"):
+            for direction in ("fastq.F","fastq.R","fastq.S"):
                 if direction in self.sample_data[sample].keys():
                     # temp_dict[direction] = {}
                     file_basename = os.path.basename(self.sample_data[sample][direction])

@@ -9,9 +9,9 @@ Requires
     
         * fastq files in at least one of the following slots:
         
-            * ``sample_data[<sample>]["fastqc"]["readsF"]``
-            * ``sample_data[<sample>]["fastqc"]["readsR"]``
-            * ``sample_data[<sample>]["fastqc"]["readsS"]``
+            * ``sample_data[<sample>]["fastq.F"]``
+            * ``sample_data[<sample>]["fastq.R"]``
+            * ``sample_data[<sample>]["fastq.S"]``
     
     
 Output:
@@ -23,14 +23,14 @@ Output:
         * for sample-wise assembly:
         
             * ``sample_data[<sample>]["fasta.nucl"]``
-            * ``sample_data[<sample>]["assembly"]["spades_assembl"]["contigs"]``
-            * ``sample_data[<sample>]["assembly"]["spades_assembl"]["scaffolds"]``
+            * ``sample_data[<sample>]["spades_assembl.contigs"]``
+            * ``sample_data[<sample>]["spades_assembl.scaffolds"]``
         
         * for mega assembly (not defined yet):
         
             * ``sample_data["fasta.nucl"]``
-            * ``sample_data["assembly"]["spades_assembl"]["contigs"]``
-            * ``sample_data["assembly"]["spades_assembl"]["scaffolds"]``
+            * ``sample_data["spades_assembl.contigs"]``
+            * ``sample_data["spades_assembl.scaffolds"]``
 
                 
 Parameters that can be set        
@@ -80,7 +80,7 @@ class Step_spades_assembl(Step):
 
         # Assert that all samples have reads files:
         for sample in self.sample_data["samples"]:    
-            if not {"readsF", "readsR", "readsS"} & set(self.sample_data[sample].keys()):
+            if not {"fastq.F", "fastq.R", "fastq.S"} & set(self.sample_data[sample].keys()):
                 raise AssertionExcept("No read files\n",sample)
          
         if "scope" in self.params:
@@ -155,14 +155,14 @@ class Step_spades_assembl(Step):
 
 
                 if "PE" in self.sample_data[sample]["type"]:
-                    self.script += "--pe1-1 %s \\\n\t" % self.sample_data[sample]["readsF"]
-                    self.script += "--pe1-2 %s \n\n" % self.sample_data[sample]["readsR"]
+                    self.script += "--pe1-1 %s \\\n\t" % self.sample_data[sample]["fastq.F"]
+                    self.script += "--pe1-2 %s \n\n" % self.sample_data[sample]["fastq.R"]
                 elif "SE" in self.sample_data[sample]["type"]:
-                    self.script += "--s1 %s \n\n" % self.sample_data[sample]["readsS"]
+                    self.script += "--s1 %s \n\n" % self.sample_data[sample]["fastq.S"]
                 elif "PE" in self.sample_data[sample]["type"] and "SE" in self.sample_data[sample]["type"]:       # Mixed!!
-                    self.script += "--pe1-1 %s \\\n\t" % self.sample_data[sample]["readsF"]
-                    self.script += "--pe1-2 %s \\\n\t" % self.sample_data[sample]["readsR"]
-                    self.script += "--s1 %s \n\n" % self.sample_data[sample]["readsS"]
+                    self.script += "--pe1-1 %s \\\n\t" % self.sample_data[sample]["fastq.F"]
+                    self.script += "--pe1-2 %s \\\n\t" % self.sample_data[sample]["fastq.R"]
+                    self.script += "--s1 %s \n\n" % self.sample_data[sample]["fastq.S"]
                 else:
                     raise AssertionExcept("Strange type configuration for sample\n" ,sample)
                     

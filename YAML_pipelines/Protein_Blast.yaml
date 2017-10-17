@@ -1,0 +1,30 @@
+Global_params:
+    Default_wait: 100
+    Qsub_opts: -V -cwd
+    Qsub_path: /storage/SGE6U8/bin/lx24-amd64
+    Qsub_q: bioinfo.q
+    job_limit: C:\Users\sklarz.BGU-USERS\Documents\python_pipeline_gitlab\python_pipeline\release_0.2.0\parameter_sets\job_limit.txt
+    module_path:
+        - C:\Users\sklarz.BGU-USERS\Documents\python_pipeline_gitlab\python_pipeline\additional_modules_release_1.0.0
+Step_params:
+    merge1:
+        module: merge
+        script_path: cat
+    blastProts:
+        module: blast
+        base: merge1
+        script_path: /fastspace/bioinfo_apps/BLAST_PLUS/ncbi-blast-2.5.0+/bin/blastp
+        qsub_params:
+            -pe: shared 40
+            node: sge102
+            queue: ess_all.q
+        fasta2use: prot
+        scope: sample 
+        redirects:
+            -evalue: 0.0001
+            -num_descriptions: 20
+            -num_threads: 40
+            -outfmt: '"6 qseqid sallseqid qlen slen qstart qend sstart send length
+                evalue bitscore score pident qframe"'
+            -db: /path/to/prot_db
+    

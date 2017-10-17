@@ -13,9 +13,9 @@ Requires
     
     * ``fastq`` files in at least one of the following slots:
         
-        * ``sample_data[<sample>]["fastqc"]["readsF"]``
-        * ``sample_data[<sample>]["fastqc"]["readsR"]``
-        * ``sample_data[<sample>]["fastqc"]["readsS"]``
+        * ``sample_data[<sample>]["fastqc"]["fastq.F"]``
+        * ``sample_data[<sample>]["fastqc"]["fastq.R"]``
+        * ``sample_data[<sample>]["fastqc"]["fastq.S"]``
 
     
 Output:
@@ -23,9 +23,9 @@ Output:
 
     * puts ``fastq`` output files (with added tags) in the following slots:
         
-        * ``sample_data[<sample>]["fastqc"]["readsF"]``
-        * ``sample_data[<sample>]["fastqc"]["readsR"]``
-        * ``sample_data[<sample>]["fastqc"]["readsS"]``
+        * ``sample_data[<sample>]["fastqc"]["fastq.F"]``
+        * ``sample_data[<sample>]["fastqc"]["fastq.R"]``
+        * ``sample_data[<sample>]["fastqc"]["fastq.S"]``
 
                 
     
@@ -72,7 +72,7 @@ class Step_add_trinity_tags(Step):
 
         # Assert that all samples have reads files:
         for sample in self.sample_data["samples"]:    
-            if not {"readsF", "readsR", "readsS"} & set(self.sample_data[sample].keys()):
+            if not {"fastq.F", "fastq.R", "fastq.S"} & set(self.sample_data[sample].keys()):
                 raise AssertionExcept("No read files\n",sample)
          
 
@@ -91,7 +91,7 @@ class Step_add_trinity_tags(Step):
         for sample in self.sample_data["samples"]:      # Getting list of samples out of samples_hash
             # Adding tags to Forward and Reverse files only
             for direction in ["Forward","Reverse","Single"]:
-                file_slot = "reads" + direction[0]  # file_slot is "readsF", "readsR" and "readS" for "Forward", "Reverse" and "Single" resepctively
+                file_slot = "reads" + direction[0]  # file_slot is "fastq.F", "fastq.R" and "readS" for "Forward", "Reverse" and "Single" resepctively
                 if (file_slot in self.sample_data[sample].keys()):
                     self.script = ""
                     direction_tag = direction[0] # Get first letter in direction

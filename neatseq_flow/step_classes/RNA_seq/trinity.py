@@ -8,9 +8,9 @@ Requires
     
     * ``fastq`` files in at least one of the following slots:
         
-        * ``sample_data[<sample>]["fastqc"]["readsF"]``
-        * ``sample_data[<sample>]["fastqc"]["readsR"]``
-        * ``sample_data[<sample>]["fastqc"]["readsS"]``
+        * ``sample_data[<sample>]["fastqc"]["fastq.F"]``
+        * ``sample_data[<sample>]["fastqc"]["fastq.R"]``
+        * ``sample_data[<sample>]["fastqc"]["fastq.S"]``
 
     
 Output:
@@ -88,7 +88,7 @@ class Step_trinity(Step):
         
         # Assert that all samples have reads files:
         for sample in self.sample_data["samples"]:    
-            if not {"readsF", "readsR", "readsS"} & set(self.sample_data[sample].keys()):
+            if not {"fastq.F", "fastq.R", "fastq.S"} & set(self.sample_data[sample].keys()):
                 raise AssertionExcept("No read files\n",sample)
          
         if "scope" in self.params:
@@ -163,11 +163,11 @@ class Step_trinity(Step):
         for sample in self.sample_data["samples"]:      # Getting list of samples out of samples_hash
             # If both F and R reads exist, adding them to forward and reverse
             # Assuming upstream input testing to check that if there are F reads then there are also R reads.
-            if "readsF" in self.sample_data[sample].keys():
-                forward.append(self.sample_data[sample]["readsF"])
-                reverse.append(self.sample_data[sample]["readsR"])
-            if "readsS" in self.sample_data[sample].keys():
-                single.append(self.sample_data[sample]["readsS"])
+            if "fastq.F" in self.sample_data[sample].keys():
+                forward.append(self.sample_data[sample]["fastq.F"])
+                reverse.append(self.sample_data[sample]["fastq.R"])
+            if "fastq.S" in self.sample_data[sample].keys():
+                single.append(self.sample_data[sample]["fastq.S"])
 
         # Concatenate all filenames separated by commas:
         single  = ",".join(single)   if (len(single) > 0) else None
@@ -228,11 +228,11 @@ class Step_trinity(Step):
 
             self.script += "--output %s \\\n\t" % use_dir
             
-            if "readsF" in self.sample_data[sample].keys():
-                self.script += "--left %s \\\n\t" % self.sample_data[sample]["readsF"]
-                self.script += "--right %s \\\n\t" % self.sample_data[sample]["readsR"]
-            if "readsS" in self.sample_data[sample].keys():
-                self.script += "--single %s \n\n" % self.sample_data[sample]["readsS"]
+            if "fastq.F" in self.sample_data[sample].keys():
+                self.script += "--left %s \\\n\t" % self.sample_data[sample]["fastq.F"]
+                self.script += "--right %s \\\n\t" % self.sample_data[sample]["fastq.R"]
+            if "fastq.S" in self.sample_data[sample].keys():
+                self.script += "--single %s \n\n" % self.sample_data[sample]["fastq.S"]
 
             # If there is an extra "\\\n\t" at the end of the script, remove it.
             self.script = self.script.rstrip("\\\n\t") + "\n\n"

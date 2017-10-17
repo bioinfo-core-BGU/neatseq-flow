@@ -16,9 +16,9 @@ Requires
 
 * fastq files in one of the following slots:
 
-    * ``sample_data[<sample>]["fastqc"]["readsF"]``
-    * ``sample_data[<sample>]["fastqc"]["readsR"]``
-    * ``sample_data[<sample>]["fastqc"]["readsS"]``
+    * ``sample_data[<sample>]["fastqc"]["fastq.F"]``
+    * ``sample_data[<sample>]["fastqc"]["fastq.R"]``
+    * ``sample_data[<sample>]["fastqc"]["fastq.S"]``
 * If ``mod`` is one of ``samse, sampe``, the sai files are required as well (created by a ``bwa aln`` step:
     * ``self.sample_data[<sample>]["bwa"]["saiF|saiR|saiS"]``
     
@@ -166,15 +166,15 @@ class Step_bwa_mapper(Step):
             if self.params["mod"] in ["samse"]:
                 try:
                     self.sample_data[sample]["saiS"]
-                    self.sample_data[sample]["readsS"]
+                    self.sample_data[sample]["fastq.S"]
                 except KeyError:
                     raise AssertionExcept("'samse' requires sai and single-end fatsq files for the sample. Make sure you have a bwa aln step before this step and 'Single' files in the sample file.", sample)
             if self.params["mod"] in ["sampe"]:
                 try:
                     self.sample_data[sample]["saiF"]
                     self.sample_data[sample]["saiR"]
-                    self.sample_data[sample]["readsF"]
-                    self.sample_data[sample]["readsR"]
+                    self.sample_data[sample]["fastq.F"]
+                    self.sample_data[sample]["fastq.R"]
 
                 except KeyError:
                     raise AssertionExcept("'sampe' requires sai and paired-end fatsq files for the sample. Make sure you have a bwa aln step before this step and 'Forward' and 'Reverse' files in the sample file.", sample)
@@ -252,7 +252,7 @@ class Step_bwa_mapper(Step):
             
             if self.params["mod"] in ["aln"]:
                 
-                for direction in filter(lambda x: x in ["readsF","readsR","readsS"], self.sample_data[sample].keys()):
+                for direction in filter(lambda x: x in ["fastq.F","fastq.R","fastq.S"], self.sample_data[sample].keys()):
 
                     self.script = ""
                     direction_tag = direction[-1] # Get last letter in direction
@@ -336,15 +336,15 @@ class Step_bwa_mapper(Step):
 
                 # Add reads
                 if self.params["mod"] in ["mem"]:
-                    if "readsF" in self.sample_data[sample].keys():
+                    if "fastq.F" in self.sample_data[sample].keys():
                         self.script += "%s \\\n\t%s\\\n\t" % \
-                            (self.sample_data[sample]["readsF"],
-                            self.sample_data[sample]["readsR"])
-                    elif "readsS" in self.sample_data[sample].keys():
-                        self.script += "%s \\\n\t" % self.sample_data[sample]["readsS"]
+                            (self.sample_data[sample]["fastq.F"],
+                            self.sample_data[sample]["fastq.R"])
+                    elif "fastq.S" in self.sample_data[sample].keys():
+                        self.script += "%s \\\n\t" % self.sample_data[sample]["fastq.S"]
                     else:
                         pass
-                    if "readsF" in self.sample_data[sample] and "readsS" in self.sample_data[sample]:
+                    if "fastq.F" in self.sample_data[sample] and "fastq.S" in self.sample_data[sample]:
                         self.write_warning("Both paired- and single-end sequence files exists for sample. Using only paired data\n", sample)
                     
                     
@@ -352,13 +352,13 @@ class Step_bwa_mapper(Step):
                 if self.params["mod"] in ["samse"]:
                     self.script += "%s \\\n\t%s\\\n\t" % \
                         (self.sample_data[sample]["saiS"],\
-                         self.sample_data[sample]["readsS"])
+                         self.sample_data[sample]["fastq.S"])
                 if self.params["mod"] in ["sampe"]:
                     self.script += "%s \\\n\t%s\\\n\t%s \\\n\t%s\\\n\t" % \
                         (self.sample_data[sample]["saiF"], \
                         self.sample_data[sample]["saiR"], \
-                        self.sample_data[sample]["readsF"],
-                        self.sample_data[sample]["readsR"])
+                        self.sample_data[sample]["fastq.F"],
+                        self.sample_data[sample]["fastq.R"])
 
                 # Add output:
                 self.script += "> %s\n\n" % (use_dir + output_filename)

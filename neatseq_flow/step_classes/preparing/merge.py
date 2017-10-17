@@ -21,7 +21,7 @@ Output
 
 * puts fastq output files in the following slots:
 
-    * ``sample_data[<sample>]["readsF"|"readsR"|"readsS"]``
+    * ``sample_data[<sample>]["fastq.F"|"fastq.R"|"fastq.S"]``
         
 * puts fasta output files in the following slots:
     
@@ -150,9 +150,9 @@ class Step_merge(Step):
 
                 
                 # Store file in active file for sample:
-                self.sample_data[sample]["reads" + direction_tag] = self.base_dir + fq_fn
+                self.sample_data[sample]["fastq." + direction_tag] = self.base_dir + fq_fn
                 
-                self.stamp_file(self.sample_data[sample]["reads" + direction_tag])
+                self.stamp_file(self.sample_data[sample]["fastq." + direction_tag])
                 
                 
                 self.create_low_level_script()
