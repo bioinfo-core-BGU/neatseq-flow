@@ -4,7 +4,9 @@
 """
 
 __author__ = "Menachem Sklarz"
-__version__ = "1.0.1"
+__version__ = "1.1.0"
+
+
 import os, sys, re, yaml
 from pprint import pprint as pp
 import collections

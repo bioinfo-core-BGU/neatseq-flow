@@ -11,7 +11,9 @@ from copy import *
 from pprint import pprint as pp
 
 __author__ = "Menachem Sklarz"
-__version__ = "1.0.1"
+__version__ = "1.1.0"
+
+
 
 class AssertionExcept(Exception):
     """A class to be raised by modules failing at assertions

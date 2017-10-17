@@ -6,7 +6,9 @@ Actual work is done by calling other class types: PLCStep and PLCName
 """
 
 __author__ = "Menachem Sklarz"
-__version__ = "1.0.1"
+__version__ = "1.1.0"
+
+
 import os, sys, json, shutil, time, yaml
 
 

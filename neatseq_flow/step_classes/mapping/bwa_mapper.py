@@ -114,7 +114,9 @@ from PLC_step import Step,AssertionExcept
 
 
 __author__ = "Menachem Sklarz"
-__version__ = "1.0.1"
+__version__ = "1.1.0"
+
+
 class Step_bwa_mapper(Step):
     
    
