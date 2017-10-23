@@ -2,7 +2,21 @@ Global_params:
     Default_wait: 100
     Qsub_opts: -V -cwd
     Qsub_q: queue.q
-
+Vars:
+    paths:
+        trimmo:     /path/to/java -jar /path/to/trimmomatic-0.32.jar
+        bowtie2-build:     /path/to/bowtie2-build
+        bowtie2:    /path/to/bowtie2
+        fastqc:     /path/to/fastqc
+        Trinity:    /path/to/Trinity
+        makeblastdb:/path/to/makeblastdb
+        blastx:     /path/to/blastx
+        blastn:     /path/to/blastn
+        java:       /path/to/java    
+        SGE_Trinity_conf:   /path/to/SGE_Trinity_conf.txt
+    databases:
+        sprot:      /path/to/sprot_db
+        query:      /path/to/query
 Step_params:
     merge1:
         module: merge
@@ -10,7 +24,7 @@ Step_params:
     fqc_merge1:
         module: fastqc_html
         base: merge1
-        script_path: /path/to/FastQC/fastqc
+        script_path: {Vars.paths.fastqc}
         qsub_params:
             -pe: shared 15
         redirects:
@@ -18,19 +32,19 @@ Step_params:
     trim1:
         module: trimmo
         base: merge1
-        script_path: java -jar trimmomatic-0.32.jar
+        script_path: {Vars.paths.java} -jar trimmomatic-0.32.jar
         qsub_params:
             -pe: shared 20
             node: node1
             queue: stam.q
-        spec_dir: /path/to/Trimmomatic_dir/
+        spec_dir: {Vars.paths.trimmo}
         todo: LEADING:20 TRAILING:20
         redirects:
             -threads: 20
     fqc_trim1:
         module: fastqc_html
         base: trim1
-        script_path: /path/to/FastQC/fastqc
+        script_path: {Vars.paths.fastqc}
         qsub_params:
             -pe: shared 15
         redirects:
@@ -42,10 +56,9 @@ Step_params:
     trinity1:
         module: trinity
         base: trin_tags1
-        script_path: /path/to/Trinity
+        script_path: {Vars.paths.Trinity}
         qsub_params:
             -pe: shared 20
-            node: sge213
         scope: project
         redirects:
             --CPU: 20
@@ -57,17 +70,17 @@ Step_params:
     mkblst1:
         module: makeblastdb
         base: trinity1
-        script_path: /path/to/makeblastdb
+        script_path: {Vars.paths.makeblastdb}
         scope: project
         redirects:
             -dbtype: nucl
     sprot:
         module: blast
         base: trinity1
-        script_path: /path/to/blastx
+        script_path: {Vars.paths.blastx}
         scope: project
         redirects:
-            -db: /path/to/sprot
+            -db: {Vars.databases.sprot}
             -evalue: 0.0001
             -max_target_seqs: 5
             -outfmt: '"6 qseqid sallseqid qlen slen qstart qend sstart send length
@@ -75,11 +88,10 @@ Step_params:
     blastOnAssembl:
         module: blast
         base: mkblst1
-        script_path: /path/to/blastn
+        script_path: {Vars.paths.blastn}
         qsub_params:
             -pe: shared 40
             node: sge102
-            queue: ess_all.q
         fasta2use: nucl
         scope: project
         redirects:
@@ -88,16 +100,16 @@ Step_params:
             -num_threads: 40
             -outfmt: '"6 qseqid sallseqid qlen slen qstart qend sstart send length
                 evalue bitscore score pident qframe"'
-            -query: /path/to/query.fasta
+            -query: {Vars.databases.query}
     bwt2_build:
         module: bowtie2_builder
         base: trinity1
-        script_path: /path/to/bowtie2-build
+        script_path: {Vars.paths.bowtie2-build}
         scope: project
     bwt2_map:
         module: bowtie2_mapper
         base: bwt2_build
-        script_path: /path/to/bowtie2
+        script_path: {Vars.paths.bowtie2}
         qsub_params:
             -pe: shared 20
         get_map_log: null
@@ -110,29 +122,28 @@ Step_params:
     trinity_smp:
         module: trinity
         base: trin_tags1
-        script_path: /path/to/Trinity
+        script_path: {Vars.paths.Trinity}
         qsub_params:
             -pe: shared 20
-            node: sge213
         scope: sample
         redirects:
             --CPU: 20
             --JM: 140G
             --full_cleanup: null
-            --grid_conf: /path/to/SGE_Trinity_conf.txt
+            --grid_conf: {Vars.paths.SGE_Trinity_conf}
             --min_kmer_cov: 2
             --seqType: fq
     mkblst_smp:
         module: makeblastdb
         base: trinity_smp
-        script_path: /path/to/makeblastdb
+        script_path: {Vars.paths.makeblastdb}
         scope: sample
         redirects:
             -dbtype: nucl
     sprot_smp:
         module: blast
         base: trinity_smp
-        script_path: /path/to/blastx
+        script_path: {Vars.paths.blastx}
         scope: sample
         redirects:
             -db: /path/to/sprot
@@ -143,11 +154,9 @@ Step_params:
     blastOnAssembl_smp:
         module: blast
         base: mkblst_smp
-        script_path: /path/to/blastn
+        script_path: {Vars.paths.blastn}
         qsub_params:
             -pe: shared 40
-            node: sge102
-            queue: ess_all.q
         fasta2use: nucl
         scope: sample
         redirects:

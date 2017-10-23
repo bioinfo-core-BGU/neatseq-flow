@@ -1,6 +1,4 @@
 
-
-
 """ A module for running macs2 callpeak:
 
 
@@ -9,7 +7,7 @@ Requires
 
 * bam files in the following slots:
 
-    * ``sample_data[<sample>]["fastqc"]["mapping"]["bam"]``
+    * ``sample_data[<sample>]["bam"]``
 
 * If using control (input) samples, make sure you include a sample-control table in your sample file.
 
@@ -18,25 +16,26 @@ Output
 
 * Puts output macs2 output files in the following slots:
 
-    * ``self.sample_data[<sample>]["fastq"]["chip_seq"]["prefix"])``
-    * ``self.sample_data[<sample>]["fastq"]["chip_seq"]["peak_bed"])``
-    * ``self.sample_data[<sample>]["fastq"]["chip_seq"]["peak_xls"])``
-    * ``self.sample_data[<sample>]["fastq"]["chip_seq"]["summit_bed"])``
+    * ``self.sample_data[<sample>]["prefix"])``
+    * ``self.sample_data[<sample>]["peak_bed"])``
+    * ``self.sample_data[<sample>]["peak_xls"])``
+    * ``self.sample_data[<sample>]["summit_bed"])``
 
 * If ``--bdg`` (or ``-B``) was specified, puts output bdg files in the following slots:
             
-    * ``self.sample_data[<sample>]["fastq"]["chip_seq"]["control_lambda"]`` - Control BedGraph
-    * ``self.sample_data[<sample>]["fastq"]["chip_seq"]["treat_pileup"]`` - Treatment BedGraph
-    * ``self.sample_data[<sample>]["fastq"]["mapping"]["bdg"]`` - Treatment BedGraph
-    * ``self.sample_data[<control>]["fastq"]["mapping"]["bdg"]`` - Control BedGraph
+    * ``self.sample_data[<sample>]["control_lambda"]`` - Control BedGraph
+    * ``self.sample_data[<sample>]["treat_pileup"]`` - Treatment BedGraph
+    * ``self.sample_data[<sample>]["bdg"]`` - Treatment BedGraph
+    * ``self.sample_data[<control>]["bdg"]`` - Control BedGraph
                 
 * If ``bedToBigBed_path`` was specified, puts output bigbed files in the following slots:
             
-    * ``self.sample_data[<sample>]["fastq"]["chip_seq"]["bb"]``
+    * ``self.sample_data[<sample>]["bb"]``
 
 * If ``getfasta`` was specified, puts output fasta files in the following slots:
             
-    * ``self.sample_data[<sample>]["fastq"]["chip_seq"]["peak_fasta"]``
+    * ``self.sample_data[<sample>]["peak_fasta"]``
+    * ``self.sample_data[<sample>]["fasta.nucl"]``
 
     
 Parameters that can be set
@@ -70,6 +69,8 @@ Lines for parameter file
 
 
 """
+
+
 import os
 import os.path
 import sys
@@ -274,7 +275,7 @@ fi
                                "bed_file"  : self.sample_data[sample]["bed"]}
            
                 self.sample_data[sample]["peak_fasta"] = "%s.fasta" % self.sample_data[sample]["bed"]
-                self.sample_data[sample]["fasta"] = self.sample_data[sample]["peak_fasta"]
+                self.sample_data[sample]["fasta.nucl"] = self.sample_data[sample]["peak_fasta"]
                 # Stamping bb file
                 self.stamp_file(self.sample_data[sample]["peak_fasta"])
 

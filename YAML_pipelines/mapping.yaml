@@ -6,6 +6,24 @@ Global_params:
     Qsub_opts:  -V -cwd
     module_path: 
         - /path/to/modules2/
+Vars:
+    paths:
+        trimmo:     /path/to/java -jar /path/to/trimmomatic-0.32.jar
+        bowtie:     /path/to/bowtie
+        bowtie2:    /path/to/bowtie2
+        fastqc:     /path/to/fastqc
+        samtools:   /path/to/samtools
+        genomeCoverageBed:  /path/to/genomeCoverageBed
+        bedtools:   /path/to/bedtools
+        kentUtils:  /path/to/kentUtils/bin/
+        multiqc:    /path/to/multiqc
+        bwa:        /path/to/bwa
+    reference:
+        ref_genome:     /path/to/ref_genome.fna
+        chrom_sizes:    /path/to/ref_genome/ref_genome.chrom.sizes
+        bowtie_index:   /path/to/bowtie_index/ref_genome  # This is the prefix of the index
+        bowtie2_index:  /path/to/bowtie2_index/ref_genome  # This is the prefix of the index
+        bwa_index:      /path/to/bwa_index/ref_genome  # This is the prefix of the index
         
 Step_params:
     merge1:
@@ -16,7 +34,7 @@ Step_params:
     trim1:
         module: trimmo
         base: merge1
-        script_path: java -jar trimmomatic-0.32.jar
+        script_path: {Vars.paths.trimmo}
         qsub_params:
             -pe: shared 20
             node: [node1,node2]
@@ -27,29 +45,29 @@ Step_params:
     bwt1:
         module: bowtie1_mapper
         base: trim1
-        script_path: /path/to/bowtie
+        script_path: {Vars.paths.bowtie}
         qsub_params:
             -pe: shared 20
-        ebwt: /path/to/bowtie1_index/ref_genome
-        ref_genome: /path/to/ref_genome.fna
+        ebwt: {Vars.reference.bowtie1_index}
+        ref_genome: {Vars.reference.ref_genome}
         redirects:
             -p: 20
     bwt2_1:
         module: bowtie2_mapper
         base: trim1
-        script_path: /path/to/bowtie2
+        script_path: {Vars.paths.bowtie2}
         qsub_params:
             -pe: shared 20
-        get_map_log: null
-        ref_genome: /path/to/ref_genome.fna
+        get_map_log: 
+        ref_genome: {Vars.reference.ref_genome}
         redirects:
             -p: 20
-            -q: null
-            -x: /path/to/bowtie2_index/ref_genome
+            -q: 
+            -x: {Vars.reference.bowtie2_index}
     fqc_trim1:
         module: fastqc_html
         base: trim1
-        script_path: /path/to/FastQC/fastqc
+        script_path: {Vars.paths.fastqc}
         qsub_params:
             -pe: shared 15
         redirects:
@@ -57,92 +75,92 @@ Step_params:
     sam_bwt1:
         module: samtools
         base: bwt1
-        script_path: /path/to/samtools/bin/samtools
+        script_path: {Vars.paths.samtools}
         qsub_params:
             -pe: shared 20
-        del_sam: null
-        del_unsorted: null
-        flagstat: null
-        index: null
+        del_sam: 
+        del_unsorted: 
+        flagstat: 
+        index: 
         sort: -@ 20
         stats: --remove-dups
         view: -buh  -q 30 -@ 20 -F 4
     sam_bwt2_1:
         module: samtools
         base: bwt2_1
-        script_path: /path/to/samtools/bin/samtools
+        script_path: {Vars.paths.samtools}
         qsub_params:
             -pe: shared 20
-        del_sam: null
-        del_unsorted: null
-        flagstat: null
-        idxstats: null
-        index: null
+        del_sam: 
+        del_unsorted: 
+        flagstat: 
+        idxstats: 
+        index: 
         sort: -@ 20
         stats: --remove-dups
         view: -buh  -q 30 -@ 20 -F 4
     genCovBed_bwt1:
         module: genomeCoverageBed
         base: sam_bwt1
-        script_path: /path/to/bedtools/bin/genomeCoverageBed
+        script_path: {Vars.paths.genomeCoverageBed}
         redirects:
-            -bg: null
-            -g: /path/to/ref_genome/ref_genome.chrom.sizes
+            -bg: 
+            -g: {Vars.reference.chrom_sizes}
     genCovBed_bwt2_1:
         module: genomeCoverageBed
         base: sam_bwt2_1
-        script_path: /path/to/bedtools/bin/bedtools genomecov
+        script_path: '{Vars.paths.bedtools} genomecov'
         redirects:
-            -bg: null
-            -g: /path/to/ref_genome/ref_genome.chrom.sizes
+            -bg: 
+            -g: {Vars.reference.chrom_sizes}
     UCSCmapfiles_bwt1:
         module: UCSC_BW_wig
         base: genCovBed_bwt1
-        script_path: /path/to/kentUtils/bin
+        script_path: {Vars.paths.kentUtils}
         bedGraphToBigWig_params: -blockSize 10 -itemsPerSlot 20
         bigWigToWig_params: -chrom X1 -start X2 -end X3
-        genome: /path/to/ref_genome/ref_genome.chrom.sizes
+        genome: {Vars.reference.chrom_sizes}
     UCSCmapfiles_bwt2_1:
         module: UCSC_BW_wig
         base: genCovBed_bwt2_1
-        script_path: /path/to/kentUtils/bin
+        script_path: {Vars.paths.kentUtils}
         bedGraphToBigWig_params: -blockSize 10 -itemsPerSlot 20
         bigWigToWig_params: -chrom X1 -start X2 -end X3
-        genome: /path/to/ref_genome/ref_genome.chrom.sizes
+        genome: {Vars.reference.chrom_sizes}
     firstMultQC:
         module: Multiqc
         base:
         - sam_bwt2_1
         - fqc_trim1
-        script_path: /path/to/multiqc
+        script_path: {Vars.paths.multiqc}
     
     bwa_mem_1:
         module: bwa_mapper
         base: trim1
-        script_path: /path/to/bwa
+        script_path: {Vars.paths.bwa}
         mod: mem
         qsub_params:
             -pe: shared 20
-        ref_genome: /path/to/ref_genome.fna
-        ref_index: /path/to/bwa_index/ref_genome
+        ref_genome: {Vars.reference.ref_genome}
+        ref_index: {Vars.reference.bwa_index}
         redirects:
             -t: 20
 
     bwa_aln_1:
         module: bwa_mapper
         base: trim1
-        script_path: /path/to/bwa_mapper
+        script_path: {Vars.paths.bwa}
         mod: aln
         qsub_params:
             -pe: shared 20
-        ref_genome: /path/to/ref_genome.fna
-        ref_index: /path/to/bwa_index/ref_genome
+        ref_genome: {Vars.reference.ref_genome}
+        ref_index: {Vars.reference.bwa_index}
         redirects:
             -t: 20
     bwa_samse_1:
         module: bwa_mapper
         base: bwa_aln_1
-        script_path: /path/to/bwa
+        script_path: {Vars.paths.bwa}
         mod: samse
-        ref_genome: /path/to/ref_genome.fna
-        ref_index: /path/to/bwa_index/ref_genome
+        ref_genome: {Vars.reference.ref_genome}
+        ref_index: {Vars.reference.bwa_index}

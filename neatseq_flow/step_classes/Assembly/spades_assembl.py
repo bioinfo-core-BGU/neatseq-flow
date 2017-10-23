@@ -177,10 +177,10 @@ cat %(contigs)s  | cut -f 1-2 -d '_' > %(shortnames)s
 mv -f %(shortnames)s %(contigs)s \n\n""" % {"contigs":sample_dir + "contigs.fasta", "shortnames":sample_dir + "contigs.shortIDs.fasta"}
                         
                 # Store results to fasta and assembly slots:
-                self.sample_data[sample]["fasta"] = sample_dir + "contigs.fasta"
                 self.sample_data[sample]["fasta.nucl"]  = sample_dir + "contigs.fasta"
                 self.sample_data[sample][self.get_step_step() + "_contigs"] = sample_dir + "contigs.fasta"
                 self.sample_data[sample][self.get_step_step() + "_scaffolds"] = sample_dir + "scaffolds.fasta"
+                self.sample_data[sample]["assembler"] = self.get_step_step()
 
                 self.stamp_file(self.sample_data[sample][self.get_step_step() + "_scaffolds"])
                 self.stamp_file(self.sample_data[sample][self.get_step_step() + "_contigs"])
