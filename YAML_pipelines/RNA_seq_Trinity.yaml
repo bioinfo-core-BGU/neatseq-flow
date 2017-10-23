@@ -9,7 +9,7 @@ Vars:
         bowtie2:    /path/to/bowtie2
         fastqc:     /path/to/fastqc
         Trinity:    /path/to/Trinity
-        makeblastdb:/path/to/makeblastdb
+        makeblastdb: /path/to/makeblastdb
         blastx:     /path/to/blastx
         blastn:     /path/to/blastn
         java:       /path/to/java    
@@ -32,7 +32,7 @@ Step_params:
     trim1:
         module: trimmo
         base: merge1
-        script_path: {Vars.paths.java} -jar trimmomatic-0.32.jar
+        script_path: '{Vars.paths.java} -jar trimmomatic-0.32.jar'
         qsub_params:
             -pe: shared 20
             node: node1

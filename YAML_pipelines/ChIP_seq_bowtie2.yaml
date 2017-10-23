@@ -93,7 +93,7 @@ Step_params:
     macs1:
         module: macs2_callpeak
         base: sam_Z
-        script_path: '{Vars.path.macs2} callpeak'
+        script_path: '{Vars.paths.macs2} callpeak'
         bedToBigBed_path: '{Vars.paths.kentUtils}/bedToBigBed'
         chrom.sizes: {Vars.reference.chrom_sizes}
         getfasta: '{Vars.paths.bedtools} getfasta -name -s'

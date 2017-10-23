@@ -48,7 +48,7 @@ Step_params:
         script_path: {Vars.paths.bowtie}
         qsub_params:
             -pe: shared 20
-        ebwt: {Vars.reference.bowtie1_index}
+        ebwt: {Vars.reference.bowtie_index}
         ref_genome: {Vars.reference.ref_genome}
         redirects:
             -p: 20
