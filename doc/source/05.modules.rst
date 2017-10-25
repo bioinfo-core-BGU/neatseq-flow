@@ -9,5 +9,6 @@ Currently implemented modules
    modules/mapping
    modules/assembly
    modules/variants
+   modules/generic
    modules/others
 

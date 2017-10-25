@@ -402,14 +402,16 @@ class Step:
                 sample level: self.set_spec_script_name(sample)
                 project level: self.set_spec_script_name()
             If using a different level of paralleization, see e.g. VCFtools, 
-                you can create your own self.spec_script_name.
+                you can set your own self.spec_script_name.
+                
         """
         
         if sample:
             self.spec_script_name = "_".join([self.step,self.name,sample])
         else:
             self.spec_script_name = "_".join([self.step,self.name,self.sample_data["Title"]])
-            
+
+        return self.spec_script_name
         
         
         
