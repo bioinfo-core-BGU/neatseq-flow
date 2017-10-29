@@ -1,6 +1,8 @@
+""" 
+Module ``makeblastdb``
+------------------------------
 
-
-""" Create a blastdb from a fasta file
+Create a blastdb from a fasta file
 
         
 Requires

@@ -1,7 +1,8 @@
+""" 
+Module ``IGV_count``
+-----------------------
 
-
-
-""" A module for running IGVtools count:
+A module for running IGVtools count:
 
 
 

@@ -1,7 +1,8 @@
+""" 
+Module ``bowtie2_builder``
+------------------------------
 
-
-
-""" A module for running bowtie2 index builder:
+A module for running bowtie2 index builder:
 
 Builds a bowtie2 index for a fasta file stored at the project or sample level.
 

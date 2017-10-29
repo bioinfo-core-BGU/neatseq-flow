@@ -1,6 +1,8 @@
+""" 
+Module ``Multiqc``
+------------------------------
 
-
-""" A module for preparing a MultiQC report for all samples
+A module for preparing a MultiQC report for all samples
 
 Requires
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~

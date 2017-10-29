@@ -34,6 +34,11 @@ def make_interpol_func(variables_bunch):
                 except AttributeError:
                     # If not found, raise exception
                     raise Exception("Unrecognised variable %s" % m.group(1))
+                except TypeError:
+                    print "A 'TypeError' exception has occured. This may happen when variables are left empty. Make sure all your variables have values. "
+                    raise 
+                    # # print "---> %s <-----\n" % m.group(1)
+                    # pass
                 m = var_re.search(atom)
 
         return atom
@@ -70,6 +75,7 @@ def walk(node, variables_bunch, callback):
     else:
         # print "in 3\n"
         if isinstance(node, str):
+            # print "Node:\n\n%s\n\n" % node
             # node = interpol_atom(node, variables_bunch)
             node = callback(node)
         else:

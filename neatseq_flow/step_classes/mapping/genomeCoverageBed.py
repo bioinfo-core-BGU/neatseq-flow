@@ -1,5 +1,8 @@
+""" 
+Module ``genomeCoverageBed``
+------------------------------
 
-""" A module for running bedtools genomecov:
+A module for running bedtools genomecov:
 
 The module builds a bedgraph (bdg) file based on an existing BAM file.
 

@@ -1,6 +1,7 @@
-
-
 """ 
+Module ``spades_assembl``
+--------------------------
+
 A class that defines a module for assembling reads using spades assembler.
 
  

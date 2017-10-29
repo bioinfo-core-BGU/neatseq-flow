@@ -1,6 +1,8 @@
+""" 
+Module ``merge``
+------------------------------
 
-
-""" A module for merging <and unzipping> fastqc and fasta files
+A module for merging <and unzipping> fastqc and fasta files
 
 Requires
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~

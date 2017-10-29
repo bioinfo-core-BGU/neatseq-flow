@@ -1,6 +1,8 @@
+""" 
+Module ``bowtie1_builder``
+------------------------------
 
-
-""" A module for running bowtie1 index builder:
+A module for running bowtie1 index builder:
 
 Requires
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~

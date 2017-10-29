@@ -1,8 +1,8 @@
-#!/fastspace/bioinfo_apps/python-2.7_SL6/bin/python
+""" 
+Module ``vcftools``
+------------------------------
 
-
-
-""" A module for running vcftools:
+A module for running vcftools:
 
 Can take a VCF, gunzipped VCF or BCF file as input.
 

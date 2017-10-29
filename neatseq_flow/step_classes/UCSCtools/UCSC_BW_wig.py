@@ -1,6 +1,8 @@
+""" 
+Module ``UCSC_BW_wig``
+------------------------------
 
-
-""" A module for creating wig and bigwig files using UCSC tools:
+A module for creating wig and bigwig files using UCSC tools:
 
 The module creates bigwig and wig files from the current active BedGraph file.
 

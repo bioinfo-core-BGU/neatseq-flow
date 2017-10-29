@@ -1,6 +1,8 @@
+""" 
+Module ``bowtie1_mapper``
+------------------------------
 
-
-""" A module for running bowtie1 mapper:
+A module for running bowtie1 mapper:
 
 The reads stored in each sample are aligned to one of the following bowtie indices:
 

@@ -1,6 +1,7 @@
-
-
 """ 
+Module ``samtools``
+------------------------------
+
 A class that defines a module for executing samtools on a SAM file.
 
 .. attention:: The module was tested on samtools 1.3

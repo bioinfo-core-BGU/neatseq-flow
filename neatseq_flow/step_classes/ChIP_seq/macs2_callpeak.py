@@ -1,5 +1,8 @@
+""" 
+Module ``macs2_callpeak``
+--------------------------
 
-""" A module for running macs2 callpeak:
+A module for running macs2 callpeak:
 
 
 Requires

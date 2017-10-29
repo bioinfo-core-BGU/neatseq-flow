@@ -1,4 +1,7 @@
 """ 
+Module ``trinity``
+------------------------------
+
 A class that defines a module for RNA_seq assembly using the `Trinity assembler`_.
 
 .. _Trinity assembler: https://github.com/trinityrnaseq/trinityrnaseq/wiki

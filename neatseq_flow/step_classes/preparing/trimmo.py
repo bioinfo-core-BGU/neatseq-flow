@@ -1,6 +1,8 @@
+""" 
+Module ``trimmo``
+------------------------------
 
-
-""" A module for running trimmomatic on fastq files
+A module for running trimmomatic on fastq files
 
 Requires
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~

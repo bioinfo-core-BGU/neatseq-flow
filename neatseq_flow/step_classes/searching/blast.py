@@ -1,6 +1,7 @@
-
-
 """ 
+Module ``blast``
+------------------------------
+
 A class that defines a module for executing blast on a nucleotide or protein fasta file.
 The search can be either on a sample fasta or on a project-wide fasta.
 It can use the fasta as a database or as a query.

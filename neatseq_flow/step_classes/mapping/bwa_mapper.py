@@ -1,7 +1,8 @@
+""" 
+Module ``bwa_mapper``
+------------------------------
 
-
-
-""" A module for running bwa mapper:
+A module for running bwa mapper:
 
 The reads stored in each sample are aligned to one of the following bwa indices:
 

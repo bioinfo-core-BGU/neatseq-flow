@@ -1,6 +1,7 @@
-#!/fastspace/bioinfo_apps/python-2.7_SL6/bin/python
-
 """ 
+Module ``Generic``
+---------------------------
+
 A class that defines a module for a generic module.
 It enables the user to design new modules that can handle most cases.
 
@@ -25,7 +26,7 @@ Parameters file arguments:
                                     # all the samples inputs File_Types of this argument will be listed delimited by sep
                 del:                # Delete this File_Type after the step ends
                                     # Will generate empty file with the same name and a suffix of _DELETED
-        outputs:                    # The inputs for this module
+        outputs:                    # The outputs for this module
             STR:                    # Output argument, the scope of the output arguments is determinant by the module scope
                                     # could be also 'empty#' OR "No_run" for only entering the file information to output File_Type 
                 File_Type:          # The output File_Type could be any File_Type name for the current branch downstream work 

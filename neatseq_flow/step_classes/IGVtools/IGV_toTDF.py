@@ -1,7 +1,8 @@
+""" 
+Module ``IGV_toTDF``
+----------------------
 
-
-
-""" A module for running IGVtools toIGV:
+A module for running IGVtools toIGV:
 
 Requires
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~

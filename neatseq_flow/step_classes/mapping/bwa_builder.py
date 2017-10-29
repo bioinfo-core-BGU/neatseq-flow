@@ -1,7 +1,8 @@
+""" 
+Module ``bwa_builder``
+------------------------------
 
-
-
-""" A module for running bwa index builder:
+A module for running bwa index builder:
 
 Builds a bwa index for a fasta file stored at the project or sample level.
 

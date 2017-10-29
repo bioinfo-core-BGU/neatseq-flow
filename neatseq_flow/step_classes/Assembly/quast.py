@@ -1,6 +1,9 @@
+""" 
+Module ``quast``
+------------------
 
 
-""" A module for running quast on fasta assemblies:
+A module for running quast on fasta assemblies:
 
 QUAST is executed on the fasta file along the following lines:
 

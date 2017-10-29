@@ -1,6 +1,8 @@
+""" 
+Module ``fastqc_html``
+------------------------------
 
-
-""" A module for running fastqc. 
+A module for running fastqc. 
 
 Creates scripts that run fastqc on all available fastq files.
 

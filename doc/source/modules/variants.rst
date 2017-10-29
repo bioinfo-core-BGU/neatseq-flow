@@ -1,12 +1,10 @@
-Modules for variant calling and analysis
+Modules for Variant Calling and Analysis
 ========================================
 
 
 .. contents:: Modules included in this section
 
 
-vcftools
----------------
 
 .. automodule:: step_classes.variants.vcftools
 
