@@ -17,3 +17,5 @@ Currently implemented modules
    modules/generic
    modules/others
 
+:ref:`Modules in main NeatSeq-Flow repository <neatseq-flow_modules:additional_modules_repo>`
+==============================================================================================
