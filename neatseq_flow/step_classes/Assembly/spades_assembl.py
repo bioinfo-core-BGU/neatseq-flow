@@ -2,6 +2,11 @@
 Module ``spades_assembl``
 --------------------------
 
+:Authors: Menachem Sklarz
+:Affiliation: Bioinformatics core facility
+:Organization: National Institute of Biotechnology in the Negev, Ben Gurion University.
+
+
 A class that defines a module for assembling reads using spades assembler.
 
  
@@ -55,6 +60,9 @@ Lines for parameter file
         redirects:
             --careful: null
 
+References
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Bankevich, A., Nurk, S., Antipov, D., Gurevich, A.A., Dvorkin, M., Kulikov, A.S., Lesin, V.M., Nikolenko, S.I., Pham, S., Prjibelski, A.D. and Pyshkin, A.V., 2012. **SPAdes: a new genome assembly algorithm and its applications to single-cell sequencing**. *Journal of computational biology*, 19(5), pp.455-477.
 """
 
 import os

@@ -1,6 +1,11 @@
+# -*- coding: UTF-8 -*-
 """ 
 Module ``bowtie1_builder``
 ------------------------------
+
+:Authors: Menachem Sklarz
+:Affiliation: Bioinformatics core facility
+:Organization: National Institute of Biotechnology in the Negev, Ben Gurion University.
 
 A module for running bowtie1 index builder:
 
@@ -43,6 +48,10 @@ Lines for parameter file
         scope: project
 
     
+References
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Langmead, B., Trapnell, C., Pop, M. and Salzberg, S.L., 2009. **Ultrafast and memory-efficient alignment of short DNA sequences to the human genome**. *Genome biology*, 10(3), p.R25.
+
 """
     
 import os

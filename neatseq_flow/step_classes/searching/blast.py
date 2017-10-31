@@ -1,6 +1,11 @@
+# -*- coding: UTF-8 -*-
 """ 
 Module ``blast``
 ------------------------------
+
+:Authors: Menachem Sklarz
+:Affiliation: Bioinformatics core facility
+:Organization: National Institute of Biotechnology in the Negev, Ben Gurion University.
 
 A class that defines a module for executing blast on a nucleotide or protein fasta file.
 The search can be either on a sample fasta or on a project-wide fasta.
@@ -94,6 +99,9 @@ Sample specific fasta, external database::
                 evalue bitscore score pident qframe"'
         scope: sample
 
+References
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Altschul, S.F., Madden, T.L., Schäffer, A.A., Zhang, J., Zhang, Z., Miller, W. and Lipman, D.J., 1997. **Gapped BLAST and PSI-BLAST: a new generation of protein database search programs**. *Nucleic acids research*, 25(17), pp.3389-3402.
 
 """
 

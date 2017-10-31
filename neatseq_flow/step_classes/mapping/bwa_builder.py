@@ -1,6 +1,10 @@
+# -*- coding: UTF-8 -*-
 """ 
 Module ``bwa_builder``
 ------------------------------
+:Authors: Menachem Sklarz
+:Affiliation: Bioinformatics core facility
+:Organization: National Institute of Biotechnology in the Negev, Ben Gurion University.
 
 A module for running bwa index builder:
 
@@ -47,6 +51,9 @@ Lines for parameter file
         script_path: /path/to/bwa index
         scope: project
 
+References
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Li, H. and Durbin, R., 2009. **Fast and accurate short read alignment with Burrows–Wheeler transform**. *Bioinformatics*, 25(14), pp.1754-1760.
 """
 
 import os

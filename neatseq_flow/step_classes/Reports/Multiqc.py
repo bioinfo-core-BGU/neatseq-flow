@@ -1,6 +1,10 @@
+# -*- coding: UTF-8 -*-
 """ 
 Module ``Multiqc``
 ------------------------------
+:Authors: Menachem Sklarz
+:Affiliation: Bioinformatics core facility
+:Organization: National Institute of Biotechnology in the Negev, Ben Gurion University.
 
 A module for preparing a MultiQC report for all samples
 
@@ -29,7 +33,9 @@ Lines for parameter file
         - fqc_trim1
         script_path: /path/to/multiqc
 
-    
+References
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Ewels, P., Magnusson, M., Lundin, S. and Käller, M., 2016. **MultiQC: summarize analysis results for multiple tools and samples in a single report**. *Bioinformatics*, 32(19), pp.3047-3048.    
 """
 
 import os

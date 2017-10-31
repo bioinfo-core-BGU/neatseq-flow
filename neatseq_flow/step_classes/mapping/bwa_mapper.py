@@ -1,6 +1,10 @@
+# -*- coding: UTF-8 -*-
 """ 
 Module ``bwa_mapper``
 ------------------------------
+:Authors: Menachem Sklarz
+:Affiliation: Bioinformatics core facility
+:Organization: National Institute of Biotechnology in the Negev, Ben Gurion University.
 
 A module for running bwa mapper:
 
@@ -106,6 +110,9 @@ Lines for parameter file
         mod: mem
         scope: project
 
+References
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Li, H. and Durbin, R., 2009. **Fast and accurate short read alignment with Burrows–Wheeler transform**. *Bioinformatics*, 25(14), pp.1754-1760.
 """
 
 

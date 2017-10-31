@@ -1,6 +1,10 @@
+# -*- coding: UTF-8 -*-
 """ 
 Module ``bowtie2_builder``
 ------------------------------
+:Authors: Menachem Sklarz
+:Affiliation: Bioinformatics core facility
+:Organization: National Institute of Biotechnology in the Negev, Ben Gurion University.
 
 A module for running bowtie2 index builder:
 
@@ -46,6 +50,10 @@ Lines for parameter file
         base: trinity1
         script_path: /path/to/bowtie2-build
         scope: project
+
+References
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Langmead, B. and Salzberg, S.L., 2012. **Fast gapped-read alignment with Bowtie 2**. *Nature methods*, 9(4), pp.357-359.
 
 """
 

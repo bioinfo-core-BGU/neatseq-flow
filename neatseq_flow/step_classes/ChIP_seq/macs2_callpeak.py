@@ -1,6 +1,12 @@
+# -*- coding: UTF-8 -*-
 """ 
 Module ``macs2_callpeak``
 --------------------------
+
+
+:Authors: Menachem Sklarz
+:Affiliation: Bioinformatics core facility
+:Organization: National Institute of Biotechnology in the Negev, Ben Gurion University.
 
 A module for running macs2 callpeak:
 
@@ -70,6 +76,11 @@ Lines for parameter file
             -g:     mm
             --bw:   400
 
+
+References
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Feng, J., Liu, T., Qin, B., Zhang, Y. and Liu, X.S., 2012. **Identifying ChIP-seq enrichment using MACS**. *Nature protocols*, 7(9), pp.1728-1740.
 
 """
 

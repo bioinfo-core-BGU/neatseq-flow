@@ -1,6 +1,10 @@
+# -*- coding: UTF-8 -*-
 """ 
 Module ``fastqc_html``
 ------------------------------
+:Authors: Menachem Sklarz
+:Affiliation: Bioinformatics core facility
+:Organization: National Institute of Biotechnology in the Negev, Ben Gurion University.
 
 A module for running fastqc. 
 
@@ -40,6 +44,10 @@ Lines for parameter file
             --threads: 15
 
  
+
+References
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Andrews, S., 2010. FastQC: a quality control tool for high throughput sequence data. 
 
 """
 

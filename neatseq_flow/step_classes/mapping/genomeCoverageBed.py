@@ -1,6 +1,11 @@
+# -*- coding: UTF-8 -*-
 """ 
 Module ``genomeCoverageBed``
 ------------------------------
+:Authors: Menachem Sklarz
+:Affiliation: Bioinformatics core facility
+:Organization: National Institute of Biotechnology in the Negev, Ben Gurion University.
+
 
 A module for running bedtools genomecov:
 
@@ -46,6 +51,8 @@ Lines for parameter file
 
 
 
+References
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 """
     
     

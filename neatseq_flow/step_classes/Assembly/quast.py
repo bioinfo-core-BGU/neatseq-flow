@@ -1,7 +1,11 @@
+# -*- coding: UTF-8 -*-
 """ 
 Module ``quast``
 ------------------
 
+:Authors: Menachem Sklarz
+:Affiliation: Bioinformatics core facility
+:Organization: National Institute of Biotechnology in the Negev, Ben Gurion University.
 
 A module for running quast on fasta assemblies:
 
@@ -50,6 +54,10 @@ Lines for parameter file
         scope: project
         redirects:
             --fast: null
+
+References
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Gurevich, A., Saveliev, V., Vyahhi, N. and Tesler, G., 2013. **QUAST: quality assessment tool for genome assemblies**. *Bioinformatics*, 29(8), pp.1072-1075.
 
 """
 

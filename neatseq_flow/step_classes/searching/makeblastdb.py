@@ -1,6 +1,11 @@
+# -*- coding: UTF-8 -*-
 """ 
 Module ``makeblastdb``
 ------------------------------
+
+:Authors: Menachem Sklarz
+:Affiliation: Bioinformatics core facility
+:Organization: National Institute of Biotechnology in the Negev, Ben Gurion University.
 
 Create a blastdb from a fasta file
 
@@ -50,6 +55,9 @@ Lines for parameter file
             -dbtype: nucl
         scope: project
 
+References
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Altschul, S.F., Madden, T.L., Schäffer, A.A., Zhang, J., Zhang, Z., Miller, W. and Lipman, D.J., 1997. **Gapped BLAST and PSI-BLAST: a new generation of protein database search programs**. *Nucleic acids research*, 25(17), pp.3389-3402.
     
 """
     
@@ -173,16 +181,10 @@ class Step_makeblastdb(Step):
             # Make a dir for the current sample:
             sample_dir = self.make_folder_for_sample(sample)
             
-            # If "local" is set, will do all IO to local folder and then copy everything to self.base_dir
-            if "local" in self.params.keys():
-                local_dir = "/local/bioinfo/" + "_".join([self.step,self.name,sample,self.pipe_data["run_code"]]) + os.sep
-                self.script += "mkdir -p %s \n\n" % local_dir
-                use_dir = local_dir 
-            else:
-                use_dir = sample_dir
+            # This line should be left before every new script. It sees to local issues.
+            # Use the dir it returns as the base_dir for this step.
+            use_dir = self.local_start(sample_dir)
 
- 
- 
          
             # Define output filename 
             output_filename = "".join([use_dir , sample , self.file_tag])

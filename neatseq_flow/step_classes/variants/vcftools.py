@@ -1,6 +1,11 @@
+# -*- coding: UTF-8 -*-
 """ 
 Module ``vcftools``
 ------------------------------
+
+:Authors: Menachem Sklarz
+:Affiliation: Bioinformatics core facility
+:Organization: National Institute of Biotechnology in the Negev, Ben Gurion University.
 
 A module for running vcftools:
 
@@ -76,6 +81,10 @@ Lines for parameter file
             --get-INFO:
                 - NS
                 - DB
+
+References
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Danecek, P., Auton, A., Abecasis, G., Albers, C.A., Banks, E., DePristo, M.A., Handsaker, R.E., Lunter, G., Marth, G.T., Sherry, S.T. and McVean, G., 2011. **The variant call format and VCFtools**. *Bioinformatics*, 27(15), pp.2156-2158.
 
 """
 

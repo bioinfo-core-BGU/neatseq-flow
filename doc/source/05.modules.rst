@@ -1,7 +1,9 @@
+.. _builtin_modules:
+
+
 Currently implemented modules 
 ==============================
 
-.. _builtin_modules:
 
 .. toctree::
    :maxdepth: 2

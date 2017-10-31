@@ -1,6 +1,10 @@
+# -*- coding: UTF-8 -*-
 """ 
 Module ``add_trinity_tags``
 ------------------------------
+:Authors: Menachem Sklarz
+:Affiliation: Bioinformatics core facility
+:Organization: National Institute of Biotechnology in the Negev, Ben Gurion University.
 
 A class that defines a module for adding the tags required by Trinity to the ends of the read names.
 See the `Strand specific assembly`_ section of the Trinity manual.

@@ -1,6 +1,10 @@
+# -*- coding: UTF-8 -*-
 """ 
 Module ``trinity``
 ------------------------------
+:Authors: Menachem Sklarz
+:Affiliation: Bioinformatics core facility
+:Organization: National Institute of Biotechnology in the Negev, Ben Gurion University.
 
 A class that defines a module for RNA_seq assembly using the `Trinity assembler`_.
 
@@ -61,7 +65,10 @@ Lines for parameter file
             --min_kmer_cov:     2
             --full_cleanup:
 
+References
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+Grabherr, M.G., Haas, B.J., Yassour, M., Levin, J.Z., Thompson, D.A., Amit, I., Adiconis, X., Fan, L., Raychowdhury, R., Zeng, Q. and Chen, Z., 2011. **Trinity: reconstructing a full-length transcriptome without a genome from RNA-Seq data**. *Nature biotechnology*, 29(7), p.644.
 
 """
 

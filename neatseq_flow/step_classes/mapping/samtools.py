@@ -1,6 +1,11 @@
+# -*- coding: UTF-8 -*-
 """ 
 Module ``samtools``
 ------------------------------
+
+:Authors: Menachem Sklarz
+:Affiliation: Bioinformatics core facility
+:Organization: National Institute of Biotechnology in the Negev, Ben Gurion University.
 
 A class that defines a module for executing samtools on a SAM file.
 
@@ -71,6 +76,10 @@ Lines for parameter file
         del_unsorted: null
 
  
+References
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Li, H., Handsaker, B., Wysoker, A., Fennell, T., Ruan, J., Homer, N., Marth, G., Abecasis, G. and Durbin, R., 2009. **The sequence alignment/map format and SAMtools**. *Bioinformatics*, 25(16), pp.2078-2079.
+
 """
 
 

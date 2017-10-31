@@ -1,6 +1,11 @@
+# -*- coding: UTF-8 -*-
 """ 
 Module ``trimmo``
 ------------------------------
+
+:Authors: Menachem Sklarz
+:Affiliation: Bioinformatics core facility
+:Organization: National Institute of Biotechnology in the Negev, Ben Gurion University.
 
 A module for running trimmomatic on fastq files
 
@@ -48,6 +53,10 @@ Lines for parameter file
             -threads: 20
 
             
+References
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Bolger, A.M., Lohse, M. and Usadel, B., 2014. **Trimmomatic: a flexible trimmer for Illumina sequence data**. *Bioinformatics*, 30(15), pp.2114-2120.
+
 """
 
 import os

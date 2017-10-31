@@ -1,6 +1,11 @@
+# -*- coding: UTF-8 -*-
 """ 
 Module ``bowtie2_mapper``
 ----------------------------
+
+:Authors: Menachem Sklarz
+:Affiliation: Bioinformatics core facility
+:Organization: National Institute of Biotechnology in the Negev, Ben Gurion University.
 
 A module for running bowtie2 mapper:
 
@@ -88,6 +93,10 @@ Lines for parameter file
             -p: 20
             -q: null
 
+
+References
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Langmead, B. and Salzberg, S.L., 2012. **Fast gapped-read alignment with Bowtie 2**. *Nature methods*, 9(4), pp.357-359.
 
 """
 

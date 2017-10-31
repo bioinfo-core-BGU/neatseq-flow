@@ -1,6 +1,11 @@
+# -*- coding: UTF-8 -*-
 """ 
 Module ``IGV_toTDF``
 ----------------------
+
+:Authors: Menachem Sklarz
+:Affiliation: Bioinformatics core facility
+:Organization: National Institute of Biotechnology in the Negev, Ben Gurion University.
 
 A module for running IGVtools toIGV:
 
@@ -40,6 +45,10 @@ Lines for parameter file
         script_path: /path/to/bin/java -Xmx1500m -jar /path/to/igvtools.jar toTDF 
         genome: /path/to/genome.chrom.sizes
     
+References
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Thorvaldsdóttir, H., Robinson, J.T. and Mesirov, J.P., 2013. **Integrative Genomics Viewer (IGV): high-performance genomics data visualization and exploration**. *Briefings in bioinformatics*, 14(2), pp.178-192.        
 """
 
 import os

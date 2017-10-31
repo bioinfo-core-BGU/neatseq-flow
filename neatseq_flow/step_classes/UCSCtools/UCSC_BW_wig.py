@@ -1,6 +1,10 @@
+# -*- coding: UTF-8 -*-
 """ 
 Module ``UCSC_BW_wig``
 ------------------------------
+:Authors: Menachem Sklarz
+:Affiliation: Bioinformatics core facility
+:Organization: National Institute of Biotechnology in the Negev, Ben Gurion University.
 
 A module for creating wig and bigwig files using UCSC tools:
 
@@ -51,6 +55,9 @@ Lines for parameter file
         bigWigToWig_params: -chrom X1 -start X2 -end X3
         genome: /path/to/genome.chrom.sizes
 
+References
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Kent, W.J., Sugnet, C.W., Furey, T.S., Roskin, K.M., Pringle, T.H., Zahler, A.M. and Haussler, D., 2002. **The human genome browser at UCSC**. *Genome research*, 12(6), pp.996-1006.
 
 """
 
