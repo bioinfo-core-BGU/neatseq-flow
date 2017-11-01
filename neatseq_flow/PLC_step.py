@@ -142,6 +142,9 @@ class Step:
         # Is used to add a prelimanry step, equivalent to the "wrapping up" step that is dependent on all previous scripts
         self.preliminary_jids =[]  
 
+        self.skip_scripts = False   # This is supposed to enable steps to avoid script building by setting to True.
+                                    # See for example del_type and move_type
+
         # Catch exceptions of type AssertionExcept raised by the specific initiation code
         try:
             self.step_specific_init()
@@ -158,7 +161,8 @@ class Step:
         # Will then be queried by main to create a general dictionary which can be written to json and used for remote run monitor
         self.qsub_names_dict = dict()
 
-        
+
+                                    
     def __str__(self):
         """ Print a summary of the class: name, step and depend list
         """
@@ -334,6 +338,8 @@ class Step:
             This cannot be done in constructor because it depends on the output from previous steps.
             Uses self.base_step_list
         """
+
+
         # Preparing dict to store sample_data of bases:
         # This is not usually used but might be handy when you need more than one bam, for instance (see below)
 
@@ -341,10 +347,9 @@ class Step:
             # Copying sample_data. Just '=' would create a kind of reference
             self.sample_data = deepcopy(sample_data)
             self.base_sample_data = dict()  
-
         else:   # Extract sample_data from base steps:
             self.sample_data = dict()
-        
+
             for base_step in self.base_step_list:
                 # Merge sample_data from all base steps.
                 # Function sample_data_merge uses deepcopy as well
@@ -385,6 +390,7 @@ class Step:
             # An error was raised during specific sample initiation
             print assertErr.get_error_str(self.get_step_name())
             raise
+
 
             
 
@@ -515,23 +521,26 @@ perl -e 'use Env qw(USER); open(my $fh, "<", "%(limit_file)s"); ($l,$s) = <$fh>=
         # Adding to qsub_names_dict:
         self.qsub_names_dict["low_qsubs"].append(self.spec_qsub_name)
         
+    def create_scripts_dir(self):
+        """ Create a dir for storing the step scripts.
+        """
+        # Set script dir name:
+        self.step_scripts_dir = self.pipe_data["scripts_dir"] + ".".join([self.step_number,"_".join([self.step,self.name])]) + os.sep
+        # Create, if not existing 
+        if not os.path.isdir(self.step_scripts_dir):
+            sys.stderr.write("Making dir (%s) at %s \n" % (self.name,self.step_scripts_dir))
+            os.makedirs(self.step_scripts_dir) 
+        else:
+            sys.stderr.write("Dir %s exists (step %s) \n" % (self.step_scripts_dir,self.name))
 
-        
+            
     def create_high_level_script(self):
         """ Create the high (i.e. 2nd) level scripts, which are the scripts that run the 3rd level scripts for the step
         """
         
         # Set script name for high level script:
         self.high_level_script_name = self.pipe_data["scripts_dir"] + ".".join([self.step_number,"_".join([self.step,self.name]),"csh" if self.shell=="csh" else "sh"]) 
-        self.step_scripts_dir = self.pipe_data["scripts_dir"] + ".".join([self.step_number,"_".join([self.step,self.name])]) + os.sep
         
-        
-        
-        if not os.path.isdir(self.step_scripts_dir):
-            sys.stderr.write("Making dir (%s) at %s \n" % (self.name,self.step_scripts_dir))
-            os.makedirs(self.step_scripts_dir) 
-        else:
-            sys.stderr.write("Dir %s exists (step %s) \n" % (self.step_scripts_dir,self.name))
 
         
         self.spec_qsub_name = self.get_qsub_name()   #"_".join([self.step,self.name,self.pipe_data["run_code"]])
@@ -709,25 +718,30 @@ perl -e 'use Env qw(USER); open(my $fh, "<", "%(limit_file)s"); ($l,$s) = <$fh>=
         """ Contains code to be done after build_scripts()
         """
 
-        try:
-            # Create high (iu.e. 2nd) level script for the qsub commands
-            self.create_high_level_script()
+        if not self.skip_scripts:
+            try:
+                
+                # Create dir for storing step scripts:
+                self.create_scripts_dir()
+                
+                # Create high (iu.e. 2nd) level script for the qsub commands
+                self.create_high_level_script()
 
-            # Add a preliminary script if it is defined in the step specific module
-            self.create_preliminary_script()
+                # Add a preliminary script if it is defined in the step specific module
+                self.create_preliminary_script()
 
-            # Create actual scripts: NOTE: This function is defined in the individual step files!
-            self.build_scripts()
+                # Create actual scripts: NOTE: This function is defined in the individual step files!
+                self.build_scripts()
 
-            # Add a wrapping up script if it is defined in the step specific module
-            self.create_wrapping_up_script()
-            
-            # Add closing lines to the high level script
-            self.close_high_level_script()
+                # Add a wrapping up script if it is defined in the step specific module
+                self.create_wrapping_up_script()
+                
+                # Add closing lines to the high level script
+                self.close_high_level_script()
 
-        except AssertionExcept as assertErr:
-            print assertErr.get_error_str(self.get_step_name())
-            raise
+            except AssertionExcept as assertErr:
+                print assertErr.get_error_str(self.get_step_name())
+                raise
     
         if "stop_and_show" in self.params:
             print "project slots:\n-------------"

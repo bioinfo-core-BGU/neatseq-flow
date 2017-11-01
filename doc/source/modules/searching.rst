@@ -10,4 +10,6 @@ Modules for Searching
 
 .. automodule:: step_classes.searching.blast
 
+.. automodule:: step_classes.searching.blast_new
+
    

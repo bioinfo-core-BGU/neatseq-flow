@@ -388,7 +388,8 @@ class neatseq_flow:
             
             # For each step, write the qsub command created by get_qsub_command() method:
             for step_n in self.step_list:
-                pipe_fh.write(self.get_qsub_command(step_n))
+                if not step_n.skip_scripts:   # Add the line only for modules that produce scripts (see del_type and move_type for examples of modules that don't...)
+                    pipe_fh.write(self.get_qsub_command(step_n))
 
                 
                 
