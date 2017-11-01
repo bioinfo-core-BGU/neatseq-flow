@@ -52,13 +52,15 @@ Parameters that can be set
 Lines for parameter file
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+::
+
     spades1:
         module: spades_assembl
         base: trim1
         script_path: /path/to/bin/spades.py
-        truncate_names: null
+        truncate_names: 
         redirects:
-            --careful: null
+            --careful: 
 
 References
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~

@@ -88,3 +88,12 @@ Step_params:
         scope: sample
         redirects:
             -query: /path/to/query.fasta
+    new_blast1:
+        module: blast_new
+        base: mkblst1
+        script_path: {Vars.paths.blastx}
+        querytype: nucl
+        dbtype: nucl
+        redirects:
+            -db: /path/to/blasdb.ind
+            -query: sample

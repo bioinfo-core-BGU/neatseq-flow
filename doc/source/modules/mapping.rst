@@ -3,6 +3,8 @@ Modules for Mapping
 
 
 .. contents:: Modules included in this section
+   :local:
+   :depth: 1
 
 
 .. automodule:: step_classes.mapping.bowtie2_builder

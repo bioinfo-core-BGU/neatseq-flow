@@ -46,10 +46,12 @@ Output:
 * puts BLAST output files in the following slots for sample-wise blast:
 
     * ``sample_data[<sample>]["blast.nucl"|"blast.prot"]``
+    * ``sample_data[<sample>]["blast"]``
 
 * puts fasta output files in the following slots for project-wise blast:
     
     * ``sample_data["blast.nucl"|"blast.prot"]``
+    * ``sample_data["blast"]``
 
 
 Parameters that can be set        
@@ -57,9 +59,12 @@ Parameters that can be set
 
 .. csv-table:: 
     :header: "Parameter", "Values", "Comments"
+    :widths: 5,10,10
 
     "scope", "sample|project", "Set if project-wide fasta slot should be used"
+    "dbscope", "sample|project", "If scope=sample and you want to use internal fasta and database, this will tell "
     "fasta2use", "nucl|prot", "Helps the module decide which fasta file to use."
+    "db2use", "nucl|prot", "Helps the module decide which database to use."
     "-query | -db", "Path to fasta or BLAST index", "The sequences to use as query, using the internal database as database, or a BLAST database index, using the internal fasta as query."
 
 Lines for parameter file
@@ -131,7 +136,8 @@ class Step_blast(Step):
             raise AssertionExcept("You must supply either '-db' or '-query'\n")
         if "-db" in self.params["redir_params"] and "-query" in self.params["redir_params"]:
             raise AssertionExcept("You can't supply both '-db' and '-query'\n")
-            
+        if "db2use" in self.params or "dbscope" in self.params:
+            raise AssertionExcept("'db2use' and 'dbscope' are not implemented yet. Try using the alternative blast module.")
 
     def step_sample_initiation(self):
         """ A place to do initiation stages following setting of sample_data

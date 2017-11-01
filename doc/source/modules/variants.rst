@@ -2,7 +2,10 @@ Modules for Variant Calling and Analysis
 ========================================
 
 
+
 .. contents:: Modules included in this section
+   :local:
+   :depth: 1
 
 
 

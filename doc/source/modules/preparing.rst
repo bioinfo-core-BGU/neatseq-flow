@@ -3,6 +3,8 @@ Modules for Preparation and QC
 
 
 .. contents:: Modules included in this section
+   :local:
+   :depth: 1
 
 
 .. automodule:: step_classes.preparing.merge

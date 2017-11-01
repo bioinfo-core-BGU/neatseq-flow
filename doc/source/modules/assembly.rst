@@ -1,9 +1,10 @@
+
 Modules for Genome Assembly
 ========================================
 
-
 .. contents:: Modules included in this section
-
+   :local:
+   :depth: 1
 
 .. automodule:: step_classes.Assembly.spades_assembl
 
@@ -12,6 +13,11 @@ Modules for Genome Assembly
 
 Modules for RNA-seq Aassembly
 ========================================
+
+.. contents:: Modules included in this section
+   :local:
+   :depth: 1
+
 
 .. automodule:: step_classes.RNA_seq.trinity
 

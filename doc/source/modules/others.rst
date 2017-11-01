@@ -1,9 +1,11 @@
-Various other modules
-========================================
 
+
+Modules for BAM conversion to other formats
+============================================
 
 .. contents:: Modules included in this section
-
+   :local:
+   :depth: 1
 
 .. automodule:: step_classes.mapping.genomeCoverageBed
 
@@ -12,6 +14,13 @@ Various other modules
 .. automodule:: step_classes.IGVtools.IGV_count
 
 .. automodule:: step_classes.IGVtools.IGV_toTDF
+
+Modules for ChIP-seq peak calling
+========================================
+
+.. contents:: Modules included in this section
+   :local:
+   :depth: 1
 
 .. automodule:: step_classes.ChIP_seq.macs2_callpeak
 
