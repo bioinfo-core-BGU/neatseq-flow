@@ -1,6 +1,6 @@
 """ 
-Module ``spades_assembl``
---------------------------
+``spades_assembl``
+-----------------------------------------------------------------
 
 :Authors: Menachem Sklarz
 :Affiliation: Bioinformatics core facility

@@ -1,7 +1,7 @@
 # -*- coding: UTF-8 -*-
 """ 
-Module ``bwa_builder``
-------------------------------
+``bwa_builder``
+-----------------------------------------------------------------
 :Authors: Menachem Sklarz
 :Affiliation: Bioinformatics core facility
 :Organization: National Institute of Biotechnology in the Negev, Ben Gurion University.

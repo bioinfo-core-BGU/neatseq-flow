@@ -1,5 +1,5 @@
 
-Modules for Genome Assembly
+Genome Assembly
 ========================================
 
 .. contents:: Modules included in this section
@@ -11,7 +11,7 @@ Modules for Genome Assembly
 .. automodule:: step_classes.Assembly.quast
 
 
-Modules for RNA-seq Aassembly
+RNA-seq Aassembly
 ========================================
 
 .. contents:: Modules included in this section

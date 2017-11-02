@@ -1,4 +1,4 @@
-Modules for Variant Calling and Analysis
+Variant Calling and Analysis
 ========================================
 
 

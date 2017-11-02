@@ -4,10 +4,15 @@
 Welcome to neatseq_flow's documentation!
 ========================================
 
-Contents:
+
+
+
+Contents
+--------
 
 .. toctree::
    :maxdepth: 2
+
 
    01.concept
    02.build_WF

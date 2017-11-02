@@ -1,7 +1,7 @@
 # -*- coding: UTF-8 -*-
 """ 
-Module ``makeblastdb``
-------------------------------
+``makeblastdb``
+-----------------------------------------------------------------
 
 :Authors: Menachem Sklarz
 :Affiliation: Bioinformatics core facility

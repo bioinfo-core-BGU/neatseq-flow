@@ -1,4 +1,4 @@
-Modules for Preparation and QC
+Preparation and QC
 ========================================
 
 

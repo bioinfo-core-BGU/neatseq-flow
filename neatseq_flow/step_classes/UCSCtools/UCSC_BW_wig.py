@@ -1,7 +1,7 @@
 # -*- coding: UTF-8 -*-
 """ 
-Module ``UCSC_BW_wig``
-------------------------------
+``UCSC_BW_wig``
+-----------------------------------------------------------------
 :Authors: Menachem Sklarz
 :Affiliation: Bioinformatics core facility
 :Organization: National Institute of Biotechnology in the Negev, Ben Gurion University.

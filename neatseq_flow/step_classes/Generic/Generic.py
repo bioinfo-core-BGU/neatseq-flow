@@ -1,6 +1,6 @@
 """ 
-Module ``Generic``
----------------------------
+``Generic``
+-----------------------------------------------------------------
 
 A class that defines a module for a generic module.
 It enables the user to design new modules that can handle most cases.

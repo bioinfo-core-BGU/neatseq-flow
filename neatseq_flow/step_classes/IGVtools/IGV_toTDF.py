@@ -1,7 +1,7 @@
 # -*- coding: UTF-8 -*-
 """ 
-Module ``IGV_toTDF``
-----------------------
+``IGV_toTDF``
+-----------------------------------------------------------------
 
 :Authors: Menachem Sklarz
 :Affiliation: Bioinformatics core facility

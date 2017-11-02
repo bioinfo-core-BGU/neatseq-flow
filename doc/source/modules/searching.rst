@@ -1,4 +1,4 @@
-Modules for Searching
+Searching
 ========================================
 
 .. contents:: Modules included in this section
@@ -10,6 +10,5 @@ Modules for Searching
 
 .. automodule:: step_classes.searching.blast
 
-.. automodule:: step_classes.searching.blast_new
 
    

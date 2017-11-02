@@ -1,7 +1,7 @@
 # -*- coding: UTF-8 -*-
 """ 
-Module ``IGV_count``
------------------------
+``IGV_count``
+-----------------------------------------------------------------
 
 :Authors: Menachem Sklarz
 :Affiliation: Bioinformatics core facility

@@ -1,7 +1,7 @@
 # -*- coding: UTF-8 -*-
 """ 
-Module ``bowtie1_builder``
-------------------------------
+``bowtie1_builder``
+-----------------------------------------------------------------
 
 :Authors: Menachem Sklarz
 :Affiliation: Bioinformatics core facility

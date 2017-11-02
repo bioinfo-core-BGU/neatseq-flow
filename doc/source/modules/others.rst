@@ -1,6 +1,6 @@
 
 
-Modules for BAM conversion to other formats
+BAM conversion to other formats
 ============================================
 
 .. contents:: Modules included in this section
@@ -15,7 +15,7 @@ Modules for BAM conversion to other formats
 
 .. automodule:: step_classes.IGVtools.IGV_toTDF
 
-Modules for ChIP-seq peak calling
+ChIP-seq peak calling
 ========================================
 
 .. contents:: Modules included in this section

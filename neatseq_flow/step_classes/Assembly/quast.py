@@ -1,7 +1,7 @@
 # -*- coding: UTF-8 -*-
 """ 
 ``quast``
-------------------
+-----------------------------------------------------------------
 
 :Authors: Menachem Sklarz
 :Affiliation: Bioinformatics core facility

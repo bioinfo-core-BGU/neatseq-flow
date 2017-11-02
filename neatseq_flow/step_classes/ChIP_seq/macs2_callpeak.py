@@ -1,7 +1,7 @@
 # -*- coding: UTF-8 -*-
 """ 
-Module ``macs2_callpeak``
---------------------------
+``macs2_callpeak``
+-----------------------------------------------------------------
 
 
 :Authors: Menachem Sklarz
