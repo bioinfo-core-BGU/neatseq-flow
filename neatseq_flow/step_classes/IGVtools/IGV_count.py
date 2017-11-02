@@ -16,8 +16,8 @@ Requires
 
 * Either SAM or BAM files in the following slots:
 
-    * ``sample_data[<sample>]["fastqc"]["mapping"]["bam"]``
-    * ``sample_data[<sample>]["fastqc"]["mapping"]["sam"]``
+    * ``sample_data[<sample>]["bam"]``
+    * ``sample_data[<sample>]["sam"]``
     
 
 Output
@@ -25,8 +25,8 @@ Output
 
 * Puts output tdf or wig files in one the following slots:
     
-    * ``self.sample_data[<sample>]["fastq"]["mapping"]["wig"]``
-    * ``self.sample_data[<sample>]["fastq"]["mapping"]["tdf"]``
+    * ``self.sample_data[<sample>]["wig"]``
+    * ``self.sample_data[<sample>]["tdf"]``
 
 Parameters that can be set
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~

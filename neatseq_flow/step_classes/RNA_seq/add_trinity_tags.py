@@ -20,9 +20,9 @@ Requires
     
     * ``fastq`` files in at least one of the following slots:
         
-        * ``sample_data[<sample>]["fastqc"]["fastq.F"]``
-        * ``sample_data[<sample>]["fastqc"]["fastq.R"]``
-        * ``sample_data[<sample>]["fastqc"]["fastq.S"]``
+        * ``sample_data[<sample>]["fastq.F"]``
+        * ``sample_data[<sample>]["fastq.R"]``
+        * ``sample_data[<sample>]["fastq.S"]``
 
     
 Output:
@@ -30,9 +30,9 @@ Output:
 
     * puts ``fastq`` output files (with added tags) in the following slots:
         
-        * ``sample_data[<sample>]["fastqc"]["fastq.F"]``
-        * ``sample_data[<sample>]["fastqc"]["fastq.R"]``
-        * ``sample_data[<sample>]["fastqc"]["fastq.S"]``
+        * ``sample_data[<sample>]["fastq.F"]``
+        * ``sample_data[<sample>]["fastq.R"]``
+        * ``sample_data[<sample>]["fastq.S"]``
 
                 
     

@@ -17,7 +17,7 @@ Requires
 
 * BAM file in the following slot:
 
-    * ``sample_data[<sample>]["fastqc"]["mapping"]["bam"]``
+    * ``sample_data[<sample>]["bam"]``
 
     
 
@@ -25,7 +25,7 @@ Output
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 * Puts output BedGraph files in the following slots:
-    * ``sample_data[<sample>]["fastqc"]["mapping"]["bdg"]``
+    * ``sample_data[<sample>]["bdg"]``
 
 
 Parameters that can be set

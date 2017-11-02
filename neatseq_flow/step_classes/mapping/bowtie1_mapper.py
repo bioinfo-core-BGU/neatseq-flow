@@ -23,9 +23,9 @@ Requires
 
 * fastq files in one of the following slots:
 
-    * ``sample_data[<sample>]["fastqc"]["fastq.F"]``
-    * ``sample_data[<sample>]["fastqc"]["fastq.R"]``
-    * ``sample_data[<sample>]["fastqc"]["fastq.S"]``
+    * ``sample_data[<sample>]["fastq.F"]``
+    * ``sample_data[<sample>]["fastq.R"]``
+    * ``sample_data[<sample>]["fastq.S"]``
     
 
 Output
@@ -33,13 +33,13 @@ Output
 
 
 * Puts output sam files in the following slots:
-    ``self.sample_data[<sample>]["fastq"]["mapping"]["sam"]``
+    ``self.sample_data[<sample>]["sam"]``
 
 * Puts the name of the mapper in:
-    ``self.sample_data[<sample>]["fastq"]["mapping"]["mapper"]``
+    ``self.sample_data[<sample>]["mapper"]``
 
 * Puts fasta of reference genome (if one is given in param file) in:
-    ``self.sample_data[<sample>]["fastq"]["mapping"]["reference"]``
+    ``self.sample_data[<sample>]["reference"]``
 
 Parameters that can be set
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -105,16 +105,6 @@ class Step_bowtie1_mapper(Step):
         """ A place to do initiation stages following setting of sample_data
         """
         
-        # # Initializing a "mapping" dict for each sample:
-        # for sample in self.sample_data["samples"]:      # Getting list of samples out of samples_hash
-
-            # try:
-                # self.sample_data[sample]["fastq"]["mapping"]
-            # except KeyError:
-                # self.sample_data[sample]["fastq"]["mapping"] = {}
-            # else:
-                # self.write_warning("mapping dict exists for sample. Double mapping steps?\n", sample)
-
         # Require either 'scope' or 'ebwt':
         if "scope" in self.params:
             # If scope defined, comment if also ebwt exists.
@@ -220,18 +210,6 @@ class Step_bowtie1_mapper(Step):
                     self.script += "%s \\\n\t" % self.sample_data[sample]["bowtie1_index"]
             except KeyError:  # Otherwise do nothing - '-x' is included through redirect params
                 self.script += "%s \\\n\t" % self.params["ebwt"]
-
-            # if "ebwt" in self.params.keys():
-                # self.script += "%s \\\n\t" % self.params["ebwt"]
-            # else:
-                # if "bowtie1" in self.sample_data.keys():  # A bowtie1 index has been created in self.sample_data["bowtie1"]
-                    # self.script += "%s \\\n\t" % self.sample_data["bowtie1_index"]
-                    # self.sample_data[sample]["fastq"]["mapping"]["reference"] = self.sample_data["bowtie1"]["fasta"]
-                # elif "bowtie1" in self.sample_data[sample]:  # A bowtie1 index has been created in self.sample_data[sample]["bowtie1"]
-                    # self.script += "%s \\\n\t" % self.sample_data[sample]["bowtie1_index"]
-                    # self.sample_data[sample]["fastq"]["mapping"]["reference"] = self.sample_data[sample]["bowtie1"]["fasta"]
-                # else:
-                    # raise AssertionExcept("In %s: Sample %s does not have a reference defined, nor did you pass one with 'ebwt' parameter...\n" % (self.name, sample))
 
                     
             # assert set("fastq.F","fastq.R","fastq.S") & self.sample_data["sample"].keys(), "There are no reads for sample %s" % sample

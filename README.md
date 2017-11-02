@@ -39,9 +39,27 @@ Brief description
 Installation & Execution
 ----------------------------
 
+### Installing NeatSeq-Flow
+
 The easiest way to install is by cloning the github repository:
 
 	git clone https://github.com/bioinfo-core-BGU/neatseq-flow.git
+
+### Installing dependencies
+
+NeatSeq-Flow requires the following non-standard python libraries: `yaml` and `bunch`. 
+
+Installing them is performed with:
+
+	pip install yaml bunch
+
+If you are using your own installation of python, located at `/path/to/python-2.7/`, use the following:
+
+	/path/to/python-2.7/bin/pip install                \
+       --install-option="--prefix=/path/to/python-2.7" \
+       yaml bunc
+ 
+### Executing NeatSeq-Flow
 
 Execution is then done as follows:
 

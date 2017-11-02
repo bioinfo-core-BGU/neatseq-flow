@@ -15,9 +15,9 @@ Requires
     
     * ``fastq`` files in at least one of the following slots:
         
-        * ``sample_data[<sample>]["fastqc"]["fastq.F"]``
-        * ``sample_data[<sample>]["fastqc"]["fastq.R"]``
-        * ``sample_data[<sample>]["fastqc"]["fastq.S"]``
+        * ``sample_data[<sample>]["fastq.F"]``
+        * ``sample_data[<sample>]["fastq.R"]``
+        * ``sample_data[<sample>]["fastq.S"]``
 
     
 Output:
@@ -28,12 +28,12 @@ Output:
         * for sample-wise assembly:
         
             * ``sample_data[<sample>]["fasta.nucl"]``
-            * ``sample_data[<sample>]["assembly"]["trinity_assembl"]["contigs"]``
+            * ``sample_data[<sample>]["Trinity.contigs"]``
         
         * for project-wise assembly:
         
             * ``sample_data["fasta.nucl"]``
-            * ``sample_data["assembly"]["trinity_assembl"]["contigs"]``
+            * ``sample_data["Trinity.contigs"]``
 
                 
 Parameters that can be set        
@@ -106,26 +106,11 @@ class Step_trinity(Step):
         if "scope" in self.params:
           
             if self.params["scope"]=="project":
-                # # Prepare "fasta" slot for output
-                # if "fasta" not in self.sample_data.keys():
-                    # self.sample_data["fasta"] = dict()
-                # if "assembly" not in self.sample_data.keys():
-                    # self.sample_data["assembly"] = dict()
-                    # self.sample_data["assembly"][self.step] = dict()
                 pass
 
             elif self.params["scope"]=="sample":
                 
                 for sample in self.sample_data["samples"]:      # Getting list of samples out of samples_hash
-                    # # Making sure each sample has an "assembly" slot to store contigs and scaffolds
-                    # if "assembly" not in self.sample_data[sample]:
-                        # self.sample_data[sample]["assembly"] = {}
-                    # if self.step not in self.sample_data[sample]["assembly"]:
-                        # self.sample_data[sample]["assembly"][self.step] = {}
-
-                    # # Making sure a "fasta" slot exists to store contigs:
-                    # if "fasta" not in self.sample_data[sample]:
-                        # self.sample_data[sample]["fasta"] = {}
                     pass
             else:
                 raise AssertionExcept("'scope' must be either 'sample' or 'project'")
@@ -206,9 +191,9 @@ class Step_trinity(Step):
 
         # Store results to fasta and assembly slots:
         self.sample_data["fasta.nucl"] = "%s%s%s%s" % (self.base_dir, os.sep, self.sample_data["Title"], self.file_tag)
-        self.sample_data[self.get_step_step() + "_contigs"] = self.sample_data["fasta.nucl"]
+        self.sample_data[self.get_step_step() + ".contigs"] = self.sample_data["fasta.nucl"]
 
-        self.stamp_file(self.sample_data[self.get_step_step() + "_contigs"])
+        self.stamp_file(self.sample_data[self.get_step_step() + ".contigs"])
 
        
         # Move all files from temporary local dir to permanent base_dir
@@ -251,9 +236,9 @@ class Step_trinity(Step):
 
             # Store results to fasta and assembly slots:
             self.sample_data[sample]["fasta.nucl"] = sample_dir + "Trinity.fasta"
-            self.sample_data[sample][self.get_step_step() + "_contigs"] = sample_dir + "Trinity.fasta"
+            self.sample_data[sample][self.get_step_step() + ".contigs"] = sample_dir + "Trinity.fasta"
 
-            self.stamp_file(self.sample_data[sample][self.get_step_step() + "_contigs"])
+            self.stamp_file(self.sample_data[sample][self.get_step_step() + ".contigs"])
 
                 
             # Wrapping up function. Leave these lines at the end of every iteration:

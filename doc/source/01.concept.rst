@@ -45,7 +45,7 @@ Often, the files are sample-specific, such as fastq files. In this case, they ar
 
 Some of the modules take their inputs and put their outputs in the sample-specific slots and some use the project-wide slots. The sample-specific slots are indicated in the documentation as ``sample_data[<sample>]``. Some modules can do both, and their exact behaviour is either controlled by a module parameter (*e.g.* ``scope`` in ``bowtie2_mapper``) or guessed at by the module based on the dictionary structure.
 
-Creating a workflow is then like assembling a puzzle. Each instance of a module must have an ancestor module (``base`` module) that puts files in the slots required by the module. *e.g.* when the ``BLAST`` module is executed with the ``-query`` parameter, the module expects a BLAST index to exist in ``sample_data["blast"]["blastdb"]["nucl"|"prot"]`` (a ``nucl`` or ``prot`` BLAST index), so you must have an instance of ``makeblastdb`` module as an ancestor of the BLAST module.
+Creating a workflow is then like assembling a puzzle. Each instance of a module must have an ancestor module (``base`` module) that puts files in the slots required by the module. *e.g.* when the ``samtools`` module is executed, it expects to find a SAM file in ``sample_data[<sample>]["sam"]``. It, in turn, produces a BAM and puts it in ``sample_data[<sample>]["bam"]`` for use by other modules downstream.
 
 Sometimes, modules *overwrite* existing slots. This **does not mean the files will be overwritten**. It only means that access to these slots in downstream modules will refer to the newer files. *e.g.* the ``trimmo`` module puts its outputs in the same slots as the ``merge`` module. Therefore, a ``fastqc_html`` instance based on the ``merge`` instance will use the files created by ``merge`` while a ``fastqc_html`` instance based on the ``trimmo`` instance will use the files created by ``trimmo``.
 
@@ -77,16 +77,16 @@ For standard file types, you should use the appropriate slots (check out similar
 .. csv-table:: Slots for commonly used files
     :header: "File type", "Scope", "Slot"
 
-    "fastq", "Sample", ``sample_data[<sample>]['fastq']['readsF|readsR|readsS']``
-    "fasta", "Sample", ``sample_data[<sample>]['fasta']['nucl|prot']``
-    "fasta", "Project", ``sample_data['fasta']['nucl|prot']``
-    "SAM", "Sample", ``sample_data[<sample>]['fastq']['mapping']['sam']``
-    "BAM", "Sample", ``sample_data[<sample>]['fastq']['mapping']['bam']``
-    "Aligner index", "Sample", ``sample_data[<sample>][<aligner name>]['index']``
-    "Aligner index", "Project", ``sample_data[<aligner name>]['index']``
-    "Aligner reference", "Sample", ``sample_data[<sample>]['fastq']['mapping']['reference']``
-    "GFF", "Sample", ``sample_data[<sample>]['fasta']['GFF']``
-    "GFF", "Project", ``sample_data['fasta']['GFF']``
+    "fastq", "Sample", ``sample_data[<sample>]['fastq.F|fastq.R|fastq.S']``
+    "fasta", "Sample", ``sample_data[<sample>]['fasta.nucl|fasta.prot']``
+    "fasta", "Project", ``sample_data['fasta.nucl|fasta.prot']``
+    "SAM", "Sample", ``sample_data[<sample>]['sam']``
+    "BAM", "Sample", ``sample_data[<sample>]['bam']``
+    "Aligner index", "Sample", ``sample_data[<sample>][<aligner name>_index']``
+    "Aligner index", "Project", ``sample_data[<aligner name>_index']``
+    "Aligner reference", "Sample", ``sample_data[<sample>]['reference']``
+    "GFF", "Sample", ``sample_data[<sample>]['gff']``
+    "GFF", "Project", ``sample_data['gff']``
 
 .. tip:: 
     

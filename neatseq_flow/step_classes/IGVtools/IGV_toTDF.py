@@ -14,7 +14,7 @@ Requires
 
 * WIG file in the following slot:
 
-    * ``sample_data[<sample>]["fastqc"]["mapping"]["wig"]``
+    * ``sample_data[<sample>]["wig"]``
     
 
 Output
@@ -22,7 +22,7 @@ Output
 
 * Puts output tdf file in one the following slots:
     
-    * ``self.sample_data[<sample>]["fastq"]["mapping"]["tdf"]``
+    * ``self.sample_data[<sample>]["tdf"]``
 
 Parameters that can be set
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~

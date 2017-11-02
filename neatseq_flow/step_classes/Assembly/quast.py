@@ -1,6 +1,6 @@
 # -*- coding: UTF-8 -*-
 """ 
-Module ``quast``
+``quast``
 ------------------
 
 :Authors: Menachem Sklarz
@@ -27,8 +27,8 @@ Output
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 * Puts output directory in one of:
-    * ``self.sample_data["assembly"]["quast"]``
-    * ``self.sample_data[<sample>]["assembly"]["quast"]``
+    * ``self.sample_data["quast"]``
+    * ``self.sample_data[<sample>]["quast"]``
 
 Parameters that can be set
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -97,11 +97,7 @@ class Step_quast(Step):
                     raise AssertionExcept("No project wide assembly!")
                 else:
                     pass
-                    # try:   # Creating an assembly slot in case it does not exist
-                            # # This can happen when running quast on a fasta file that was not assembled (=input)
-                        # self.sample_data["assembly"]
-                    # except KeyError:
-                        # self.sample_data["assembly"] = {}
+
                 if "compare_mode" in self.params.keys():
                     self.write_warning("Ignoring 'compare_mode' in project scope")
             
@@ -111,16 +107,10 @@ class Step_quast(Step):
                     # Make sure each sample has a ["fasta.nucl"] slot 
                     try:
                         self.sample_data[sample]["fasta.nucl"]
-                        # self.sample_data["assembly"]  # Removed so that the step can be executed on fasta assembled elsewhere and loaded as fasta from sample file
                     except KeyError:
                         raise AssertionExcept("You are trying to run QUAST with no assembly.\n" , sample)
                     else:
                         pass
-                        # try:   # Creating an assembly slot in case it does not exist
-                                # # This can happen when running quast on a fasta file that was not assembled (=input)
-                            # self.sample_data[sample]["assembly"]
-                        # except KeyError:
-                            # self.sample_data[sample]["assembly"] = {}
             else:
                 raise AssertionExcept("'scope' must be either 'project' or 'sample'")
             
@@ -138,7 +128,7 @@ class Step_quast(Step):
                     # Make sure each sample has a ["fasta.nucl"] slot 
                     try:
                         self.sample_data[sample]["fasta.nucl"]
-                        # self.sample_data["assembly"]  # Removed so that the step can be executed on fasta assembled elsewhere and loaded as fasta from sample file
+
                     except KeyError:
                         raise AssertionExcept("You are trying to run QUAST with no assembly.\n" , sample)
                 
@@ -146,11 +136,6 @@ class Step_quast(Step):
                 
             else:
                 self.write_warning("There is a project-wide assembly. Using it.\n")
-
-                # try:   # Creating an assembly slot in case it does not exist
-                    # self.sample_data["assembly"]
-                # except KeyError:
-                    # self.sample_data["assembly"] = {}
         
                 self.params["scope"] = "project"
         
@@ -197,12 +182,8 @@ class Step_quast(Step):
                 
 
             
-                # Store result file:
-                # if "assembly" not in self.sample_data.keys():
-                    # self.sample_data["assembly"] = dict()
                 self.sample_data["quast"] = self.base_dir
-                # self.stamp_dir_files(self.sample_data["assembly"]["quast"])
-
+            
 
                 # Wrapping up function. Leave these lines at the end of every iteration:
                 self.local_finish(use_dir,self.base_dir)       # Sees to copying local files to final destination (and other stuff)
@@ -241,8 +222,6 @@ class Step_quast(Step):
                     # Store BLAST result file:
                     self.sample_data[sample]["quast"] = sample_dir
 
-                    # self.stamp_dir_files(self.sample_data[sample]["assembly"]["quast"])
-
                     # Wrapping up function. Leave these lines at the end of every iteration:
                     self.local_finish(use_dir,sample_dir)       # Sees to copying local files to final destination (and other stuff)
                               
@@ -276,7 +255,6 @@ class Step_quast(Step):
         
             # Store BLAST result file:
             self.sample_data["quast"] = self.base_dir
-            # self.stamp_dir_files(self.sample_data["assembly"]["quast"])
 
 
             # Wrapping up function. Leave these lines at the end of every iteration:

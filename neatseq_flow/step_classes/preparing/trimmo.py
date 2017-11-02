@@ -14,16 +14,16 @@ Requires
     
         * fastq files in at least one of the following slots:
         
-            * ``sample_data[<sample>]["fastqc"]["fastq.F"]``
-            * ``sample_data[<sample>]["fastqc"]["fastq.R"]``
-            * ``sample_data[<sample>]["fastqc"]["fastq.S"]``
+            * ``sample_data[<sample>]["fastq.F"]``
+            * ``sample_data[<sample>]["fastq.R"]``
+            * ``sample_data[<sample>]["fastq.S"]``
         
 Output
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     
         * puts fastq output files in the following slots:
         
-            * ``sample_data[<sample>]["fastq"]["fastq.F"|"fastq.R"|"fastq.S"]``
+            * ``sample_data[<sample>]["fastq.F"|"fastq.R"|"fastq.S"]``
 
 
 Parameters that can be set

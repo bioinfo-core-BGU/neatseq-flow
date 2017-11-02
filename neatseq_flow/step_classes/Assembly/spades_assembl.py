@@ -103,22 +103,7 @@ class Step_spades_assembl(Step):
 
             elif self.params["scope"]=="sample":
                 pass
-                # for sample in self.sample_data["samples"]:      # Getting list of samples out of samples_hash
-                    # # Making sure each sample has an "assembly" slot to store contigs and scaffolds
-                    # try:
-                        # self.sample_data[sample]["assembly"]
-                    # except KeyError:
-                        # self.sample_data[sample]["assembly"] = {}
-                    # try:
-                        # self.sample_data[sample]["assembly"][self.step]
-                    # except KeyError:
-                        # self.sample_data[sample]["assembly"][self.step] = {}
-
-                    # # Making sure a "fasta" slot exists to store contigs:
-                    # try:
-                        # self.sample_data[sample]["fasta"]
-                    # except KeyError:
-                        # self.sample_data[sample]["fasta"] = {}
+                
             else:
                 raise AssertionExcept("'scope' must be either 'sample' or 'project'")
         else:

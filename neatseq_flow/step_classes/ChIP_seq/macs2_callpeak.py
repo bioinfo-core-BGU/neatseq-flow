@@ -107,15 +107,8 @@ class Step_macs2_callpeak(Step):
         """ A place to do initiation stages following setting of sample_data
         """
         
-        # Initializing a "mapping" dict for each sample:
         for sample in self.sample_data["samples"]:      # Getting list of samples out of samples_hash
 
-            # # Make sure there is a mapping dict
-            # try:
-                # self.sample_data[sample]["fastq"]["mapping"]
-            # except KeyError:
-                # raise AssertionExcept("Mapping dict does not exist for sample. samtools can not run without a mapping\n", sample)
-            
             # Make sure there is a bam file
             try:
                 self.sample_data[sample]["bam"]
@@ -127,16 +120,6 @@ class Step_macs2_callpeak(Step):
             self.sample_data["Controls"]
         except KeyError:
             raise AssertionExcept("You must define sample:control pairs\n")
-            
-        # for sample in self.sample_data["Controls"].keys():      # Getting list of samples out of Controls dict.
-            # # Create "chip_seq" dict for results, if does not exist
-            # # Only in samples. Not in controls....
-            # try:
-                # self.sample_data[sample]["fastq"]["chip_seq"]
-            # except KeyError:
-                # self.sample_data[sample]["fastq"]["chip_seq"] = {}
-            # else:
-                # self.write_warning("chip_seq dict exists for sample %s. Double peak calling steps?\n", sample)
 
 
         pass

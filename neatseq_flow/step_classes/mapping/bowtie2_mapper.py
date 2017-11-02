@@ -28,22 +28,22 @@ Requires
 
 * fastq files in one of the following slots:
 
-    * ``sample_data[<sample>]["fastqc"]["fastq.F"]``
-    * ``sample_data[<sample>]["fastqc"]["fastq.R"]``
-    * ``sample_data[<sample>]["fastqc"]["fastq.S"]``
+    * ``sample_data[<sample>]["fastq.F"]``
+    * ``sample_data[<sample>]["fastq.R"]``
+    * ``sample_data[<sample>]["fastq.S"]``
     
 
 Output
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 * Puts output sam files in the following slots:
-    * ``self.sample_data[<sample>]["fastq"]["mapping"]["sam"]``
+    * ``self.sample_data[<sample>]["sam"]``
 
 * Puts the name of the mapper in:
-    * ``self.sample_data[<sample>]["fastq"]["mapping"]["mapper"]``
+    * ``self.sample_data[<sample>]["mapper"]``
 
 * puts fasta of reference genome (if one is given in param file) in:
-    * ``self.sample_data[<sample>]["fastq"]["mapping"]["reference"]``
+    * ``self.sample_data[<sample>]["reference"]``
 
 Parameters that can be set
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -122,17 +122,6 @@ class Step_bowtie2_mapper(Step):
         """ A place to do initiation stages following setting of sample_data
         """
         
-        
-        # # Initializing a "mapping" dict for each sample:
-        # for sample in self.sample_data["samples"]:      # Getting list of samples out of samples_hash
-
-            # try:
-                # self.sample_data[sample]["fastq"]["mapping"]
-            # except KeyError:
-                # self.sample_data[sample]["fastq"]["mapping"] = {}
-            # else:
-                # self.write_warning("mapping dict exists for sample %s. Double mapping steps?\n", sample)
-
         
         # Require either 'scope' or '-x':
         if "scope" in self.params:

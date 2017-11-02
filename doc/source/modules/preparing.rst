@@ -15,5 +15,3 @@ Modules for Preparation and QC
 
 .. automodule:: step_classes.Reports.Multiqc
 
-
-

@@ -16,7 +16,7 @@ Requires
 
 * BedGraph file in the following slot:
 
-    * ``sample_data[<sample>]["fastqc"]["mapping"]["bdg"]``
+    * ``sample_data[<sample>]["bdg"]``
     
 
 Output
@@ -24,8 +24,8 @@ Output
 
 * Puts output sam files in the following slots:
 
-    * self.sample_data[<sample>]["fastq"]["mapping"]["bw"]
-    * self.sample_data[<sample>]["fastq"]["mapping"]["wig"]
+    * self.sample_data[<sample>]["bw"]
+    * self.sample_data[<sample>]["wig"]
     
 Parameters that can be set
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~

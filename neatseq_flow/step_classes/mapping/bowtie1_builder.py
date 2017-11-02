@@ -23,8 +23,8 @@ output
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
    
 Puts output index files in one of the following slot:
-    * ``self.sample_data[<sample>]["bowtie1"]["index"]``
-    * ``self.sample_data["bowtie2"]["index"]``
+    * ``self.sample_data[<sample>]["bowtie1_index"]``
+    * ``self.sample_data["bowtie1_index"]``
             
 
 Parameters that can be set
@@ -64,19 +64,6 @@ __version__ = "1.1.0"
 
 
 class Step_bowtie1_builder(Step):
-    """ A module for running bowtie2 mapper:
-        requires:
-            fasta file in one of the following slot: (will take project wide first, if exists)
-            sample_data["fasta.nucl"]
-            sample_data[<sample>]["fasta.nucl"]
-
-        output:
-            puts output index files in the following slots:
-            self.sample_data[<sample>]["bowtie2"]["index"]
-            or
-            self.sample_data["bowtie2"]["index"]
-    """
-   
     
     def step_specific_init(self):
         self.shell = "bash"      # Can be set to "bash" by inheriting instances
@@ -101,7 +88,6 @@ class Step_bowtie1_builder(Step):
                 raise AssertionExcept("Scope must be either 'sample' or 'project'\n")
 
         if self.params["scope"] == "sample":
-            # Initializing a "mapping" dict \\for each sample:
             for sample in self.sample_data["samples"]:      # Getting list of samples out of samples_hash
                 try:
                     self.sample_data[sample]["fasta.nucl"]

@@ -103,7 +103,6 @@ class Step_samtools(Step):
         """ A place to do initiation stages following setting of sample_data
         """
         
-        # Checking a "mapping" exists for each sample:
         for sample in self.sample_data["samples"]:      # Getting list of samples out of samples_hash
 
             # Check that a sam or bam exists

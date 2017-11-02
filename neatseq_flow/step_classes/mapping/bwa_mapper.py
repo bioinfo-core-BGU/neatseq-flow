@@ -21,11 +21,11 @@ Requires
 
 * fastq files in one of the following slots:
 
-    * ``sample_data[<sample>]["fastqc"]["fastq.F"]``
-    * ``sample_data[<sample>]["fastqc"]["fastq.R"]``
-    * ``sample_data[<sample>]["fastqc"]["fastq.S"]``
+    * ``sample_data[<sample>]["fastq.F"]``
+    * ``sample_data[<sample>]["fastq.R"]``
+    * ``sample_data[<sample>]["fastq.S"]``
 * If ``mod`` is one of ``samse, sampe``, the sai files are required as well (created by a ``bwa aln`` step:
-    * ``self.sample_data[<sample>]["bwa"]["saiF|saiR|saiS"]``
+    * ``self.sample_data[<sample>]["saiF|saiR|saiS"]``
     
 
 Output
@@ -33,15 +33,15 @@ Output
 
 * Puts output sam files in the following slots:
     * If ``mod`` is one of ``mem, samse, sampe, bwasw``:
-        * ``self.sample_data[<sample>]["fastq"]["mapping"]["sam"]``
+        * ``self.sample_data[<sample>]["sam"]``
     * If ``mod`` is ``aln``:
-        * ``self.sample_data[<sample>]["bwa"]["saiF|saiR|saiS"]``
+        * ``self.sample_data[<sample>]["saiF|saiR|saiS"]``
 
 * Puts the name of the mapper in:
-    * ``self.sample_data[<sample>]["fastq"]["mapping"]["mapper"]``
+    * ``self.sample_data[<sample>]["mapper"]``
 
 * puts fasta of reference genome (if one is given in param file) in:
-    * ``self.sample_data[<sample>]["fastq"]["mapping"]["reference"]``
+    * ``self.sample_data[<sample>]["reference"]``
 
 Parameters that can be set
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -160,19 +160,12 @@ class Step_bwa_mapper(Step):
         """
         
         
-        # Initializing a "mapping" dict for each sample:
         for sample in self.sample_data["samples"]:      # Getting list of samples out of samples_hash
 
             if "sam" in self.sample_data[sample]:
                 self.write_warning("SAM file exists for sample. Double mapping steps?\n", sample)
-            # else:
-                # self.sample_data[sample]["fastq"]["mapping"] = {}
-
-            # # If mod is "aln", initiate a "bwa" slot for the sample, in does not exist
-            # if self.params["mod"] in ["aln"]:
-                # if "bwa" not in self.sample_data[sample]:
-                    # self.sample_data[sample]["bwa"] = dict()
-            # If mod is "samse" or "sampe", require a "bwa" slot for the sample, and require relevant sai files
+           
+           
             if self.params["mod"] in ["samse"]:
                 try:
                     self.sample_data[sample]["saiS"]

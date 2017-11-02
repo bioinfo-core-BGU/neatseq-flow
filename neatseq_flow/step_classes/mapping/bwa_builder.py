@@ -25,11 +25,11 @@ Output
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 * Puts output index files in one of the following slots:
-    * ``self.sample_data[<sample>]["bwa"]["index"]``
-    * ``self.sample_data["bwa"]["index"]``
+    * ``self.sample_data[<sample>]["bwa_index"]``
+    * ``self.sample_data["bwa_index"]``
 
 * Puts the fasta file in one of the following slot:
-    * ``self.sample_data[<sample>]["fastq"]["mapping"]["reference"]``
+    * ``self.sample_data[<sample>]["reference"]``
 
 Parameters that can be set
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~

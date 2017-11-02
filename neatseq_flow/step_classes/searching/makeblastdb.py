@@ -25,13 +25,15 @@ Output
     
 * A BLAST database in the following slots:
 
-    * ``sample_data[<sample>]["blast"]["blastdb"]["nucl"|"prot"]``
-    * ``sample_data[<sample>]["blast"]["blastdb"]["nucl_log"|"prot_log"]``
+    * ``sample_data[<sample>]["blastdb"]``
+    * ``sample_data[<sample>]["blastdb.nucl"|"blastdb.prot"]``
+    * ``sample_data[<sample>]["blastdb.nucl.log"|"blastdb.prot.log"]``
 
 * Or (if 'projectBLAST' is set):
 
-    * ``sample_data["blast"]["blastdb"]["nucl"|"prot"]``
-    * ``sample_data["blast"]["blastdb"]["nucl_log"|"prot_log"]``
+    * ``sample_data["blastdb"]``
+    * ``sample_data["blastdb.nucl"|"blastdb.prot"]``
+    * ``sample_data["blastdb.nucl.log"|"blastdb.prot.log"]``
     
 Parameters that can be set:
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -115,11 +117,6 @@ class Step_makeblastdb(Step):
                 self.sample_data[sample]["fasta." + self.dbtype]
             except KeyError:
                 raise AssertionExcept("No file exists in sample for specified -dbtype (%s)\n" % dbtype, sample)
-            # # initialize blast and blastdb slots for sample:
-            # if not "blast" in self.sample_data[sample].keys():
-                # self.sample_data[sample]["blast"] = dict()
-            # if not "blastdb" in self.sample_data[sample]["blast"].keys():
-                # self.sample_data[sample]["blast"]["blastdb"] = dict()
 
     def step_sample_initiation_byproject(self):
 
@@ -129,13 +126,8 @@ class Step_makeblastdb(Step):
             self.sample_data["fasta." + self.dbtype]
         except KeyError:
             raise AssertionExcept("No file exists in project for specified -dbtype (%s)\n" % self.dbtype)
-            
-        # # Creating holder for output:
-        # if not "blast" in self.sample_data.keys():
-            # self.sample_data["blast"] = dict()
-        # if not "blastdb" in self.sample_data["blast"].keys():
-            # self.sample_data["blast"]["blastdb"] = dict()
-                
+  
+  
         
     def create_spec_wrapping_up_script(self):
         """ Add stuff to check and agglomerate the output data

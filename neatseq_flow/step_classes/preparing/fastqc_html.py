@@ -15,16 +15,24 @@ Requires
     
 * fastq files in one of the following slots:
 
-    * ``sample_data[<sample>]["fastqc"]["fastq.F"]``
-    * ``sample_data[<sample>]["fastqc"]["fastq.R"]``
-    * ``sample_data[<sample>]["fastqc"]["fastq.S"]``
+    * ``sample_data[<sample>]["fastq.F"]``
+    * ``sample_data[<sample>]["fastq.R"]``
+    * ``sample_data[<sample>]["fastq.S"]``
 
 Output
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     
 * puts fastqc output files in the following slots:
         
-    * ``sample_data[<sample>]["fastq"]["fastqc"]["fastq.F"|"fastq.R"|"fastq.S"]["html"|"zip"]``
+    * ``sample_data[<sample>]["fastqc_fastq.F_html"]``
+    * ``sample_data[<sample>]["fastqc_fastq.R_html"]``
+    * ``sample_data[<sample>]["fastqc_fastq.S_html"]``
+            
+* puts fastqc zip files in the following slots:
+        
+    * ``sample_data[<sample>]["fastqc_fastq.F_zip"]``
+    * ``sample_data[<sample>]["fastqc_fastq.R_zip"]``
+    * ``sample_data[<sample>]["fastqc_fastq.S_zip"]``
             
  
 
@@ -73,8 +81,6 @@ class Step_fastqc_html(Step):
         
         # Assert that all samples have reads files:
         for sample in self.sample_data["samples"]:    
-            # if not "fastq" in self.sample_data[sample]:
-                # raise AssertionExcept("No fastq files defined.\n", sample)
             if not filter(lambda x: x in ["fastq.F", "fastq.R", "fastq.S"], self.sample_data[sample].keys()):
                 raise AssertionExcept("No read files defined\n", sample)
 

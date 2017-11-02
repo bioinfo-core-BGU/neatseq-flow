@@ -48,7 +48,7 @@ Instructions for ``build_scripts()`` function
     2. Calling ``self.script += self.get_script_const()`` will add the `env` parameter, if it exists; the `script_path` parameter and the redirected parameters. Then all that remains is to see to input and output parameters.
     3. The input parameter, typically ``-i``, is usually based on the sample data structure, _e.g._::
     
-        self.script += "-i %s \\\n\t" % self.sample_data[sample]["fasta"]["nucl"]
+        self.script += "-i %s \\\n\t" % self.sample_data[sample]["fasta.nucl"]
  
     .. note:: The ``"\\\n\t"`` at the end of the string makes the final script more readable.
   
@@ -58,12 +58,11 @@ Instructions for ``build_scripts()`` function
 
 - Place the output file somewhere in the ``sample_data`` structure. _e.g._::
 
-        self.sample_data[sample]["my_step"]["output"] = (sample_dir + os.path.basename(output_filename))
+        self.sample_data[sample]["bam"] = (sample_dir + os.path.basename(output_filename))
     
-- You have to be creative with positioning the output in the sample_data structure:
-    If your step creates a file that will be used downstream, put it where similar modules put files. e.g. ``fasta``, ``BAM``, ``SAM`` and ``GFF`` files have well-defined slots which you should use (see the documentation for similar modules)
+- If the output is a standard file, *e.g.* BAM or fastq files, put them in the respective places in ``sample_data``. See documentation for simira modules to find out the naming scheme. Otherwise, use a concise file-type descriptor for the file and specify the location you decided on in the module documentation.
  
-* The function should end with the following two lines (within the sample-loop, if one exists)::
+* The function should end with the following line (within the sample-loop, if one exists)::
 
         self.create_low_level_script()
 
@@ -104,4 +103,4 @@ Additional comments
 
 1. You can add more than one command in the ``self.script`` vartiable if the two commands are typically executed together. See ``class Step_samtools`` for an example.
 
-2. A step can operate on the sample or project level. For example, BLAST can run on sample fasta files or on a project-wide assembly. See how we did this in our definition of BLAST. An alternative is to add an ``if..else`` in the ``build_scripts()`` function. If this is your case, you should require a ``scope`` parameter which can be set to ``sample`` or to ``project`` (see how this was done in BLAST, although the parameter used there is specific to BLAST, for back-compatibility reasons.).
+2. A step can operate on the sample or project level. For example, BLAST can run on sample fasta files or on a project-wide assembly. See how we did this in our definition of BLAST. An alternative is to add an ``if..else`` in the ``build_scripts()`` function. If this is your case, you should require a ``scope`` parameter which can be set to ``sample`` or to ``project``.
