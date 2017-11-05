@@ -88,6 +88,25 @@ def parse_param_file(filename):
     print "YAML failed. trying classic"
     return get_param_data(file_conts)
 
+    
+from collections import OrderedDict
+    
+def ordered_load(stream, Loader=yaml.Loader, object_pairs_hook=OrderedDict):
+    class OrderedLoader(Loader):
+        pass
+    def construct_mapping(loader, node):
+        loader.flatten_mapping(node)
+        return object_pairs_hook(loader.construct_pairs(node))
+    OrderedLoader.add_constructor(
+        yaml.resolver.BaseResolver.DEFAULT_MAPPING_TAG,
+        construct_mapping)
+    return yaml.load(stream, OrderedLoader)
+
+# # usage example:
+# ordered_load(stream, yaml.SafeLoader)
+
+
+
 def get_param_data_YAML(filelines):
     """ Parse YAML-formatted parameter files
     """
@@ -138,7 +157,9 @@ def get_param_data_YAML(filelines):
 
     # Read params with pyyaml package:
     # yaml_params = yaml.load("\n".join(filelines),  Loader=yaml.SafeLoader)
-    yaml_params = yaml.safe_load("\n".join(filelines))
+    # yaml_params = yaml.safe_load("\n".join(filelines))
+    yaml_params = ordered_load("\n".join(filelines), yaml.SafeLoader)
+
     
     # If there is a Variables section, interpolate any appearance of the variables in the params
     if "Vars" in yaml_params.keys():
