@@ -47,6 +47,7 @@ GLOBAL_PARAMS_LIST = ['Default_wait','Main','Qsub_opts','Qsub_q','Qsub_nodes','Q
 # A list of words that identify global parameters that take multiple values (are stored as lists even when only one value exists)
 GLOBAL_PARAMS_MULTIPLE_V = ['Qsub_opts','Qsub_nodes','module_path']   
 STEP_PARAMS_MULTIPLE_V = ['base','setenv','export']   
+STEP_PARAMS_SINGLE_VALUE = ['script_path','module','redirects']
 
 def parse_param_file(filename):
     """Parses a file from filename
@@ -434,7 +435,8 @@ def param_data_testing_step_wise(param_data):
         for name in param_data[step].keys():
             for param in param_data[step][name].keys():
                 # Checking that no parameter except "base" is a list:
-                if param not in STEP_PARAMS_MULTIPLE_V and isinstance(param_data[step][name][param],list):
+                # if param not in STEP_PARAMS_MULTIPLE_V and isinstance(param_data[step][name][param],list):
+                if param in STEP_PARAMS_SINGLE_VALUE and isinstance(param_data[step][name][param],list):
                     issue_warning += "%s. Duplicate values for param %s in step %s (name %s)\n" % (issue_count,param,step,name)
                     issue_count += 1
             
