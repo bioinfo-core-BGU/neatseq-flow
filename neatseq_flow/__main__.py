@@ -32,15 +32,21 @@ parser.add_argument("-s","--sample_file", help="Location of sample file, in clas
 parser.add_argument("-p","--param_file", help="Location of parameter file. Can be a comma-separated list - all will be used as one. Alternatively, -p can be passed many times with different param files", action="append")
 parser.add_argument("-d","--home_dir", help="Location of pipeline. Default is currect directory", default=os.getcwd())
 parser.add_argument("-m","--message", help="A message describing the pipeline", default="")
-parser.add_argument("-c","--convert2yaml", help="Convert parameter file to yaml format?", action='store_true')
+# parser.add_argument("-c","--convert2yaml", help="Convert parameter file to yaml format?", action='store_true')
+parser.add_argument("-v","--version", help="Convert parameter file to yaml format?", action='store_true')
 
 args = parser.parse_args()
+
+
+if args.version:
+    print "NeatSeq-Flow version %s" % __version__
+    print "Installation location: %s" % os.path.dirname(os.path.realpath(__file__))
+    sys.exit()
 
 # Checking that sample_file and param_file were passed:
 if args.sample_file == None or args.param_file == None:
     print "Don't forget to pass sample and parameter files with the -s and -p flags.\n", parser.print_help()
-    sys.exit()
-    
+
 # Converting list of parameter files into comma-separated list. This is deciphered by the neatseq_flow class.
 args.param_file = ",".join(args.param_file)
 
