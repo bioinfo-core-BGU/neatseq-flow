@@ -26,9 +26,9 @@ class AssertionExcept(Exception):
         
     def get_error_str(self, step_name):
         if self.sample: # If a sample was passed. The exception is specific to a sample
-            return "In %s (sample %s): %s" % (step_name, self.sample, self.comment)
-        else:
-            return "In %s: %s" % (step_name, self.comment)
+            return "ERROR  : In %s (sample %s): %s" % (step_name, self.sample, self.comment)
+        else:       
+            return "ERROR  : In %s: %s" % (step_name, self.comment)
         
 
 class Step:

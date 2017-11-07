@@ -154,7 +154,9 @@ def get_param_data_YAML(filelines):
  
     filelines = remove_comments(filelines)
     
-
+    # Convert all tabs to 4 spaces. Tabs do not work well with YAML!
+    filelines = [re.sub("\t","    ",line) for line in filelines]
+    
     # Read params with pyyaml package:
     # yaml_params = yaml.load("\n".join(filelines),  Loader=yaml.SafeLoader)
     # yaml_params = yaml.safe_load("\n".join(filelines))
