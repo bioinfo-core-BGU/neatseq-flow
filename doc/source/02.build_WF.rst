@@ -185,9 +185,11 @@ Each sample file must include a single title line with the format::
 
 An example of a sample definition::
 
-    Sample     17.2016.3.18s
-    Forward    17-2-18s_S45_L001_R1_001.fastq.gz
-    Reverse    17-2-18s_S45_L001_R2_001.fastq.gz
+    Sample     Sample1
+    Forward    /full/path/to/Sample1_L001_R1_001.fastq.gz
+    Reverse    /full/path/to/Sample1_L001_R2_001.fastq.gz
+    Forward    /full/path/to/Sample1_L001_R1_002.fastq.gz
+    Reverse    /full/path/to/Sample1_L001_R2_002.fastq.gz
 
 
 A new sample definition begins with ``Sample`` followed by a sample name (the sample name must **not** contain spaces!)
@@ -226,11 +228,11 @@ The first field is the sample name (no spaces!). The 2nd field is the file type 
 
 An example of a sample table follows::
 
-    #SampleID    Type    Path
-    sample.5    Forward    sample.5_R1_001.fastq.gz
-    sample.5    Reverse    sample.5_R2_001.fastq.gz
-    sample.8    Forward    sample.8_R1_001.fastq.gz
-    sample.8    Reverse    sample.8_R2_001.fastq.gz
+    #SampleID    Type     Path
+    Sample1    Forward    /full/path/to/Sample1_R1_001.fastq.gz
+    Sample1    Reverse    /full/path/to/Sample1_R2_001.fastq.gz
+    Sample2    Forward    /full/path/to/Sample2_R1_001.fastq.gz
+    Sample2    Reverse    /full/path/to/Sample2_R2_001.fastq.gz
 
 
 File types are as described above in section :ref:`list_format_definition`. 

@@ -47,6 +47,13 @@ if args.version:
     print "Installation location: %s" % os.path.dirname(os.path.realpath(__file__))
     sys.exit()
 
+    
+if args.sample_file == None or args.param_file==None:
+    print "Please supply sample and parameter files...\n"
+    parser.print_help()
+    sys.exit()
+
+
 # Checking that sample_file and param_file were passed:
 if args.sample_file == None or args.param_file == None:
     print "Don't forget to pass sample and parameter files with the -s and -p flags.\n", parser.print_help()
