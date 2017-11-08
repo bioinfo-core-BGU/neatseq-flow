@@ -161,6 +161,6 @@ Step_params:
         module: bwa_mapper
         base: bwa_aln_1
         script_path: {Vars.paths.bwa}
-        mod: samse
+        mod: sampe
         ref_genome: {Vars.reference.ref_genome}
         ref_index: {Vars.reference.bwa_index}

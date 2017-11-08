@@ -23,10 +23,10 @@ Execution
 
 A typical execution of ``neatseq_flow`` is as follows::
 
-    python neatseq_flow                         \
-        --sample_file sample_data.nsfs          \
-        --param_file  Parameters.nsfp           \
-        --message     "an informative message"  \
+    python neatseq_flow.py                              \
+        --sample_file YAML_pipelines/PE_tabular.nsfs    \
+        --param_file  YAML_pipelines/mapping.yaml       \
+        --message     "an informative message"          \
         --home_dir    /path/to/workflow/directory
 
 You can leave out the ``--message`` and ``--home_dir`` parameters.
