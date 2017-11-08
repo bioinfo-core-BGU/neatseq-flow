@@ -145,7 +145,7 @@ class Step_bowtie2_mapper(Step):
                 raise AssertionExcept("There is a mismatch between 'scope' and the existing bowtie2 index\n", sample)
                 
             if "ref_genome" in self.params.keys():
-                raise AssertionExcept("ref_genome was passed, and 'scope' was defined. Ignoring ref_genome\n")
+                raise AssertionExcept("ref_genome was passed, and 'scope' was defined. Resolve!\n")
         else:
             # If scope is not defined, require '-x'
             if not "-x" in self.params["redir_params"]:
