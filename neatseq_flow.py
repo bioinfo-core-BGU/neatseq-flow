@@ -17,7 +17,7 @@ import os, sys
 import argparse
 from pprint import pprint as pp
 
-sys.path.insert(0, os.path.abspath(os.path.dirname(__file__)) + "/src")
+sys.path.insert(0, os.path.realpath(os.path.expanduser(os.path.dirname(__file__))) + "/src")
 
 
 from PLC_main import neatseq_flow
@@ -62,9 +62,11 @@ if args.sample_file == None or args.param_file == None:
 args.param_file = ",".join(args.param_file)
 
 
-neatseq_flow(sample_file   = os.path.abspath(args.sample_file), \
-             param_file    = args.param_file,                   \
-             home_dir      = args.home_dir,                     \
-             message       = args.message)#,                      \
-             # convert2yaml  = args.convert2yaml)
+neatseq_flow(sample_file   = args.sample_file,   \
+             param_file    = args.param_file,    \
+             home_dir      = args.home_dir,      \
+             message       = args.message)
+             
+
+
 

@@ -7,5 +7,5 @@ Generic module
    :depth: 1
 
 
-.. automodule:: step_classes.Generic.Generic
+.. automodule:: step_classes.Generic_module.Generic
 

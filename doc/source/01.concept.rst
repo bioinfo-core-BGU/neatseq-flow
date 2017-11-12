@@ -1,5 +1,5 @@
-NeatSeq-Flow concept 
-=====================
+.. NeatSeq-Flow concept 
+.. =====================
 
 
 **Author:** Menachem Sklarz
@@ -11,11 +11,12 @@ NeatSeq-Flow concept
 Introduction
 --------------------
 
-Usage of NeatSeq-Flow works at three levels:
+Usage of **NeatSeq-Flow** works at three levels:
 
 1. :ref:`Basic_usage`: A workflow is coded in a parameter file. All the user has to do is create a sample file describing the samples and their associated files. (See :ref:`Sample_file_definition`.)
 2. :ref:`workflow_contruction`: Creating a workflow parameter file based on existing modules. The user has to create both a parameter file and a sample file.
-3. :ref:`adding_modules`: Creating a workflow based on tools not yet included in NeatSeq-Flow. This requires the user to add modules for each program he expects to run.
+3. :ref:`adding_modules`: Creating a workflow based on tools not yet included in **NeatSeq-Flow**. This requires the user to add modules for each program he expects to run.
+
 
 
 .. _Basic_usage: 
@@ -25,10 +26,10 @@ Basic usage
 
 Basic usage does not require much. 
 
-1. Copy a ready-made parameter file.
+1. Copy a ready-made parameter file (you can find some in ``Workflows`` dir in the main **NeatSeq-Flow** directory).
 2. Adjust the script paths to the correct paths on your system.
 3. Create a sample file following the directions in :ref:`Sample_file_definition`.
-4. Execute NeatSeq-Flow (see :ref:`Execution_section`)
+4. Execute **NeatSeq-Flow** (see :ref:`Execution_section`)
 
 .. _workflow_contruction:
 
@@ -37,7 +38,7 @@ Workflow construction
 
 In order to construct workflows, one needs to combine modules in such a way that files are transferred seamlessly between them. 
 
-The module output filenames are organised within NeatSeq-Flow in a python dictionary (this dictionary is included in the JSON file in the ``objects`` directory). This dictionary is called ``sample_data``. The dictionary tracks the locations of the output files from each module, saving each file type in a dedicated slot. For instance, reads are stored in ``readsX`` slots, where ``X`` is either ``F``, ``R`` or ``S`` for forward-, reverse- and single-end reads, respectively. *FASTA*, *SAM* and *BAM* files, too, have dedicated slots.  
+The module output filenames are organised within **NeatSeq-Flow** in a python dictionary (this dictionary is included in the JSON file in the ``objects`` directory). This dictionary is called ``sample_data``. The dictionary tracks the locations of the output files from each module, saving each file type in a dedicated slot. For instance, reads are stored in ``readsX`` slots, where ``X`` is either ``F``, ``R`` or ``S`` for forward-, reverse- and single-end reads, respectively. *FASTA*, *SAM* and *BAM* files, too, have dedicated slots.  
 
 A workflow is a combination of module instances that inherit the above-mentioned dictionary from other modules (these are called the ``base`` of the instance). Each module expects to find specific files in specific slots in the dictionary, which should be put there by one of the modules it inherits from, and puts the files its scripts will create in slots in the dictionary. You can see these requirements in the module documentation, in the *Requires* and *Output* sections. 
 

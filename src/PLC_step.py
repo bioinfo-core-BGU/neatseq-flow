@@ -43,9 +43,14 @@ class Step:
 
         # Searching module paths passed by user in parameter file:
         if "module_path" in param_data["Global"]:
-            for module_path in param_data["Global"]["module_path"]:#.split(" "):
+            for module_path_raw in param_data["Global"]["module_path"]:#.split(" "):
                 # Remove trainling '/' from dir name. For some reason that botches things up!
-                module_path = module_path.rstrip(os.sep)
+                module_path = module_path_raw.rstrip(os.sep)
+
+                # Expanding '~' and returning full path 
+                module_path = os.path.realpath(os.path.expanduser(module_path))
+                
+
                 # Check the dir exists:
                 if not os.path.isdir(module_path):
                     sys.stderr.write("Path %s from module_path does not exist. Skipping...\n" % module_path)

@@ -1,5 +1,5 @@
-Output directory structure
-==========================
+.. Output directory structure
+.. ==========================
 
 .. contents::
 
@@ -13,7 +13,7 @@ The directories are elaborated on below.
    :alt: NeatSeq-Flow dir structure
    :align: center
 
-   The directory structure created by NeatSeq-Flow
+   The directory structure created by **NeatSeq-Flow**
    
 The scripts directory
 -----------------------------
@@ -28,7 +28,7 @@ The scripts directory
    :alt: Structure of script directory
    :align: center
 
-   The scripts directory created by NeatSeq-Flow
+   The scripts directory created by **NeatSeq-Flow**
 
   
 The data directory
@@ -43,7 +43,7 @@ Below is the data directory for the example, showing the tree organization for t
    :alt: Structure of script directory
    :align: center
 
-   The data directory created by NeatSeq-Flow, showing the tree organization.
+   The data directory created by **NeatSeq-Flow**, showing the tree organization.
 
   
 The backup directory 
@@ -57,7 +57,7 @@ The backup directory contains a history of workflow sample and parameter files.
    :alt: Structure of script directory
    :align: center
 
-   The backups directory created by NeatSeq-Flow
+   The backups directory created by **NeatSeq-Flow**
 
  
 The logs directory
@@ -77,7 +77,7 @@ The logs directory contains various logging files:
    :alt: log directory
    :align: center
 
-   The logs directory created by NeatSeq-Flow
+   The logs directory created by **NeatSeq-Flow**
 
 .. figure:: figs/image010.png
    :scale: 100 %
@@ -103,7 +103,7 @@ The objects directory contains various files describing the workflow:
    :alt: log directory
    :align: center
 
-   The objects directory created by NeatSeq-Flow
+   The objects directory created by **NeatSeq-Flow**
 
    
 1. ``pipeline_graph.html``: An SVG diagram of the workflow.

@@ -1,5 +1,5 @@
-Basic neaseq_flow classes
-=========================
+.. Basic neaseq_flow classes
+.. =========================
 
 Contents:
 

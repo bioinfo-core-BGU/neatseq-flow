@@ -1,8 +1,7 @@
 .. _for_the_programmer_Adding_modules:
 
-====================================================
-For the programmer - Adding modules
-====================================================
+.. For the programmer - Adding modules
+.. ====================================================
 
 .. toctree::
    :maxdepth: 2
@@ -76,7 +75,7 @@ When programming a module, the programmer usually has certain requirements from 
 
 This kind of condition is typically programmed in python using assertions.
 
-In NeatSeq-Flow, assertions are managed with the ``AssertionExcept`` exception class. For testing the parameters, create an ``if`` condition which raises an ``AssertionExcept``. The arguments to ``AssertionExcept`` are as follows:
+In **NeatSeq-Flow**, assertions are managed with the ``AssertionExcept`` exception class. For testing the parameters, create an ``if`` condition which raises an ``AssertionExcept``. The arguments to ``AssertionExcept`` are as follows:
 
 1. An error message to be displayed. ``AssertionExcept`` will automatically add the step name to the message.
 2. Optional: The sample name, in case the condition failed for a particular sample (e.g. a particular sample does not have a BAM file defined.)
@@ -89,7 +88,7 @@ A typical condition testing code snippet::
 
 .. note:: The reason for using ``if not CONDITION`` rather than ``if CONDITION`` is that the condition is a condition for success rather than for failure, which is more intuitive (for me at least)
 
-If you only want to warn the user about a certain issue, rather than failing, you can induce NeatSeq-Flow to produce a warning message with the same format as an ``AssertionExcept`` message, as follows::
+If you only want to warn the user about a certain issue, rather than failing, you can induce **NeatSeq-Flow** to produce a warning message with the same format as an ``AssertionExcept`` message, as follows::
 
     for sample in self.sample_data["samples"]:
         if CONDITION:

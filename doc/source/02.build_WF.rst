@@ -1,5 +1,5 @@
-Building a workflow
-====================
+.. Building a workflow
+.. ====================
 
 **Author:** Menachem Sklarz
 
@@ -7,16 +7,8 @@ Building a workflow
 
 .. contents::
 
-Installation
-------------
-
-Clone the github repository or download the zipped archive from github to the required location on your filesystem.
-No further installation is required.
-
-.. Note:: The pipelines created by NeatSeq-Flow were tested using SGE (qsub) version N1GE 6.0u8
 
 
-.. _Execution_section:
 
 Execution
 ---------
@@ -67,8 +59,8 @@ All global parameters are set within a ``Global_params`` block in YAML format.
 - ``Qsub_opts``: Other SGE parameters to be set as default for all scripts, *e.g.* ``-V -cwd`` etc. The parameters should be passed in one long string and **not** as a list.
 - ``Qsub_path``: The path to the ``qstat`` command. If not set, qstat will be used as-is with no path. Sometimes in remote nodes the ``qstat`` command is not in the path and if Qsub_path is not set, the step start and stop logging will fail.
 - ``Default_wait``: The time, in seconds, to wait for jobs to enter the queue before terminating the step-level script. Must be an integer. The default is 10, which is usually a good value to start with. If downstream jobs seem to be sent for execution before earlier jobs have terminated, increase this value.
-- ``module_path``: When adding your own module (see section :ref:`for_the_programmer_Adding_modules`), you can keep your modules in a separate path and pass the path to neatseq_flow with ``module_path``. Several of these can be passed in YAML list format for more than one external module path. 
-- ``job_limit``: If there is an upper limit on the jobs you can send to the job manager, you can use the ``job_limit`` parameter to pass NeatSeq-Flow a file with one line, *e.g.* `limit=1000 sleep=60`. This will make the scripts check every 60 seconds if there are less than 1000 jobs registered for the user. New jobs will be released only when there are less than the specified limit. 
+- ``module_path``: Enables including modules not in the main **NeatSeq-Flow** package. This includes the modules downloaded from the **NeatSeq-Flow** module and workflow repository as modules you added yourself (see section :ref:`for_the_programmer_Adding_modules`). Keep your modules in a separate path and pass the path to **NeatSeq-Flow** with ``module_path``. Several of these can be passed in YAML list format for more than one external module path. The list will be searched in order, with the main **NeatSeq-Flow** package being searched last.
+- ``job_limit``: If there is an upper limit on the jobs you can send to the job manager, you can use the ``job_limit`` parameter to pass **NeatSeq-Flow** a file with one line, *e.g.* `limit=1000 sleep=60`. This will make the scripts check every 60 seconds if there are less than 1000 jobs registered for the user. New jobs will be released only when there are less than the specified limit. 
 
 
 Example of a global-parameter block::

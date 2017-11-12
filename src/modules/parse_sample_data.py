@@ -52,7 +52,10 @@ def parse_sample_file(filename):
     file_conts = []
 
     filenames = filename.split(",")
-    for filename in filenames:
+    for filename_raw in filenames:
+        # Expanding '~' and returning full path 
+        filename = os.path.realpath(os.path.expanduser(filename_raw))
+
         if not os.path.isfile(filename):
             sys.exit("Sample file %s does not exist.\n" % filename)
         with open(filename) as fileh:

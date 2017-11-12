@@ -55,7 +55,10 @@ def parse_param_file(filename):
     file_conts = []
     
     filenames = filename.split(",")
-    for filename in filenames:
+    for filename_raw in filenames:
+        # Expanding '~' and returning full path 
+        filename = os.path.realpath(os.path.expanduser(filename_raw))
+
         if not os.path.isfile(filename):
             sys.exit("Parameter file %s does not exist.\n" % filename)
 
