@@ -1,9 +1,5 @@
-Monitor docs
+NeatSeq-Flow Monitor
 ====================================================
-
-**Author:** Menachem Sklarz
-
-**Affiliation:** `Bioinformatics Core Facility <http://bioinfo.bgu.ac.il/bsu/index.htm>`_, `National institute of Biotechnology in the Negev <http://in.bgu.ac.il/en/nibn/Pages/default.aspx>`_, Ben-Gurion University
 
 .. contents:: Table of Contents
    :depth: 2
