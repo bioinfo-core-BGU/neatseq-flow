@@ -317,5 +317,5 @@ class Mock(object):
     def __getattr__(self, name):
         return Mock
 
-for mod_name in ('curses','_curses'):
+for mod_name in ('curses','_curses','pandas','_pandas'):
     sys.modules[mod_name] = Mock()
