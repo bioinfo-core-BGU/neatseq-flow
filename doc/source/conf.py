@@ -305,7 +305,7 @@ texinfo_documents = [
 
 # Example configuration for intersphinx: refer to the Python standard library.
 intersphinx_mapping = {'https://docs.python.org/': None,
-                       'neatseq_flow_modules':('http://neatseq-flow.readthedocs.io/projects/neatseq_flow_additional_modules/en/latest/', None)}
+                       'neatseq_flow_modules':('http://neatseq-flow.readthedocs.io/projects/neatseq-flow-modules/en/latest/', None)}
                                                 
                                                 
                                                 

@@ -83,7 +83,8 @@ Create a new directory anywhere, `cd` into it and execute the following commands
 Modules
 -------
 
-While a basic number of modules come with **NeatSeq-Flow**, the main source of modules is the **NeatSeq-Flow module and workflow repository**. This repository is available on `github <https://github.com/bioinfo-core-BGU/neatseq-flow-modules>`_. Check out the :ref:`list of modules in the modules repository <neatseq_flow_modules:additional_modules_repo>`
+While a basic number of modules come with **NeatSeq-Flow**, the main source of modules is the **NeatSeq-Flow module and workflow repository**. This repository is available on `github <https://github.com/bioinfo-core-BGU/neatseq-flow-modules>`_. Check out the :ref:`list of modules in the modules repository <neatseq_flow_modules:module_repo_docs>`
+
 
 
 .. Detailed documentation
