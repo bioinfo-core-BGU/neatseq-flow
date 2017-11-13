@@ -25,6 +25,12 @@
    * provides documentation, version control and time & memory usage reports and
    * provides a monitor for tracking execution progress.
 
+.. contents:: Table of Contents
+   :depth: 1
+   :local:
+   :backlinks: top
+
+
 What is **NeatSeq-Flow**?
 --------------------------
 
@@ -69,54 +75,29 @@ Getting started
 
 Create a new directory anywhere, `cd` into it and execute the following commands (``$NSF_main`` is the directory where **NeatSeq-Flow** is installed)::
 
-    python $NSF_main/neatseq_flow.py                              \
-        --sample_file $NSF_main/YAML_pipelines/PE_tabular.nsfs    \
-        --param_file  $NSF_main/YAML_pipelines/mapping.yaml       \
+    python $NSF_main/neatseq_flow.py                         \
+        --sample_file $NSF_main/Workflows/PE_tabular.nsfs    \
+        --param_file  $NSF_main/Workflows/mapping.yaml       \
         --message     "an informative message"
 
+Modules
+-------
+
+While a basic number of modules come with **NeatSeq-Flow**, the main source of modules is the **NeatSeq-Flow module and workflow repository**. This repository is available on `github <https://github.com/bioinfo-core-BGU/neatseq-flow-modules>`_. Check out the :ref:`list of modules in the modules repository <neatseq_flow_modules:additional_modules_repo>`
 
 
+.. Detailed documentation
+.. -----------------------
 
 .. toctree::
    :maxdepth: 1
-   :caption: Concept
+   :caption: Detailed documentation
 
    01.concept
-
-.. toctree::
-   :maxdepth: 1
-   :caption: Building workflows
-
    02.build_WF
-
-.. toctree::
-   :maxdepth: 1
-   :caption: Output directory structure
-   
    03.output
-
-.. .. toctree::
-..    :maxdepth: 1
-..    :caption: Modules 
-..    
-..    05.modules
-
-
-:ref:`List of modules in the modules repository <neatseq_flow_modules:additional_modules_repo>`
------------------------------------------------------------------------------------------------
-
-.. toctree::
-   :maxdepth: 1
-   :caption: Creating new modules
-
    06.addnew_module
-
-.. toctree::
-   :maxdepth: 1
-   :caption: The Monitor
-
    07.monitor
-   
        
 Indices and tables
 ==================

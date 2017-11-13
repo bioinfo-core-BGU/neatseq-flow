@@ -1,9 +1,14 @@
+Monitor docs
+====================================================
 
-.. Monitor docs
-.. ====================================================
+**Author:** Menachem Sklarz
 
-.. toctree::
-   :maxdepth: 2
+**Affiliation:** `Bioinformatics Core Facility <http://bioinfo.bgu.ac.il/bsu/index.htm>`_, `National institute of Biotechnology in the Negev <http://in.bgu.ac.il/en/nibn/Pages/default.aspx>`_, Ben-Gurion University
+
+.. contents:: Table of Contents
+   :depth: 2
+   :local:
+   :backlinks: top
 
    
 .. automodule:: neatseq_flow_monitor

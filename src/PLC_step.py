@@ -756,6 +756,7 @@ perl -e 'use Env qw(USER); open(my $fh, "<", "%(limit_file)s"); ($l,$s) = <$fh>=
             # all_sample_keys = all_sample_keys.append(map(lambda x: self.sample_data[x].keys(), self.sample_data["samples"]))
             pp(self.sample_data[self.sample_data["samples"][0]].keys())
             # print all_sample_keys
+            sys.exit("Showed. Now stopping. To continue, remove the 'stop_and_show' tage from %s" % self.get_step_name())
             
         
     def make_qsub_header(self, jid_list, script_lev = "low"):

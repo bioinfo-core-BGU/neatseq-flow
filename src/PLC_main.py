@@ -46,6 +46,13 @@ class neatseq_flow:
             
             if raisedex.args[0] == "Issues in parameters":
                 sys.exit()
+            elif len(raisedex.args)>1:
+                if raisedex.args[1] in ["Variables","parameters"]:
+                    print raisedex.args[0]
+                    sys.exit()
+                else:  # Unknown
+                    print "unknown exception type"
+                    sys.exit()
             else:
                 raise
             # sys.stderr.write("An exception has occured in parameter file reading. Double check!")
@@ -440,8 +447,13 @@ qsub -N %(step_step)s_%(step_name)s_%(run_code)s \\
         
         # Find the location of the step module in the file structure (see function find_step_module())
         step_module_loc = Step.find_step_module(step_type, self.param_data, self.pipe_data)  # Passing param data because it contains the optional search path...
-        # Import the module:
-        exec "from %s import %s as StepClass" % (step_module_loc,'Step_' + step_type)
+        try:
+            # Import the module:
+            exec "from %s import %s as StepClass" % (step_module_loc,'Step_' + step_type)
+        except ImportError:
+            print "An error has occured loading module %s.\n" % step_module_loc
+            sys.exit()
+
         # Run constructor:
         try:
             return StepClass(step_name,   \

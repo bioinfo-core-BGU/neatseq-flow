@@ -14,7 +14,7 @@ from pprint import pprint as pp
 # The local copy is loc_variables_bunch, and is set as global so that eval will recognise it.
 def make_interpol_func(variables_bunch):
     # Define a regular expression for variables (any contiguous alphanumeric or period between {})
-    var_re = re.compile("\{([\w\.]+?)\}")
+    var_re = re.compile("\{([\w\.\-]+?)\}")
     loc_variables_bunch = variables_bunch
     
     global loc_variables_bunch
@@ -22,6 +22,7 @@ def make_interpol_func(variables_bunch):
     def interpol_atom(atom):
 
         if isinstance(atom, str):
+
             m = var_re.search(atom)
             # While a match exists:
             while (m):
@@ -33,10 +34,10 @@ def make_interpol_func(variables_bunch):
                     atom = var_re.sub(eval("loc_variables_bunch.%s" % m.group(1)),atom,count=1)
                 except AttributeError:
                     # If not found, raise exception
-                    raise Exception("Unrecognised variable %s" % m.group(1))
+                    raise Exception("Unrecognised variable %s" % m.group(1), "Variables")
                 except TypeError:
-                    print "A 'TypeError' exception has occured. This may happen when variables are left empty. Make sure all your variables have values. "
-                    raise 
+                    raise Exception("A 'TypeError' exception has occured. This may happen when variables are left empty. Make sure all your variables have values. ", "Variables")
+                    
                     # # print "---> %s <-----\n" % m.group(1)
                     # pass
                 m = var_re.search(atom)
@@ -82,3 +83,25 @@ def walk(node, variables_bunch, callback):
             pass
 #        raise Exception("walk() works on dicts and lists only")
     return node
+
+    
+def test_vars(node):
+
+    
+    if isinstance(node,dict):
+        for key in node.keys():
+            if re.search("[^a-zA-Z0-9_]",key):
+                raise Exception("Please use only alphanumeric symbols and underscore in variables (%s)" % key, "Variables")
+            if re.search("^[0-9]",key):
+                raise Exception("Variables must begin with a alphabetic symbol or underscore (%s)" % key, "Variables")
+            if node[key] == None:
+                raise Exception("It seems you have an empty variable! (%s)" % key, "Variables")
+            test_vars(node[key])
+    elif isinstance(node,list):
+        raise Exception("Please don't use lists in variables section!", "Variables")
+    elif isinstance(node,str):
+        pass
+    elif node==None:
+        raise Exception("It seems you have an empty variable!" % key, "Variables")
+    else:
+        raise Exception("Unrecognised variable type (%s)" % node, "Variables")

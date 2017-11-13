@@ -145,7 +145,7 @@ html_short_title = "NeatSeq-Flow docs"
 
 # The name of an image file (relative to this directory) to place at the top
 # of the sidebar.
-html_logo = "figs/logo_Hor.png"
+html_logo = "figs/NeatSeq_Flow_logo.png"
 
 # The name of an image file (within the static path) to use as favicon of the
 # docs.  This file should be a Windows icon file (.ico) being 16x16 or 32x32
@@ -172,6 +172,7 @@ html_static_path = ['_static']
 
 # Custom sidebar templates, maps document names to template names.
 #html_sidebars = {}
+
 
 # Additional templates that should be rendered to pages, maps page names to
 # template names.

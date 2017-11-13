@@ -69,13 +69,14 @@ def parse_param_file(filename):
 
     try:
         return get_param_data_YAML(file_conts)
+        # pp(get_param_data_YAML(file_conts))
         
     except ConstructorError, exc:
         if hasattr(exc, 'problem_mark'):
             mark = exc.problem_mark
             print "Error position: (%s:%s)" % (mark.line+1, mark.column+1)
             print mark.get_snippet()
-        raise Exception("Possible duplicate value passed")
+        raise Exception("Possible duplicate value passed", "parameters")
     except yaml.YAMLError, exc:
         if hasattr(exc, 'problem_mark'):
             mark = exc.problem_mark
@@ -84,9 +85,9 @@ def parse_param_file(filename):
         
         # Comment out the following line to enable classic param file format.
         # Not recommended.
-        raise Exception("Failed to read YAML file. Make sure your parameter file is a correctly formatted YAML document.")
+        raise Exception("Failed to read YAML file. Make sure your parameter file is a correctly formatted YAML document.", "parameters")
     except:
-        raise #Exception("Unrecognised exception reading the parameter file.")
+        raise #Exception("Unrecognised exception reading the parameter file.", "parameters")
     
     print "YAML failed. trying classic"
     return get_param_data(file_conts)
@@ -118,9 +119,9 @@ def get_param_data_YAML(filelines):
         endparams = {}
         for yamlname in yamlnames:
             if "module" not in param_dict[yamlname]:
-                raise Exception("You did not supply a module name in %s\n" % yamlname)
+                raise Exception("You did not supply a module name in %s\n" % yamlname, "parameters")
             if not isinstance(param_dict[yamlname]["module"], str):
-                raise Exception("In %s: 'module' must be a string, not a list or anything else...\n" % yamlname)
+                raise Exception("In %s: 'module' must be a string, not a list or anything else...\n" % yamlname, "parameters")
             if param_dict[yamlname]["module"] not in endparams:
                 endparams[param_dict[yamlname]["module"]] = {}
             endparams[param_dict[yamlname]["module"]][yamlname] = param_dict[yamlname]
@@ -139,10 +140,10 @@ def get_param_data_YAML(filelines):
             if "qsub_params" in endparams[param_dict[yamlname]["module"]][yamlname]:
                 if "queue" in endparams[param_dict[yamlname]["module"]][yamlname]["qsub_params"]:
                     if not isinstance(endparams[param_dict[yamlname]["module"]][yamlname]["qsub_params"]["queue"], str):
-                        raise Exception("queue must be a string, not a list or other.")
+                        raise Exception("queue must be a string, not a list or other.", "parameters")
                 if "-q" in endparams[param_dict[yamlname]["module"]][yamlname]["qsub_params"]:
                     if not isinstance(endparams[param_dict[yamlname]["module"]][yamlname]["qsub_params"]["-q"], str):
-                        raise Exception("queue must be a string, not a list or other.")
+                        raise Exception("queue must be a string, not a list or other.", "parameters")
                     
                 # Converting node to list if it is not one already
                 if "node" in endparams[param_dict[yamlname]["module"]][yamlname]["qsub_params"]:
@@ -151,7 +152,7 @@ def get_param_data_YAML(filelines):
                     elif isinstance(endparams[param_dict[yamlname]["module"]][yamlname]["qsub_params"]["node"],list):
                         pass
                     else:
-                        raise Exception("In %s: Node can be either string or list\n" % yamlname)
+                        raise Exception("In %s: Node can be either string or list\n" % yamlname, "parameters")
             
         return endparams
  
@@ -168,9 +169,12 @@ def get_param_data_YAML(filelines):
     
     # If there is a Variables section, interpolate any appearance of the variables in the params
     if "Vars" in yaml_params.keys():
+        
         # Prepare the bunch for variable interpolation:
         from bunch import Bunch 
-        from var_interpol_defs import make_interpol_func, walk
+        from var_interpol_defs import make_interpol_func, walk, test_vars
+        
+        test_vars(yaml_params["Vars"])
 
         variables_bunch = Bunch.fromDict({"Vars":yaml_params["Vars"]})
         print variables_bunch
@@ -188,8 +192,8 @@ def get_param_data_YAML(filelines):
     try:
         param_data["Global"] = yaml_params["Global_params"]
     except KeyError:
-        sys.stderr.write("You must include a 'Global_params' section in your parameter file!\n\n")
-        raise
+        raise Exception("You must include a 'Global_params' section in your parameter file!\n\n", "parameters")
+        
     
     
     
@@ -200,7 +204,7 @@ def get_param_data_YAML(filelines):
         elif isinstance(param_data["Global"]["module_path"],list):
             pass # OK
         else:
-            raise Exception("Unrecognised 'module_path' format. 'module_path' in 'Global_params' must be a single path or a list. \n")
+            raise Exception("Unrecognised 'module_path' format. 'module_path' in 'Global_params' must be a single path or a list. \n", "parameters")
     # Converting single Qsub_nodes into single element list
     if "Qsub_nodes" in param_data["Global"]:
         if isinstance(param_data["Global"]["Qsub_nodes"],str):
@@ -210,7 +214,7 @@ def get_param_data_YAML(filelines):
         elif isinstance(param_data["Global"]["Qsub_nodes"],list):
             pass # OK
         else:
-            raise Exception("Unrecognised 'Qsub_nodes' format. 'Qsub_nodes' in 'Global_params' must be a single path or a list. \n")
+            raise Exception("Unrecognised 'Qsub_nodes' format. 'Qsub_nodes' in 'Global_params' must be a single path or a list. \n", "parameters")
     
     # Extract step-wise parameter dict from lines:
     param_data["Step"] = convert_param_format(yaml_params["Step_params"])
@@ -380,8 +384,8 @@ def parse_name_parameters(sw_name_lines):
                             for param_n in {param_nv[0] for param_nv in sw_name_lines}\
                         if param_n[0]=="_"}
     except IndexError:
-        sys.stderr.write("Check that all lines have a step name and a param name!\n")
-        raise
+        raise Exception("Check that all lines have a step name and a param name!\n", "parameters")
+        
         
     # Remove singleton lists and empty lists (shouldnt exist)
     redir_params = {param[1:]:(val[0] if len(val) == 1 else val) for param,val in redir_params.iteritems() if val != []}
@@ -416,7 +420,7 @@ def param_data_testing(param_data):
     
     # If errors in global or step params, raise a special exception which is caugth by PLC_main
     if not param_data_testing_global(param_data["Global"]) or not param_data_testing_step_wise(param_data["Step"]):
-        raise Exception("Issues in parameters")
+        raise Exception("Issues in parameters", "parameters")
     
     
     
