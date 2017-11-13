@@ -6,6 +6,17 @@ Global_params:
     job_limit: /path/to/job_limit.txt
     module_path:
         - /path/to/modules
+Documentation: |
+    A workflow for demonstrating use of BLAST
+    --------------------------------------------------------------
+    
+    This workflow demonstrates the use of the blast module for searching with a fasta of protein sequences against a blast database using blastp.
+    
+    Steps:
+    1. Merging the sample fasta files (Must be 'Protein' files!)
+    2. Search against a blast database with blastp.
+    
+    ----------------------------------------------------------------
 Vars:
     paths:
         blastp: /path/to/bin/blastp

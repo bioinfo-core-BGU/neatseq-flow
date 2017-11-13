@@ -63,7 +63,7 @@ Help message:
 
 ::
 
-    usage: Neatseq_Flow_Monitor.py  [-h] [-D STR] [-R STR] [--Monitor_RF FLOAT]
+    usage: neatseq_flow_monitor.py  [-h] [-D STR] [-R STR] [--Monitor_RF FLOAT]
                                     [--File_browser_RF FLOAT]
                                     [--Bar_Marker CHAR] [--Bar_Spacer CHAR]
                                     [--Bar_len INT]

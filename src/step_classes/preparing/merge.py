@@ -37,9 +37,11 @@ Output
 .. note:: In the *merge* parameters, set the *script_path* parameter according to the type of raw files you've got. 
     e.g., if they are gzipped, it should be ``gzip -cd``, etc.
 
-.. note:: If you want to do something more complex with the combined files, you can use the ``pipe`` parameter to send extra commands to be piped on the files after the main command.
+.. attention:: If you want to do something more complex with the combined files, you can use the ``pipe`` parameter to send extra commands to be piped on the files after the main command. **This is an experimental feature and should be used with care**.
 
-    e.g.: You can get files from a remote location by setting ``script_path`` to ``curl`` and ``pipe`` to ``gzip -cd``. This will download the files with curl, unzip them and concatenate them into the target file.  In the sample file, specify remote URLs instead of local pathes.
+    e.g.: You can get files from a remote location by setting ``script_path`` to ``curl`` and ``pipe`` to ``gzip -cd``. This will download the files with curl, unzip them and concatenate them into the target file.  In the sample file, specify remote URLs instead of local pathes. **This will work only for one file per sample**.
+    
+    
     
 Parameters that can be set
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~

@@ -313,6 +313,8 @@ class Step:
         return self.sample_data
         
     def get_base_sample_data(self):
+        """ Get base_sample_data
+        """
         return self.base_sample_data
         
     def sample_data_merge(self, sample_data, other_sample_data, other_step_name):
@@ -492,8 +494,10 @@ class Step:
         # With logging:
         self.script = "\n".join([qsub_header,                                           \
                                 self.create_log_lines(self.spec_qsub_name,"Started", level="low"),   \
+                                self.create_activate_lines(type = "activate"),          \
                                 self.script,                                            \
                                 self.register_files(self.spec_qsub_name),      \
+                                self.create_activate_lines(type = "deactivate"),          \
                                 self.create_log_lines(self.spec_qsub_name,"Finished", level="low")])
         
 
@@ -851,7 +855,29 @@ fi
         
         return script
         
+    def create_activate_lines(self, type):
+        """ Function for adding activate/deactivate lines to scripts so that virtual environments can be used 
+            A workflow that uses this option is the QIIME2 workflow.
+        """
         
+        if "activate_path" not in self.params:
+            return ""
+        
+        if type not in ["activate","deactivate"]:
+            sys.exit("Wrong 'type' passed to create_activate_lines")
+            
+        if self.shell=="csh":
+            self.write_warning("Are you sure you want to use 'activate' with a 'csh' based script?")
+        
+        script = """
+# Adding environment activation/deactivation command:
+source {activate_path}{type} {environ}
+
+""".format(activate_path = self.params["activate_path"],
+             type = type,
+             environ = self.params["environment"]) 
+        
+        return script
         
     def make_folder_for_sample(self, sample):
         """ Creates a folder for sample in this step's results folder
@@ -1065,45 +1091,6 @@ fi
         
         
         
-     
-            
-    # def stamp_dir_files(self, dirname):
-        # """ Register a file for stamping with md5sum
-        # """
-        
-        # self.stamped_dirs.append(dirname)
-        
-                
-               
-    # # def register_stamped_files(self,results_dir):
-    # def register_files_in_dir(self,qsub_name):
-        # """
-        # """
-
-        # script = ""
-        # # Bash needs the -e flag to render \t as tabs.
-        # if self.shell=="csh":
-            # echo_cmd = "echo"
-        # elif self.shell=="bash":
-            # echo_cmd = "echo -e"
-        # else:
-            # pass
-        
-        # for dir_name in self.stamped_dirs:
-            # script = """\n\n
-# ####################        
-# # Registering files created in this step:
-# find %(results_dir)s -type f | xargs -I {} md5sum {} | xargs -I {} %(echo_cmd)s `date '+%%d/%%m/%%Y %%H:%%M:%%S'` '\\t%(step)s\\t%(stepname)s\\t%(stepID)s\\t' {} >> %(registration_file)s
-# """ % { "echo_cmd"          : echo_cmd,                             \
-        # "results_dir"       : dir_name,                             \
-        # "registration_file" : self.pipe_data["registration_file"],  \
-        # "step"              : self.get_step_step(),                 \
-        # "stepname"          : self.get_step_name(),                 \
-        # "stepID"            : qsub_name}
-
-# # find data/merge/merge1/ -type f | xargs -I {} md5sum {} | xargs -I {} echo "tttt " {} >> t1.txt
-    
-        # return script
         
     def register_files(self, qsub_name):
         """

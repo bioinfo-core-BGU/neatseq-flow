@@ -389,8 +389,9 @@ class neatseq_flow:
             pipe_fh.write("""
 \n\n
 # This is the main executable script of this pipeline
-# It was created on %(date)s by Sungrebe version %(version)s
-# All rights reserved to Menachem Sklarz and the Bioinformatics Core Unit at NIBN.
+# It was created on %(date)s by NeatSeq-Flow version %(version)s
+# See http://neatseq-flow.readthedocs.io/en/latest/
+
 \n\n\n""" % {"date": time.strftime("%d/%m/%Y %H:%M:%S"), "version": __version__})
             
             # For each step, write the qsub command created by get_qsub_command() method:
