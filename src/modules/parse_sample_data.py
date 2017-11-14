@@ -7,8 +7,8 @@ __author__ = "Menachem Sklarz"
 __version__ = "1.1.0"
 
 
-import os
-import sys
+import os, sys
+
 from pprint import pprint as pp
 import re
 
@@ -111,10 +111,16 @@ def get_classic_sample_data(filelines):
     """
     Get sample data from filelines
     """
+    
+    # Helper function. Converts sample line into sample name while removing trailing spaces and converting internal spaces into underscores.
+    def get_sample_name(sample_name):
+        return re.sub("\s+","_",re.split("\s+", sample_name.strip(), maxsplit=1)[1])
+
     # Extract sample-related lines from filelines:
     filelines = get_classic_sample_data_lines(filelines)
     # Get list of tuples: (index, sample name) where "index" is the line in filelines holding the sample name line
-    sample_index = [(ind,re.split("\s+", line, maxsplit=1)[1]) for ind,line in list(enumerate(filelines)) if re.split("\s+", line, maxsplit=1)[0]=="Sample"]
+    sample_index = [(ind,get_sample_name(line)) for ind,line in list(enumerate(filelines)) if re.split("\s+", line, maxsplit=1)[0]=="Sample"]
+    
     
     # Get project title:
     title = get_project_title(filelines)
@@ -407,4 +413,12 @@ def get_project_title(filelines):
         sys.exit("The sample file does not contain a 'Title' line!\n")
     if len(title) > 1:
         sys.stderr.write("The sample file contains more than one 'Title' line! USING THE FIRST ONE (%s)\n" % title[0])
+
+    # Removing trailing spaces and converting whitespace to underscore
+    if re.search("\s+", title[0]):
+        print "in here"
+        title[0] = title[0].strip()
+        title[0] = re.sub("\s+", "_", title[0])
+        sys.stderr.write("The title contains white spaces. Converting to underscores. (%s)\n" % title[0])
+  
     return title[0]

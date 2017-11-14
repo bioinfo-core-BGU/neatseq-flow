@@ -85,6 +85,13 @@ Modules
 
 While a basic number of modules come with **NeatSeq-Flow**, the main source of modules is the **NeatSeq-Flow module and workflow repository**. This repository is available on `github <https://github.com/bioinfo-core-BGU/neatseq-flow-modules>`_. Check out the `list of modules in the modules repository <http://neatseq-flow.readthedocs.io/projects/neatseq-flow-modules/en/latest/>`_.
 
+Authors
+---------
+
+* Menachem Sklarz
+* Michal Gordon
+* Liron Levin
+* Vered Chalifa-Caspi
 
 
 .. Detailed documentation
