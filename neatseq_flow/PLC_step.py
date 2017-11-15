@@ -860,22 +860,34 @@ fi
             A workflow that uses this option is the QIIME2 workflow.
         """
         
-        if "activate_path" not in self.params:
-            return ""
-        
         if type not in ["activate","deactivate"]:
             sys.exit("Wrong 'type' passed to create_activate_lines")
             
+        if "conda" in self.params:
+            if "path" in self.params["conda"] and "env" in self.params["conda"]:
+                activate_path = os.path.join(self.params["conda"]["path"],type)
+                environ       = self.params["conda"]["env"]
+            else:
+                raise AssertionExcept("'conda' parameter must include 'path' and 'env'")
+            
+        elif "conda" in self.pipe_data:
+            activate_path  = os.path.join(self.pipe_data["conda"]["path"],type)
+            environ        = self.pipe_data["conda"]["env"]
+        else:
+            return ""
+            
+            
+
+
         if self.shell=="csh":
             self.write_warning("Are you sure you want to use 'activate' with a 'csh' based script?")
         
         script = """
 # Adding environment activation/deactivation command:
-source {activate_path}{type} {environ}
+source {activate_path} {environ}
 
-""".format(activate_path = self.params["activate_path"],
-             type = type,
-             environ = self.params["environment"]) 
+""".format(activate_path = activate_path,
+             environ = environ if type == "activate" else "") 
         
         return script
         

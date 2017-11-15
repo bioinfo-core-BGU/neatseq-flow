@@ -4,6 +4,9 @@ Global_params:
     Qsub_q: bioinfo.q
     Qsub_nodes: [node1,node2,node3]
     Qsub_opts:  -V -cwd
+    # conda:
+        # path: /gpfs0/bioinfo/apps/Miniconda2/Miniconda_v4.3.21/bin/
+        # env:    NSF
     module_path: 
         - /path/to/modules2/
 Documentation: |
@@ -87,6 +90,9 @@ Step_params:
         stats:              --remove-dups
         del_sam: 
         del_unsorted: 
+        # conda:
+            # path:           /path/to/conda
+            # env:            NSF3.5    
     genCovBed_bwt1:
         module:             genomeCoverageBed
         base:               sam_bwt1

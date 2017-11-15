@@ -215,6 +215,10 @@ def get_param_data_YAML(filelines):
             pass # OK
         else:
             raise Exception("Unrecognised 'Qsub_nodes' format. 'Qsub_nodes' in 'Global_params' must be a single path or a list. \n", "parameters")
+    # Checking conda params are sensible:
+    if "conda" in param_data["Global"]:
+        if "path" not in param_data["Global"]["conda"] or "env" not in param_data["Global"]["conda"]:
+            raise Exception("When using 'conda', you must supply a 'path' with the dir in which 'activate' is located and an 'env'.","parameters")
     
     # Extract step-wise parameter dict from lines:
     param_data["Step"] = convert_param_format(yaml_params["Step_params"])

@@ -124,6 +124,13 @@ class neatseq_flow:
 
         # --------------------------------
         
+        # --------------------------------
+        # Define conda parameters
+        if "conda" in self.param_data["Global"]:
+            self.pipe_data["conda"] = self.param_data["Global"]["conda"]
+
+        # --------------------------------
+        
         # Create directory structure:
         self.make_directory_structure()
 
