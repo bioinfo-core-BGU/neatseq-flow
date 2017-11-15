@@ -13,3 +13,6 @@ parameter_sets/
 comparison_with_others.docx
 .project
 .pydevproject
+dist/
+README
+MANIFEST
