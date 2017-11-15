@@ -1,0 +1,11 @@
+NeatSeq-Flow Monitor
+====================================================
+
+.. contents:: Table of Contents
+   :depth: 2
+   :local:
+   :backlinks: top
+
+   
+.. automodule:: neatseq_flow_monitor
+

@@ -1,0 +1,340 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>NeatSeq-Flow Monitor &mdash; neatseq_flow 1.1.0 documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="genindex.html"/>
+        <link rel="search" title="Search" href="search.html"/>
+    <link rel="top" title="neatseq_flow 1.1.0 documentation" href="index.html"/>
+        <link rel="prev" title="For the programmer - Adding modules" href="06.addnew_module.html"/> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="index.html" class="icon icon-home"> neatseq_flow
+          
+
+          
+            
+            <img src="_static/NeatSeq_Flow_logo.png" class="logo" />
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.1.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+                <p class="caption"><span class="caption-text">Detailed documentation</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="01.concept.html">NeatSeq-Flow concept</a></li>
+<li class="toctree-l1"><a class="reference internal" href="02.build_WF.html">Building a workflow</a></li>
+<li class="toctree-l1"><a class="reference internal" href="03.output.html">Output directory structure</a></li>
+<li class="toctree-l1"><a class="reference internal" href="06.addnew_module.html">For the programmer - Adding modules</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">NeatSeq-Flow Monitor</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#short-description">Short Description</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#requires">Requires</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#parameters-that-can-be-set">Parameters that can be set</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#comments">Comments</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#help-message">Help message:</a></li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="index.html">neatseq_flow</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+ 
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="index.html">Docs</a> &raquo;</li>
+      
+    <li>NeatSeq-Flow Monitor</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="_sources/07.monitor.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="neatseq-flow-monitor">
+<h1>NeatSeq-Flow Monitor<a class="headerlink" href="#neatseq-flow-monitor" title="Permalink to this headline">¶</a></h1>
+<div class="contents local topic" id="table-of-contents">
+<p class="topic-title first">Table of Contents</p>
+<ul class="simple">
+<li><a class="reference internal" href="#short-description" id="id1">Short Description</a></li>
+<li><a class="reference internal" href="#requires" id="id2">Requires</a></li>
+<li><a class="reference internal" href="#parameters-that-can-be-set" id="id3">Parameters that can be set</a></li>
+<li><a class="reference internal" href="#comments" id="id4">Comments</a></li>
+<li><a class="reference internal" href="#help-message" id="id5">Help message:</a></li>
+</ul>
+</div>
+<span class="target" id="module-neatseq_flow_monitor"></span><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Authors:</th><td class="field-body">Liron Levin</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Affiliation:</th><td class="field-body">Bioinformatics core facility</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Organization:</th><td class="field-body">National Institute of Biotechnology in the Negev, Ben Gurion University.</td>
+</tr>
+</tbody>
+</table>
+<div class="section" id="short-description">
+<h2><a class="toc-backref" href="#table-of-contents">Short Description</a><a class="headerlink" href="#short-description" title="Permalink to this headline">¶</a></h2>
+<p>Neatseq-Flow Monitor can be used to track the progress of running work-flows in real-time of a specific project.</p>
+<p>Alternatively Neatseq-Flow Monitor can be used to compare between previous runs of a specific project.</p>
+<p>Neatseq-Flow Monitor uses the information in the Neatseq-Flow log files and information gathered from the cluster scheduler</p>
+<p>Neatseq-Flow Monitor provide the following information:</p>
+<blockquote>
+<div><ul class="simple">
+<li>List of available log files for a specific work-flow [project]</li>
+<li>List of steps and samples as they distribute by the cluster scheduler</li>
+<li>Steps and samples Start and finished times</li>
+<li>Number of started and finished jobs</li>
+<li>Number and identity of the current ruining jobs</li>
+<li>Step progress bar</li>
+<li>Colour indication for the status of steps and samples</li>
+</ul>
+</div></blockquote>
+</div>
+<div class="section" id="requires">
+<h2><a class="toc-backref" href="#table-of-contents">Requires</a><a class="headerlink" href="#requires" title="Permalink to this headline">¶</a></h2>
+<p>Neatseq-Flow Monitor is written in python and requires the following packages that are not included in python 2.7 release:</p>
+<ul class="simple">
+<li><code class="docutils literal"><span class="pre">pandas</span></code></li>
+</ul>
+</div>
+<div class="section" id="parameters-that-can-be-set">
+<h2><a class="toc-backref" href="#table-of-contents">Parameters that can be set</a><a class="headerlink" href="#parameters-that-can-be-set" title="Permalink to this headline">¶</a></h2>
+<table border="1" class="docutils">
+<colgroup>
+<col width="43%" />
+<col width="29%" />
+<col width="29%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Parameter</th>
+<th class="head">Values</th>
+<th class="head">Comments</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>-D</td>
+<td>PATH</td>
+<td>Neatseq-flow project directory [default= current working directory ]</td>
+</tr>
+<tr class="row-odd"><td>-R</td>
+<td>STR</td>
+<td>Log file Regular Expression [in ./log/ ] [default=log_[0-9]+.txt$]</td>
+</tr>
+<tr class="row-even"><td>–Monitor_RF</td>
+<td>FLOAT</td>
+<td>Monitor Refresh rate [default=1]</td>
+</tr>
+<tr class="row-odd"><td>–File_browser_RF</td>
+<td>FLOAT</td>
+<td>File Browser Refresh rate [default=1]</td>
+</tr>
+<tr class="row-even"><td>–Bar_Marker</td>
+<td>CHAR</td>
+<td>Progress Bar Marker [default=#]</td>
+</tr>
+<tr class="row-odd"><td>–Bar_Spacer</td>
+<td>CHAR</td>
+<td>Progress Bar Spacer [default=Space]</td>
+</tr>
+<tr class="row-even"><td>–Bar_len</td>
+<td>INT</td>
+<td>Progress Bar Total Length [in chars] [default=50]</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="comments">
+<h2><a class="toc-backref" href="#table-of-contents">Comments</a><a class="headerlink" href="#comments" title="Permalink to this headline">¶</a></h2>
+<blockquote>
+<div><p>Neatseq Flow Monitor can be run only after the Neatseq Flow script generator is finished successfully [a project is created]</p>
+<p>Running <code class="docutils literal"><span class="pre">neatseq_flow_monitor.py</span></code> from the project directory without arguments will use all the default parameters and will show the project available log files.</p>
+</div></blockquote>
+</div>
+<div class="section" id="help-message">
+<h2><a class="toc-backref" href="#table-of-contents">Help message:</a><a class="headerlink" href="#help-message" title="Permalink to this headline">¶</a></h2>
+<div class="highlight-default"><div class="highlight"><pre><span></span>usage: Neatseq_Flow_Monitor.py  [-h] [-D STR] [-R STR] [--Monitor_RF FLOAT]
+                                [--File_browser_RF FLOAT]
+                                [--Bar_Marker CHAR] [--Bar_Spacer CHAR]
+                                [--Bar_len INT]
+
+Neatseq-flow Monitor_v1.1 By Liron Levin
+
+optional arguments:
+  -h, --help                show this help message and exit
+  -D STR                    Neatseq-flow project directory [default=cwd]
+  -R STR                    Log file Regular Expression [in ./log/ ]
+                            [default=log_[0-9]+.txt$]
+  --Monitor_RF FLOAT        Monitor Refresh rate [default=1]
+  --File_browser_RF FLOAT
+                            File Browser Refresh rate [default=1]
+  --Bar_Marker CHAR         Progress Bar Marker [default=#]
+  --Bar_Spacer CHAR         Progress Bar Spacer [default=Space]
+  --Bar_len INT             Progress Bar Total Length [in chars] [default=50]
+</pre></div>
+</div>
+</div>
+</div>
+
+
+           </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+      
+        <a href="06.addnew_module.html" class="btn btn-neutral" title="For the programmer - Adding modules" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2017, Menachem Sklarz.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'./',
+            VERSION:'1.1.0',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="_static/jquery.js"></script>
+      <script type="text/javascript" src="_static/underscore.js"></script>
+      <script type="text/javascript" src="_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

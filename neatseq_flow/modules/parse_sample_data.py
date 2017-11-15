@@ -12,12 +12,11 @@ import os, sys
 from pprint import pprint as pp
 import re
 
-# execfile("parse_params.py")
 
 RECOGNIZED_FILE_TYPES = ['Single', 'Forward', 'Reverse', 'Nucleotide','Protein', 'SAM', 'BAM', 'REFERENCE']
 GLOBAL_SAMPLE_LIST = ['Title', 'Sample', 'Single', 'Sample_Control'] + RECOGNIZED_FILE_TYPES
 
-from  modules.global_defs import ZIPPED_EXTENSIONS, ARCHIVE_EXTENSIONS, KNOWN_FILE_EXTENSIONS
+from  neatseq_flow.modules.global_defs import ZIPPED_EXTENSIONS, ARCHIVE_EXTENSIONS, KNOWN_FILE_EXTENSIONS
 
 
 def remove_comments(filelines):

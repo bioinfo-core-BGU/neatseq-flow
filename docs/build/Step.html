@@ -1,0 +1,456 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Step master class &mdash; neatseq_flow 1.1.0 documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="genindex.html"/>
+        <link rel="search" title="Search" href="search.html"/>
+    <link rel="top" title="neatseq_flow 1.1.0 documentation" href="index.html"/> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="index.html" class="icon icon-home"> neatseq_flow
+          
+
+          
+            
+            <img src="_static/NeatSeq_Flow_logo.png" class="logo" />
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.1.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+                <p class="caption"><span class="caption-text">Detailed documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="01.concept.html">NeatSeq-Flow concept</a></li>
+<li class="toctree-l1"><a class="reference internal" href="02.build_WF.html">Building a workflow</a></li>
+<li class="toctree-l1"><a class="reference internal" href="03.output.html">Output directory structure</a></li>
+<li class="toctree-l1"><a class="reference internal" href="06.addnew_module.html">For the programmer - Adding modules</a></li>
+<li class="toctree-l1"><a class="reference internal" href="07.monitor.html">Monitor docs</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="index.html">neatseq_flow</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+ 
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="index.html">Docs</a> &raquo;</li>
+      
+    <li>Step master class</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="_sources/Step.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="module-PLC_step">
+<span id="step-master-class"></span><h1>Step master class<a class="headerlink" href="#module-PLC_step" title="Permalink to this headline">¶</a></h1>
+<p>A class defining a step in the pipeline.</p>
+<dl class="exception">
+<dt id="PLC_step.AssertionExcept">
+<em class="property">exception </em><code class="descclassname">PLC_step.</code><code class="descname">AssertionExcept</code><span class="sig-paren">(</span><em>comment='Unknown problem'</em>, <em>sample=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/PLC_step.html#AssertionExcept"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#PLC_step.AssertionExcept" title="Permalink to this definition">¶</a></dt>
+<dd><p>A class to be raised by modules failing at assertions</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="PLC_step.Step">
+<em class="property">class </em><code class="descclassname">PLC_step.</code><code class="descname">Step</code><span class="sig-paren">(</span><em>name</em>, <em>step_type</em>, <em>params</em>, <em>pipe_data</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/PLC_step.html#Step"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#PLC_step.Step" title="Permalink to this definition">¶</a></dt>
+<dd><p>A class that defines a pipeline step name (=instance).</p>
+<dl class="method">
+<dt id="PLC_step.Step.add_jid_to_jid_list">
+<code class="descname">add_jid_to_jid_list</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/PLC_step.html#Step.add_jid_to_jid_list"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#PLC_step.Step.add_jid_to_jid_list" title="Permalink to this definition">¶</a></dt>
+<dd><p>Adds a jid for a sub process (e.g. a sample-specific script) to the jid list of the current step</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="PLC_step.Step.close_high_level_script">
+<code class="descname">close_high_level_script</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/PLC_step.html#Step.close_high_level_script"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#PLC_step.Step.close_high_level_script" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add lines at the end of the high level script:</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="PLC_step.Step.create_all_scripts">
+<code class="descname">create_all_scripts</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/PLC_step.html#Step.create_all_scripts"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#PLC_step.Step.create_all_scripts" title="Permalink to this definition">¶</a></dt>
+<dd><p>Contains code to be done after build_scripts()</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="PLC_step.Step.create_high_level_script">
+<code class="descname">create_high_level_script</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/PLC_step.html#Step.create_high_level_script"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#PLC_step.Step.create_high_level_script" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create the high (i.e. 2nd) level scripts, which are the scripts that run the 3rd level scripts for the step</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="PLC_step.Step.create_log_lines">
+<code class="descname">create_log_lines</code><span class="sig-paren">(</span><em>qsub_name</em>, <em>type='Started'</em>, <em>level='high'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/PLC_step.html#Step.create_log_lines"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#PLC_step.Step.create_log_lines" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create logging lines. Added before and after script to return start and end times</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="PLC_step.Step.create_low_level_script">
+<code class="descname">create_low_level_script</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/PLC_step.html#Step.create_low_level_script"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#PLC_step.Step.create_low_level_script" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create the low (i.e. 3rd) level scripts, which are the scripts that actually do the work
+The actual part of the script is produced by the particular step class.
+This function is responsible for the generic part: opening the file and writing the qsub parameters and the script</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="PLC_step.Step.create_preliminary_script">
+<code class="descname">create_preliminary_script</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/PLC_step.html#Step.create_preliminary_script"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#PLC_step.Step.create_preliminary_script" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a script that will run before all other low level scripts commence</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="PLC_step.Step.create_scripts_dir">
+<code class="descname">create_scripts_dir</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/PLC_step.html#Step.create_scripts_dir"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#PLC_step.Step.create_scripts_dir" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a dir for storing the step scripts.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="PLC_step.Step.create_wrapping_up_script">
+<code class="descname">create_wrapping_up_script</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/PLC_step.html#Step.create_wrapping_up_script"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#PLC_step.Step.create_wrapping_up_script" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a script that will run once all other low level scripts terminate
+Ideal place for putting testing and agglomeration procedures.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="PLC_step.Step.declare_file">
+<code class="descname">declare_file</code><span class="sig-paren">(</span><em>filename</em>, <em>slot</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/PLC_step.html#Step.declare_file"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#PLC_step.Step.declare_file" title="Permalink to this definition">¶</a></dt>
+<dd><p>Declare a file for inserting into sample_data and creating md5 signature</p>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="PLC_step.Step.find_step_module">
+<em class="property">classmethod </em><code class="descname">find_step_module</code><span class="sig-paren">(</span><em>step</em>, <em>param_data</em>, <em>pipe_data</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/PLC_step.html#Step.find_step_module"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#PLC_step.Step.find_step_module" title="Permalink to this definition">¶</a></dt>
+<dd><p>A class method for finding the location of a module for a given step</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="PLC_step.Step.get_base_step_name">
+<code class="descname">get_base_step_name</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/PLC_step.html#Step.get_base_step_name"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#PLC_step.Step.get_base_step_name" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return name of base step for this step.
+Used by pipeline class to send the base step class</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="PLC_step.Step.get_dependency_jid_list">
+<code class="descname">get_dependency_jid_list</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/PLC_step.html#Step.get_dependency_jid_list"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#PLC_step.Step.get_dependency_jid_list" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the list of jids of all base steps
+Recursion. beware!</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="PLC_step.Step.get_dict_encoding">
+<code class="descname">get_dict_encoding</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/PLC_step.html#Step.get_dict_encoding"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#PLC_step.Step.get_dict_encoding" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a dict containing all the step information
+Used for JSON serialization and storage in MongoDB</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="PLC_step.Step.get_jid_list">
+<code class="descname">get_jid_list</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/PLC_step.html#Step.get_jid_list"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#PLC_step.Step.get_jid_list" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return list of jids
+To be used by pipeline for creating the delete function (99.del…)</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="PLC_step.Step.get_qsub_name">
+<code class="descname">get_qsub_name</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/PLC_step.html#Step.get_qsub_name"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#PLC_step.Step.get_qsub_name" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the jid id of the current step</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="PLC_step.Step.get_redir_parameters_script">
+<code class="descname">get_redir_parameters_script</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/PLC_step.html#Step.get_redir_parameters_script"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#PLC_step.Step.get_redir_parameters_script" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a piece of script containing the redirect parameters</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="PLC_step.Step.get_script_const">
+<code class="descname">get_script_const</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/PLC_step.html#Step.get_script_const"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#PLC_step.Step.get_script_const" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a piece of script containing the env, script_path and redirect parameters lines
+These are the same in most steps. Can be used whereever suitable</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="PLC_step.Step.get_script_env_path">
+<code class="descname">get_script_env_path</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/PLC_step.html#Step.get_script_env_path"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#PLC_step.Step.get_script_env_path" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a piece of code with “env” and “script_path”</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="PLC_step.Step.get_setenv_part">
+<code class="descname">get_setenv_part</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/PLC_step.html#Step.get_setenv_part"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#PLC_step.Step.get_setenv_part" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a piece of code with “env”, “setenv” and “export”</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="PLC_step.Step.local_finish">
+<code class="descname">local_finish</code><span class="sig-paren">(</span><em>use_dir</em>, <em>base_dir</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/PLC_step.html#Step.local_finish"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#PLC_step.Step.local_finish" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="PLC_step.Step.local_start">
+<code class="descname">local_start</code><span class="sig-paren">(</span><em>base_dir</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/PLC_step.html#Step.local_start"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#PLC_step.Step.local_start" title="Permalink to this definition">¶</a></dt>
+<dd><p>Adds code to self.script to enable steps to temporarily write to a local disk before moving to final shared destination
+This can be useful when a lot of IO to the shared disk is detrimental</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="PLC_step.Step.make_folder_for_sample">
+<code class="descname">make_folder_for_sample</code><span class="sig-paren">(</span><em>sample</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/PLC_step.html#Step.make_folder_for_sample"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#PLC_step.Step.make_folder_for_sample" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates a folder for sample in this step’s results folder</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="PLC_step.Step.make_qsub_header">
+<code class="descname">make_qsub_header</code><span class="sig-paren">(</span><em>jid_list</em>, <em>script_lev='low'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/PLC_step.html#Step.make_qsub_header"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#PLC_step.Step.make_qsub_header" title="Permalink to this definition">¶</a></dt>
+<dd><p>Make the first few lines for the scripts
+Is called for high level, low level and wrapper scripts</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="PLC_step.Step.manage_qsub_opts">
+<code class="descname">manage_qsub_opts</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/PLC_step.html#Step.manage_qsub_opts"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#PLC_step.Step.manage_qsub_opts" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add default qsub options to step params 
+If ‘-q’ is passed, is equivalent to passing “queue”
+If both are passed, print a comment and use ‘queue’</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="PLC_step.Step.register_files">
+<code class="descname">register_files</code><span class="sig-paren">(</span><em>qsub_name</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/PLC_step.html#Step.register_files"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#PLC_step.Step.register_files" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="PLC_step.Step.register_stamped_files">
+<code class="descname">register_stamped_files</code><span class="sig-paren">(</span><em>qsub_name</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/PLC_step.html#Step.register_stamped_files"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#PLC_step.Step.register_stamped_files" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="PLC_step.Step.return_formatted_message">
+<code class="descname">return_formatted_message</code><span class="sig-paren">(</span><em>comment</em>, <em>sample=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/PLC_step.html#Step.return_formatted_message"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#PLC_step.Step.return_formatted_message" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a formatted comment</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="PLC_step.Step.sample_data_merge">
+<code class="descname">sample_data_merge</code><span class="sig-paren">(</span><em>sample_data</em>, <em>other_sample_data</em>, <em>other_step_name</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/PLC_step.html#Step.sample_data_merge"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#PLC_step.Step.sample_data_merge" title="Permalink to this definition">¶</a></dt>
+<dd><p>Merge a different sample_data dict into this step’s sample_data
+Used for cyclic sungrebe - basing a step on more than one base.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="PLC_step.Step.set_base_step">
+<code class="descname">set_base_step</code><span class="sig-paren">(</span><em>base_step_list</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/PLC_step.html#Step.set_base_step"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#PLC_step.Step.set_base_step" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sets the base step for the current step
+This is the class of the base step, not just the name
+NOTE: This is a bit convoluted. This shoud be set only for the low level step classes</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="PLC_step.Step.set_sample_data">
+<code class="descname">set_sample_data</code><span class="sig-paren">(</span><em>sample_data=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/PLC_step.html#Step.set_sample_data"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#PLC_step.Step.set_sample_data" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sets the sample_data. 
+This cannot be done in constructor because it depends on the output from previous steps.
+Uses self.base_step_list</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="PLC_step.Step.set_script_name">
+<code class="descname">set_script_name</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/PLC_step.html#Step.set_script_name"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#PLC_step.Step.set_script_name" title="Permalink to this definition">¶</a></dt>
+<dd><p>Defines the name of the step script (level 2. Appears in qsub command in 00.pipe.commands.csh )</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="PLC_step.Step.set_spec_script_name">
+<code class="descname">set_spec_script_name</code><span class="sig-paren">(</span><em>sample=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/PLC_step.html#Step.set_spec_script_name"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#PLC_step.Step.set_spec_script_name" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="docutils">
+<dt>Sets the current spec_script_name to a regular name, i.e.:</dt>
+<dd>sample level: “_”.join([self.step,self.name,sample])
+project level: “_”.join([self.step,self.name,self.sample_data[“Title”]])</dd>
+<dt>In the build_scripts function, run:</dt>
+<dd>sample level: self.set_spec_script_name(sample)
+project level: self.set_spec_script_name()</dd>
+<dt>If using a different level of paralleization, see e.g. VCFtools, </dt>
+<dd>you can set your own self.spec_script_name.</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="PLC_step.Step.set_step_number">
+<code class="descname">set_step_number</code><span class="sig-paren">(</span><em>step_number</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/PLC_step.html#Step.set_step_number"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#PLC_step.Step.set_step_number" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sets the number of the step in the step list. 
+Is used in naming the scripts, so that they can be sorted with ‘ll’</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="PLC_step.Step.stamp_file">
+<code class="descname">stamp_file</code><span class="sig-paren">(</span><em>filename</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/PLC_step.html#Step.stamp_file"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#PLC_step.Step.stamp_file" title="Permalink to this definition">¶</a></dt>
+<dd><p>Register a file for stamping with md5sum</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="PLC_step.Step.write_warning">
+<code class="descname">write_warning</code><span class="sig-paren">(</span><em>warning='Unknown problem'</em>, <em>sample=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/PLC_step.html#Step.write_warning"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#PLC_step.Step.write_warning" title="Permalink to this definition">¶</a></dt>
+<dd><p>Write a warning when doing something that might be foolish.
+If the foolishness is sample-specific, pass the sample as an argument</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+           </div>
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2017, Menachem Sklarz.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'./',
+            VERSION:'1.1.0',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="_static/jquery.js"></script>
+      <script type="text/javascript" src="_static/underscore.js"></script>
+      <script type="text/javascript" src="_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

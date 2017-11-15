@@ -1,0 +1,23 @@
+.. _builtin_modules:
+
+
+.. Currently implemented modules 
+.. ==============================
+
+
+.. toctree::
+   :maxdepth: 2
+
+
+..   modules/preparing
+..   modules/searching
+..   modules/mapping
+..   modules/assembly
+..   modules/variants
+..   modules/generic
+..   modules/others
+
+
+
+:ref:`List of modules in the modules repository <neatseq_flow_modules:additional_modules_repo>`
+-----------------------------------------------------------------------------------------------

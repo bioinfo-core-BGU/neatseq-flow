@@ -13,6 +13,6 @@ parameter_sets/
 comparison_with_others.docx
 .project
 .pydevproject
-dist/
-MANIFEST
+dist
 README
+NeatSeq_Flow.egg-info

@@ -40,7 +40,7 @@ yaml.add_constructor(yaml.resolver.BaseResolver.DEFAULT_MAPPING_TAG, no_duplicat
 
 
 # from parse_sample_data import remove_comments
-from modules.parse_sample_data import remove_comments, check_newlines
+from neatseq_flow.modules.parse_sample_data import remove_comments, check_newlines
 
 # A list of words that identify global parameters:
 GLOBAL_PARAMS_LIST = ['Default_wait','Main','Qsub_opts','Qsub_q','Qsub_nodes','Qsub_path','slow_release','module_path','job_limit']

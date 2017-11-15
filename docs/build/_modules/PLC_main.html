@@ -1,0 +1,1148 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>PLC_main &mdash; neatseq_flow 1.1.0 documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="../genindex.html"/>
+        <link rel="search" title="Search" href="../search.html"/>
+    <link rel="top" title="neatseq_flow 1.1.0 documentation" href="../index.html"/>
+        <link rel="up" title="Module code" href="index.html"/> 
+
+  
+  <script src="../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> neatseq_flow
+          
+
+          
+            
+            <img src="../_static/NeatSeq_Flow_logo.png" class="logo" />
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.1.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+                <p class="caption"><span class="caption-text">Detailed documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../01.concept.html">NeatSeq-Flow concept</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../02.build_WF.html">Building a workflow</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../03.output.html">Output directory structure</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../06.addnew_module.html">For the programmer - Adding modules</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../07.monitor.html">NeatSeq-Flow Monitor</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="../index.html">neatseq_flow</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../index.html">Docs</a> &raquo;</li>
+      
+          <li><a href="index.html">Module code</a> &raquo;</li>
+      
+    <li>PLC_main</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for PLC_main</h1><div class="highlight"><pre>
+<span></span>
+<span class="sd">&quot;&quot;&quot; A class defining a pipeline.</span>
+
+<span class="sd">This class takes input files: samples and parameters, and creates a qsub pipeline, including dependencies</span>
+<span class="sd">Actual work is done by calling other class types: PLCStep and PLCName</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="n">__author__</span> <span class="o">=</span> <span class="s2">&quot;Menachem Sklarz&quot;</span>
+<span class="n">__version__</span> <span class="o">=</span> <span class="s2">&quot;1.1.0&quot;</span>
+
+
+<span class="kn">import</span> <span class="nn">os</span><span class="o">,</span> <span class="nn">sys</span><span class="o">,</span> <span class="nn">json</span><span class="o">,</span> <span class="nn">shutil</span><span class="o">,</span> <span class="nn">time</span><span class="o">,</span> <span class="nn">yaml</span>
+
+
+<span class="kn">from</span> <span class="nn">copy</span> <span class="k">import</span> <span class="o">*</span>
+<span class="kn">from</span> <span class="nn">pprint</span> <span class="k">import</span> <span class="n">pprint</span> <span class="k">as</span> <span class="n">pp</span>
+<span class="kn">from</span> <span class="nn">random</span> <span class="k">import</span> <span class="n">randint</span>
+<span class="kn">from</span> <span class="nn">datetime</span> <span class="k">import</span> <span class="n">datetime</span>
+
+
+<span class="kn">from</span> <span class="nn">modules.parse_sample_data</span> <span class="k">import</span> <span class="n">parse_sample_file</span>
+<span class="kn">from</span> <span class="nn">modules.parse_param_data</span> <span class="k">import</span> <span class="n">parse_param_file</span>
+
+<span class="kn">from</span> <span class="nn">PLC_step</span> <span class="k">import</span> <span class="n">Step</span><span class="p">,</span><span class="n">AssertionExcept</span>
+
+
+<div class="viewcode-block" id="neatseq_flow"><a class="viewcode-back" href="../Main.html#PLC_main.neatseq_flow">[docs]</a><span class="k">class</span> <span class="nc">neatseq_flow</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Main pipeline class. Contains sample data and parameters</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sample_file</span><span class="p">,</span> <span class="n">param_file</span><span class="p">,</span> <span class="n">home_dir</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">message</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+        
+        <span class="c1"># Read and parse the sample and parameter files:</span>
+
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">sample_data</span> <span class="o">=</span> <span class="n">parse_sample_file</span><span class="p">(</span><span class="n">sample_file</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+            
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;An exception has occured in sample file reading. Double check!&quot;</span><span class="p">)</span>
+            <span class="k">raise</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">param_data</span> <span class="o">=</span> <span class="n">parse_param_file</span><span class="p">(</span><span class="n">param_file</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">raisedex</span><span class="p">:</span>
+            
+            <span class="k">if</span> <span class="n">raisedex</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;Issues in parameters&quot;</span><span class="p">:</span>
+                <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">()</span>
+            <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">raisedex</span><span class="o">.</span><span class="n">args</span><span class="p">)</span><span class="o">&gt;</span><span class="mi">1</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">raisedex</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;Variables&quot;</span><span class="p">,</span><span class="s2">&quot;parameters&quot;</span><span class="p">]:</span>
+                    <span class="nb">print</span> <span class="n">raisedex</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+                    <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">()</span>
+                <span class="k">else</span><span class="p">:</span>  <span class="c1"># Unknown</span>
+                    <span class="nb">print</span> <span class="s2">&quot;unknown exception type&quot;</span>
+                    <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">()</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span>
+            <span class="c1"># sys.stderr.write(&quot;An exception has occured in parameter file reading. Double check!&quot;)</span>
+            <span class="c1"># raise</span>
+        <span class="k">except</span><span class="p">:</span>
+            <span class="k">raise</span>
+        
+        <span class="c1"># Prepare dictionary for pipe data (in perl version: pipe_hash)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pipe_data</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+
+        <span class="c1"># Determine type of sample: SE, PE or mixed:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">determine_sample_types</span><span class="p">()</span>
+
+        <span class="c1"># if home_dir is None or empty, set to cwd, else leave as is</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pipe_data</span><span class="p">[</span><span class="s2">&quot;home_dir&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">home_dir</span> <span class="k">if</span> <span class="n">home_dir</span> <span class="k">else</span> <span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">()</span>
+        <span class="c1"># Assert that the dir is a valid existing directory:</span>
+        <span class="k">assert</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pipe_data</span><span class="p">[</span><span class="s2">&quot;home_dir&quot;</span><span class="p">]),</span> <span class="s2">&quot;Directory </span><span class="si">%s</span><span class="s2"> does not exist!</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">pipe_data</span><span class="p">[</span><span class="s2">&quot;home_dir&quot;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pipe_data</span><span class="p">[</span><span class="s2">&quot;home_dir&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">realpath</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pipe_data</span><span class="p">[</span><span class="s2">&quot;home_dir&quot;</span><span class="p">])</span>
+
+        <span class="c1"># Store message:</span>
+        <span class="k">assert</span> <span class="n">message</span><span class="o">==</span><span class="kc">None</span> <span class="ow">or</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">message</span><span class="p">,</span> <span class="n">basestring</span><span class="p">),</span> <span class="s2">&quot;Message must be text or &#39;None&#39;.&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pipe_data</span><span class="p">[</span><span class="s2">&quot;message&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">message</span>
+
+        <span class="c1"># Store list of sample names in pipe_data (A patch. This is so that steps can have access to the full sample list after a user requests a step to operate on a subset of samples.)</span>
+        <span class="c1"># See definition of PLC_step.set_sample_data()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pipe_data</span><span class="p">[</span><span class="s2">&quot;samples&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">sample_data</span><span class="p">[</span><span class="s2">&quot;samples&quot;</span><span class="p">]</span>
+        
+        <span class="c1"># Making a step name index (dict of form {step_name:step_type})</span>
+        <span class="c1"># Storing in self.name_index</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">make_names_index</span><span class="p">()</span>
+        
+        <span class="c1"># Expanding dependencies based on &quot;base&quot; parameter:</span>
+        <span class="c1"># Storing in self.depend_dict </span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">expand_depends</span><span class="p">()</span>
+
+        <span class="c1"># Create run code to identify the scripts etc.</span>
+        <span class="c1"># Original: just random number: self.run_code = str(randint(0,1e6)) # Is always used as a string</span>
+        <span class="c1"># Current: Date+rand num (to preserve order of pipelines)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">run_code</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s2">&quot;%Y%m</span><span class="si">%d</span><span class="s2">%H%M%S&quot;</span><span class="p">)</span> <span class="c1"># Is always used as a string</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pipe_data</span><span class="p">[</span><span class="s2">&quot;run_code&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">run_code</span>
+        <span class="k">if</span> <span class="s2">&quot;Default_wait&quot;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">param_data</span><span class="p">[</span><span class="s2">&quot;Global&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">pipe_data</span><span class="p">[</span><span class="s2">&quot;Default_wait&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">param_data</span><span class="p">[</span><span class="s2">&quot;Global&quot;</span><span class="p">][</span><span class="s2">&quot;Default_wait&quot;</span><span class="p">]</span>
+        <span class="k">if</span> <span class="s2">&quot;job_limit&quot;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">param_data</span><span class="p">[</span><span class="s2">&quot;Global&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">pipe_data</span><span class="p">[</span><span class="s2">&quot;job_limit&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">param_data</span><span class="p">[</span><span class="s2">&quot;Global&quot;</span><span class="p">][</span><span class="s2">&quot;job_limit&quot;</span><span class="p">]</span>
+        
+        
+        <span class="c1"># ------------------------------</span>
+        <span class="c1"># Define default qsub parameters</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pipe_data</span><span class="p">[</span><span class="s2">&quot;qsub_params&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">pipe_data</span><span class="p">[</span><span class="s2">&quot;qsub_params&quot;</span><span class="p">][</span><span class="s2">&quot;queue&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">param_data</span><span class="p">[</span><span class="s2">&quot;Global&quot;</span><span class="p">][</span><span class="s2">&quot;Qsub_q&quot;</span><span class="p">]</span>    <span class="c1"># This is required by assertion in parse_param_data()</span>
+        <span class="c1"># if &quot;Qsub_nodes&quot; in self.param_data[&quot;Global&quot;].keys():</span>
+            <span class="c1"># self.pipe_data[&quot;qsub_params&quot;][&quot;node&quot;] = &quot;,&quot;.join(list(set(self.param_data[&quot;Global&quot;][&quot;Qsub_nodes&quot;])))</span>
+        <span class="c1"># else:</span>
+            <span class="c1"># self.pipe_data[&quot;qsub_params&quot;][&quot;node&quot;] = None</span>
+        <span class="k">if</span> <span class="s2">&quot;Qsub_nodes&quot;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">param_data</span><span class="p">[</span><span class="s2">&quot;Global&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">pipe_data</span><span class="p">[</span><span class="s2">&quot;qsub_params&quot;</span><span class="p">][</span><span class="s2">&quot;node&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">param_data</span><span class="p">[</span><span class="s2">&quot;Global&quot;</span><span class="p">][</span><span class="s2">&quot;Qsub_nodes&quot;</span><span class="p">]))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">pipe_data</span><span class="p">[</span><span class="s2">&quot;qsub_params&quot;</span><span class="p">][</span><span class="s2">&quot;node&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="c1"># If Qsub_opts is defined by user in global params, copy into pipe_data:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pipe_data</span><span class="p">[</span><span class="s2">&quot;qsub_params&quot;</span><span class="p">][</span><span class="s2">&quot;opts&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">param_data</span><span class="p">[</span><span class="s2">&quot;Global&quot;</span><span class="p">][</span><span class="s2">&quot;Qsub_opts&quot;</span><span class="p">]</span> <span class="k">if</span> <span class="s2">&quot;Qsub_opts&quot;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">param_data</span><span class="p">[</span><span class="s2">&quot;Global&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span> <span class="k">else</span> <span class="s2">&quot;&quot;</span>
+        
+        <span class="c1"># Setting path to qstat</span>
+        <span class="k">if</span> <span class="s2">&quot;Qsub_path&quot;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">param_data</span><span class="p">[</span><span class="s2">&quot;Global&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">pipe_data</span><span class="p">[</span><span class="s2">&quot;qsub_params&quot;</span><span class="p">][</span><span class="s2">&quot;qstat_path&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">sep</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">param_data</span><span class="p">[</span><span class="s2">&quot;Global&quot;</span><span class="p">][</span><span class="s2">&quot;Qsub_path&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">rstrip</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">sep</span><span class="p">),</span><span class="s2">&quot;qstat&quot;</span><span class="p">])</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">pipe_data</span><span class="p">[</span><span class="s2">&quot;qsub_params&quot;</span><span class="p">][</span><span class="s2">&quot;qstat_path&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;qstat&quot;</span>
+
+        <span class="c1"># --------------------------------</span>
+        
+        <span class="c1"># Create directory structure:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">make_directory_structure</span><span class="p">()</span>
+
+        <span class="c1"># Create log file:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">create_log_file</span><span class="p">()</span>
+
+        <span class="c1"># Create file md5sum registration file:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">create_registration_file</span><span class="p">()</span>
+        
+        <span class="c1"># Backup parameter and sample files:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">backup_source_files</span><span class="p">(</span><span class="n">param_file</span><span class="p">,</span> <span class="n">sample_file</span><span class="p">)</span>
+        
+        <span class="c1"># Create step instances:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">make_step_instances</span><span class="p">()</span>
+        
+        <span class="c1"># if convert2yaml:</span>
+            <span class="c1"># # Convert to YAML</span>
+            <span class="c1"># self.convert_data_to_YAML()</span>
+            <span class="c1"># print &quot;Exported sample and param data to YAML format.\nExitting...\n&quot;</span>
+            <span class="c1"># # sys.exit()</span>
+            <span class="c1"># return</span>
+
+        <span class="c1"># Make main script:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">make_main_pipeline_script</span><span class="p">()</span>
+        
+        <span class="c1"># Do the actual script building:</span>
+        <span class="c1"># Also, catching assetion exceptions raised by class build_scripts() and </span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">build_scripts</span><span class="p">()</span>
+            
+        <span class="k">except</span> <span class="n">AssertionExcept</span> <span class="k">as</span> <span class="n">assertErr</span><span class="p">:</span>
+            <span class="nb">print</span> <span class="s2">&quot;An error has occured. See comment above.</span><span class="se">\n</span><span class="s2">Printing current JSON and exiting</span><span class="se">\n</span><span class="s2">&quot;</span>
+            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pipe_data</span><span class="p">[</span><span class="s2">&quot;objects_dir&quot;</span><span class="p">]</span><span class="o">+</span><span class="s2">&quot;pipedata.json&quot;</span><span class="p">,</span><span class="s2">&quot;w&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">json_fh</span><span class="p">:</span>
+                <span class="n">json_fh</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_json_encoding</span><span class="p">())</span>
+            <span class="c1"># sys.exit() </span>
+            <span class="k">return</span>
+            
+
+        
+        <span class="c1"># Make the qdel script:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">create_qdel_script</span><span class="p">()</span>
+        <span class="c1"># Make the qalter script:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">create_qalter_script</span><span class="p">()</span>
+        
+        <span class="c1"># Make js graphical representation (maybe add parameter to not include this feature?)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">create_js_graphic</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">create_diagrammer_graphic</span><span class="p">()</span>
+        
+        <span class="c1"># Writing JSON encoding ofg pipeline:</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pipe_data</span><span class="p">[</span><span class="s2">&quot;objects_dir&quot;</span><span class="p">]</span><span class="o">+</span><span class="s2">&quot;pipedata.json&quot;</span><span class="p">,</span><span class="s2">&quot;w&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">json_fh</span><span class="p">:</span>
+            <span class="n">json_fh</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_json_encoding</span><span class="p">())</span>
+        <span class="c1"># Writing JSON encoding of qsub names (can be used by remote progress monitor)</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pipe_data</span><span class="p">[</span><span class="s2">&quot;objects_dir&quot;</span><span class="p">]</span><span class="o">+</span><span class="s2">&quot;qsub_names.json&quot;</span><span class="p">,</span><span class="s2">&quot;w&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">json_fh</span><span class="p">:</span>
+            <span class="n">json_fh</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_qsub_names_json_encoding</span><span class="p">())</span>
+            
+        
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">create_log_plotter</span><span class="p">()</span>
+        
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Finished successfully....&quot;</span><span class="p">)</span>
+        
+    <span class="c1"># Handlers</span>
+<div class="viewcode-block" id="neatseq_flow.get_param_data"><a class="viewcode-back" href="../Main.html#PLC_main.neatseq_flow.get_param_data">[docs]</a>    <span class="k">def</span> <span class="nf">get_param_data</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Return parameter data</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">param_data</span></div>
+        
+<div class="viewcode-block" id="neatseq_flow.get_step_param_data"><a class="viewcode-back" href="../Main.html#PLC_main.neatseq_flow.get_step_param_data">[docs]</a>    <span class="k">def</span> <span class="nf">get_step_param_data</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Return step-wise parameter data</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">param_data</span><span class="p">[</span><span class="s2">&quot;Step&quot;</span><span class="p">]</span></div>
+        
+        
+<div class="viewcode-block" id="neatseq_flow.get_steps"><a class="viewcode-back" href="../Main.html#PLC_main.neatseq_flow.get_steps">[docs]</a>    <span class="k">def</span> <span class="nf">get_steps</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; return a list of step types required </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">param_data</span><span class="p">[</span><span class="s2">&quot;Step&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span></div>
+        
+        
+<div class="viewcode-block" id="neatseq_flow.get_step_names"><a class="viewcode-back" href="../Main.html#PLC_main.neatseq_flow.get_step_names">[docs]</a>    <span class="k">def</span> <span class="nf">get_step_names</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; return a list of step names (=step instances)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">name_index</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
+        <span class="k">pass</span></div>
+        
+        
+    <span class="k">def</span> <span class="nf">get_names_index</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">name_index</span>
+        
+        
+<div class="viewcode-block" id="neatseq_flow.make_names_index"><a class="viewcode-back" href="../Main.html#PLC_main.neatseq_flow.make_names_index">[docs]</a>    <span class="k">def</span> <span class="nf">make_names_index</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Make a dict of the form name:steps</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">name_index</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">step</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">param_data</span><span class="p">[</span><span class="s2">&quot;Step&quot;</span><span class="p">]:</span>
+            <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">param_data</span><span class="p">[</span><span class="s2">&quot;Step&quot;</span><span class="p">][</span><span class="n">step</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">name_index</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">step</span>
+        
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">name_index</span></div>
+        
+<div class="viewcode-block" id="neatseq_flow.build_scripts"><a class="viewcode-back" href="../Main.html#PLC_main.neatseq_flow.build_scripts">[docs]</a>    <span class="k">def</span> <span class="nf">build_scripts</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Run the actual script building</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># For each step name (step_n), set sample_data based on the steps base(s) and then create scripts</span>
+        <span class="k">for</span> <span class="n">step_n</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">step_list</span><span class="p">:</span>
+           
+            <span class="n">step_name</span> <span class="o">=</span> <span class="n">step_n</span><span class="o">.</span><span class="n">get_step_name</span><span class="p">()</span>
+            <span class="n">step_step</span> <span class="o">=</span> <span class="n">step_n</span><span class="o">.</span><span class="n">get_step_step</span><span class="p">()</span>
+
+            <span class="c1"># Find base step(s) for current step: (If does not exist return None)</span>
+            <span class="n">base_name_list</span> <span class="o">=</span> <span class="n">step_n</span><span class="o">.</span><span class="n">get_base_step_name</span><span class="p">()</span>    
+
+            
+            <span class="c1"># For merge, 1st step, this will be true, passing the original sample_data to the step:</span>
+            <span class="k">if</span> <span class="n">base_name_list</span> <span class="o">==</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">step_n</span><span class="o">.</span><span class="n">set_sample_data</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">sample_data</span><span class="p">)</span>
+                <span class="n">step_n</span><span class="o">.</span><span class="n">set_base_step</span><span class="p">([])</span>
+            <span class="c1"># For the others, finds the instance(s) of the base step(s) and calls set_base_step() with the list of bases:</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="c1"># Note: set_base_step() takes a list of step objects, not names. Finding them is done by the .index() method.</span>
+                <span class="n">step_n</span><span class="o">.</span><span class="n">set_base_step</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">step_list</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">step_list_index</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">base_name</span><span class="p">)]</span> <span class="k">for</span> <span class="n">base_name</span> <span class="ow">in</span> <span class="n">base_name_list</span><span class="p">])</span>
+
+                
+            <span class="c1"># Do the actual script building for step_n</span>
+            <span class="n">step_n</span><span class="o">.</span><span class="n">create_all_scripts</span><span class="p">()</span></div>
+                
+            
+                
+                
+    <span class="k">def</span> <span class="nf">make_step_order</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">pass</span>
+        
+    <span class="c1"># def complete_depends(self):     # Complete the dependencies </span>
+    
+<div class="viewcode-block" id="neatseq_flow.make_depends_dict"><a class="viewcode-back" href="../Main.html#PLC_main.neatseq_flow.make_depends_dict">[docs]</a>    <span class="k">def</span> <span class="nf">make_depends_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Creates and returns the basic depend_dict structure</span>
+<span class="sd">            step names are keys, values are a list of the step names which are bases for the step</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">step_data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_step_param_data</span><span class="p">()</span>
+        <span class="c1"># Get the base list for each step.</span>
+        <span class="c1"># self.depend_dict = {name:[step_data[self.name_index[name]][name][&quot;base&quot;] if self.name_index[name] != &quot;merge&quot; else &quot;&quot;] for name in self.name_index.keys() }</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">depend_dict</span> <span class="o">=</span> <span class="p">{</span><span class="n">name</span><span class="p">:</span><span class="n">deepcopy</span><span class="p">(</span><span class="n">step_data</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">name_index</span><span class="p">[</span><span class="n">name</span><span class="p">]][</span><span class="n">name</span><span class="p">][</span><span class="s2">&quot;base&quot;</span><span class="p">])</span> 
+                                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">name_index</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">!=</span> <span class="s2">&quot;merge&quot;</span> 
+                                <span class="k">else</span> <span class="p">[</span><span class="s2">&quot;&quot;</span><span class="p">]</span> <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">name_index</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span> <span class="p">}</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">depend_dict</span></div>
+        
+        
+<div class="viewcode-block" id="neatseq_flow.expand_depends"><a class="viewcode-back" href="../Main.html#PLC_main.neatseq_flow.expand_depends">[docs]</a>    <span class="k">def</span> <span class="nf">expand_depends</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Extract base info for each step from parameters and expand the dependency info</span>
+<span class="sd">            i.e. if base(samtools)=[&#39;Bowtie_mapper&#39;], expand it to [&#39;merge&#39;,&#39;Bowtie_mapper&#39;]</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">step_data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_step_param_data</span><span class="p">()</span>
+        <span class="c1"># Get the base list for each step.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">make_depends_dict</span><span class="p">()</span>
+        
+        <span class="c1"># ### Helper recursive function</span>
+        <span class="k">def</span> <span class="nf">expand_depend_list</span><span class="p">(</span><span class="n">step_name</span><span class="p">,</span><span class="n">depend_list</span><span class="p">,</span><span class="n">depend_dict</span><span class="p">):</span>
+            <span class="sd">&quot;&quot;&quot; helper function. takes a list and RECURSIVELY expands it based on the dependency dict</span>
+<span class="sd">            step_name is the name of the step on which it is executing. Used to hault the recursion on cases of loops in the DAG...</span>
+<span class="sd">            &quot;&quot;&quot;</span>
+            
+            <span class="k">if</span> <span class="n">depend_list</span><span class="o">==</span><span class="p">[]:</span>
+                <span class="k">return</span> <span class="n">depend_list</span>
+            <span class="n">ret_list</span> <span class="o">=</span> <span class="n">depend_list</span>
+            <span class="k">if</span> <span class="n">step_name</span> <span class="ow">in</span> <span class="n">depend_list</span><span class="p">:</span>
+                <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="s2">&quot;There seems to be a cycle in the workflow design. Check dependencies of step </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">step_name</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">elem</span> <span class="ow">in</span> <span class="n">depend_list</span><span class="p">:</span>
+                <span class="k">if</span> <span class="p">(</span><span class="n">elem</span><span class="o">==</span><span class="s2">&quot;&quot;</span><span class="p">):</span>
+                    <span class="k">pass</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">ret_list</span> <span class="o">+=</span> <span class="n">expand_depend_list</span><span class="p">(</span><span class="n">step_name</span><span class="p">,</span> <span class="nb">list</span><span class="p">(</span><span class="n">depend_dict</span><span class="p">[</span><span class="n">elem</span><span class="p">]),</span><span class="n">depend_dict</span><span class="p">)</span>
+                    
+            <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">ret_list</span><span class="p">))</span>
+        <span class="c1"># ######</span>
+
+        <span class="c1"># Expand to include all dependencies in the list</span>
+        <span class="c1"># This is a little bit of recursive and comprehension magic...</span>
+        <span class="n">local_depend_dict</span> <span class="o">=</span> <span class="p">{</span><span class="n">step</span><span class="p">:</span><span class="n">expand_depend_list</span><span class="p">(</span><span class="n">step</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">depend_dict</span><span class="p">[</span><span class="n">step</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">depend_dict</span><span class="p">)</span> <span class="k">for</span> <span class="n">step</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">depend_dict</span><span class="p">}</span>
+        <span class="c1"># Remove empty strings (&#39;&#39;) from the lists of dependencies:</span>
+        <span class="n">local_depend_dict</span> <span class="o">=</span> <span class="p">{</span><span class="n">step</span><span class="p">:[</span><span class="n">depend</span> <span class="k">for</span> <span class="n">depend</span> <span class="ow">in</span> <span class="n">local_depend_dict</span><span class="p">[</span><span class="n">step</span><span class="p">]</span> <span class="k">if</span> <span class="n">depend</span> <span class="o">!=</span> <span class="s2">&quot;&quot;</span><span class="p">]</span> <span class="k">for</span> <span class="n">step</span> <span class="ow">in</span> <span class="n">local_depend_dict</span><span class="p">}</span>    
+        <span class="bp">self</span><span class="o">.</span><span class="n">depend_dict</span> <span class="o">=</span> <span class="n">local_depend_dict</span>
+
+        <span class="c1"># Store dependencies in param structure:</span>
+        <span class="k">for</span> <span class="n">step</span> <span class="ow">in</span> <span class="n">step_data</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">param_data</span><span class="p">[</span><span class="s2">&quot;Step&quot;</span><span class="p">][</span><span class="n">step</span><span class="p">]:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">param_data</span><span class="p">[</span><span class="s2">&quot;Step&quot;</span><span class="p">][</span><span class="n">step</span><span class="p">][</span><span class="n">name</span><span class="p">][</span><span class="s2">&quot;depend_list&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">depend_dict</span><span class="p">[</span><span class="n">name</span><span class="p">]</span>
+            
+        
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">depend_dict</span> </div>
+
+        
+    <span class="c1"># def get_base_list(self,step_params):</span>
+        <span class="c1"># &quot;&quot;&quot; helper function. Extracts base info for steps in form {name:[base]}</span>
+            <span class="c1"># This is later expanded by expand_depends()</span>
+        <span class="c1"># &quot;&quot;&quot;</span>
+        <span class="c1"># names_ind = self.make_names_index()</span>
+        <span class="c1"># t1 = {names_ind[base[0]] for base in [[val for param,val in name_p.items() if(param==&quot;base&quot;)] for name,name_p in step_params.items()]}</span>
+        
+        <span class="c1"># print t1</span>
+        
+        <span class="c1"># return t1</span>
+
+
+<div class="viewcode-block" id="neatseq_flow.sort_step_list"><a class="viewcode-back" href="../Main.html#PLC_main.neatseq_flow.sort_step_list">[docs]</a>    <span class="k">def</span> <span class="nf">sort_step_list</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; This function sorts the step list</span>
+<span class="sd">            By default uses the list.sort function on the step list, which sorts the steps by level, i.e. all direct merge dependents first, then their dependents, etc.</span>
+<span class="sd">            A different sorting scheme can be added here for depth-wise sorting, for instance.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">step_list</span><span class="o">.</span><span class="n">sort</span><span class="p">()</span>    <span class="c1"># Sort by internal __lt__ and __gt__</span></div>
+            
+<div class="viewcode-block" id="neatseq_flow.make_step_instances"><a class="viewcode-back" href="../Main.html#PLC_main.neatseq_flow.make_step_instances">[docs]</a>    <span class="k">def</span> <span class="nf">make_step_instances</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Makes step instances and stores them in self.step_list.</span>
+<span class="sd">            The steps are also sorted based on their dependencies. See __lt__ and __gt__ in &quot;Step&quot; class definition.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># The list of steps is created using a helper function, make_step_type_instance.</span>
+        <span class="c1"># See definition of make_step_type_instance to see how step type is determined and imported...</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">step_list</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">make_step_type_instance</span><span class="p">(</span><span class="n">step_n</span><span class="p">)</span> <span class="k">for</span> <span class="n">step_n</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_step_names</span><span class="p">()]</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">sort_step_list</span><span class="p">()</span>
+
+        
+        <span class="c1"># Send number of step to the instances:</span>
+        <span class="c1"># This is used for numbering the scripts in the scripts_dir</span>
+        <span class="n">counter</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="k">for</span> <span class="n">step_n</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">step_list</span><span class="p">:</span>
+            <span class="n">step_n</span><span class="o">.</span><span class="n">set_step_number</span><span class="p">(</span><span class="n">counter</span><span class="p">)</span>
+            <span class="n">counter</span><span class="o">+=</span><span class="mi">1</span>
+            
+        <span class="c1"># Create index of step names. Once their order is set, above, this new list will contain the step names in the same order</span>
+        <span class="c1"># Is used to search the list of classes.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">step_list_index</span> <span class="o">=</span> <span class="p">[</span><span class="n">step_n</span><span class="o">.</span><span class="n">get_step_name</span><span class="p">()</span> <span class="k">for</span> <span class="n">step_n</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">step_list</span><span class="p">]</span>
+        
+        <span class="c1"># NOTE: Each step&#39;s base step is set in build_scripts(), because not all info exists at construction time...</span>
+        
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">step_list</span></div>
+        
+
+        
+<div class="viewcode-block" id="neatseq_flow.make_directory_structure"><a class="viewcode-back" href="../Main.html#PLC_main.neatseq_flow.make_directory_structure">[docs]</a>    <span class="k">def</span> <span class="nf">make_directory_structure</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Creating the directory structure to hold the scripts, data etc.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">directory</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;data_dir&quot;</span><span class="p">,</span><span class="s2">&quot;scripts_dir&quot;</span><span class="p">,</span><span class="s2">&quot;stderr_dir&quot;</span><span class="p">,</span><span class="s2">&quot;stdout_dir&quot;</span><span class="p">,</span><span class="s2">&quot;objects_dir&quot;</span><span class="p">,</span><span class="s2">&quot;logs_dir&quot;</span><span class="p">,</span><span class="s2">&quot;backups_dir&quot;</span><span class="p">]:</span>
+            <span class="c1"># Get only the first part of &#39;directory&#39; for directory name:</span>
+            <span class="n">dir_name</span> <span class="o">=</span> <span class="n">directory</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;_&quot;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="c1"># Concatenate the directory name to the home path:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">pipe_data</span><span class="p">[</span><span class="n">directory</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pipe_data</span><span class="p">[</span><span class="s2">&quot;home_dir&quot;</span><span class="p">]</span> <span class="o">+</span> <span class="n">os</span><span class="o">.</span><span class="n">sep</span> <span class="o">+</span> <span class="n">dir_name</span> <span class="o">+</span> <span class="n">os</span><span class="o">.</span><span class="n">sep</span>
+            <span class="k">if</span> <span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pipe_data</span><span class="p">[</span><span class="n">directory</span><span class="p">])):</span>
+                <span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">dir_name</span> <span class="o">+</span> <span class="s2">&quot; folder exists. Overwriting existing! (existing files will not be deleted)</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;Creating &quot;</span> <span class="o">+</span> <span class="n">dir_name</span> <span class="o">+</span> <span class="s2">&quot; directory at &quot;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">pipe_data</span><span class="p">[</span><span class="n">directory</span><span class="p">]</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+                <span class="n">os</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pipe_data</span><span class="p">[</span><span class="n">directory</span><span class="p">])</span></div>
+        
+
+<div class="viewcode-block" id="neatseq_flow.make_main_pipeline_script"><a class="viewcode-back" href="../Main.html#PLC_main.neatseq_flow.make_main_pipeline_script">[docs]</a>    <span class="k">def</span> <span class="nf">make_main_pipeline_script</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Create the main pipline script stored in 00.pipe.commands.csh </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pipe_data</span><span class="p">[</span><span class="s2">&quot;scripts_dir&quot;</span><span class="p">]</span> <span class="o">+</span> <span class="s2">&quot;00.pipe.commands.csh&quot;</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">pipe_fh</span><span class="p">:</span>
+            <span class="c1"># Writing header :)</span>
+            <span class="n">pipe_fh</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="se">\n\n</span><span class="s2"></span>
+<span class="s2"># This is the main executable script of this pipeline</span>
+<span class="s2"># It was created on </span><span class="si">%(date)s</span><span class="s2"> by Sungrebe version </span><span class="si">%(version)s</span><span class="s2"></span>
+<span class="s2"># All rights reserved to Menachem Sklarz and the Bioinformatics Core Unit at NIBN.</span>
+<span class="se">\n\n\n</span><span class="s2">&quot;&quot;&quot;</span> <span class="o">%</span> <span class="p">{</span><span class="s2">&quot;date&quot;</span><span class="p">:</span> <span class="n">time</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%d</span><span class="s2">/%m/%Y %H:%M:%S&quot;</span><span class="p">),</span> <span class="s2">&quot;version&quot;</span><span class="p">:</span> <span class="n">__version__</span><span class="p">})</span>
+            
+            <span class="c1"># For each step, write the qsub command created by get_qsub_command() method:</span>
+            <span class="k">for</span> <span class="n">step_n</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">step_list</span><span class="p">:</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">step_n</span><span class="o">.</span><span class="n">skip_scripts</span><span class="p">:</span>   <span class="c1"># Add the line only for modules that produce scripts (see del_type and move_type for examples of modules that don&#39;t...)</span>
+                    <span class="n">pipe_fh</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_qsub_command</span><span class="p">(</span><span class="n">step_n</span><span class="p">))</span></div>
+
+                
+                
+<div class="viewcode-block" id="neatseq_flow.get_qsub_command"><a class="viewcode-back" href="../Main.html#PLC_main.neatseq_flow.get_qsub_command">[docs]</a>    <span class="k">def</span> <span class="nf">get_qsub_command</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">step</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Get the qsub command for step to print in main pipeline script, 00....</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">qsub_line</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+        <span class="n">qsub_line</span> <span class="o">+=</span> <span class="s2">&quot;echo running &quot;</span> <span class="o">+</span> <span class="n">step</span><span class="o">.</span><span class="n">get_step_name</span><span class="p">()</span> <span class="o">+</span> <span class="s2">&quot; &#39;:</span><span class="se">\\</span><span class="s2">n------------------------------&#39;</span><span class="se">\n</span><span class="s2">&quot;</span>
+        
+        <span class="c1"># slow_release_script_loc = os.sep.join([self.pipe_data[&quot;home_dir&quot;],&quot;utilities&quot;,&quot;qsub_scripts&quot;,&quot;run_jobs_slowly.pl&quot;])</span>
+
+        <span class="k">if</span> <span class="s2">&quot;slow_release&quot;</span> <span class="ow">in</span> <span class="n">step</span><span class="o">.</span><span class="n">params</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="c1"># Define the code for slow release </span>
+            <span class="c1"># Define the slow_release command (common to both options of slow_release)</span>
+            <span class="n">qsub_line</span> <span class="o">+=</span> <span class="s2">&quot;&quot;&quot; </span>
+<span class="s2">qsub -N </span><span class="si">%(step_step)s</span><span class="s2">_</span><span class="si">%(step_name)s</span><span class="s2">_</span><span class="si">%(run_code)s</span><span class="s2"> </span><span class="se">\\</span><span class="s2"></span>
+<span class="s2">    -q </span><span class="si">%(queue)s</span><span class="s2"> </span><span class="se">\\</span><span class="s2"></span>
+<span class="s2">    -e </span><span class="si">%(stderr)s</span><span class="s2"> </span><span class="se">\\</span><span class="s2"></span>
+<span class="s2">    -o </span><span class="si">%(stdout)s</span><span class="s2"> </span><span class="se">\\</span><span class="s2"></span>
+<span class="s2">    </span><span class="si">%(slow_rel_params)s</span><span class="s2"> </span><span class="se">\\</span><span class="s2"></span>
+<span class="s2">    -f </span><span class="si">%(scripts_dir)s%(script_name)s</span><span class="s2"> </span><span class="se">\n</span><span class="s2">&quot;&quot;&quot;</span> <span class="o">%</span> \
+                        <span class="p">{</span><span class="s2">&quot;step_step&quot;</span>              <span class="p">:</span> <span class="n">step</span><span class="o">.</span><span class="n">get_step_step</span><span class="p">(),</span>
+                        <span class="s2">&quot;step_name&quot;</span>               <span class="p">:</span> <span class="n">step</span><span class="o">.</span><span class="n">get_step_name</span><span class="p">(),</span>
+                        <span class="s2">&quot;run_code&quot;</span>                <span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">run_code</span><span class="p">,</span>
+                        <span class="s2">&quot;stderr&quot;</span>                  <span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">pipe_data</span><span class="p">[</span><span class="s2">&quot;stderr_dir&quot;</span><span class="p">],</span>
+                        <span class="s2">&quot;stdout&quot;</span>                  <span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">pipe_data</span><span class="p">[</span><span class="s2">&quot;stdout_dir&quot;</span><span class="p">],</span>
+                        <span class="s2">&quot;queue&quot;</span>                   <span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">pipe_data</span><span class="p">[</span><span class="s2">&quot;qsub_params&quot;</span><span class="p">][</span><span class="s2">&quot;queue&quot;</span><span class="p">],</span>
+                        <span class="s2">&quot;scripts_dir&quot;</span>             <span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">pipe_data</span><span class="p">[</span><span class="s2">&quot;scripts_dir&quot;</span><span class="p">],</span>
+                        <span class="s2">&quot;script_name&quot;</span>             <span class="p">:</span> <span class="n">step</span><span class="o">.</span><span class="n">get_script_name</span><span class="p">(),</span>
+                        <span class="s2">&quot;slow_rel_params&quot;</span>         <span class="p">:</span> <span class="n">step</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s2">&quot;slow_release&quot;</span><span class="p">]}</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">qsub_line</span> <span class="o">+=</span> <span class="s2">&quot;qsub </span><span class="si">%(scripts_dir)s%(script_name)s</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">{</span><span class="s2">&quot;scripts_dir&quot;</span> <span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">pipe_data</span><span class="p">[</span><span class="s2">&quot;scripts_dir&quot;</span><span class="p">],</span> 
+                                                                    <span class="s2">&quot;script_name&quot;</span> <span class="p">:</span> <span class="n">step</span><span class="o">.</span><span class="n">get_script_name</span><span class="p">()}</span>
+
+        <span class="n">qsub_line</span> <span class="o">+=</span> <span class="s2">&quot;</span><span class="se">\n\n</span><span class="s2">&quot;</span>
+        <span class="k">return</span> <span class="n">qsub_line</span></div>
+
+
+
+
+<div class="viewcode-block" id="neatseq_flow.make_step_type_instance"><a class="viewcode-back" href="../Main.html#PLC_main.neatseq_flow.make_step_type_instance">[docs]</a>    <span class="k">def</span> <span class="nf">make_step_type_instance</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">step_name</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Create and return a class of the type defined in step_type</span>
+<span class="sd">            Gets the module name from Step class, imports it, constructs the suitable subclass and returns it.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">step_type</span>   <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">name_index</span><span class="p">[</span><span class="n">step_name</span><span class="p">]</span>
+        <span class="n">step_params</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_step_param_data</span><span class="p">()[</span><span class="n">step_type</span><span class="p">][</span><span class="n">step_name</span><span class="p">]</span>
+        
+        <span class="c1"># Find the location of the step module in the file structure (see function find_step_module())</span>
+        <span class="n">step_module_loc</span> <span class="o">=</span> <span class="n">Step</span><span class="o">.</span><span class="n">find_step_module</span><span class="p">(</span><span class="n">step_type</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">param_data</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">pipe_data</span><span class="p">)</span>  <span class="c1"># Passing param data because it contains the optional search path...</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="c1"># Import the module:</span>
+            <span class="n">exec</span> <span class="s2">&quot;from </span><span class="si">%s</span><span class="s2"> import </span><span class="si">%s</span><span class="s2"> as StepClass&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">step_module_loc</span><span class="p">,</span><span class="s1">&#39;Step_&#39;</span> <span class="o">+</span> <span class="n">step_type</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+            <span class="nb">print</span> <span class="s2">&quot;An error has occured loading module </span><span class="si">%s</span><span class="s2">.</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">step_module_loc</span>
+            <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">()</span>
+
+        <span class="c1"># Run constructor:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">StepClass</span><span class="p">(</span><span class="n">step_name</span><span class="p">,</span>   \
+                             <span class="n">step_type</span><span class="p">,</span>   \
+                             <span class="n">step_params</span><span class="p">,</span> \
+                             <span class="bp">self</span><span class="o">.</span><span class="n">pipe_data</span><span class="p">)</span>
+        <span class="k">except</span> <span class="n">AssertionExcept</span> <span class="k">as</span> <span class="n">assertErr</span><span class="p">:</span>
+            <span class="nb">print</span> <span class="s2">&quot;An error has occured in step initialization. See comment above.</span><span class="se">\n</span><span class="s2">&quot;</span>
+            <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">()</span></div>
+
+                        
+<div class="viewcode-block" id="neatseq_flow.determine_sample_types"><a class="viewcode-back" href="../Main.html#PLC_main.neatseq_flow.determine_sample_types">[docs]</a>    <span class="k">def</span> <span class="nf">determine_sample_types</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Add a &quot;type&quot; field to each sample with &quot;PE&quot;, &quot;SE&quot; or &quot;Mixed&quot;</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        
+        <span class="k">for</span> <span class="n">sample</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">sample_data</span><span class="p">[</span><span class="s2">&quot;samples&quot;</span><span class="p">]:</span>      <span class="c1"># Getting list of samples out of samples_hash</span>
+            
+            <span class="c1"># Prepare holder for type:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">sample_data</span><span class="p">[</span><span class="n">sample</span><span class="p">][</span><span class="s2">&quot;type&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
+            <span class="k">if</span> <span class="s2">&quot;Single&quot;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">sample_data</span><span class="p">[</span><span class="n">sample</span><span class="p">]:</span>
+                <span class="c1"># Only one type of file: SE</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">sample_data</span><span class="p">[</span><span class="n">sample</span><span class="p">][</span><span class="s2">&quot;type&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;SE&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="s2">&quot;Forward&quot;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">sample_data</span><span class="p">[</span><span class="n">sample</span><span class="p">]</span> <span class="ow">and</span> <span class="s2">&quot;Reverse&quot;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">sample_data</span><span class="p">[</span><span class="n">sample</span><span class="p">]:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">sample_data</span><span class="p">[</span><span class="n">sample</span><span class="p">][</span><span class="s2">&quot;type&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;PE&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="s2">&quot;Forward&quot;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">sample_data</span><span class="p">[</span><span class="n">sample</span><span class="p">]</span> <span class="ow">and</span> <span class="s2">&quot;Reverse&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">sample_data</span><span class="p">[</span><span class="n">sample</span><span class="p">]:</span>
+                <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="s2">&quot;You have only Forward for sample </span><span class="si">%s</span><span class="s2">. Can&#39;t proceed!&quot;</span> <span class="o">%</span> <span class="n">sample</span><span class="p">)</span>
+            <span class="k">if</span> <span class="s2">&quot;Reverse&quot;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">sample_data</span><span class="p">[</span><span class="n">sample</span><span class="p">]</span> <span class="ow">and</span> <span class="s2">&quot;Forward&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">sample_data</span><span class="p">[</span><span class="n">sample</span><span class="p">]:</span>
+                <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="s2">&quot;You have only Reverse for sample </span><span class="si">%s</span><span class="s2">. Can&#39;t proceed!&quot;</span> <span class="o">%</span> <span class="n">sample</span><span class="p">)</span>
+            <span class="c1"># IF fasta exists, add to types list</span>
+            <span class="k">if</span> <span class="s2">&quot;Nucleotide&quot;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">sample_data</span><span class="p">[</span><span class="n">sample</span><span class="p">]:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">sample_data</span><span class="p">[</span><span class="n">sample</span><span class="p">][</span><span class="s2">&quot;type&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;nucl&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="s2">&quot;Protein&quot;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">sample_data</span><span class="p">[</span><span class="n">sample</span><span class="p">]:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">sample_data</span><span class="p">[</span><span class="n">sample</span><span class="p">][</span><span class="s2">&quot;type&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;prot&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="s2">&quot;BAM&quot;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">sample_data</span><span class="p">[</span><span class="n">sample</span><span class="p">]</span> <span class="ow">or</span> <span class="s2">&quot;SAM&quot;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">sample_data</span><span class="p">[</span><span class="n">sample</span><span class="p">]:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">sample_data</span><span class="p">[</span><span class="n">sample</span><span class="p">][</span><span class="s2">&quot;type&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;mapping&quot;</span><span class="p">)</span></div>
+            
+                
+<div class="viewcode-block" id="neatseq_flow.create_qdel_script"><a class="viewcode-back" href="../Main.html#PLC_main.neatseq_flow.create_qdel_script">[docs]</a>    <span class="k">def</span> <span class="nf">create_qdel_script</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; This function creates the 99.qdel_all script</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="c1"># Create name for qdel script:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">qdel_script_name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pipe_data</span><span class="p">[</span><span class="s2">&quot;scripts_dir&quot;</span><span class="p">]</span> <span class="o">+</span> <span class="s2">&quot;99.qdel_all.csh&quot;</span>
+        
+        <span class="c1"># Create directory for step-wise qdel </span>
+        <span class="n">stepWiseDir</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="si">%s</span><span class="s2">99.qdel_all</span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pipe_data</span><span class="p">[</span><span class="s2">&quot;scripts_dir&quot;</span><span class="p">],</span><span class="n">os</span><span class="o">.</span><span class="n">sep</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="n">stepWiseDir</span><span class="p">):</span>
+            <span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;Making dir 99.qdel_all directory at </span><span class="si">%s</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">stepWiseDir</span><span class="p">)</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">stepWiseDir</span><span class="p">)</span> 
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;Dir </span><span class="si">%s</span><span class="s2"> exists. Will overwrite... </span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">stepWiseDir</span><span class="p">)</span>
+
+        
+        
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">qdel_script_name</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">script_fh</span><span class="p">:</span>
+            <span class="c1"># Adding preliminary stuff:</span>
+            <span class="n">script_fh</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;#!/bin/csh</span><span class="se">\n\n</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="n">script_fh</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;# Adding line to log file:</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="n">script_fh</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;date &#39;+</span><span class="si">%%</span><span class="s2">d </span><span class="si">%%</span><span class="s2">b </span><span class="si">%%</span><span class="s2">Y, </span><span class="si">%%</span><span class="s2">H:</span><span class="si">%%</span><span class="s2">M&#39; &gt;&gt; </span><span class="si">%s</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pipe_data</span><span class="p">[</span><span class="s2">&quot;log_file&quot;</span><span class="p">]))</span>
+            <span class="n">script_fh</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;echo &#39;</span><span class="se">\\</span><span class="s2">t</span><span class="se">\\</span><span class="s2">tDeleting all jobs with 99.qdel_all.csh&#39; &gt;&gt; </span><span class="si">%s</span><span class="se">\n\n\n</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pipe_data</span><span class="p">[</span><span class="s2">&quot;log_file&quot;</span><span class="p">]))</span>
+            <span class="c1"># For every step:</span>
+            <span class="k">for</span> <span class="n">step</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">step_list</span><span class="p">:</span>
+                <span class="c1"># Create step-specific del script:</span>
+                <span class="n">step_del_script_fn</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="si">%s</span><span class="s2">99.qdel_all_</span><span class="si">%s</span><span class="s2">.csh&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">stepWiseDir</span><span class="p">,</span><span class="n">step</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+                <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">step_del_script_fn</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">step_del_script</span><span class="p">:</span>
+                    <span class="c1"># Write header</span>
+                    <span class="n">step_del_script</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;#!/bin/csh</span><span class="se">\n\n</span><span class="s2">&quot;</span><span class="p">)</span>
+                    <span class="c1"># For every jid, add a qdel line:</span>
+                    <span class="k">for</span> <span class="n">jid</span> <span class="ow">in</span> <span class="n">step</span><span class="o">.</span><span class="n">get_jid_list</span><span class="p">():</span>
+                        <span class="n">step_del_script</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;qdel </span><span class="si">%s</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">jid</span><span class="p">)</span>
+                <span class="c1"># Add call to step-specific qdel script to main qdel script:</span>
+                <span class="n">script_fh</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;csh </span><span class="si">%s</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">step_del_script_fn</span><span class="p">)</span>
+            <span class="c1"># Add logging:</span>
+            <span class="n">script_fh</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n\n</span><span class="s2"># Adding line to log file:</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="n">script_fh</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;date &#39;+</span><span class="si">%%</span><span class="s2">d </span><span class="si">%%</span><span class="s2">b </span><span class="si">%%</span><span class="s2">Y, </span><span class="si">%%</span><span class="s2">H:</span><span class="si">%%</span><span class="s2">M&#39; &gt;&gt; </span><span class="si">%s</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pipe_data</span><span class="p">[</span><span class="s2">&quot;log_file&quot;</span><span class="p">]))</span>
+            <span class="n">script_fh</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;echo &#39;</span><span class="se">\\</span><span class="s2">t</span><span class="se">\\</span><span class="s2">tCompleted deleting all jobs with 99.qdel_all.csh&#39; &gt;&gt; </span><span class="si">%s</span><span class="se">\n\n\n</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pipe_data</span><span class="p">[</span><span class="s2">&quot;log_file&quot;</span><span class="p">]))</span></div>
+              
+<div class="viewcode-block" id="neatseq_flow.create_qalter_script"><a class="viewcode-back" href="../Main.html#PLC_main.neatseq_flow.create_qalter_script">[docs]</a>    <span class="k">def</span> <span class="nf">create_qalter_script</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; This function creates the 98.qalter_all script</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">qalter_script_name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pipe_data</span><span class="p">[</span><span class="s2">&quot;scripts_dir&quot;</span><span class="p">]</span> <span class="o">+</span> <span class="s2">&quot;98.qalter_all.csh&quot;</span>
+
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">qalter_script_name</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">script_fh</span><span class="p">:</span>
+            <span class="n">script_fh</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;#!/bin/csh</span><span class="se">\n\n</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">step</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">step_list</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">step</span><span class="o">.</span><span class="n">get_depend_list</span><span class="p">():</span>      <span class="c1"># The step has dependencies:</span>
+                    <span class="n">script_fh</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;qalter </span><span class="se">\\\n\t</span><span class="s2">-hold_jid </span><span class="si">%s</span><span class="s2"> </span><span class="se">\\\n\t</span><span class="si">%s</span><span class="se">\n\n</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="s2">&quot;,&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">step</span><span class="o">.</span><span class="n">get_dependency_jid_list</span><span class="p">()),</span> <span class="n">step</span><span class="o">.</span><span class="n">get_qsub_name</span><span class="p">()))</span></div>
+              
+    <span class="k">def</span> <span class="nf">create_log_file</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        
+        <span class="c1"># Set log file name in pipe_data</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pipe_data</span><span class="p">[</span><span class="s2">&quot;log_file&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">pipe_data</span><span class="p">[</span><span class="s2">&quot;logs_dir&quot;</span><span class="p">],</span> <span class="s2">&quot;log_&quot;</span> <span class="p">,</span>  <span class="bp">self</span><span class="o">.</span><span class="n">pipe_data</span><span class="p">[</span><span class="s2">&quot;run_code&quot;</span><span class="p">]</span> <span class="p">,</span> <span class="s2">&quot;.txt&quot;</span><span class="p">])</span>
+        <span class="c1"># Initialize log file with current datetime:</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pipe_data</span><span class="p">[</span><span class="s2">&quot;log_file&quot;</span><span class="p">],</span><span class="s2">&quot;w&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">logf</span><span class="p">:</span>
+            <span class="n">logf</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">Pipeline </span><span class="si">%(run_code)s</span><span class="s2"> logfile:</span>
+<span class="s2">----------------</span>
+
+<span class="si">%(datetime)s</span><span class="s2">:   Pipeline </span><span class="si">%(run_code)s</span><span class="s2"> created.</span>
+
+<span class="s2">&quot;&quot;&quot;</span> <span class="o">%</span> \
+                <span class="p">{</span><span class="s2">&quot;datetime&quot;</span> <span class="p">:</span> <span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%d</span><span class="s2"> %b %Y, %H:%M&quot;</span><span class="p">),</span>\
+                 <span class="s2">&quot;run_code&quot;</span> <span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">pipe_data</span><span class="p">[</span><span class="s2">&quot;run_code&quot;</span><span class="p">]})</span>
+            
+            <span class="k">if</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pipe_data</span><span class="p">[</span><span class="s2">&quot;message&quot;</span><span class="p">]</span> <span class="o">!=</span> <span class="kc">None</span><span class="p">):</span>
+                <span class="n">logf</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;Message: </span><span class="si">%s</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">pipe_data</span><span class="p">[</span><span class="s2">&quot;message&quot;</span><span class="p">])</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">logf</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;Message: No message passed for this pipeline</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>  <span class="c1"># This is here to keep the number of header lines constant. The reason - R reading the log file for graphing!</span>
+
+            <span class="n">logf</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">Timestamp</span><span class="se">\t</span><span class="s2">Event</span><span class="se">\t</span><span class="s2">Module</span><span class="se">\t</span><span class="s2">Instance</span><span class="se">\t</span><span class="s2">Job name</span><span class="se">\t</span><span class="s2">Level</span><span class="se">\t</span><span class="s2">Host</span><span class="se">\t</span><span class="s2">Max mem</span>
+<span class="s2">&quot;&quot;&quot;</span><span class="p">)</span>
+
+                
+        <span class="c1"># Set file name for storing list of pipeline versions:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pipe_data</span><span class="p">[</span><span class="s2">&quot;version_list_file&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">pipe_data</span><span class="p">[</span><span class="s2">&quot;logs_dir&quot;</span><span class="p">],</span> <span class="s2">&quot;version_list.txt&quot;</span><span class="p">])</span>
+        <span class="c1"># Initialize log file with current datetime:</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pipe_data</span><span class="p">[</span><span class="s2">&quot;version_list_file&quot;</span><span class="p">],</span><span class="s2">&quot;a&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">logf</span><span class="p">:</span>
+            <span class="n">logf</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%s</span><span class="se">\t</span><span class="si">%s</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pipe_data</span><span class="p">[</span><span class="s2">&quot;run_code&quot;</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">pipe_data</span><span class="p">[</span><span class="s2">&quot;message&quot;</span><span class="p">]))</span>
+
+
+            
+<div class="viewcode-block" id="neatseq_flow.create_registration_file"><a class="viewcode-back" href="../Main.html#PLC_main.neatseq_flow.create_registration_file">[docs]</a>    <span class="k">def</span> <span class="nf">create_registration_file</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Set log file name in pipe_data</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pipe_data</span><span class="p">[</span><span class="s2">&quot;registration_file&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">pipe_data</span><span class="p">[</span><span class="s2">&quot;logs_dir&quot;</span><span class="p">],</span> <span class="s2">&quot;file_registration.txt&quot;</span><span class="p">])</span>
+        <span class="c1"># If file does not exist, initialize it:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pipe_data</span><span class="p">[</span><span class="s2">&quot;registration_file&quot;</span><span class="p">]):</span>
+            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pipe_data</span><span class="p">[</span><span class="s2">&quot;registration_file&quot;</span><span class="p">],</span><span class="s2">&quot;w&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">regist_f</span><span class="p">:</span>
+                <span class="n">regist_f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;# Registration of files created in this pipeline:</span>
+<span class="s2">Date</span><span class="se">\t</span><span class="s2">Step</span><span class="se">\t</span><span class="s2">Name</span><span class="se">\t</span><span class="s2">Script</span><span class="se">\t</span><span class="s2">File</span><span class="se">\t</span><span class="s2">md5sum</span><span class="se">\n</span><span class="s2"></span>
+<span class="s2">&quot;&quot;&quot;</span><span class="p">)</span></div>
+              
+              
+
+<div class="viewcode-block" id="neatseq_flow.get_dict_encoding"><a class="viewcode-back" href="../Main.html#PLC_main.neatseq_flow.get_dict_encoding">[docs]</a>    <span class="k">def</span> <span class="nf">get_dict_encoding</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Returns a dict representation of the pipeline.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="n">ret_dict</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+        <span class="n">ret_dict</span><span class="p">[</span><span class="s2">&quot;sample_data&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">sample_data</span>
+        <span class="n">ret_dict</span><span class="p">[</span><span class="s2">&quot;pipe_data&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pipe_data</span>
+        <span class="n">ret_dict</span><span class="p">[</span><span class="s2">&quot;global_params&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">param_data</span><span class="p">[</span><span class="s2">&quot;Global&quot;</span><span class="p">]</span>
+        <span class="n">ret_dict</span><span class="p">[</span><span class="s2">&quot;step_data&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="n">step</span><span class="o">.</span><span class="n">get_step_name</span><span class="p">():</span><span class="n">step</span><span class="o">.</span><span class="n">get_dict_encoding</span><span class="p">()</span> <span class="k">for</span> <span class="n">step</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">step_list</span><span class="p">}</span>
+        
+        <span class="k">return</span> <span class="n">ret_dict</span></div>
+        
+        
+<div class="viewcode-block" id="neatseq_flow.get_json_encoding"><a class="viewcode-back" href="../Main.html#PLC_main.neatseq_flow.get_json_encoding">[docs]</a>    <span class="k">def</span> <span class="nf">get_json_encoding</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Convert pipeline data into JSON format</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_dict_encoding</span><span class="p">(),</span> <span class="n">sort_keys</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">indent</span> <span class="o">=</span> <span class="mi">4</span><span class="p">,</span> <span class="n">separators</span><span class="o">=</span><span class="p">(</span><span class="s1">&#39;,&#39;</span><span class="p">,</span> <span class="s1">&#39;: &#39;</span><span class="p">))</span></div>
+        
+<div class="viewcode-block" id="neatseq_flow.get_qsub_names_json_encoding"><a class="viewcode-back" href="../Main.html#PLC_main.neatseq_flow.get_qsub_names_json_encoding">[docs]</a>    <span class="k">def</span> <span class="nf">get_qsub_names_json_encoding</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Convert qsub names dict into JSON format</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="n">dict_to_dump</span> <span class="o">=</span> <span class="p">{</span><span class="n">step</span><span class="o">.</span><span class="n">get_step_name</span><span class="p">():</span><span class="n">step</span><span class="o">.</span><span class="n">get_qsub_names_dict</span><span class="p">()</span> <span class="k">for</span> <span class="n">step</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">step_list</span><span class="p">}</span>
+        <span class="k">return</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">dict_to_dump</span><span class="p">,</span> <span class="n">sort_keys</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">indent</span> <span class="o">=</span> <span class="mi">4</span><span class="p">,</span> <span class="n">separators</span><span class="o">=</span><span class="p">(</span><span class="s1">&#39;,&#39;</span><span class="p">,</span> <span class="s1">&#39;: &#39;</span><span class="p">))</span></div>
+        
+        
+        
+<div class="viewcode-block" id="neatseq_flow.backup_source_files"><a class="viewcode-back" href="../Main.html#PLC_main.neatseq_flow.backup_source_files">[docs]</a>    <span class="k">def</span> <span class="nf">backup_source_files</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">param_file</span><span class="p">,</span> <span class="n">sample_file</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Copies the parameter and sample files for backup in &#39;backups&#39; directory</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># param_file and sample_file can be a comma separated lists, so backing up all files:</span>
+        <span class="n">filenames</span> <span class="o">=</span> <span class="n">param_file</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;,&quot;</span><span class="p">)</span>
+        <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">for</span> <span class="n">filename</span> <span class="ow">in</span> <span class="n">filenames</span><span class="p">:</span>
+            <span class="n">shutil</span><span class="o">.</span><span class="n">copyfile</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="s2">&quot;</span><span class="si">%s%s</span><span class="s2">_params_</span><span class="si">%d</span><span class="s2">.txt&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pipe_data</span><span class="p">[</span><span class="s2">&quot;backups_dir&quot;</span><span class="p">],</span> \
+                                                                <span class="bp">self</span><span class="o">.</span><span class="n">pipe_data</span><span class="p">[</span><span class="s2">&quot;run_code&quot;</span><span class="p">],</span> \
+                                                                <span class="n">i</span><span class="p">))</span>
+            <span class="n">i</span> <span class="o">+=</span> <span class="mi">1</span>
+
+        <span class="n">filenames</span> <span class="o">=</span> <span class="n">sample_file</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;,&quot;</span><span class="p">)</span>
+        <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">for</span> <span class="n">filename</span> <span class="ow">in</span> <span class="n">filenames</span><span class="p">:</span>
+            <span class="n">shutil</span><span class="o">.</span><span class="n">copyfile</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="s2">&quot;</span><span class="si">%s%s</span><span class="s2">_samples_</span><span class="si">%d</span><span class="s2">.txt&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pipe_data</span><span class="p">[</span><span class="s2">&quot;backups_dir&quot;</span><span class="p">],</span> \
+                                                                <span class="bp">self</span><span class="o">.</span><span class="n">pipe_data</span><span class="p">[</span><span class="s2">&quot;run_code&quot;</span><span class="p">],</span> \
+                                                                <span class="n">i</span><span class="p">))</span>
+            <span class="n">i</span> <span class="o">+=</span> <span class="mi">1</span>
+        
+        <span class="n">os</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">{bck_dir}{run_code}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">bck_dir</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pipe_data</span><span class="p">[</span><span class="s2">&quot;backups_dir&quot;</span><span class="p">],</span> \
+                                              <span class="n">run_code</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pipe_data</span><span class="p">[</span><span class="s2">&quot;run_code&quot;</span><span class="p">]))</span>
+        <span class="k">pass</span></div>
+
+        
+<div class="viewcode-block" id="neatseq_flow.create_js_graphic"><a class="viewcode-back" href="../Main.html#PLC_main.neatseq_flow.create_js_graphic">[docs]</a>    <span class="k">def</span> <span class="nf">create_js_graphic</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Use http://bl.ocks.org/mbostock/1153292 to make graphic of pipeline</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+ 
+        <span class="n">links_part</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="c1"># For each step, create text encoding of connection between it and all it&#39;s base steps.</span>
+        <span class="c1"># Print links_part to see what it looks like</span>
+        <span class="k">for</span> <span class="n">step</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">step_list</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">step</span><span class="o">.</span><span class="n">get_base_step_name</span><span class="p">():</span>
+                <span class="k">for</span> <span class="n">base_step</span> <span class="ow">in</span> <span class="n">step</span><span class="o">.</span><span class="n">get_base_step_list</span><span class="p">():</span>
+                    <span class="n">links_part</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;{source: </span><span class="se">\&quot;</span><span class="si">%s</span><span class="s2">(</span><span class="si">%s</span><span class="s2">)</span><span class="se">\&quot;</span><span class="s2">, target: </span><span class="se">\&quot;</span><span class="si">%s</span><span class="s2">(</span><span class="si">%s</span><span class="s2">)</span><span class="se">\&quot;</span><span class="s2">, type: </span><span class="se">\&quot;</span><span class="s2">dependency</span><span class="se">\&quot;</span><span class="s2">}&quot;</span> <span class="o">%</span> \
+                                    <span class="p">(</span><span class="n">base_step</span><span class="o">.</span><span class="n">get_step_name</span><span class="p">(),</span>\
+                                    <span class="n">base_step</span><span class="o">.</span><span class="n">get_step_step</span><span class="p">(),</span>\
+                                    <span class="n">step</span><span class="o">.</span><span class="n">get_step_name</span><span class="p">(),</span>\
+                                    <span class="n">step</span><span class="o">.</span><span class="n">get_step_step</span><span class="p">()))</span>
+        <span class="n">links_part</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">,&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">links_part</span><span class="p">)</span>
+
+        
+        <span class="n">html_text</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;&lt;!DOCTYPE html&gt;</span>
+<span class="s2">&lt;meta charset=&quot;utf-8&quot;&gt;</span>
+<span class="s2">&lt;style&gt;</span>
+
+<span class="s2">.link {</span>
+<span class="s2">  fill: none;</span>
+<span class="s2">  stroke: #666;</span>
+<span class="s2">  stroke-width: 1.5px;</span>
+<span class="s2">}</span>
+
+<span class="s2">#dependency {</span>
+<span class="s2">  fill: green;</span>
+<span class="s2">}</span>
+
+<span class="s2">.link.dependency {</span>
+<span class="s2">  stroke: green;</span>
+<span class="s2">}</span>
+
+
+<span class="s2">circle {</span>
+<span class="s2">  fill: #ccc;</span>
+<span class="s2">  stroke: #333;</span>
+<span class="s2">  stroke-width: 1.5px;</span>
+<span class="s2">}</span>
+
+<span class="s2">text {</span>
+<span class="s2">  font: 10px sans-serif;</span>
+<span class="s2">  pointer-events: none;</span>
+<span class="s2">  text-shadow: 0 1px 0 #fff, 1px 0 0 #fff, 0 -1px 0 #fff, -1px 0 0 #fff;</span>
+<span class="s2">}</span>
+
+<span class="s2">&lt;/style&gt;</span>
+<span class="s2">&lt;body&gt;</span>
+<span class="s2">&lt;script src=&quot;</span><span class="si">%(d3_loc)s</span><span class="s2">&quot;&gt;&lt;/script&gt;</span>
+<span class="s2">&lt;script&gt;</span>
+
+<span class="s2">var links = [</span>
+<span class="si">%(links_p)s</span><span class="s2">  </span>
+<span class="s2">];</span>
+
+<span class="s2">var nodes = </span><span class="si">{}</span><span class="s2">;</span>
+
+<span class="s2">// Compute the distinct nodes from the links.</span>
+<span class="s2">links.forEach(function(link) {</span>
+<span class="s2">  link.source = nodes[link.source] || (nodes[link.source] = {name: link.source});</span>
+<span class="s2">  link.target = nodes[link.target] || (nodes[link.target] = {name: link.target});</span>
+<span class="s2">});</span>
+
+<span class="s2">var width = 960,</span>
+<span class="s2">    height = 500;</span>
+
+<span class="s2">var force = d3.layout.force()</span>
+<span class="s2">    .nodes(d3.values(nodes))</span>
+<span class="s2">    .links(links)</span>
+<span class="s2">    .size([width, height])</span>
+<span class="s2">    .linkDistance(60)</span>
+<span class="s2">    .charge(-300)</span>
+<span class="s2">    .on(&quot;tick&quot;, tick)</span>
+<span class="s2">    .start();</span>
+
+<span class="s2">var svg = d3.select(&quot;body&quot;).append(&quot;svg&quot;)</span>
+<span class="s2">    .attr(&quot;width&quot;, width)</span>
+<span class="s2">    .attr(&quot;height&quot;, height);</span>
+
+<span class="s2">// Per-type markers, as they don&#39;t inherit styles.</span>
+<span class="s2">svg.append(&quot;defs&quot;).selectAll(&quot;marker&quot;)</span>
+<span class="s2">    .data([&quot;suit&quot;, &quot;dependency&quot;, &quot;resolved&quot;])</span>
+<span class="s2">  .enter().append(&quot;marker&quot;)</span>
+<span class="s2">    .attr(&quot;id&quot;, function(d) { return d; })</span>
+<span class="s2">    .attr(&quot;viewBox&quot;, &quot;0 -5 10 10&quot;)</span>
+<span class="s2">    .attr(&quot;refX&quot;, 15)</span>
+<span class="s2">    .attr(&quot;refY&quot;, -1.5)</span>
+<span class="s2">    .attr(&quot;markerWidth&quot;, 6)</span>
+<span class="s2">    .attr(&quot;markerHeight&quot;, 6)</span>
+<span class="s2">    .attr(&quot;orient&quot;, &quot;auto&quot;)</span>
+<span class="s2">  .append(&quot;path&quot;)</span>
+<span class="s2">    .attr(&quot;d&quot;, &quot;M0,-5L10,0L0,5&quot;);</span>
+
+<span class="s2">var path = svg.append(&quot;g&quot;).selectAll(&quot;path&quot;)</span>
+<span class="s2">    .data(force.links())</span>
+<span class="s2">  .enter().append(&quot;path&quot;)</span>
+<span class="s2">    .attr(&quot;class&quot;, function(d) { return &quot;link &quot; + d.type; })</span>
+<span class="s2">    .attr(&quot;marker-end&quot;, function(d) { return &quot;url(#&quot; + d.type + &quot;)&quot;; });</span>
+
+<span class="s2">var circle = svg.append(&quot;g&quot;).selectAll(&quot;circle&quot;)</span>
+<span class="s2">    .data(force.nodes())</span>
+<span class="s2">  .enter().append(&quot;circle&quot;)</span>
+<span class="s2">    .attr(&quot;r&quot;, 12)</span>
+<span class="s2">    .call(force.drag);</span>
+
+<span class="s2">// Change color of first circle to red (root of pipeline)</span>
+<span class="s2">svg.select(&quot;circle&quot;).style(&quot;fill&quot;,&quot;red&quot;)</span>
+
+<span class="s2">var text = svg.append(&quot;g&quot;).selectAll(&quot;text&quot;)</span>
+<span class="s2">    .data(force.nodes())</span>
+<span class="s2">  .enter().append(&quot;text&quot;)</span>
+<span class="s2">    .attr(&quot;x&quot;, 8)</span>
+<span class="s2">    .attr(&quot;y&quot;, &quot;.31em&quot;)</span>
+<span class="s2">    .text(function(d) { return d.name; });</span>
+
+<span class="s2">// Use elliptical arc path segments to doubly-encode directionality.</span>
+<span class="s2">function tick() {</span>
+<span class="s2">  path.attr(&quot;d&quot;, linkArc);</span>
+<span class="s2">  circle.attr(&quot;transform&quot;, transform);</span>
+<span class="s2">  text.attr(&quot;transform&quot;, transform);</span>
+<span class="s2">}</span>
+
+<span class="s2">function linkArc(d) {</span>
+<span class="s2">  var dx = d.target.x - d.source.x,</span>
+<span class="s2">      dy = d.target.y - d.source.y,</span>
+<span class="s2">      dr = Math.sqrt(dx * dx + dy * dy),</span>
+<span class="s2">      dist_ratio = 0.88;</span>
+<span class="s2">  return &quot;M&quot; + d.source.x + &quot;,&quot; + d.source.y + &quot;L&quot; + (d.source.x + dx*dist_ratio) + &quot;,&quot; + (d.source.y + dy*dist_ratio);</span>
+<span class="s2">//  return &quot;M&quot; + d.source.x + &quot;,&quot; + d.source.y + &quot;L&quot; + d.target.x + &quot;,&quot; + d.target.y;</span>
+<span class="s2">//  return &quot;M&quot; + d.source.x + &quot;,&quot; + d.source.y + &quot;A&quot; + dr + &quot;,&quot; + dr + &quot; 0 0,1 &quot; + d.target.x + &quot;,&quot; + d.target.y;</span>
+<span class="s2">}</span>
+
+<span class="s2">function transform(d) {</span>
+<span class="s2">  return &quot;translate(&quot; + d.x + &quot;,&quot; + d.y + &quot;)&quot;;</span>
+<span class="s2">}</span>
+
+<span class="s2">&lt;/script&gt;  &quot;&quot;&quot;</span> <span class="o">%</span> <span class="p">{</span><span class="s2">&quot;links_p&quot;</span><span class="p">:</span><span class="n">links_part</span><span class="p">,</span> <span class="s2">&quot;d3_loc&quot;</span><span class="p">:</span><span class="s2">&quot;https://d3js.org/d3.v3.min.js&quot;</span><span class="p">}</span>
+        
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pipe_data</span><span class="p">[</span><span class="s2">&quot;objects_dir&quot;</span><span class="p">]</span><span class="o">+</span><span class="n">os</span><span class="o">.</span><span class="n">sep</span><span class="o">+</span><span class="s2">&quot;pipeline_graph.html&quot;</span> <span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">pipejs</span><span class="p">:</span>
+            <span class="n">pipejs</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">html_text</span><span class="p">)</span></div>
+            
+            
+            
+            
+            
+    <span class="k">def</span> <span class="nf">create_log_plotter</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    
+
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pipe_data</span><span class="p">[</span><span class="s2">&quot;logs_dir&quot;</span><span class="p">]</span> <span class="o">+</span> <span class="s2">&quot;log_file_plotter.R&quot;</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">log_plot</span><span class="p">:</span>
+            <span class="n">log_plot</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;&quot;&quot; </span>
+<span class="s2">library(reshape2); library(googleVis); args &lt;- commandArgs(trailingOnly =T);log_file &lt;- read.delim(args[1],skip = 8, he=T,stringsAsFactors = F);parsed_log_file &lt;- dcast(data = log_file, formula = Module+Instance+Job.name~Event, value.var = &quot;Timestamp&quot;, fun.aggregate = function(x) x[1]);parsed_log_file$Started &lt;- as.POSIXct(parsed_log_file$Started, tz = &quot;&quot;, format=&quot;</span><span class="si">%d</span><span class="s2">/%m/%Y %H:%M:%S &quot;);parsed_log_file$Finished &lt;- as.POSIXct(parsed_log_file$Finished, tz = &quot;&quot;, format=&quot;</span><span class="si">%d</span><span class="s2">/%m/%Y %H:%M:%S &quot;);parsed_log_file &lt;- parsed_log_file[not(is.na(parsed_log_file$Finished)|is.na(parsed_log_file$Started)),];parsed_log_file &lt;- parsed_log_file[order(parsed_log_file$Started),];color_leg &lt;- substring(rainbow(length(unique(parsed_log_file$Module))),first = 1,last = 7);names(color_leg) &lt;- unique(parsed_log_file$Module);plotcolors &lt;- sprintf(&quot;[</span><span class="si">%s</span><span class="s2">]&quot;,paste(paste(&quot;&#39;&quot;,color_leg[parsed_log_file$Module],&quot;&#39;&quot;,sep=&quot;&quot;),collapse = &quot;,&quot;));Timeline &lt;- gvisTimeline(data=parsed_log_file, rowlabel=&quot;Instance&quot;, barlabel=&quot;Job.name&quot;, start=&quot;Started&quot;, end=&quot;Finished&quot;, options=list(timeline=&quot;{groupByRowLabel:false}&quot;, backgroundColor=&#39;#ffd&#39;, height=800, width=1000, colors=plotcolors));print(x = Timeline, tag=NULL, file = sprintf(&quot;</span><span class="si">%s</span><span class="s2">.html&quot;,args[1]));## https://github.com/al2na/Rmarkdown_JSviz/blob/master/googleVis.Rmd</span>
+
+
+<span class="s2">&quot;&quot;&quot;</span><span class="p">)</span>
+
+<span class="c1"># Code to add to Rscript above to convert datetime values into absolute time:</span>
+<span class="c1"># parsed_log_file$Started_numeric &lt;- as.numeric(parsed_log_file$Started);PL_start &lt;- min(parsed_log_file$Started_numeric);parsed_log_file$Started_numeric &lt;- parsed_log_file$Started_numeric - PL_start;parsed_log_file$Finished_numeric &lt;- as.numeric(parsed_log_file$Finished);parsed_log_file$Finished_numeric &lt;- parsed_log_file$Finished_numeric - PL_start;parsed_log_file$Started_numeric &lt;- parsed_log_file$Started_numeric * 1000; parsed_log_file$Finished_numeric &lt;- parsed_log_file$Finished_numeric * 1000;</span>
+
+    <span class="k">def</span> <span class="nf">create_diagrammer_graphic</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+
+        <span class="c1"># colors = &quot;darkgreen darkred firebrick4 forestgreen saddlebrown blue2 deepskyblue4 brown green1 gold4 salmon4 darkorchid4 olivedrab4 lightsalmon4 palevioletred4 palegreen4 orangered lightpink4 tomato3 orchid4&quot;</span>
+        <span class="c1"># colors = &quot;rosybrown2 lightsteelblue darkseagreen1 gray87 navajowhite lemonchiffon bisque2 mistyrose gray95 lightcyan3 peachpuff2 lightsteelblue2 thistle2 lightyellow2 moccasin antiquewhite2 gray80&quot;</span>
+        <span class="n">colors</span> <span class="o">=</span> <span class="s2">&quot;lightskyblue3 lightpink2 plum3 burlywood3 pink2 mediumturquoise darkseagreen palegreen3 aquamarine3 skyblue3 lightsteelblue darkkhaki lightseagreen rosybrown3&quot;</span>
+        <span class="n">colors</span> <span class="o">=</span> <span class="n">colors</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot; &quot;</span><span class="p">)</span>
+        <span class="n">color_counter</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">links_part</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">footnote_part</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">nodes_list</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">nodes_list_step</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">step_colors_index</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+        <span class="c1"># For each step, create text encoding of connection between it and all it&#39;s base steps.</span>
+        <span class="c1"># Print links_part to see what it looks like</span>
+        <span class="k">for</span> <span class="n">step</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">step_list</span><span class="p">:</span>
+            <span class="c1"># Add base_step to dict of nodes, if not yet existing</span>
+            <span class="k">if</span> <span class="n">step</span><span class="o">.</span><span class="n">get_step_name</span><span class="p">()</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">nodes_list</span><span class="p">:</span>
+                <span class="n">nodes_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">step</span><span class="o">.</span><span class="n">get_step_name</span><span class="p">())</span>
+                <span class="n">nodes_list_step</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">step</span><span class="o">.</span><span class="n">get_step_step</span><span class="p">())</span>
+            <span class="c1"># Storing color for step type:</span>
+            <span class="k">if</span> <span class="n">step</span><span class="o">.</span><span class="n">get_step_step</span><span class="p">()</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">step_colors_index</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+                <span class="n">step_colors_index</span><span class="p">[</span><span class="n">step</span><span class="o">.</span><span class="n">get_step_step</span><span class="p">()]</span> <span class="o">=</span> <span class="n">colors</span><span class="p">[</span><span class="n">color_counter</span><span class="p">]</span>
+                <span class="n">color_counter</span> <span class="o">=</span> <span class="p">(</span><span class="n">color_counter</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span> <span class="o">%</span> <span class="nb">len</span><span class="p">(</span><span class="n">colors</span><span class="p">)</span>
+                
+            <span class="k">if</span> <span class="n">step</span><span class="o">.</span><span class="n">get_base_step_name</span><span class="p">():</span>
+                <span class="k">for</span> <span class="n">base_step</span> <span class="ow">in</span> <span class="n">step</span><span class="o">.</span><span class="n">get_base_step_list</span><span class="p">():</span>
+                    
+                    
+                    <span class="c1"># Add base_step to dict of nodes, if not yet existing</span>
+                    <span class="k">if</span> <span class="n">base_step</span><span class="o">.</span><span class="n">get_step_name</span><span class="p">()</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">nodes_list</span><span class="p">:</span>
+                        <span class="n">nodes_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">base_step</span><span class="o">.</span><span class="n">get_step_name</span><span class="p">())</span>
+                        <span class="n">nodes_list_step</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">base_step</span><span class="o">.</span><span class="n">get_step_step</span><span class="p">())</span>
+                    <span class="c1"># Storing color for step type:</span>
+                    <span class="k">if</span> <span class="n">base_step</span><span class="o">.</span><span class="n">get_step_step</span><span class="p">()</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">step_colors_index</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+                        <span class="n">step_colors_index</span><span class="p">[</span><span class="n">base_step</span><span class="o">.</span><span class="n">get_step_step</span><span class="p">()]</span> <span class="o">=</span> <span class="n">colors</span><span class="p">[</span><span class="n">color_counter</span><span class="p">]</span>
+                        <span class="n">color_counter</span> <span class="o">=</span> <span class="p">(</span><span class="n">color_counter</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span> <span class="o">%</span> <span class="nb">len</span><span class="p">(</span><span class="n">colors</span><span class="p">)</span>
+
+                    
+                    <span class="n">links_part</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%d</span><span class="s2"> -&gt; </span><span class="si">%d</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="mi">1</span><span class="o">+</span><span class="n">nodes_list</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">base_step</span><span class="o">.</span><span class="n">get_step_name</span><span class="p">()),</span>\
+                                                    <span class="mi">1</span><span class="o">+</span><span class="n">nodes_list</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">step</span><span class="o">.</span><span class="n">get_step_name</span><span class="p">())))</span>
+                    
+                    
+                    
+                    
+        <span class="n">links_part</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">links_part</span><span class="p">)</span>
+        <span class="n">nodes_part</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="s2">&quot;</span><span class="si">%(node_num)d</span><span class="s2"> [label = &#39;@@</span><span class="si">%(node_num)d</span><span class="s2">&#39;, fillcolor = </span><span class="si">%(step_col)s</span><span class="s2">]&quot;</span> <span class="o">%</span> \
+                                <span class="p">{</span><span class="s2">&quot;node_num&quot;</span> <span class="p">:</span> <span class="mi">1</span><span class="o">+</span><span class="n">counter</span><span class="p">,</span>  \
+                                 <span class="s2">&quot;step_col&quot;</span> <span class="p">:</span> <span class="n">step_colors_index</span><span class="p">[</span><span class="n">nodes_list_step</span><span class="p">[</span><span class="n">counter</span><span class="p">]]}</span> \
+                                    <span class="k">for</span> <span class="n">counter</span><span class="p">,</span><span class="n">step</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">nodes_list</span><span class="p">)])</span>
+        <span class="n">footnote_part</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="s2">&quot;[</span><span class="si">%d</span><span class="s2">]: &#39;</span><span class="si">%s</span><span class="se">\\\\</span><span class="s2">n(</span><span class="si">%s</span><span class="s2">)&#39;&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="mi">1</span><span class="o">+</span><span class="n">counter</span><span class="p">,</span> <span class="n">step</span><span class="p">,</span> <span class="n">nodes_list_step</span><span class="p">[</span><span class="n">counter</span><span class="p">])</span> \
+                                    <span class="k">for</span> <span class="n">counter</span><span class="p">,</span><span class="n">step</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">nodes_list</span><span class="p">)])</span>
+        
+        <span class="n">Gviz_text</span> <span class="o">=</span>  <span class="s2">&quot;&quot;&quot;</span>
+<span class="s2"># Check if required packages are installed:</span>
+<span class="s2">if(not(all(c(&quot;DiagrammeR&quot;,&quot;htmlwidgets&quot;) </span><span class="si">%%</span><span class="s2">in</span><span class="si">%%</span><span class="s2"> installed.packages()))) {</span>
+<span class="s2">    cat(&quot;&#39;DiagrammeR&#39; and &#39;htmlwidgets&#39; are not installed.</span><span class="se">\n</span><span class="s2">You must install them for this script to work!</span><span class="se">\n</span><span class="s2">Install by running the following commands:</span><span class="se">\n</span><span class="s2">install.packages(&#39;DiagrammeR&#39;)</span><span class="se">\n</span><span class="s2">install.packages(&#39;htmlwidgets&#39;)&quot;)</span>
+<span class="s2">}</span>
+<span class="s2">library(DiagrammeR)</span>
+<span class="s2">library(htmlwidgets)        </span>
+<span class="s2">        </span>
+<span class="s2">        </span>
+<span class="s2">myviz &lt;- grViz(&quot;</span>
+<span class="s2">digraph a_nice_graph {</span>
+<span class="s2">      </span>
+<span class="s2">      # node definitions with substituted label text</span>
+<span class="s2">      node [shape = egg, style = filled, fontname = Helvetica]</span>
+<span class="s2">      </span><span class="si">%(nodes_p)s</span><span class="s2"></span>
+<span class="s2">      </span>
+<span class="s2">      # edge definitions with the node IDs</span>
+<span class="s2">      </span><span class="si">%(links_p)s</span><span class="s2"></span>
+<span class="s2">      }</span>
+
+<span class="s2">      </span><span class="si">%(foot_p)s</span><span class="s2"></span>
+<span class="s2">      &quot;)</span>
+<span class="s2">      </span>
+<span class="s2">      saveWidget(myviz,file = &quot;</span><span class="si">%(out_file_name)s</span><span class="s2">&quot;,selfcontained = F)</span>
+<span class="s2">      </span>
+<span class="s2">&quot;&quot;&quot;</span> <span class="o">%</span> <span class="p">{</span> <span class="s2">&quot;nodes_p&quot;</span> <span class="p">:</span> <span class="n">nodes_part</span><span class="p">,</span>
+        <span class="s2">&quot;links_p&quot;</span> <span class="p">:</span> <span class="n">links_part</span><span class="p">,</span>
+        <span class="s2">&quot;foot_p&quot;</span>  <span class="p">:</span> <span class="n">footnote_part</span><span class="p">,</span>
+        <span class="s2">&quot;out_file_name&quot;</span> <span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">pipe_data</span><span class="p">[</span><span class="s2">&quot;objects_dir&quot;</span><span class="p">]</span> <span class="o">+</span> <span class="s2">&quot;workflow_graph.html&quot;</span><span class="p">}</span>
+        
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pipe_data</span><span class="p">[</span><span class="s2">&quot;objects_dir&quot;</span><span class="p">]</span> <span class="o">+</span> <span class="s2">&quot;diagrammer.R&quot;</span> <span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">diagrammer</span><span class="p">:</span>
+            <span class="n">diagrammer</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">Gviz_text</span><span class="p">)</span></div>
+                
+                
+                
+    <span class="c1"># def convert_data_to_YAML(self):</span>
+        <span class="c1"># &quot;&quot;&quot; Export all sample and param data in YAML format.</span>
+        
+        <span class="c1"># &quot;&quot;&quot;</span>
+
+        <span class="c1"># param_yaml = yaml.dump({&quot;Global_params&quot;:self.param_data.pop(&quot;Global&quot;)},default_flow_style = False, indent = 4)</span>
+
+        <span class="c1"># endparams = {}</span>
+        <span class="c1"># for step in self.step_list:</span>
+        
+            <span class="c1"># # Renaming &quot;redir_params&quot; to &quot;redirects&quot; if exists and is not empty.            </span>
+            <span class="c1"># # &#39;redir_params&#39; always exists. If empty, removing. Else, changing ro &#39;redirects&#39;</span>
+            <span class="c1"># if step.params[&quot;redir_params&quot;]:</span>
+                <span class="c1"># step.params[&quot;redirects&quot;] = step.params.pop(&quot;redir_params&quot;)</span>
+            <span class="c1"># else:</span>
+                <span class="c1"># step.params.pop(&quot;redir_params&quot;)</span>
+                
+            <span class="c1"># # Removing depend_list which is the only element in the param_data dict that does not appear in the param file:</span>
+            <span class="c1"># step.params.pop(&quot;depend_list&quot;)</span>
+            
+            <span class="c1"># # Removing empty node indicators from step</span>
+            <span class="c1"># if not step.params[&quot;qsub_params&quot;][&quot;node&quot;]:</span>
+                <span class="c1"># step.params[&quot;qsub_params&quot;].pop(&quot;node&quot;)</span>
+            <span class="c1"># # Removing qstat_path when using default</span>
+            <span class="c1"># if step.params[&quot;qsub_params&quot;][&quot;qstat_path&quot;] in [&quot;qstat&quot;,self.pipe_data[&quot;qsub_params&quot;][&quot;qstat_path&quot;]]:</span>
+                <span class="c1"># step.params[&quot;qsub_params&quot;].pop(&quot;qstat_path&quot;)</span>
+            <span class="c1"># # Removing queue when using default</span>
+            <span class="c1"># if step.params[&quot;qsub_params&quot;][&quot;queue&quot;] == self.pipe_data[&quot;qsub_params&quot;][&quot;queue&quot;]:</span>
+                <span class="c1"># step.params[&quot;qsub_params&quot;].pop(&quot;queue&quot;)</span>
+            <span class="c1"># step.params[&quot;module&quot;] = step.get_step_step()</span>
+            <span class="c1"># # Converting single base from list to string:</span>
+            <span class="c1"># if &quot;base&quot; in step.params and len(step.params[&quot;base&quot;])==1:</span>
+                <span class="c1"># step.params[&quot;base&quot;] = step.params[&quot;base&quot;][0]</span>
+            <span class="c1"># # Adding step number to step name.</span>
+            <span class="c1"># # This is a workaround to output steps in working order.</span>
+            <span class="c1"># # The numbers can be removed with a simple RE (&#39;\s{4}\d+\.&#39; replace with 4 spaces) in notepad++</span>
+            <span class="c1"># new_step_name = &quot;%s.%s&quot; % (step.step_number, step.get_step_name())</span>
+            <span class="c1"># endparams[new_step_name] = step.params</span>
+            <span class="c1"># # temp_yaml = yaml.dump({step.get_step_name():step.params},default_flow_style=False)</span>
+            
+            
+        <span class="c1"># param_yaml += yaml.dump({&quot;Step_params&quot;:endparams},default_flow_style = False, indent = 4)</span>
+
+        <span class="c1"># import re</span>
+        <span class="c1"># param_yaml = re.sub(pattern = &#39;\s{4}\d+\.&#39;, repl = &#39;    &#39;, string = param_yaml)</span>
+        
+        <span class="c1"># # print param_yaml</span>
+        <span class="c1"># print &quot;Param data converted to YAML format in file: \n%s&quot; % self.pipe_data[&quot;objects_dir&quot;]+&quot;param_data.yaml&quot;</span>
+        <span class="c1"># with open(self.pipe_data[&quot;objects_dir&quot;]+&quot;param_data.yaml&quot;,&quot;w&quot;) as yaml_fh:</span>
+            <span class="c1"># yaml_fh.write(param_yaml)</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2017, Menachem Sklarz.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../',
+            VERSION:'1.1.0',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="../_static/jquery.js"></script>
+      <script type="text/javascript" src="../_static/underscore.js"></script>
+      <script type="text/javascript" src="../_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

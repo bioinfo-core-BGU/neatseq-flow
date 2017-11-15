@@ -1,0 +1,326 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Output directory structure &mdash; neatseq_flow 1.1.0 documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="genindex.html"/>
+        <link rel="search" title="Search" href="search.html"/>
+    <link rel="top" title="neatseq_flow 1.1.0 documentation" href="index.html"/>
+        <link rel="next" title="For the programmer - Adding modules" href="06.addnew_module.html"/>
+        <link rel="prev" title="Building a workflow" href="02.build_WF.html"/> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="index.html" class="icon icon-home"> neatseq_flow
+          
+
+          
+            
+            <img src="_static/NeatSeq_Flow_logo.png" class="logo" />
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.1.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+                <p class="caption"><span class="caption-text">Detailed documentation</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="01.concept.html">NeatSeq-Flow concept</a></li>
+<li class="toctree-l1"><a class="reference internal" href="02.build_WF.html">Building a workflow</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Output directory structure</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#the-main-directory-structure">The main directory structure</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#the-scripts-directory">The scripts directory</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#the-data-directory">The data directory</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#the-backup-directory">The backup directory</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#the-logs-directory">The logs directory</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#the-stderr-and-stdout-directories">The stderr and stdout directories</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#the-objects-directory">The objects directory</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="06.addnew_module.html">For the programmer - Adding modules</a></li>
+<li class="toctree-l1"><a class="reference internal" href="07.monitor.html">Monitor docs</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="index.html">neatseq_flow</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+ 
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="index.html">Docs</a> &raquo;</li>
+      
+    <li>Output directory structure</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="_sources/03.output.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="output-directory-structure">
+<h1>Output directory structure<a class="headerlink" href="#output-directory-structure" title="Permalink to this headline">¶</a></h1>
+<p><strong>Author:</strong> Menachem Sklarz</p>
+<p><strong>Affiliation:</strong> <a class="reference external" href="http://bioinfo.bgu.ac.il/bsu/index.htm">Bioinformatics Core Facility</a>, <a class="reference external" href="http://in.bgu.ac.il/en/nibn/Pages/default.aspx">National institute of Biotechnology in the Negev</a>, Ben-Gurion University</p>
+<div class="contents local topic" id="table-of-contents">
+<p class="topic-title first">Table of Contents</p>
+<ul class="simple">
+<li><a class="reference internal" href="#the-main-directory-structure" id="id8">The main directory structure</a></li>
+<li><a class="reference internal" href="#the-scripts-directory" id="id9">The scripts directory</a></li>
+<li><a class="reference internal" href="#the-data-directory" id="id10">The data directory</a></li>
+<li><a class="reference internal" href="#the-backup-directory" id="id11">The backup directory</a></li>
+<li><a class="reference internal" href="#the-logs-directory" id="id12">The logs directory</a></li>
+<li><a class="reference internal" href="#the-stderr-and-stdout-directories" id="id13">The stderr and stdout directories</a></li>
+<li><a class="reference internal" href="#the-objects-directory" id="id14">The objects directory</a></li>
+</ul>
+</div>
+<div class="section" id="the-main-directory-structure">
+<h2><a class="toc-backref" href="#table-of-contents">The main directory structure</a><a class="headerlink" href="#the-main-directory-structure" title="Permalink to this headline">¶</a></h2>
+<p>The directories are elaborated on below.</p>
+<div class="figure align-center" id="id1">
+<a class="reference internal image-reference" href="_images/image003.png"><img alt="NeatSeq-Flow dir structure" src="_images/image003.png" style="width: 134.0px; height: 178.0px;" /></a>
+<p class="caption"><span class="caption-text">The directory structure created by <strong>NeatSeq-Flow</strong></span></p>
+</div>
+</div>
+<div class="section" id="the-scripts-directory">
+<h2><a class="toc-backref" href="#table-of-contents">The scripts directory</a><a class="headerlink" href="#the-scripts-directory" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li>Executing <code class="docutils literal"><span class="pre">csh</span> <span class="pre">00.pipe.commands.csh</span></code> will execute the entire workflow.</li>
+<li>The scripts beginning <code class="docutils literal"><span class="pre">01.merge…</span></code> etc. execute entire steps.</li>
+<li>The actual scripts running each step per sample or on the entire project are contained in the equivalent directories <code class="docutils literal"><span class="pre">01.merge…</span></code> etc.</li>
+<li>The scripts are numbered by execution order (see <code class="docutils literal"><span class="pre">00.pipe.commands.csh</span></code>)</li>
+</ul>
+<div class="figure align-center" id="id2">
+<a class="reference internal image-reference" href="_images/image005.png"><img alt="Structure of script directory" src="_images/image005.png" style="width: 329.0px; height: 495.0px;" /></a>
+<p class="caption"><span class="caption-text">The scripts directory created by <strong>NeatSeq-Flow</strong></span></p>
+</div>
+</div>
+<div class="section" id="the-data-directory">
+<h2><a class="toc-backref" href="#table-of-contents">The data directory</a><a class="headerlink" href="#the-data-directory" title="Permalink to this headline">¶</a></h2>
+<p>In the data directory, the analysis outputs are organized by module, by module instance and by sample.</p>
+<p>Below is the data directory for the example, showing the tree organization for the bowtie2_mapper and Multiqc modules.</p>
+<div class="figure align-center" id="id3">
+<a class="reference internal image-reference" href="_images/image007.png"><img alt="Structure of script directory" src="_images/image007.png" style="width: 211.0px; height: 256.0px;" /></a>
+<p class="caption"><span class="caption-text">The data directory created by <strong>NeatSeq-Flow</strong>, showing the tree organization.</span></p>
+</div>
+</div>
+<div class="section" id="the-backup-directory">
+<h2><a class="toc-backref" href="#table-of-contents">The backup directory</a><a class="headerlink" href="#the-backup-directory" title="Permalink to this headline">¶</a></h2>
+<p>The backup directory contains a history of workflow sample and parameter files.</p>
+<div class="figure align-center" id="id4">
+<a class="reference internal image-reference" href="_images/image008.png"><img alt="Structure of script directory" src="_images/image008.png" style="width: 199.0px; height: 276.0px;" /></a>
+<p class="caption"><span class="caption-text">The backups directory created by <strong>NeatSeq-Flow</strong></span></p>
+</div>
+</div>
+<div class="section" id="the-logs-directory">
+<h2><a class="toc-backref" href="#table-of-contents">The logs directory</a><a class="headerlink" href="#the-logs-directory" title="Permalink to this headline">¶</a></h2>
+<p>The logs directory contains various logging files:</p>
+<ol class="arabic simple">
+<li><strong>version_list</strong>. A list of all the versions of the workflow with equivalent comments</li>
+<li><strong>file_registration</strong>. A list of files produced, including md5 signatures, and the script and workflow version that produced them</li>
+<li><code class="docutils literal"><span class="pre">log_file_plotter.R</span></code>. An R script for producing a plot of the execution times. (Run with Rscript and receives a single argument – a log file to plot)</li>
+<li><code class="docutils literal"><span class="pre">log_&lt;workflow_ID&gt;.txt</span></code>. Log of the execution times of the script per workflow version ID.</li>
+<li><code class="docutils literal"><span class="pre">log_&lt;workflow_ID&gt;.txt.html</span></code>. Graphical representation of the progress of the WF execution, as produced by the <code class="docutils literal"><span class="pre">log_file_plotter.R</span></code> script (see figure below)</li>
+</ol>
+<div class="figure align-center" id="id5">
+<a class="reference internal image-reference" href="_images/image009.png"><img alt="log directory" src="_images/image009.png" style="width: 188.0px; height: 240.0px;" /></a>
+<p class="caption"><span class="caption-text">The logs directory created by <strong>NeatSeq-Flow</strong></span></p>
+</div>
+<div class="figure align-center" id="id6">
+<a class="reference internal image-reference" href="_images/image010.png"><img alt="log directory" src="_images/image010.png" style="width: 1008.0px; height: 784.0px;" /></a>
+<p class="caption"><span class="caption-text">A graphical representation of the workflow execution.</span></p>
+</div>
+</div>
+<div class="section" id="the-stderr-and-stdout-directories">
+<h2><a class="toc-backref" href="#table-of-contents">The stderr and stdout directories</a><a class="headerlink" href="#the-stderr-and-stdout-directories" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li>The stderr and stdout directories store the script standard error and outputs, respectively.</li>
+<li>These are stored in files containing the module name, module instance, sample name, workflow ID and cluster job ID.</li>
+</ul>
+</div>
+<div class="section" id="the-objects-directory">
+<h2><a class="toc-backref" href="#table-of-contents">The objects directory</a><a class="headerlink" href="#the-objects-directory" title="Permalink to this headline">¶</a></h2>
+<p>The objects directory contains various files describing the workflow:</p>
+<div class="figure align-center" id="id7">
+<a class="reference internal image-reference" href="_images/image014.png"><img alt="log directory" src="_images/image014.png" style="width: 164.0px; height: 106.0px;" /></a>
+<p class="caption"><span class="caption-text">The objects directory created by <strong>NeatSeq-Flow</strong></span></p>
+</div>
+<ol class="arabic simple">
+<li><code class="docutils literal"><span class="pre">pipeline_graph.html</span></code>: An SVG diagram of the workflow.</li>
+</ol>
+<div class="figure align-center">
+<a class="reference internal image-reference" href="_images/pipeline_graph_old.PNG"><img alt="log directory" src="_images/pipeline_graph_old.PNG" style="width: 995.0px; height: 549.0px;" /></a>
+</div>
+<ol class="arabic simple" start="2">
+<li><code class="docutils literal"><span class="pre">diagrammer.R</span></code>: an R script for producing a DiagrammeR diagram of the workflow.</li>
+<li><code class="docutils literal"><span class="pre">pipedata.json</span></code>: A JSON file containing all the workflow data, for uploading to JSON compliant databases etc.</li>
+<li><code class="docutils literal"><span class="pre">workflow_graph.html</span></code> is the output from executing <code class="docutils literal"><span class="pre">Rscript</span> <span class="pre">diagrammer.R</span></code>.</li>
+</ol>
+<div class="figure align-center">
+<a class="reference internal image-reference" href="_images/workflow_graph.PNG"><img alt="log directory" src="_images/workflow_graph.PNG" style="width: 1081.0px; height: 761.0px;" /></a>
+</div>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">The <code class="docutils literal"><span class="pre">diagrammer.R</span></code> script requires installing the <code class="docutils literal"><span class="pre">DiagrammeR</span></code> and <code class="docutils literal"><span class="pre">htmlwidgets</span></code> R packages.</p>
+</div>
+</div>
+</div>
+
+
+           </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="06.addnew_module.html" class="btn btn-neutral float-right" title="For the programmer - Adding modules" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="02.build_WF.html" class="btn btn-neutral" title="Building a workflow" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2017, Menachem Sklarz.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'./',
+            VERSION:'1.1.0',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="_static/jquery.js"></script>
+      <script type="text/javascript" src="_static/underscore.js"></script>
+      <script type="text/javascript" src="_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

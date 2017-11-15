@@ -1,0 +1,1340 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>PLC_step &mdash; neatseq_flow 1.1.0 documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="../genindex.html"/>
+        <link rel="search" title="Search" href="../search.html"/>
+    <link rel="top" title="neatseq_flow 1.1.0 documentation" href="../index.html"/>
+        <link rel="up" title="Module code" href="index.html"/> 
+
+  
+  <script src="../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> neatseq_flow
+          
+
+          
+            
+            <img src="../_static/NeatSeq_Flow_logo.png" class="logo" />
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.1.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+                <p class="caption"><span class="caption-text">Detailed documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../01.concept.html">NeatSeq-Flow concept</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../02.build_WF.html">Building a workflow</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../03.output.html">Output directory structure</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../06.addnew_module.html">For the programmer - Adding modules</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../07.monitor.html">NeatSeq-Flow Monitor</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="../index.html">neatseq_flow</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../index.html">Docs</a> &raquo;</li>
+      
+          <li><a href="index.html">Module code</a> &raquo;</li>
+      
+    <li>PLC_step</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for PLC_step</h1><div class="highlight"><pre>
+<span></span>
+<span class="sd">&quot;&quot;&quot; A class defining a step in the pipeline.</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">os</span><span class="o">,</span> <span class="nn">shutil</span><span class="o">,</span> <span class="nn">sys</span><span class="o">,</span> <span class="nn">re</span>
+<span class="kn">import</span> <span class="nn">traceback</span>
+<span class="kn">import</span> <span class="nn">datetime</span>
+
+
+<span class="kn">from</span> <span class="nn">copy</span> <span class="k">import</span> <span class="o">*</span>
+<span class="kn">from</span> <span class="nn">pprint</span> <span class="k">import</span> <span class="n">pprint</span> <span class="k">as</span> <span class="n">pp</span>
+
+<span class="n">__author__</span> <span class="o">=</span> <span class="s2">&quot;Menachem Sklarz&quot;</span>
+<span class="n">__version__</span> <span class="o">=</span> <span class="s2">&quot;1.1.0&quot;</span>
+
+
+
+<div class="viewcode-block" id="AssertionExcept"><a class="viewcode-back" href="../Step.html#PLC_step.AssertionExcept">[docs]</a><span class="k">class</span> <span class="nc">AssertionExcept</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;A class to be raised by modules failing at assertions</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">comment</span> <span class="o">=</span> <span class="s2">&quot;Unknown problem&quot;</span><span class="p">,</span> <span class="n">sample</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;initializize with error comment and sample, if exists)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sample</span> <span class="o">=</span> <span class="n">sample</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">comment</span> <span class="o">=</span> <span class="n">comment</span>
+        
+    <span class="k">def</span> <span class="nf">get_error_str</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">step_name</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">sample</span><span class="p">:</span> <span class="c1"># If a sample was passed. The exception is specific to a sample</span>
+            <span class="k">return</span> <span class="s2">&quot;ERROR  : In </span><span class="si">%s</span><span class="s2"> (sample </span><span class="si">%s</span><span class="s2">): </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">step_name</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">sample</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">comment</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>       
+            <span class="k">return</span> <span class="s2">&quot;ERROR  : In </span><span class="si">%s</span><span class="s2">: </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">step_name</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">comment</span><span class="p">)</span></div>
+        
+
+<div class="viewcode-block" id="Step"><a class="viewcode-back" href="../Step.html#PLC_step.Step">[docs]</a><span class="k">class</span> <span class="nc">Step</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot; A class that defines a pipeline step name (=instance).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">Cwd</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="n">__file__</span><span class="p">))</span>
+
+<div class="viewcode-block" id="Step.find_step_module"><a class="viewcode-back" href="../Step.html#PLC_step.Step.find_step_module">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">find_step_module</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">step</span><span class="p">,</span><span class="n">param_data</span><span class="p">,</span> <span class="n">pipe_data</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; A class method for finding the location of a module for a given step</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># Searching module paths passed by user in parameter file:</span>
+        <span class="k">if</span> <span class="s2">&quot;module_path&quot;</span> <span class="ow">in</span> <span class="n">param_data</span><span class="p">[</span><span class="s2">&quot;Global&quot;</span><span class="p">]:</span>
+            <span class="k">for</span> <span class="n">module_path_raw</span> <span class="ow">in</span> <span class="n">param_data</span><span class="p">[</span><span class="s2">&quot;Global&quot;</span><span class="p">][</span><span class="s2">&quot;module_path&quot;</span><span class="p">]:</span><span class="c1">#.split(&quot; &quot;):</span>
+                <span class="c1"># Remove trainling &#39;/&#39; from dir name. For some reason that botches things up!</span>
+                <span class="n">module_path</span> <span class="o">=</span> <span class="n">module_path_raw</span><span class="o">.</span><span class="n">rstrip</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">sep</span><span class="p">)</span>
+
+                <span class="c1"># Expanding &#39;~&#39; and returning full path </span>
+                <span class="n">module_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">realpath</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">expanduser</span><span class="p">(</span><span class="n">module_path</span><span class="p">))</span>
+                
+
+                <span class="c1"># Check the dir exists:</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="n">module_path</span><span class="p">):</span>
+                    <span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;Path </span><span class="si">%s</span><span class="s2"> from module_path does not exist. Skipping...</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">module_path</span><span class="p">)</span>
+                    <span class="k">continue</span>
+                    
+                <span class="n">mod_t</span> <span class="o">=</span> <span class="n">step</span>
+                <span class="n">dir_generator</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">walk</span><span class="p">(</span><span class="n">module_path</span><span class="p">)</span>       <span class="c1"># Each .next call on this generator returns a level tuple as follows:</span>
+                <span class="n">level</span> <span class="o">=</span> <span class="n">dir_generator</span><span class="o">.</span><span class="n">next</span><span class="p">()</span>           <span class="c1"># level is a tuple with: (current dir. [list of dirs],[list of files])</span>
+                <span class="k">while</span><span class="p">(</span><span class="n">mod_t</span> <span class="o">+</span> <span class="s2">&quot;.py&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">level</span><span class="p">[</span><span class="mi">2</span><span class="p">]):</span>     <span class="c1"># Repeat while expected filename is NOT in current dir contents (=level[2]. see above)</span>
+                    <span class="k">try</span><span class="p">:</span>
+                        <span class="n">level</span> <span class="o">=</span> <span class="n">dir_generator</span><span class="o">.</span><span class="n">next</span><span class="p">()</span>    <span class="c1"># Try getting another level    </span>
+                    <span class="k">except</span> <span class="ne">StopIteration</span><span class="p">:</span>
+<span class="c1">#                        print &quot;Step %s not found in path %s.&quot; % (mod_t,module_path)</span>
+                        <span class="k">break</span> <span class="c1"># Leave while without executing &quot;else&quot;</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="c1"># Adding module_path to search path</span>
+                    <span class="k">if</span> <span class="n">module_path</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="p">:</span>
+                        <span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="n">module_path</span><span class="p">))</span>
+
+                    <span class="c1"># For what this does, see below (# Build module name)...</span>
+
+                    <span class="c1"># Backup module to backups dir:</span>
+                    <span class="n">shutil</span><span class="o">.</span><span class="n">copyfile</span><span class="p">(</span><span class="n">level</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="n">os</span><span class="o">.</span><span class="n">sep</span> <span class="o">+</span> <span class="n">mod_t</span> <span class="o">+</span> <span class="s2">&quot;.py&quot;</span><span class="p">,</span> \
+                        <span class="s2">&quot;</span><span class="si">{bck_dir}{runcode}{ossep}{filename}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">bck_dir</span> <span class="o">=</span> <span class="n">pipe_data</span><span class="p">[</span><span class="s2">&quot;backups_dir&quot;</span><span class="p">],</span> \
+                                                                     <span class="n">runcode</span> <span class="o">=</span> <span class="n">pipe_data</span><span class="p">[</span><span class="s2">&quot;run_code&quot;</span><span class="p">],</span> \
+                                                                     <span class="n">ossep</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">sep</span><span class="p">,</span> \
+                                                                     <span class="n">filename</span> <span class="o">=</span> <span class="n">mod_t</span> <span class="o">+</span> <span class="s2">&quot;.py&quot;</span><span class="p">))</span>
+                    <span class="n">retval</span> <span class="o">=</span> <span class="p">(</span><span class="n">level</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">module_path</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">partition</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">sep</span><span class="p">)[</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">sep</span><span class="p">,</span><span class="s2">&quot;.&quot;</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;.&quot;</span> <span class="o">+</span> <span class="n">mod_t</span><span class="p">)</span><span class="o">.</span><span class="n">lstrip</span><span class="p">(</span><span class="s2">&quot;.&quot;</span><span class="p">)</span>
+                    <span class="k">return</span> <span class="n">retval</span>
+
+
+        <span class="c1"># If not found, do the same with self.Cwd:</span>
+        <span class="n">mod_t</span> <span class="o">=</span> <span class="n">step</span>
+        <span class="n">dir_generator</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">walk</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Cwd</span><span class="p">)</span>       <span class="c1"># Each .next call on this generator returns a level tuple as follows:</span>
+        <span class="n">level</span> <span class="o">=</span> <span class="n">dir_generator</span><span class="o">.</span><span class="n">next</span><span class="p">()</span>           <span class="c1"># level is a tuple with: (current dir. [list of dirs],[list of files])</span>
+        <span class="k">while</span><span class="p">(</span><span class="n">mod_t</span> <span class="o">+</span> <span class="s2">&quot;.py&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">level</span><span class="p">[</span><span class="mi">2</span><span class="p">]):</span>     <span class="c1"># Repeat while expected filename is NOT in current dir contents (=level[2]. see above)</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">level</span> <span class="o">=</span> <span class="n">dir_generator</span><span class="o">.</span><span class="n">next</span><span class="p">()</span>    <span class="c1"># Try getting another level    </span>
+            <span class="k">except</span> <span class="ne">StopIteration</span><span class="p">:</span>
+                <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="s2">&quot;Step </span><span class="si">%s</span><span class="s2"> not found in regular path or user defined paths.&quot;</span> <span class="o">%</span> <span class="n">mod_t</span><span class="p">)</span>
+        
+        <span class="c1"># Build module name:</span>
+        <span class="c1"># 1. take dir found in search</span>
+        <span class="c1"># 2. split it by CWD and take 2nd part,  i.e. remove cwd from dir name...</span>
+        <span class="c1"># 3. partition by os.sep to remove leading os.sep</span>
+        <span class="c1"># 4. replace remaining os.sep&#39;s by &quot;.&quot;. </span>
+        <span class="c1"># 5. Add .</span>
+        
+        <span class="c1"># Backup module to backups dir:</span>
+        <span class="n">shutil</span><span class="o">.</span><span class="n">copyfile</span><span class="p">(</span><span class="n">level</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="n">os</span><span class="o">.</span><span class="n">sep</span> <span class="o">+</span> <span class="n">mod_t</span> <span class="o">+</span> <span class="s2">&quot;.py&quot;</span><span class="p">,</span> \
+                        <span class="s2">&quot;</span><span class="si">{bck_dir}{runcode}{ossep}{filename}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">bck_dir</span> <span class="o">=</span> <span class="n">pipe_data</span><span class="p">[</span><span class="s2">&quot;backups_dir&quot;</span><span class="p">],</span> \
+                                                                     <span class="n">runcode</span> <span class="o">=</span> <span class="n">pipe_data</span><span class="p">[</span><span class="s2">&quot;run_code&quot;</span><span class="p">],</span> \
+                                                                     <span class="n">ossep</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">sep</span><span class="p">,</span> \
+                                                                     <span class="n">filename</span> <span class="o">=</span> <span class="n">mod_t</span> <span class="o">+</span> <span class="s2">&quot;.py&quot;</span><span class="p">))</span>
+        <span class="n">retval</span> <span class="o">=</span> <span class="n">level</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Cwd</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">partition</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">sep</span><span class="p">)[</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">sep</span><span class="p">,</span><span class="s2">&quot;.&quot;</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;.&quot;</span> <span class="o">+</span> <span class="n">mod_t</span>
+        <span class="k">return</span> <span class="n">retval</span></div>
+        <span class="c1"># return level[0].split(self.Cwd)[1].partition(os.sep)[2].replace(os.sep,&quot;.&quot;) + &quot;.&quot; + mod_t</span>
+
+        
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">name</span><span class="p">,</span><span class="n">step_type</span><span class="p">,</span><span class="n">params</span><span class="p">,</span><span class="n">pipe_data</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; should not be used. only specific step inits should be called. </span>
+<span class="sd">            Maybe a default init can be defined as well. check.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">name</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">step</span> <span class="o">=</span> <span class="n">step_type</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">params</span> <span class="o">=</span> <span class="n">params</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pipe_data</span> <span class="o">=</span> <span class="n">pipe_data</span>
+        
+        <span class="c1">###### Place for testing parameters:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s2">&quot;script_path&quot;</span><span class="p">]</span>
+        <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+            <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="s2">&quot;You must supply a script_path parameter in </span><span class="si">%s</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">base_dir</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pipe_data</span><span class="p">[</span><span class="s2">&quot;data_dir&quot;</span><span class="p">]</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">step</span> <span class="o">+</span> <span class="n">os</span><span class="o">.</span><span class="n">sep</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">+</span> <span class="n">os</span><span class="o">.</span><span class="n">sep</span>
+        <span class="c1"># Move to general init function:</span>
+        <span class="c1"># Make dir for $qsub_name results</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">base_dir</span><span class="p">):</span>
+            <span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;Making dir for results of </span><span class="si">%s</span><span class="s2"> at </span><span class="si">%s</span><span class="s2"> </span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">base_dir</span><span class="p">))</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">base_dir</span><span class="p">)</span> 
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">pass</span>
+            <span class="c1"># TODO: Do the following only if verbose is set:</span>
+            <span class="c1"># sys.stderr.write(&quot;Dir %s exists for results of %s \n&quot; % (self.base_dir,self.name))</span>
+
+            
+        <span class="c1"># Setting qsub options in step parameters:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">manage_qsub_opts</span><span class="p">()</span>
+       
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">jid_list</span> <span class="o">=</span> <span class="p">[]</span>      <span class="c1"># Initialize a list to store the list of jids of the current step</span>
+        
+        <span class="c1"># The following line defines A list of jids from current step that all other steps should depend on.</span>
+        <span class="c1"># Is used to add a prelimanry step, equivalent to the &quot;wrapping up&quot; step that is dependent on all previous scripts</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">preliminary_jids</span> <span class="o">=</span><span class="p">[]</span>  
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">skip_scripts</span> <span class="o">=</span> <span class="kc">False</span>   <span class="c1"># This is supposed to enable steps to avoid script building by setting to True.</span>
+                                    <span class="c1"># See for example del_type and move_type</span>
+
+        <span class="c1"># Catch exceptions of type AssertionExcept raised by the specific initiation code</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">step_specific_init</span><span class="p">()</span>
+        <span class="k">except</span> <span class="n">AssertionExcept</span> <span class="k">as</span> <span class="n">assertErr</span><span class="p">:</span>
+            <span class="nb">print</span> <span class="n">assertErr</span><span class="o">.</span><span class="n">get_error_str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_step_name</span><span class="p">())</span>
+            <span class="k">raise</span>
+        
+        
+        <span class="c1"># Create a list for filenames to register with md5sum for each script:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">stamped_files</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
+        <span class="c1"># self.stamped_dirs = list()</span>
+
+        <span class="c1"># Create a dictionary storing the step name and names of sub-scripts</span>
+        <span class="c1"># Will then be queried by main to create a general dictionary which can be written to json and used for remote run monitor</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">qsub_names_dict</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+
+
+                                    
+    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Print a summary of the class: name, step and depend list</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="k">return</span> <span class="s2">&quot;Name: </span><span class="si">%(name)s</span><span class="se">\n</span><span class="s2">Step: </span><span class="si">%(step)s</span><span class="se">\n</span><span class="s2">Base </span><span class="si">%(base)s</span><span class="se">\n</span><span class="s2">Dependencies </span><span class="si">%(depends)s</span><span class="s2">&quot;</span> <span class="o">%</span> \
+                <span class="p">{</span><span class="s2">&quot;name&quot;</span>   <span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> \
+                <span class="s2">&quot;step&quot;</span>    <span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">step</span><span class="p">,</span> \
+                <span class="s2">&quot;base&quot;</span>    <span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_base_step_list</span><span class="p">,</span> \
+                <span class="s2">&quot;depends&quot;</span> <span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_depend_list</span><span class="p">()}</span>
+        
+<div class="viewcode-block" id="Step.write_warning"><a class="viewcode-back" href="../Step.html#PLC_step.Step.write_warning">[docs]</a>    <span class="k">def</span> <span class="nf">write_warning</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">warning</span> <span class="o">=</span> <span class="s2">&quot;Unknown problem&quot;</span><span class="p">,</span> <span class="n">sample</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Write a warning when doing something that might be foolish.</span>
+<span class="sd">            If the foolishness is sample-specific, pass the sample as an argument</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+    
+    <span class="c1"># def get_error_str(self, step_name):</span>
+        <span class="k">if</span> <span class="n">sample</span><span class="p">:</span> <span class="c1"># If a sample was passed. The exception is specific to a sample</span>
+            <span class="n">sys</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;WARNING: In </span><span class="si">%s</span><span class="s2"> (sample </span><span class="si">%s</span><span class="s2">): </span><span class="si">%s</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_step_name</span><span class="p">(),</span> <span class="n">sample</span><span class="p">,</span> <span class="n">warning</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">sys</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;WARNING: In </span><span class="si">%s</span><span class="s2">: </span><span class="si">%s</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_step_name</span><span class="p">(),</span> <span class="n">warning</span><span class="p">))</span></div>
+        
+        
+    
+    <span class="k">def</span> <span class="nf">get_depend_list</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s2">&quot;depend_list&quot;</span><span class="p">]</span>
+        
+    <span class="k">def</span> <span class="nf">get_step_step</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">step</span>
+
+    <span class="k">def</span> <span class="nf">get_step_name</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span>
+        
+<div class="viewcode-block" id="Step.get_base_step_name"><a class="viewcode-back" href="../Step.html#PLC_step.Step.get_base_step_name">[docs]</a>    <span class="k">def</span> <span class="nf">get_base_step_name</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Return name of base step for this step.</span>
+<span class="sd">            Used by pipeline class to send the base step class</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s2">&quot;base&quot;</span><span class="p">]</span>
+        <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">None</span></div>
+            
+<div class="viewcode-block" id="Step.set_base_step"><a class="viewcode-back" href="../Step.html#PLC_step.Step.set_base_step">[docs]</a>    <span class="k">def</span> <span class="nf">set_base_step</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">base_step_list</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Sets the base step for the current step</span>
+<span class="sd">            This is the class of the base step, not just the name</span>
+<span class="sd">            NOTE: This is a bit convoluted. This shoud be set only for the low level step classes</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Check the base step is a valid Step object:</span>
+        <span class="c1"># assert isinstance(base_step,Step) or base_step==None</span>
+        
+        <span class="c1"># base list version: Check all bases in base list are valid Step objects:</span>
+        <span class="c1"># The map-reduce pair do the following:</span>
+        <span class="c1">#   map - check each element in base_step (now a list...) is a legitimate Step object (returns a list of booleans for each step)</span>
+        <span class="c1">#   all() = make sure all map comparisons are True.</span>
+        <span class="c1"># print &quot;base step for %s (in Step):\n------------\n&quot; % self.name</span>
+        <span class="c1"># print base_step_list</span>
+
+        <span class="c1"># assert base_step_list == [] or all(map(lambda x: isinstance(x,Step), base_step_list)), &quot;For some reason, step %s has an invalid base list.&quot; % self.name</span>
+        <span class="k">if</span> <span class="n">base_step_list</span> <span class="o">!=</span> <span class="p">[]</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">all</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="n">Step</span><span class="p">),</span> <span class="n">base_step_list</span><span class="p">)):</span>
+            <span class="k">raise</span> <span class="n">AssertionExcept</span><span class="p">(</span><span class="s2">&quot;Invalid base list</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+        
+        <span class="k">try</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">base_step_list</span>
+        <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
+            <span class="c1"># Good. Does not exist</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">base_step_list</span> <span class="o">=</span> <span class="n">base_step_list</span> <span class="k">if</span> <span class="n">base_step_list</span> <span class="k">else</span> <span class="kc">None</span>  <span class="c1"># Set merge base_step to None and all others to base_step</span>
+            <span class="c1"># While at it, update sample_data according to new base_step</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">base_step_list</span><span class="p">:</span>  <span class="c1"># Do the following only if base_step is not None (= there is a base step. all except merge)</span>
+                <span class="c1"># sys.stderr.write(&quot;setting sample data for %s \n&quot; % self.name)</span>
+                <span class="c1"># self.set_sample_data(self.base_step_list[0].get_sample_data())</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">set_sample_data</span><span class="p">()</span>  <span class="c1"># Uses self.base_step_list</span>
+                
+                
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">AssertionExcept</span><span class="p">(</span><span class="s2">&quot;Somehow base_step is defined more than once&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">))</span></div>
+        
+    <span class="k">def</span> <span class="nf">get_base_step_list</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">base_step_list</span>
+        <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
+            <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="s2">&quot;base_step not found in </span><span class="si">%s</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">))</span>
+            
+<span class="c1">## Comprison methods</span>
+    
+    <span class="k">def</span> <span class="nf">__lt__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">other</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; A step is _lt_ than &#39;other&#39; if it is in &#39;other&#39;s list of dependencies or if it has a shorter dependency list.</span>
+<span class="sd">            Is used by the sort function to sort the steps in a correct running order</span>
+<span class="sd">            A side effect is that parallel branches are sorted top-down rather than branch-wise.</span>
+<span class="sd">            You can redefine the &#39;sort&#39; method in Pipeline class to change this behaviour.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="ow">in</span> <span class="n">other</span><span class="o">.</span><span class="n">get_depend_list</span><span class="p">():</span>
+            <span class="k">return</span> <span class="kc">True</span>
+        <span class="k">if</span> <span class="n">other</span><span class="o">.</span><span class="n">name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_depend_list</span><span class="p">():</span>
+            <span class="k">return</span> <span class="kc">False</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_depend_list</span><span class="p">())</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">other</span><span class="o">.</span><span class="n">get_depend_list</span><span class="p">()):</span>
+            <span class="k">return</span> <span class="kc">True</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_depend_list</span><span class="p">())</span> <span class="o">&gt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">other</span><span class="o">.</span><span class="n">get_depend_list</span><span class="p">()):</span>
+            <span class="k">return</span> <span class="kc">False</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_step_name</span><span class="p">()</span> <span class="o">&lt;</span> <span class="n">other</span><span class="o">.</span><span class="n">get_step_name</span><span class="p">():</span>
+            <span class="k">return</span> <span class="kc">True</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_step_name</span><span class="p">()</span> <span class="o">&gt;</span> <span class="n">other</span><span class="o">.</span><span class="n">get_step_name</span><span class="p">():</span>
+            <span class="k">return</span> <span class="kc">False</span>
+        <span class="k">return</span> <span class="bp">NotImplemented</span> 
+        
+    <span class="k">def</span> <span class="nf">__gt__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">other</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; See doc string for __lt__</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="ow">in</span> <span class="n">other</span><span class="o">.</span><span class="n">get_depend_list</span><span class="p">():</span>
+            <span class="k">return</span> <span class="kc">False</span>
+        <span class="k">if</span> <span class="n">other</span><span class="o">.</span><span class="n">name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_depend_list</span><span class="p">():</span>
+            <span class="k">return</span> <span class="kc">True</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_depend_list</span><span class="p">())</span> <span class="o">&gt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">other</span><span class="o">.</span><span class="n">get_depend_list</span><span class="p">()):</span>
+            <span class="k">return</span> <span class="kc">True</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_depend_list</span><span class="p">())</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">other</span><span class="o">.</span><span class="n">get_depend_list</span><span class="p">()):</span>
+            <span class="k">return</span> <span class="kc">False</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_step_name</span><span class="p">()</span> <span class="o">&gt;</span> <span class="n">other</span><span class="o">.</span><span class="n">get_step_name</span><span class="p">():</span>
+            <span class="k">return</span> <span class="kc">True</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_step_name</span><span class="p">()</span> <span class="o">&lt;</span> <span class="n">other</span><span class="o">.</span><span class="n">get_step_name</span><span class="p">():</span>
+            <span class="k">return</span> <span class="kc">False</span>
+        <span class="k">return</span> <span class="bp">NotImplemented</span> 
+        
+        
+<div class="viewcode-block" id="Step.set_step_number"><a class="viewcode-back" href="../Step.html#PLC_step.Step.set_step_number">[docs]</a>    <span class="k">def</span> <span class="nf">set_step_number</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">step_number</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Sets the number of the step in the step list. </span>
+<span class="sd">            Is used in naming the scripts, so that they can be sorted with &#39;ll&#39;</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">step_number</span><span class="p">,</span> <span class="nb">int</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">step_number</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="si">{:0&gt;2}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">step_number</span><span class="p">)</span>
+        <span class="c1"># If number is added/updated, the script name must be initialized/updated</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">set_script_name</span><span class="p">()</span></div>
+        
+        
+<div class="viewcode-block" id="Step.set_script_name"><a class="viewcode-back" href="../Step.html#PLC_step.Step.set_script_name">[docs]</a>    <span class="k">def</span> <span class="nf">set_script_name</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Defines the name of the step script (level 2. Appears in qsub command in 00.pipe.commands.csh )</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">script_name</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="si">{!s}</span><span class="s2">.</span><span class="si">{!s}</span><span class="s2">_</span><span class="si">{!s}</span><span class="s2">.</span><span class="si">{!s}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">step_number</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">step</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span><span class="s2">&quot;csh&quot;</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">shell</span><span class="o">==</span><span class="s2">&quot;csh&quot;</span> <span class="k">else</span> <span class="s2">&quot;sh&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">script_name</span></div>
+
+    <span class="k">def</span> <span class="nf">get_script_name</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">script_name</span>
+        
+
+    <span class="k">def</span> <span class="nf">get_sample_data</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">sample_data</span>
+        
+    <span class="k">def</span> <span class="nf">get_base_sample_data</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">base_sample_data</span>
+        
+<div class="viewcode-block" id="Step.sample_data_merge"><a class="viewcode-back" href="../Step.html#PLC_step.Step.sample_data_merge">[docs]</a>    <span class="k">def</span> <span class="nf">sample_data_merge</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sample_data</span><span class="p">,</span> <span class="n">other_sample_data</span><span class="p">,</span> <span class="n">other_step_name</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Merge a different sample_data dict into this step&#39;s sample_data</span>
+<span class="sd">            Used for cyclic sungrebe - basing a step on more than one base.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># new_smpdt = deepcopy(smpdt)</span>
+
+        <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">other_sample_data</span><span class="o">.</span><span class="n">iteritems</span><span class="p">():</span>
+            <span class="c1"># print smpdt</span>
+            <span class="c1"># print &quot;\n\n&quot;</span>
+            <span class="k">if</span> <span class="p">(</span><span class="n">k</span> <span class="ow">in</span> <span class="n">sample_data</span><span class="p">):</span>
+                <span class="k">if</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">sample_data</span><span class="p">[</span><span class="n">k</span><span class="p">],</span> <span class="nb">dict</span><span class="p">)</span> 
+                    <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other_sample_data</span><span class="p">[</span><span class="n">k</span><span class="p">],</span> <span class="nb">dict</span><span class="p">)):</span>
+                    <span class="n">sample_data</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">sample_data_merge</span><span class="p">(</span><span class="n">sample_data</span><span class="p">[</span><span class="n">k</span><span class="p">],</span> <span class="n">other_sample_data</span><span class="p">[</span><span class="n">k</span><span class="p">],</span> <span class="n">other_step_name</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="c1"># Do nothing, but check not discarding values from other_sample_data</span>
+                    <span class="k">if</span> <span class="p">(</span><span class="n">sample_data</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">!=</span> <span class="n">other_sample_data</span><span class="p">[</span><span class="n">k</span><span class="p">]):</span>
+                        <span class="nb">print</span> <span class="s2">&quot;In step </span><span class="si">%s</span><span class="s2">: There is a difference from </span><span class="si">%s</span><span class="s2"> in key </span><span class="si">%s</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">other_step_name</span><span class="p">,</span> <span class="n">k</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">sample_data</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="n">other_sample_data</span><span class="p">[</span><span class="n">k</span><span class="p">])</span>
+        
+        <span class="k">return</span> <span class="n">sample_data</span></div>
+        
+    
+<div class="viewcode-block" id="Step.set_sample_data"><a class="viewcode-back" href="../Step.html#PLC_step.Step.set_sample_data">[docs]</a>    <span class="k">def</span> <span class="nf">set_sample_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sample_data</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Sets the sample_data. </span>
+<span class="sd">            This cannot be done in constructor because it depends on the output from previous steps.</span>
+<span class="sd">            Uses self.base_step_list</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+
+        <span class="c1"># Preparing dict to store sample_data of bases:</span>
+        <span class="c1"># This is not usually used but might be handy when you need more than one bam, for instance (see below)</span>
+
+        <span class="k">if</span> <span class="n">sample_data</span> <span class="o">!=</span> <span class="kc">None</span><span class="p">:</span>     <span class="c1"># When passing sample_data (i.e. for merge)</span>
+            <span class="c1"># Copying sample_data. Just &#39;=&#39; would create a kind of reference</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">sample_data</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="n">sample_data</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">base_sample_data</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>  
+        <span class="k">else</span><span class="p">:</span>   <span class="c1"># Extract sample_data from base steps:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">sample_data</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+
+            <span class="k">for</span> <span class="n">base_step</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">base_step_list</span><span class="p">:</span>
+                <span class="c1"># Merge sample_data from all base steps.</span>
+                <span class="c1"># Function sample_data_merge uses deepcopy as well</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">sample_data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">sample_data_merge</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_sample_data</span><span class="p">(),</span>
+                                                          <span class="n">base_step</span><span class="o">.</span><span class="n">get_sample_data</span><span class="p">(),</span>
+                                                          <span class="n">base_step</span><span class="o">.</span><span class="n">get_step_name</span><span class="p">())</span>
+
+
+            <span class="c1"># Storing sample_data from base_step in base_sample_data dict:</span>
+            <span class="c1"># This might be used when more than one copy of sample_data is required, for instance</span>
+            <span class="c1">#   one might need two bam files.</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">base_sample_data</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+
+            <span class="k">for</span> <span class="n">base_step</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">base_step_list</span><span class="p">:</span>
+                <span class="c1"># Update current base_sample_data to include base&#39;s base_sample_data</span>
+                <span class="c1"># This effectively merges bases base_sample_data into this step&#39;s base_sample_data</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">base_sample_data</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">base_step</span><span class="o">.</span><span class="n">get_base_sample_data</span><span class="p">())</span>
+                <span class="c1"># Add the base sample_data to this step&#39;s base_sample_data:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">base_sample_data</span><span class="p">[</span><span class="n">base_step</span><span class="o">.</span><span class="n">get_step_name</span><span class="p">()]</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="n">base_step</span><span class="o">.</span><span class="n">get_sample_data</span><span class="p">())</span>
+
+        <span class="c1"># Limit operation to sample_list only</span>
+        <span class="k">if</span> <span class="s2">&quot;sample_list&quot;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s2">&quot;sample_list&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;all_samples&quot;</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">sample_data</span><span class="p">[</span><span class="s2">&quot;samples&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pipe_data</span><span class="p">[</span><span class="s2">&quot;samples&quot;</span><span class="p">]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">sample_data</span><span class="p">[</span><span class="s2">&quot;samples&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;[, ]+&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s2">&quot;sample_list&quot;</span><span class="p">])</span>
+            
+            <span class="c1"># print(self.sample_data[&quot;samples&quot;])</span>
+            <span class="c1"># sys.exit()</span>
+            <span class="c1"># self.sample_data[samples]</span>
+            
+        <span class="c1"># Trying running step specific sample initiation script:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">step_sample_initiation</span><span class="p">()</span>
+        <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
+            <span class="k">pass</span>    <span class="c1"># It dosen&#39;t have to be defined.</span>
+        <span class="k">except</span> <span class="n">AssertionExcept</span> <span class="k">as</span> <span class="n">assertErr</span><span class="p">:</span> 
+            <span class="c1"># An error was raised during specific sample initiation</span>
+            <span class="nb">print</span> <span class="n">assertErr</span><span class="o">.</span><span class="n">get_error_str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_step_name</span><span class="p">())</span>
+            <span class="k">raise</span></div>
+
+
+            
+
+<div class="viewcode-block" id="Step.get_qsub_name"><a class="viewcode-back" href="../Step.html#PLC_step.Step.get_qsub_name">[docs]</a>    <span class="k">def</span> <span class="nf">get_qsub_name</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Return the jid id of the current step</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">spec_qsub_name</span> <span class="o">=</span> <span class="s2">&quot;_&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">step</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">pipe_data</span><span class="p">[</span><span class="s2">&quot;run_code&quot;</span><span class="p">]])</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">spec_qsub_name</span></div>
+        
+<div class="viewcode-block" id="Step.set_spec_script_name"><a class="viewcode-back" href="../Step.html#PLC_step.Step.set_spec_script_name">[docs]</a>    <span class="k">def</span> <span class="nf">set_spec_script_name</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">sample</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Sets the current spec_script_name to a regular name, i.e.:</span>
+<span class="sd">                sample level: &quot;_&quot;.join([self.step,self.name,sample])</span>
+<span class="sd">                project level: &quot;_&quot;.join([self.step,self.name,self.sample_data[&quot;Title&quot;]])</span>
+<span class="sd">            In the build_scripts function, run:</span>
+<span class="sd">                sample level: self.set_spec_script_name(sample)</span>
+<span class="sd">                project level: self.set_spec_script_name()</span>
+<span class="sd">            If using a different level of paralleization, see e.g. VCFtools, </span>
+<span class="sd">                you can set your own self.spec_script_name.</span>
+<span class="sd">                </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="k">if</span> <span class="n">sample</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">spec_script_name</span> <span class="o">=</span> <span class="s2">&quot;_&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">step</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span><span class="n">sample</span><span class="p">])</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">spec_script_name</span> <span class="o">=</span> <span class="s2">&quot;_&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">step</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">sample_data</span><span class="p">[</span><span class="s2">&quot;Title&quot;</span><span class="p">]])</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">spec_script_name</span></div>
+        
+        
+        
+<div class="viewcode-block" id="Step.add_jid_to_jid_list"><a class="viewcode-back" href="../Step.html#PLC_step.Step.add_jid_to_jid_list">[docs]</a>    <span class="k">def</span> <span class="nf">add_jid_to_jid_list</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Adds a jid for a sub process (e.g. a sample-specific script) to the jid list of the current step</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">jid_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">spec_qsub_name</span><span class="p">)</span></div>
+        
+        
+<div class="viewcode-block" id="Step.get_jid_list"><a class="viewcode-back" href="../Step.html#PLC_step.Step.get_jid_list">[docs]</a>    <span class="k">def</span> <span class="nf">get_jid_list</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Return list of jids</span>
+<span class="sd">            To be used by pipeline for creating the delete function (99.del...)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">jid_list</span></div>
+        
+<div class="viewcode-block" id="Step.get_dependency_jid_list"><a class="viewcode-back" href="../Step.html#PLC_step.Step.get_dependency_jid_list">[docs]</a>    <span class="k">def</span> <span class="nf">get_dependency_jid_list</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Returns the list of jids of all base steps</span>
+<span class="sd">            Recursion. beware!</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="n">depend_jid_list</span> <span class="o">=</span> <span class="p">[]</span>
+        
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">base_step_list</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">base_step</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">base_step_list</span><span class="p">:</span>
+                <span class="n">depend_jid_list</span> <span class="o">+=</span> <span class="p">(</span><span class="n">base_step</span><span class="o">.</span><span class="n">get_jid_list</span><span class="p">()</span> <span class="o">+</span> <span class="n">base_step</span><span class="o">.</span><span class="n">get_dependency_jid_list</span><span class="p">())</span>
+
+        <span class="k">return</span> <span class="n">depend_jid_list</span></div>
+        
+        
+<div class="viewcode-block" id="Step.create_low_level_script"><a class="viewcode-back" href="../Step.html#PLC_step.Step.create_low_level_script">[docs]</a>    <span class="k">def</span> <span class="nf">create_low_level_script</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Create the low (i.e. 3rd) level scripts, which are the scripts that actually do the work</span>
+<span class="sd">            The actual part of the script is produced by the particular step class.</span>
+<span class="sd">            This function is responsible for the generic part: opening the file and writing the qsub parameters and the script</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Name of specific qsub command:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">spec_qsub_name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">spec_script_name</span>
+        <span class="c1"># Adding path to spec_script_name: </span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">spec_script_name</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">step_scripts_dir</span><span class="p">,</span> \
+                                             <span class="s2">&quot;.&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">step_number</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">spec_script_name</span><span class="p">,</span><span class="s2">&quot;csh&quot;</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">shell</span><span class="o">==</span><span class="s2">&quot;csh&quot;</span> <span class="k">else</span> <span class="s2">&quot;sh&quot;</span><span class="p">]))</span> 
+        <span class="bp">self</span><span class="o">.</span><span class="n">spec_qsub_name</span> <span class="o">=</span> <span class="s2">&quot;_&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">spec_qsub_name</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">pipe_data</span><span class="p">[</span><span class="s2">&quot;run_code&quot;</span><span class="p">]])</span>
+
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">add_jid_to_jid_list</span><span class="p">()</span>  <span class="c1"># Adds spec_qsub_name to jid_list</span>
+        
+        <span class="c1"># Add qsub headers to the script:</span>
+            <span class="c1"># Decide wether to use csh or bash</span>
+            <span class="c1"># determine queue and nodes</span>
+            <span class="c1"># User-defined qsub opts</span>
+            <span class="c1"># Dependencies: DONE: use self.get_dependency_jid_list()</span>
+        
+        <span class="c1"># DONE. Update list of jids for this step (maybe different function)</span>
+        <span class="c1"># Add jid to list of jids in pipe_data for process deletion script. TO BE DONE IN PIPELINE, NOT HERE! USE get_jid_list() METHOD FOR THIS! </span>
+        
+        <span class="c1"># Print script to level 3 script file</span>
+        
+        <span class="c1"># Get dependency jid list and add prelimanry jids if exist </span>
+            <span class="c1"># (if not, is an empty list and will not affect the outcome)</span>
+        <span class="n">dependency_jid_list</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_dependency_jid_list</span><span class="p">()</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">preliminary_jids</span>  
+        
+        <span class="c1"># Create header with dependency_jid_list:</span>
+        <span class="n">qsub_header</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">make_qsub_header</span><span class="p">(</span><span class="n">jid_list</span> <span class="o">=</span> <span class="s2">&quot;,&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">dependency_jid_list</span><span class="p">)</span> <span class="k">if</span> <span class="n">dependency_jid_list</span> <span class="k">else</span> <span class="kc">None</span><span class="p">)</span>
+        
+        <span class="c1"># Without logging:</span>
+        <span class="c1"># self.script = qsub_header + self.script</span>
+        <span class="c1"># With logging:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">script</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="n">qsub_header</span><span class="p">,</span>                                           \
+                                <span class="bp">self</span><span class="o">.</span><span class="n">create_log_lines</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">spec_qsub_name</span><span class="p">,</span><span class="s2">&quot;Started&quot;</span><span class="p">,</span> <span class="n">level</span><span class="o">=</span><span class="s2">&quot;low&quot;</span><span class="p">),</span>   \
+                                <span class="bp">self</span><span class="o">.</span><span class="n">script</span><span class="p">,</span>                                            \
+                                <span class="bp">self</span><span class="o">.</span><span class="n">register_files</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">spec_qsub_name</span><span class="p">),</span>      \
+                                <span class="bp">self</span><span class="o">.</span><span class="n">create_log_lines</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">spec_qsub_name</span><span class="p">,</span><span class="s2">&quot;Finished&quot;</span><span class="p">,</span> <span class="n">level</span><span class="o">=</span><span class="s2">&quot;low&quot;</span><span class="p">)])</span>
+        
+
+
+        <span class="c1"># sys.stdout.write(self.spec_script_name + &quot;\n&quot;)</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">spec_script_name</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">script_fh</span><span class="p">:</span>
+            <span class="n">script_fh</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">script</span><span class="p">)</span>
+<span class="c1">######</span>
+        
+        <span class="k">if</span> <span class="s2">&quot;job_limit&quot;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">pipe_data</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+           
+            <span class="n">job_limit</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
+<span class="s2"># Sleeping while jobs exceed limit</span>
+<span class="s2">perl -e &#39;use Env qw(USER); open(my $fh, &quot;&lt;&quot;, &quot;</span><span class="si">%(limit_file)s</span><span class="s2">&quot;); ($l,$s) = &lt;$fh&gt;=~/limit=(\d+) sleep=(\d+)/; close($fh); while (scalar split(&quot;</span><span class="se">\\</span><span class="s2">n&quot;,qx(</span><span class="si">%(qstat)s</span><span class="s2"> -u $USER)) &gt; $l) {sleep $s; open(my $fh, &quot;&lt;&quot;, &quot;</span><span class="si">%(limit_file)s</span><span class="s2">&quot;); ($l,$s) = &lt;$fh&gt;=~/limit=(\d+) sleep=(\d+)/} print 0; exit 0&#39;</span>
+
+<span class="s2">&quot;&quot;&quot;</span> <span class="o">%</span> <span class="p">{</span><span class="s2">&quot;limit_file&quot;</span> <span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">pipe_data</span><span class="p">[</span><span class="s2">&quot;job_limit&quot;</span><span class="p">],</span>\
+            <span class="s2">&quot;qstat&quot;</span> <span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">pipe_data</span><span class="p">[</span><span class="s2">&quot;qsub_params&quot;</span><span class="p">][</span><span class="s2">&quot;qstat_path&quot;</span><span class="p">]}</span>
+
+            
+            <span class="c1"># Append the qsub command to the 2nd level script:</span>
+            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">high_level_script_name</span><span class="p">,</span> <span class="s2">&quot;a&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">script_fh</span><span class="p">:</span>
+                <span class="n">script_fh</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">job_limit</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n\n</span><span class="s2">&quot;</span><span class="p">)</span>        
+
+<span class="c1">#######            </span>
+        <span class="c1"># Append the qsub command to the 2nd level script:</span>
+        <span class="c1"># script_name = self.pipe_data[&quot;scripts_dir&quot;] + &quot;.&quot;.join([self.step_number,&quot;_&quot;.join([self.step,self.name]),self.shell]) </span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">high_level_script_name</span><span class="p">,</span> <span class="s2">&quot;a&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">script_fh</span><span class="p">:</span>
+            <span class="n">script_fh</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;qsub &quot;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">spec_script_name</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n\n</span><span class="s2">&quot;</span><span class="p">)</span>        
+        
+        <span class="c1"># Adding to qsub_names_dict:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">qsub_names_dict</span><span class="p">[</span><span class="s2">&quot;low_qsubs&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">spec_qsub_name</span><span class="p">)</span></div>
+        
+<div class="viewcode-block" id="Step.create_scripts_dir"><a class="viewcode-back" href="../Step.html#PLC_step.Step.create_scripts_dir">[docs]</a>    <span class="k">def</span> <span class="nf">create_scripts_dir</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Create a dir for storing the step scripts.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Set script dir name:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">step_scripts_dir</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pipe_data</span><span class="p">[</span><span class="s2">&quot;scripts_dir&quot;</span><span class="p">]</span> <span class="o">+</span> <span class="s2">&quot;.&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">step_number</span><span class="p">,</span><span class="s2">&quot;_&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">step</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">])])</span> <span class="o">+</span> <span class="n">os</span><span class="o">.</span><span class="n">sep</span>
+        <span class="c1"># Create, if not existing </span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">step_scripts_dir</span><span class="p">):</span>
+            <span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;Making dir (</span><span class="si">%s</span><span class="s2">) at </span><span class="si">%s</span><span class="s2"> </span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">step_scripts_dir</span><span class="p">))</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">step_scripts_dir</span><span class="p">)</span> 
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;Dir </span><span class="si">%s</span><span class="s2"> exists (step </span><span class="si">%s</span><span class="s2">) </span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">step_scripts_dir</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">))</span></div>
+
+            
+<div class="viewcode-block" id="Step.create_high_level_script"><a class="viewcode-back" href="../Step.html#PLC_step.Step.create_high_level_script">[docs]</a>    <span class="k">def</span> <span class="nf">create_high_level_script</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Create the high (i.e. 2nd) level scripts, which are the scripts that run the 3rd level scripts for the step</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="c1"># Set script name for high level script:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">high_level_script_name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pipe_data</span><span class="p">[</span><span class="s2">&quot;scripts_dir&quot;</span><span class="p">]</span> <span class="o">+</span> <span class="s2">&quot;.&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">step_number</span><span class="p">,</span><span class="s2">&quot;_&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">step</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">]),</span><span class="s2">&quot;csh&quot;</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">shell</span><span class="o">==</span><span class="s2">&quot;csh&quot;</span> <span class="k">else</span> <span class="s2">&quot;sh&quot;</span><span class="p">])</span> 
+        
+
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">spec_qsub_name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_qsub_name</span><span class="p">()</span>   <span class="c1">#&quot;_&quot;.join([self.step,self.name,self.pipe_data[&quot;run_code&quot;]])</span>
+
+        <span class="c1"># Get dependency jid list and add prelimanry jids if exist </span>
+            <span class="c1"># (if not, is an empty list and will not affect the outcome)</span>
+        <span class="n">dependency_jid_list</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_dependency_jid_list</span><span class="p">()</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">preliminary_jids</span>  
+        
+        <span class="c1"># Create header with dependency_jid_list:</span>
+        <span class="n">qsub_header</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">make_qsub_header</span><span class="p">(</span><span class="n">jid_list</span>   <span class="o">=</span> <span class="s2">&quot;,&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">dependency_jid_list</span><span class="p">)</span> <span class="k">if</span> <span class="n">dependency_jid_list</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>\
+                                            <span class="n">script_lev</span> <span class="o">=</span> <span class="s2">&quot;high&quot;</span><span class="p">)</span>
+        <span class="n">script</span> <span class="o">=</span> <span class="n">qsub_header</span>
+
+        <span class="c1"># script += &quot;# Adding line to log file:\n&quot;</span>
+        <span class="c1"># script += &quot;set Date1 = `date &#39;+%d/%m/%Y %H:%M:%S&#39;`\n&quot;</span>
+        <span class="c1"># script += &quot;echo $Date1 &#39;\\tStarted step %s&#39; &gt;&gt; %s\n\n\n&quot; % (self.name, self.pipe_data[&quot;log_file&quot;])</span>
+        
+        <span class="c1"># Storing name of high level script (only used for correct logging at &quot;Finshed&quot; step)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">high_spec_qsub_name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">spec_qsub_name</span>
+        <span class="c1"># Adding high-level jid to jid_list</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">add_jid_to_jid_list</span><span class="p">()</span>
+        
+        <span class="n">script</span> <span class="o">=</span> <span class="n">script</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">create_log_lines</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">high_spec_qsub_name</span><span class="p">,</span> <span class="s2">&quot;Started&quot;</span><span class="p">,</span> <span class="n">level</span> <span class="o">=</span> <span class="s2">&quot;high&quot;</span><span class="p">)</span>
+        
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">high_level_script_name</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">script_fh</span><span class="p">:</span>
+            <span class="n">script_fh</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">script</span><span class="p">)</span>        
+        
+        <span class="c1"># The actual qsub commands must be written in the create_low_level_script() function because they are step_name dependent!</span>
+            
+        <span class="c1"># Adding to qsub_names_dict:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">qsub_names_dict</span><span class="p">[</span><span class="s2">&quot;step&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_step_step</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">qsub_names_dict</span><span class="p">[</span><span class="s2">&quot;high_qsub&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">high_spec_qsub_name</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">qsub_names_dict</span><span class="p">[</span><span class="s2">&quot;low_qsubs&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span></div>
+        
+            
+<div class="viewcode-block" id="Step.close_high_level_script"><a class="viewcode-back" href="../Step.html#PLC_step.Step.close_high_level_script">[docs]</a>    <span class="k">def</span> <span class="nf">close_high_level_script</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Add lines at the end of the high level script:</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">script</span> <span class="o">=</span> <span class="s2">&quot;sleep </span><span class="si">%d</span><span class="se">\n\n</span><span class="s2">csh </span><span class="si">%s</span><span class="s2">98.qalter_all.csh</span><span class="se">\n\n</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pipe_data</span><span class="p">[</span><span class="s2">&quot;Default_wait&quot;</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">pipe_data</span><span class="p">[</span><span class="s2">&quot;scripts_dir&quot;</span><span class="p">])</span>
+
+        <span class="n">script</span> <span class="o">=</span> <span class="n">script</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">create_log_lines</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">high_spec_qsub_name</span><span class="p">,</span> <span class="s2">&quot;Finished&quot;</span><span class="p">,</span> <span class="n">level</span><span class="o">=</span><span class="s2">&quot;high&quot;</span><span class="p">)</span>
+        
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">high_level_script_name</span><span class="p">,</span> <span class="s2">&quot;a&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">script_fh</span><span class="p">:</span>
+            <span class="n">script_fh</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">script</span><span class="p">)</span>        </div>
+
+     
+<div class="viewcode-block" id="Step.create_preliminary_script"><a class="viewcode-back" href="../Step.html#PLC_step.Step.create_preliminary_script">[docs]</a>    <span class="k">def</span> <span class="nf">create_preliminary_script</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Create a script that will run before all other low level scripts commence</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1">#----- Define actual script here</span>
+        <span class="c1"># Adding line to remove temporary folder:</span>
+
+        <span class="c1"># Creating script. If &#39;create_spec_preliminary_script&#39; is not defined or returns nothing, return from here without doing anything</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">script</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">create_spec_preliminary_script</span><span class="p">()</span>
+        <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
+            <span class="k">return</span> 
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">script</span><span class="o">.</span><span class="n">strip</span><span class="p">():</span>                 <span class="c1"># If script is empty, do not create a wrapper function</span>
+            <span class="k">return</span> 
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">spec_qsub_name</span> <span class="o">=</span> <span class="s2">&quot;_&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">step</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span><span class="s2">&quot;preliminary&quot;</span><span class="p">])</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">spec_script_name</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">step_scripts_dir</span><span class="p">,</span> \
+                                             <span class="s2">&quot;.&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">step_number</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">spec_qsub_name</span><span class="p">,</span><span class="s2">&quot;csh&quot;</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">shell</span><span class="o">==</span><span class="s2">&quot;csh&quot;</span> <span class="k">else</span> <span class="s2">&quot;sh&quot;</span><span class="p">]))</span> 
+
+                                             
+        <span class="bp">self</span><span class="o">.</span><span class="n">spec_qsub_name</span> <span class="o">=</span> <span class="s2">&quot;_&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">spec_qsub_name</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">pipe_data</span><span class="p">[</span><span class="s2">&quot;run_code&quot;</span><span class="p">]])</span>
+        
+            
+        <span class="c1"># Get dependency jid list and add preliminary jids if exist (if not, is an empty list and will not affect the outcome)</span>
+        <span class="c1">#    Also, add all jids of current step, as this script is to run only after all previous steps have completed.</span>
+        <span class="n">dependency_jid_list</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_dependency_jid_list</span><span class="p">()</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_jid_list</span><span class="p">()</span>
+        
+        <span class="c1"># Create header with dependency_jid_list:</span>
+        <span class="n">qsub_header</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">make_qsub_header</span><span class="p">(</span><span class="n">jid_list</span> <span class="o">=</span> <span class="s2">&quot;,&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">dependency_jid_list</span><span class="p">)</span> <span class="k">if</span> <span class="n">dependency_jid_list</span> <span class="k">else</span> <span class="kc">None</span><span class="p">)</span>
+            
+        <span class="c1"># Orignal line: </span>
+        <span class="c1"># self.script = qsub_header +  self.script</span>
+        <span class="c1"># New, with host reporting and time logging:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">script</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="n">qsub_header</span><span class="p">,</span> \
+                        <span class="bp">self</span><span class="o">.</span><span class="n">create_log_lines</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">spec_qsub_name</span><span class="p">,</span> <span class="s2">&quot;Started&quot;</span><span class="p">,</span> <span class="n">level</span><span class="o">=</span><span class="s2">&quot;prelim&quot;</span><span class="p">),</span> \
+                        <span class="bp">self</span><span class="o">.</span><span class="n">script</span><span class="p">,</span> \
+                        <span class="bp">self</span><span class="o">.</span><span class="n">register_files</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">spec_qsub_name</span><span class="p">),</span>      \
+                        <span class="bp">self</span><span class="o">.</span><span class="n">create_log_lines</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">spec_qsub_name</span><span class="p">,</span> <span class="s2">&quot;Finished&quot;</span><span class="p">,</span> <span class="n">level</span><span class="o">=</span><span class="s2">&quot;prelim&quot;</span><span class="p">)])</span>
+
+
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">spec_script_name</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">script_fh</span><span class="p">:</span>
+            <span class="n">script_fh</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">script</span><span class="p">)</span>
+            
+        <span class="c1"># Append the qsub command to the 2nd level script:</span>
+        <span class="c1"># script_name = self.pipe_data[&quot;scripts_dir&quot;] + &quot;.&quot;.join([self.step_number,&quot;_&quot;.join([self.step,self.name]),self.shell]) </span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">high_level_script_name</span><span class="p">,</span> <span class="s2">&quot;a&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">script_fh</span><span class="p">:</span>
+            <span class="n">script_fh</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;qsub &quot;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">spec_script_name</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n\n</span><span class="s2">&quot;</span><span class="p">)</span>        
+            
+        <span class="c1"># This is here because I want to use jid_list to make wrapping_up script dependent on this step&#39;s main low-level scripts</span>
+        <span class="c1"># Explantion: get_jid_list() was used above (line &#39;qsub_header...&#39;) to make the wrapping_up script dependent on the other scripts created by the step</span>
+        <span class="c1">#    Now that that is done, the following line adds this step to the jid_list, so that subsequent steps are dependent on the wrapping up script as well. (I hope this makes it clear...)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">add_jid_to_jid_list</span><span class="p">()</span>
+
+        <span class="c1"># Add the preliminary jid to the list of preliminary jids.  </span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">preliminary_jids</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">spec_qsub_name</span><span class="p">)</span>
+
+        <span class="c1"># Adding to qsub_names_dict:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">qsub_names_dict</span><span class="p">[</span><span class="s2">&quot;low_qsubs&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">spec_qsub_name</span><span class="p">)</span></div>
+
+        
+<div class="viewcode-block" id="Step.create_wrapping_up_script"><a class="viewcode-back" href="../Step.html#PLC_step.Step.create_wrapping_up_script">[docs]</a>    <span class="k">def</span> <span class="nf">create_wrapping_up_script</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Create a script that will run once all other low level scripts terminate</span>
+<span class="sd">            Ideal place for putting testing and agglomeration procedures.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="c1"># Creating script. If &#39;create_spec_preliminary_script&#39; is not defined or returns nothing, return from here without doing anything</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">script</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">create_spec_wrapping_up_script</span><span class="p">()</span>
+        <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
+            <span class="k">return</span> 
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">script</span><span class="o">.</span><span class="n">strip</span><span class="p">():</span>                 <span class="c1"># If script is empty, do not create a wrapper function</span>
+            <span class="k">return</span> 
+
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">spec_qsub_name</span> <span class="o">=</span> <span class="s2">&quot;_&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">step</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span><span class="s2">&quot;wrapping_up&quot;</span><span class="p">])</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">spec_script_name</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">step_scripts_dir</span><span class="p">,</span> \
+                                             <span class="s2">&quot;.&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">step_number</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">spec_qsub_name</span><span class="p">,</span><span class="s2">&quot;csh&quot;</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">shell</span><span class="o">==</span><span class="s2">&quot;csh&quot;</span> <span class="k">else</span> <span class="s2">&quot;sh&quot;</span><span class="p">]))</span> 
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">spec_qsub_name</span> <span class="o">=</span> <span class="s2">&quot;_&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">spec_qsub_name</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">pipe_data</span><span class="p">[</span><span class="s2">&quot;run_code&quot;</span><span class="p">]])</span>
+        
+        <span class="c1">#----- Define actual script here</span>
+        <span class="c1"># Adding line to remove temporary folder:</span>
+        
+            
+        <span class="c1"># Get dependency jid list and add prelimanry jids if exist (if not, is an empty list and will not affect the outcome)</span>
+        <span class="c1">#    Also, add all jids of current step, as this script is to run only after all previous steps have completed.</span>
+        <span class="n">dependency_jid_list</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_dependency_jid_list</span><span class="p">()</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">preliminary_jids</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_jid_list</span><span class="p">()</span>
+        
+        <span class="c1"># Create header with dependency_jid_list:</span>
+        <span class="n">qsub_header</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">make_qsub_header</span><span class="p">(</span><span class="n">jid_list</span> <span class="o">=</span> <span class="s2">&quot;,&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">dependency_jid_list</span><span class="p">)</span> <span class="k">if</span> <span class="n">dependency_jid_list</span> <span class="k">else</span> <span class="kc">None</span><span class="p">)</span>
+            
+        <span class="c1"># Orignal line: </span>
+        <span class="c1"># self.script = qsub_header +  self.script</span>
+        <span class="c1"># New, with host reporting and time logging:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">script</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="n">qsub_header</span><span class="p">,</span> \
+                        <span class="bp">self</span><span class="o">.</span><span class="n">create_log_lines</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">spec_qsub_name</span><span class="p">,</span> <span class="s2">&quot;Started&quot;</span><span class="p">,</span> <span class="n">level</span><span class="o">=</span><span class="s2">&quot;wrapping&quot;</span><span class="p">),</span> \
+                        <span class="bp">self</span><span class="o">.</span><span class="n">script</span><span class="p">,</span> \
+                        <span class="bp">self</span><span class="o">.</span><span class="n">register_files</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">spec_qsub_name</span><span class="p">),</span>      \
+                        <span class="bp">self</span><span class="o">.</span><span class="n">create_log_lines</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">spec_qsub_name</span><span class="p">,</span> <span class="s2">&quot;Finished&quot;</span><span class="p">,</span> <span class="n">level</span><span class="o">=</span><span class="s2">&quot;wrapping&quot;</span><span class="p">)])</span>
+
+
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">spec_script_name</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">script_fh</span><span class="p">:</span>
+            <span class="n">script_fh</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">script</span><span class="p">)</span>
+            
+        <span class="c1"># Append the qsub command to the 2nd level script:</span>
+        <span class="c1"># script_name = self.pipe_data[&quot;scripts_dir&quot;] + &quot;.&quot;.join([self.step_number,&quot;_&quot;.join([self.step,self.name]),self.shell]) </span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">high_level_script_name</span><span class="p">,</span> <span class="s2">&quot;a&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">script_fh</span><span class="p">:</span>
+            <span class="n">script_fh</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;qsub &quot;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">spec_script_name</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n\n</span><span class="s2">&quot;</span><span class="p">)</span>        
+            
+        <span class="c1"># This is here because I want to use jid_list to make wrapping_up script dependent on this step&#39;s main low-level scripts</span>
+        <span class="c1"># Explantion: get_jid_list() was used above (line &#39;qsub_header...&#39;) to make the wrapping_up script dependent on the other scripts created by the step</span>
+        <span class="c1">#    Now that that is done, the following line adds this step to the jid_list, so that subsequent steps are dependent on the wrapping up script as well. (I hope this makes it clear...)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">add_jid_to_jid_list</span><span class="p">()</span>
+
+        <span class="c1"># Adding to qsub_names_dict:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">qsub_names_dict</span><span class="p">[</span><span class="s2">&quot;low_qsubs&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">spec_qsub_name</span><span class="p">)</span></div>
+
+
+            
+<div class="viewcode-block" id="Step.create_all_scripts"><a class="viewcode-back" href="../Step.html#PLC_step.Step.create_all_scripts">[docs]</a>    <span class="k">def</span> <span class="nf">create_all_scripts</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Contains code to be done after build_scripts()</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">skip_scripts</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                
+                <span class="c1"># Create dir for storing step scripts:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">create_scripts_dir</span><span class="p">()</span>
+                
+                <span class="c1"># Create high (iu.e. 2nd) level script for the qsub commands</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">create_high_level_script</span><span class="p">()</span>
+
+                <span class="c1"># Add a preliminary script if it is defined in the step specific module</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">create_preliminary_script</span><span class="p">()</span>
+
+                <span class="c1"># Create actual scripts: NOTE: This function is defined in the individual step files!</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">build_scripts</span><span class="p">()</span>
+
+                <span class="c1"># Add a wrapping up script if it is defined in the step specific module</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">create_wrapping_up_script</span><span class="p">()</span>
+                
+                <span class="c1"># Add closing lines to the high level script</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">close_high_level_script</span><span class="p">()</span>
+
+            <span class="k">except</span> <span class="n">AssertionExcept</span> <span class="k">as</span> <span class="n">assertErr</span><span class="p">:</span>
+                <span class="nb">print</span> <span class="n">assertErr</span><span class="o">.</span><span class="n">get_error_str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_step_name</span><span class="p">())</span>
+                <span class="k">raise</span>
+    
+        <span class="k">if</span> <span class="s2">&quot;stop_and_show&quot;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="p">:</span>
+            <span class="nb">print</span> <span class="s2">&quot;project slots:</span><span class="se">\n</span><span class="s2">-------------&quot;</span>
+            <span class="n">pp</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">sample_data</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+            <span class="nb">print</span> <span class="s2">&quot;sample slots:</span><span class="se">\n</span><span class="s2">-------------&quot;</span>
+            <span class="c1"># all_sample_keys = list()</span>
+            <span class="c1"># all_sample_keys = all_sample_keys.append(map(lambda x: self.sample_data[x].keys(), self.sample_data[&quot;samples&quot;]))</span>
+            <span class="n">pp</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">sample_data</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">sample_data</span><span class="p">[</span><span class="s2">&quot;samples&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">]]</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+            <span class="c1"># print all_sample_keys</span>
+            <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="s2">&quot;Showed. Now stopping. To continue, remove the &#39;stop_and_show&#39; tage from </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_step_name</span><span class="p">())</span></div>
+            
+        
+<div class="viewcode-block" id="Step.make_qsub_header"><a class="viewcode-back" href="../Step.html#PLC_step.Step.make_qsub_header">[docs]</a>    <span class="k">def</span> <span class="nf">make_qsub_header</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">jid_list</span><span class="p">,</span> <span class="n">script_lev</span> <span class="o">=</span> <span class="s2">&quot;low&quot;</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Make the first few lines for the scripts</span>
+<span class="sd">            Is called for high level, low level and wrapper scripts</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        
+        <span class="n">qsub_shell</span> <span class="o">=</span> <span class="s2">&quot;#!/bin/</span><span class="si">%(shell)s</span><span class="se">\n</span><span class="s2">#$ -S /bin/</span><span class="si">%(shell)s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">{</span><span class="s2">&quot;shell&quot;</span><span class="p">:</span> <span class="s2">&quot;csh&quot;</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">shell</span><span class="o">==</span><span class="s2">&quot;csh&quot;</span> <span class="k">else</span> <span class="s2">&quot;bash&quot;</span><span class="p">}</span>
+        <span class="c1"># Make hold_jids line only if there are jids (i.e. self.get_dependency_jid_list() != [])</span>
+        <span class="k">if</span> <span class="n">jid_list</span><span class="p">:</span>
+            <span class="n">qsub_holdjids</span> <span class="o">=</span> <span class="s2">&quot;#$ -hold_jid </span><span class="si">%s</span><span class="s2"> &quot;</span> <span class="o">%</span> <span class="n">jid_list</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">qsub_holdjids</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+        <span class="n">qsub_name</span> <span class="o">=</span>    <span class="s2">&quot;#$ -N </span><span class="si">%s</span><span class="s2"> &quot;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">spec_qsub_name</span><span class="p">)</span>
+        <span class="n">qsub_stderr</span> <span class="o">=</span>  <span class="s2">&quot;#$ -e </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">pipe_data</span><span class="p">[</span><span class="s2">&quot;stderr_dir&quot;</span><span class="p">]</span>
+        <span class="n">qsub_stdout</span> <span class="o">=</span>  <span class="s2">&quot;#$ -o </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">pipe_data</span><span class="p">[</span><span class="s2">&quot;stdout_dir&quot;</span><span class="p">]</span>
+        <span class="c1"># qsub_opts = &quot;#$ &quot; + &quot; &quot;.join(self.pipe_data[&quot;Qsub_opts&quot;])</span>
+        <span class="n">qsub_queue</span> <span class="o">=</span>   <span class="s2">&quot;#$ -q </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s2">&quot;qsub_params&quot;</span><span class="p">][</span><span class="s2">&quot;queue&quot;</span><span class="p">]</span>
+        <span class="c1"># If there are values in Qsub_opts, add them to the qsub parameter lines:</span>
+        <span class="n">qsub_opts</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+        
+        
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s2">&quot;qsub_params&quot;</span><span class="p">][</span><span class="s2">&quot;opts&quot;</span><span class="p">]:</span>
+            <span class="n">qsub_opts</span> <span class="o">+=</span> <span class="s2">&quot;#$ </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s2">&quot;qsub_params&quot;</span><span class="p">][</span><span class="s2">&quot;opts&quot;</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">qsub_opt</span> <span class="ow">in</span> <span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s2">&quot;qsub_params&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span> <span class="o">-</span> <span class="nb">set</span><span class="p">([</span><span class="s2">&quot;qstat_path&quot;</span><span class="p">,</span><span class="s2">&quot;node&quot;</span><span class="p">,</span><span class="s2">&quot;queue&quot;</span><span class="p">,</span><span class="s2">&quot;opts&quot;</span><span class="p">,</span><span class="s2">&quot;-pe&quot;</span><span class="p">,</span><span class="s2">&quot;-q&quot;</span><span class="p">])):</span>       <span class="c1"># For all qsub_params except node, queue and (global) opts which get special treatment:</span>
+            <span class="n">qsub_opts</span> <span class="o">+=</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">#$ </span><span class="si">%s</span><span class="s2"> </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">qsub_opt</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s2">&quot;qsub_params&quot;</span><span class="p">][</span><span class="n">qsub_opt</span><span class="p">]</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s2">&quot;qsub_params&quot;</span><span class="p">][</span><span class="n">qsub_opt</span><span class="p">]</span><span class="o">!=</span><span class="kc">None</span> <span class="k">else</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+        <span class="c1"># Adding &quot;-V&quot; to all high level scripts (otherwise, if shell is bash, the SGE commands are not recognized)</span>
+        <span class="k">if</span> <span class="s2">&quot;-V&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s2">&quot;qsub_params&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span> <span class="ow">and</span> <span class="n">script_lev</span> <span class="o">==</span> <span class="s2">&quot;high&quot;</span><span class="p">:</span>
+            <span class="n">qsub_opts</span> <span class="o">+=</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">#$ -V&quot;</span>
+
+        <span class="k">if</span> <span class="n">script_lev</span> <span class="o">==</span> <span class="s2">&quot;low&quot;</span><span class="p">:</span>
+            
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s2">&quot;qsub_params&quot;</span><span class="p">][</span><span class="s2">&quot;node&quot;</span><span class="p">]:</span>     <span class="c1"># If not defined then this will be &quot;None&quot;</span>
+                
+                
+                <span class="c1"># Perform two joins:</span>
+                <span class="c1">#   1. For each node, join it to the queue name with &#39;@&#39; (e.g. &#39;bio.q@sge100&#39;)</span>
+                <span class="c1">#   2. Comma-join all nodes to one list (e.g. &#39;bio.q@sge100,bio.q@sge102&#39;)</span>
+                <span class="n">qsub_queue</span> <span class="o">=</span> <span class="s2">&quot;,&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="s2">&quot;@&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s2">&quot;qsub_params&quot;</span><span class="p">][</span><span class="s2">&quot;queue&quot;</span><span class="p">],</span><span class="n">item</span><span class="p">])</span> <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s2">&quot;qsub_params&quot;</span><span class="p">][</span><span class="s2">&quot;node&quot;</span><span class="p">]])</span>
+                
+                <span class="c1"># qsub_queue += &quot;@%s&quot; % self.params[&quot;qsub_params&quot;][&quot;node&quot;]</span>
+                <span class="n">qsub_queue</span> <span class="o">=</span> <span class="s2">&quot;#$ -q </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">qsub_queue</span>
+            <span class="k">if</span> <span class="s2">&quot;-pe&quot;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s2">&quot;qsub_params&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>     <span class="c1"># If not defined then this will be &quot;None&quot;</span>
+                <span class="c1"># Add newline if qsub_opts exists:</span>
+                <span class="k">if</span> <span class="n">qsub_opts</span><span class="p">:</span>
+                    <span class="n">qsub_opts</span> <span class="o">+=</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span>
+                <span class="n">qsub_opts</span> <span class="o">+=</span> <span class="s2">&quot;#$ -pe </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s2">&quot;qsub_params&quot;</span><span class="p">][</span><span class="s2">&quot;-pe&quot;</span><span class="p">]</span>
+            
+        <span class="c1"># Sometimes qsub_opts is empty and then there is an ugly empty line in the middle of the qsub definition</span>
+        <span class="c1"># The following if-else is ugly, but solves the problem</span>
+        <span class="k">if</span> <span class="n">qsub_opts</span><span class="o">.</span><span class="n">strip</span><span class="p">():</span>
+            <span class="k">return</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="n">qsub_shell</span><span class="p">,</span><span class="n">qsub_queue</span><span class="p">,</span><span class="n">qsub_opts</span><span class="p">,</span><span class="n">qsub_name</span><span class="p">,</span><span class="n">qsub_stderr</span><span class="p">,</span><span class="n">qsub_stdout</span><span class="p">,</span><span class="n">qsub_holdjids</span><span class="p">])</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n\n</span><span class="s2">&quot;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="n">qsub_shell</span><span class="p">,</span><span class="n">qsub_queue</span><span class="p">,</span><span class="n">qsub_name</span><span class="p">,</span><span class="n">qsub_stderr</span><span class="p">,</span><span class="n">qsub_stdout</span><span class="p">,</span><span class="n">qsub_holdjids</span><span class="p">])</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n\n</span><span class="s2">&quot;</span></div>
+
+            
+<div class="viewcode-block" id="Step.create_log_lines"><a class="viewcode-back" href="../Step.html#PLC_step.Step.create_log_lines">[docs]</a>    <span class="k">def</span> <span class="nf">create_log_lines</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">qsub_name</span><span class="p">,</span> <span class="nb">type</span> <span class="o">=</span> <span class="s2">&quot;Started&quot;</span><span class="p">,</span> <span class="n">level</span> <span class="o">=</span> <span class="s2">&quot;high&quot;</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Create logging lines. Added before and after script to return start and end times</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">log_cols_dict</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;type&quot;</span>        <span class="p">:</span> <span class="nb">type</span><span class="p">,</span>                                        \
+        <span class="s2">&quot;step&quot;</span>       <span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_step_step</span><span class="p">(),</span>                        \
+        <span class="s2">&quot;stepname&quot;</span>   <span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_step_name</span><span class="p">(),</span>                        \
+        <span class="s2">&quot;stepID&quot;</span>     <span class="p">:</span> <span class="n">qsub_name</span><span class="p">,</span>                                   \
+        <span class="s2">&quot;qstat_path&quot;</span> <span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">pipe_data</span><span class="p">[</span><span class="s2">&quot;qsub_params&quot;</span><span class="p">][</span><span class="s2">&quot;qstat_path&quot;</span><span class="p">],</span> \
+        <span class="s2">&quot;level&quot;</span>      <span class="p">:</span> <span class="n">level</span><span class="p">,</span> \
+        <span class="s2">&quot;file&quot;</span>       <span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">pipe_data</span><span class="p">[</span><span class="s2">&quot;log_file&quot;</span><span class="p">]}</span>
+        
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">shell</span><span class="o">==</span><span class="s2">&quot;csh&quot;</span><span class="p">:</span>
+        
+            <span class="n">script</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">if ($?JOB_ID) then </span>
+<span class="s2">    # Adding line to log file:  Date    Step    Host</span>
+<span class="s2">    echo `date &#39;+</span><span class="si">%%</span><span class="s2">d/</span><span class="si">%%</span><span class="s2">m/</span><span class="si">%%</span><span class="s2">Y </span><span class="si">%%</span><span class="s2">H:</span><span class="si">%%</span><span class="s2">M:</span><span class="si">%%</span><span class="s2">S&#39;`&#39;</span><span class="se">\\</span><span class="s2">t</span><span class="si">%(type)s</span><span class="se">\\</span><span class="s2">t</span><span class="si">%(step)s</span><span class="se">\\</span><span class="s2">t</span><span class="si">%(stepname)s</span><span class="se">\\</span><span class="s2">t</span><span class="si">%(stepID)s</span><span class="se">\\</span><span class="s2">t</span><span class="si">%(level)s</span><span class="se">\\</span><span class="s2">t&#39;$HOSTNAME&#39;</span><span class="se">\\</span><span class="s2">t&#39;`</span><span class="si">%(qstat_path)s</span><span class="s2"> -j $JOB_ID | grep maxvmem | cut -d = -f 6` &gt;&gt; </span><span class="si">%(file)s</span><span class="s2"></span>
+<span class="s2">endif</span>
+<span class="s2">####</span><span class="se">\n\n</span><span class="s2"></span>
+<span class="s2">&quot;&quot;&quot;</span> <span class="o">%</span> <span class="n">log_cols_dict</span>
+        
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">shell</span> <span class="o">==</span> <span class="s2">&quot;bash&quot;</span><span class="p">:</span>
+            <span class="n">script</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">if [ ! -z &quot;$JOB_ID&quot; ]; then</span>
+<span class="s2">    # Adding line to log file:  Date    Step    Host</span>
+<span class="s2">    echo -e $(date &#39;+</span><span class="si">%%</span><span class="s2">d/</span><span class="si">%%</span><span class="s2">m/</span><span class="si">%%</span><span class="s2">Y </span><span class="si">%%</span><span class="s2">H:</span><span class="si">%%</span><span class="s2">M:</span><span class="si">%%</span><span class="s2">S&#39;)&#39;</span><span class="se">\\</span><span class="s2">t</span><span class="si">%(type)s</span><span class="se">\\</span><span class="s2">t</span><span class="si">%(step)s</span><span class="se">\\</span><span class="s2">t</span><span class="si">%(stepname)s</span><span class="se">\\</span><span class="s2">t</span><span class="si">%(stepID)s</span><span class="se">\\</span><span class="s2">t</span><span class="si">%(level)s</span><span class="se">\\</span><span class="s2">t&#39;$HOSTNAME&#39;</span><span class="se">\\</span><span class="s2">t&#39;$(</span><span class="si">%(qstat_path)s</span><span class="s2"> -j $JOB_ID | grep maxvmem | cut -d = -f 6) &gt;&gt; </span><span class="si">%(file)s</span><span class="s2"></span>
+<span class="s2">fi</span>
+<span class="s2">####</span><span class="se">\n\n</span><span class="s2"></span>
+<span class="s2">&quot;&quot;&quot;</span> <span class="o">%</span> <span class="n">log_cols_dict</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">script</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+            <span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;In </span><span class="si">%s</span><span class="s2">:</span><span class="se">\t</span><span class="s2">shell not recognized. Not creating log writing lines in scripts.</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+        
+        <span class="k">return</span> <span class="n">script</span></div>
+        
+        
+        
+<div class="viewcode-block" id="Step.make_folder_for_sample"><a class="viewcode-back" href="../Step.html#PLC_step.Step.make_folder_for_sample">[docs]</a>    <span class="k">def</span> <span class="nf">make_folder_for_sample</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sample</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Creates a folder for sample in this step&#39;s results folder</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="n">sample_folder</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">base_dir</span> <span class="o">+</span> <span class="n">sample</span> <span class="o">+</span> <span class="n">os</span><span class="o">.</span><span class="n">sep</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="n">sample_folder</span><span class="p">):</span>
+            <span class="k">if</span> <span class="s2">&quot;verbose&quot;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="p">:</span>   <span class="c1"># At the moment not set anywhere. Maybe in the future</span>
+                <span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;Making dir (</span><span class="si">%s</span><span class="s2">) at </span><span class="si">%s</span><span class="s2"> </span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span><span class="n">sample_folder</span><span class="p">))</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">sample_folder</span><span class="p">)</span> 
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="s2">&quot;verbose&quot;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="p">:</span>   <span class="c1"># At the moment not set anywhere. Maybe in the future</span>
+                <span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;Dir </span><span class="si">%s</span><span class="s2"> exists (step </span><span class="si">%s</span><span class="s2">) </span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">sample_folder</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">))</span>
+        
+        <span class="k">return</span> <span class="n">sample_folder</span></div>
+        
+        
+<div class="viewcode-block" id="Step.get_redir_parameters_script"><a class="viewcode-back" href="../Step.html#PLC_step.Step.get_redir_parameters_script">[docs]</a>    <span class="k">def</span> <span class="nf">get_redir_parameters_script</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Returns a piece of script containing the redirect parameters</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="n">redir_param_script</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+        <span class="k">if</span> <span class="s2">&quot;redir_params&quot;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s2">&quot;redir_params&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+                <span class="c1"># The following permits the user to pass two values for the same redirected parameter:</span>
+                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s2">&quot;redir_params&quot;</span><span class="p">][</span><span class="n">key</span><span class="p">],</span><span class="nb">list</span><span class="p">):</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">write_warning</span><span class="p">(</span><span class="s2">&quot;Passed </span><span class="si">%s</span><span class="s2"> twice as redirected parameter!&quot;</span> <span class="o">%</span> <span class="n">key</span><span class="p">)</span>
+                    <span class="k">for</span> <span class="n">keyval</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s2">&quot;redir_params&quot;</span><span class="p">][</span><span class="n">key</span><span class="p">]:</span>
+                        <span class="n">redir_param_script</span> <span class="o">+=</span> <span class="s2">&quot;</span><span class="si">%s</span><span class="s2"> </span><span class="si">%s</span><span class="s2"> </span><span class="se">\\\n\t</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">key</span><span class="p">,</span><span class="n">keyval</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s2">&quot;redir_params&quot;</span><span class="p">][</span><span class="n">key</span><span class="p">]</span><span class="o">!=</span><span class="kc">None</span> <span class="k">else</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">redir_param_script</span> <span class="o">+=</span> <span class="s2">&quot;</span><span class="si">%s</span><span class="s2"> </span><span class="si">%s</span><span class="s2"> </span><span class="se">\\\n\t</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">key</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s2">&quot;redir_params&quot;</span><span class="p">][</span><span class="n">key</span><span class="p">]</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s2">&quot;redir_params&quot;</span><span class="p">][</span><span class="n">key</span><span class="p">]</span><span class="o">!=</span><span class="kc">None</span> <span class="k">else</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">redir_param_script</span></div>
+
+<div class="viewcode-block" id="Step.get_setenv_part"><a class="viewcode-back" href="../Step.html#PLC_step.Step.get_setenv_part">[docs]</a>    <span class="k">def</span> <span class="nf">get_setenv_part</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Returns a piece of code with &quot;env&quot;, &quot;setenv&quot; and &quot;export&quot;</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">script_const</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+        <span class="c1"># Add &quot;env&quot; line, if it exists:</span>
+        <span class="c1"># New version</span>
+        <span class="k">if</span> <span class="s2">&quot;setenv&quot;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>         <span class="c1"># Add optional environmental variables.</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s2">&quot;setenv&quot;</span><span class="p">],</span> <span class="nb">list</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s2">&quot;setenv&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s2">&quot;setenv&quot;</span><span class="p">]]</span>
+            <span class="k">for</span> <span class="n">setenv</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s2">&quot;setenv&quot;</span><span class="p">]:</span>         <span class="c1"># Add optional environmental variables.</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">shell</span><span class="o">==</span><span class="s2">&quot;csh&quot;</span><span class="p">:</span>
+                    <span class="n">script_const</span> <span class="o">+=</span> <span class="s2">&quot;setenv </span><span class="si">%s</span><span class="s2"> </span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">setenv</span>
+                <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">shell</span><span class="o">==</span><span class="s2">&quot;bash&quot;</span><span class="p">:</span>
+                    <span class="n">script_const</span> <span class="o">+=</span> <span class="s2">&quot;export </span><span class="si">%s</span><span class="s2"> </span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">setenv</span>
+
+                    
+            <span class="n">script_const</span> <span class="o">+=</span> <span class="s2">&quot;</span><span class="se">\n\n</span><span class="s2">&quot;</span>
+                
+        <span class="c1"># Old version (kept for backwards compatibility. Not recommended):</span>
+        <span class="k">if</span> <span class="s2">&quot;env&quot;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>         <span class="c1"># Add optional environmental variables.</span>
+            <span class="n">script_const</span> <span class="o">+=</span> <span class="s2">&quot;env </span><span class="si">%s</span><span class="s2"> </span><span class="se">\\\n\t</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s2">&quot;env&quot;</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">script_const</span></div>
+
+
+        
+<div class="viewcode-block" id="Step.get_script_env_path"><a class="viewcode-back" href="../Step.html#PLC_step.Step.get_script_env_path">[docs]</a>    <span class="k">def</span> <span class="nf">get_script_env_path</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Returns a piece of code with &quot;env&quot; and &quot;script_path&quot;</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">script_const</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_setenv_part</span><span class="p">()</span>
+        <span class="c1"># Add &quot;env&quot; line, if it exists:</span>
+        <span class="c1"># New version</span>
+
+        <span class="c1"># Add &quot;script_path&quot; line - it must exist</span>
+        <span class="n">script_const</span> <span class="o">+=</span> <span class="s2">&quot;</span><span class="si">%s</span><span class="s2"> </span><span class="se">\\\n\t</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s2">&quot;script_path&quot;</span><span class="p">]</span>
+
+        <span class="k">return</span> <span class="n">script_const</span></div>
+        
+<div class="viewcode-block" id="Step.get_script_const"><a class="viewcode-back" href="../Step.html#PLC_step.Step.get_script_const">[docs]</a>    <span class="k">def</span> <span class="nf">get_script_const</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Returns a piece of script containing the env, script_path and redirect parameters lines</span>
+<span class="sd">            These are the same in most steps. Can be used whereever suitable</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># Add &#39;env&#39; </span>
+        <span class="n">script_const</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_script_env_path</span><span class="p">()</span>
+
+        <span class="c1"># Add redir_params:</span>
+        <span class="n">script_const</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_redir_parameters_script</span><span class="p">()</span>
+
+        <span class="k">return</span> <span class="n">script_const</span></div>
+        
+
+<div class="viewcode-block" id="Step.manage_qsub_opts"><a class="viewcode-back" href="../Step.html#PLC_step.Step.manage_qsub_opts">[docs]</a>    <span class="k">def</span> <span class="nf">manage_qsub_opts</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Add default qsub options to step params </span>
+<span class="sd">            If &#39;-q&#39; is passed, is equivalent to passing &quot;queue&quot;</span>
+<span class="sd">            If both are passed, print a comment and use &#39;queue&#39;</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        
+        <span class="k">try</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s2">&quot;qsub_params&quot;</span><span class="p">]</span>
+        <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s2">&quot;qsub_params&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pipe_data</span><span class="p">[</span><span class="s2">&quot;qsub_params&quot;</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># &#39;queue&#39; can be set with &#39;qsub_opts_queue&#39; and with &#39;qsub_opts_-q&#39;. Dealing with it here:</span>
+            <span class="k">if</span> <span class="s2">&quot;-q&quot;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s2">&quot;qsub_params&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+                <span class="k">if</span> <span class="s2">&quot;queue&quot;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s2">&quot;qsub_params&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+                    <span class="n">sys</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;In </span><span class="si">%s</span><span class="s2">:</span><span class="se">\t</span><span class="s2">Got both &#39;-q&#39; and &#39;queue&#39; params for qsub. Using &#39;queue&#39;</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_step_name</span><span class="p">())</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s2">&quot;qsub_params&quot;</span><span class="p">][</span><span class="s2">&quot;queue&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s2">&quot;qsub_params&quot;</span><span class="p">][</span><span class="s2">&quot;-q&quot;</span><span class="p">]</span>
+                <span class="k">del</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s2">&quot;qsub_params&quot;</span><span class="p">][</span><span class="s2">&quot;-q&quot;</span><span class="p">]</span>
+                
+            <span class="c1"># For each opt in default AND NOT IN step-specific qsub params</span>
+            <span class="k">for</span> <span class="n">default_q_opt</span> <span class="ow">in</span> <span class="p">[</span><span class="n">qsub_opt</span> <span class="k">for</span> <span class="n">qsub_opt</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">pipe_data</span><span class="p">[</span><span class="s2">&quot;qsub_params&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">qsub_opt</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s2">&quot;qsub_params&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">()]:</span>
+                <span class="c1"># print &quot;----&gt;&quot;+default_q_opt</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s2">&quot;qsub_params&quot;</span><span class="p">][</span><span class="n">default_q_opt</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pipe_data</span><span class="p">[</span><span class="s2">&quot;qsub_params&quot;</span><span class="p">][</span><span class="n">default_q_opt</span><span class="p">]</span>
+            
+            <span class="c1"># Require a queue to be defined globally or locally:</span>
+            <span class="k">assert</span> <span class="s2">&quot;queue&quot;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s2">&quot;qsub_params&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">(),</span> <span class="s2">&quot;In </span><span class="si">%s</span><span class="s2">:</span><span class="se">\t</span><span class="s2">No &#39;queue&#39; defined for qsub</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_step_name</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="Step.local_start"><a class="viewcode-back" href="../Step.html#PLC_step.Step.local_start">[docs]</a>    <span class="k">def</span> <span class="nf">local_start</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">base_dir</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Adds code to self.script to enable steps to temporarily write to a local disk before moving to final shared destination</span>
+<span class="sd">            This can be useful when a lot of IO to the shared disk is detrimental</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># If &quot;local&quot; is set, will do all IO to local folder and then copy everything to self.base_dir</span>
+        <span class="k">if</span> <span class="s2">&quot;local&quot;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s2">&quot;local&quot;</span><span class="p">],</span> <span class="s2">&quot;In step </span><span class="si">%s</span><span class="s2">: You must supply a local destination when requesting &#39;local&#39; in parameters&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span>
+            <span class="n">local_dir</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="n">os</span><span class="o">.</span><span class="n">sep</span><span class="p">,</span>                                                        \
+                                <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s2">&quot;local&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">strip</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">sep</span><span class="p">),</span>                             \
+                                <span class="n">os</span><span class="o">.</span><span class="n">sep</span><span class="p">,</span>                                                         \
+                                <span class="s2">&quot;_&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">spec_script_name</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">pipe_data</span><span class="p">[</span><span class="s2">&quot;run_code&quot;</span><span class="p">]]),</span>   \
+                                <span class="n">os</span><span class="o">.</span><span class="n">sep</span><span class="p">])</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">script</span> <span class="o">+=</span> <span class="s2">&quot;# Adding lines for local execution:</span><span class="se">\n</span><span class="s2">&quot;</span> 
+            <span class="bp">self</span><span class="o">.</span><span class="n">script</span> <span class="o">+=</span> <span class="s2">&quot;mkdir -p </span><span class="si">%s</span><span class="s2"> </span><span class="se">\n\n</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">local_dir</span>
+            <span class="k">return</span> <span class="n">local_dir</span> 
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">base_dir</span></div>
+            
+            
+<div class="viewcode-block" id="Step.local_finish"><a class="viewcode-back" href="../Step.html#PLC_step.Step.local_finish">[docs]</a>    <span class="k">def</span> <span class="nf">local_finish</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">use_dir</span><span class="p">,</span><span class="n">base_dir</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="s2">&quot;local&quot;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">script</span> <span class="o">+=</span> <span class="s2">&quot;# Adding lines moving local execution to final destination:</span><span class="se">\n</span><span class="s2">&quot;</span> 
+            <span class="bp">self</span><span class="o">.</span><span class="n">script</span> <span class="o">+=</span> <span class="s2">&quot; &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="s2">&quot;cp -prf &quot;</span><span class="p">,</span> <span class="n">use_dir</span> <span class="o">+</span> <span class="s2">&quot;*&quot;</span><span class="p">,</span> <span class="n">base_dir</span><span class="p">,</span><span class="s2">&quot;</span><span class="se">\n\n</span><span class="s2">&quot;</span><span class="p">])</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">script</span> <span class="o">+=</span> <span class="s2">&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="s2">&quot;rm -rf &quot;</span><span class="p">,</span> <span class="n">use_dir</span><span class="p">,</span><span class="s2">&quot;</span><span class="se">\n\n</span><span class="s2">&quot;</span><span class="p">])</span></div>
+
+            
+
+<div class="viewcode-block" id="Step.get_dict_encoding"><a class="viewcode-back" href="../Step.html#PLC_step.Step.get_dict_encoding">[docs]</a>    <span class="k">def</span> <span class="nf">get_dict_encoding</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Returns a dict containing all the step information</span>
+<span class="sd">            Used for JSON serialization and storage in MongoDB</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="n">ret_dict</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">ret_dict</span><span class="p">[</span><span class="s2">&quot;sample_data&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_sample_data</span><span class="p">()</span>
+            <span class="n">ret_dict</span><span class="p">[</span><span class="s2">&quot;base_sample_data&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_base_sample_data</span><span class="p">()</span>
+        <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
+            <span class="n">ret_dict</span><span class="p">[</span><span class="s2">&quot;sample_data&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="n">ret_dict</span><span class="p">[</span><span class="s2">&quot;base_sample_data&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="n">ret_dict</span><span class="p">[</span><span class="s2">&quot;param_data&quot;</span><span class="p">]</span>  <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span>
+        
+        
+        <span class="k">return</span> <span class="n">ret_dict</span></div>
+        
+        
+        
+<div class="viewcode-block" id="Step.return_formatted_message"><a class="viewcode-back" href="../Step.html#PLC_step.Step.return_formatted_message">[docs]</a>    <span class="k">def</span> <span class="nf">return_formatted_message</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">comment</span><span class="p">,</span> <span class="n">sample</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Returns a formatted comment </span>
+<span class="sd">        </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="c1"># Here one can add a dependency on a &#39;verbose&#39; parameter somehow...</span>
+        <span class="k">if</span> <span class="n">sample</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s2">&quot;Step </span><span class="si">%s</span><span class="s2">: In sample </span><span class="si">%s</span><span class="s2">, </span><span class="si">%s</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">sample</span><span class="p">,</span> <span class="n">comment</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s2">&quot;Step </span><span class="si">%s</span><span class="s2">: </span><span class="si">%s</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">comment</span><span class="p">)</span></div>
+            
+            
+            
+            
+<div class="viewcode-block" id="Step.stamp_file"><a class="viewcode-back" href="../Step.html#PLC_step.Step.stamp_file">[docs]</a>    <span class="k">def</span> <span class="nf">stamp_file</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filename</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Register a file for stamping with md5sum</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">stamped_files</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span></div>
+        
+        
+<div class="viewcode-block" id="Step.register_stamped_files"><a class="viewcode-back" href="../Step.html#PLC_step.Step.register_stamped_files">[docs]</a>    <span class="k">def</span> <span class="nf">register_stamped_files</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">qsub_name</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="n">script</span> <span class="o">=</span> <span class="s2">&quot;######</span><span class="se">\n</span><span class="s2"># Registering files with md5sum:</span><span class="se">\n</span><span class="s2">&quot;</span>
+
+        <span class="c1"># Bash needs the -e flag to render \t as tabs.</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">shell</span><span class="o">==</span><span class="s2">&quot;csh&quot;</span><span class="p">:</span>
+            <span class="n">echo_cmd</span> <span class="o">=</span> <span class="s2">&quot;echo&quot;</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">shell</span><span class="o">==</span><span class="s2">&quot;bash&quot;</span><span class="p">:</span>
+            <span class="n">echo_cmd</span> <span class="o">=</span> <span class="s2">&quot;echo -e&quot;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">pass</span>
+
+        <span class="k">for</span> <span class="n">filename</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">stamped_files</span><span class="p">:</span>
+            <span class="n">script</span> <span class="o">+=</span> <span class="s2">&quot;&quot;&quot;</span>
+<span class="si">%(echo_cmd)s</span><span class="s2"> `date &#39;+</span><span class="si">%%</span><span class="s2">d/</span><span class="si">%%</span><span class="s2">m/</span><span class="si">%%</span><span class="s2">Y </span><span class="si">%%</span><span class="s2">H:</span><span class="si">%%</span><span class="s2">M:</span><span class="si">%%</span><span class="s2">S&#39;` &#39;</span><span class="se">\\</span><span class="s2">t</span><span class="si">%(step)s</span><span class="se">\\</span><span class="s2">t</span><span class="si">%(stepname)s</span><span class="se">\\</span><span class="s2">t</span><span class="si">%(stepID)s</span><span class="se">\\</span><span class="s2">t&#39; `md5sum </span><span class="si">%(filename)s</span><span class="s2">` &gt;&gt; </span><span class="si">%(file)s</span><span class="s2"></span>
+<span class="s2">&quot;&quot;&quot;</span> <span class="o">%</span>      <span class="p">{</span><span class="s2">&quot;echo_cmd&quot;</span> <span class="p">:</span> <span class="n">echo_cmd</span><span class="p">,</span>             \
+            <span class="s2">&quot;filename&quot;</span> <span class="p">:</span> <span class="n">filename</span><span class="p">,</span>             \
+            <span class="s2">&quot;step&quot;</span>     <span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_step_step</span><span class="p">(),</span> \
+            <span class="s2">&quot;stepname&quot;</span> <span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_step_name</span><span class="p">(),</span> \
+            <span class="s2">&quot;stepID&quot;</span>   <span class="p">:</span> <span class="n">qsub_name</span><span class="p">,</span>            \
+            <span class="s2">&quot;file&quot;</span>     <span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">pipe_data</span><span class="p">[</span><span class="s2">&quot;registration_file&quot;</span><span class="p">]}</span>
+        
+        <span class="n">script</span> <span class="o">+=</span> <span class="s2">&quot;#############</span><span class="se">\n\n</span><span class="s2">&quot;</span>
+            
+        <span class="k">return</span> <span class="n">script</span></div>
+        
+        
+        
+     
+            
+    <span class="c1"># def stamp_dir_files(self, dirname):</span>
+        <span class="c1"># &quot;&quot;&quot; Register a file for stamping with md5sum</span>
+        <span class="c1"># &quot;&quot;&quot;</span>
+        
+        <span class="c1"># self.stamped_dirs.append(dirname)</span>
+        
+                
+               
+    <span class="c1"># # def register_stamped_files(self,results_dir):</span>
+    <span class="c1"># def register_files_in_dir(self,qsub_name):</span>
+        <span class="c1"># &quot;&quot;&quot;</span>
+        <span class="c1"># &quot;&quot;&quot;</span>
+
+        <span class="c1"># script = &quot;&quot;</span>
+        <span class="c1"># # Bash needs the -e flag to render \t as tabs.</span>
+        <span class="c1"># if self.shell==&quot;csh&quot;:</span>
+            <span class="c1"># echo_cmd = &quot;echo&quot;</span>
+        <span class="c1"># elif self.shell==&quot;bash&quot;:</span>
+            <span class="c1"># echo_cmd = &quot;echo -e&quot;</span>
+        <span class="c1"># else:</span>
+            <span class="c1"># pass</span>
+        
+        <span class="c1"># for dir_name in self.stamped_dirs:</span>
+            <span class="c1"># script = &quot;&quot;&quot;\n\n</span>
+<span class="c1"># ####################        </span>
+<span class="c1"># # Registering files created in this step:</span>
+<span class="c1"># find %(results_dir)s -type f | xargs -I {} md5sum {} | xargs -I {} %(echo_cmd)s `date &#39;+%%d/%%m/%%Y %%H:%%M:%%S&#39;` &#39;\\t%(step)s\\t%(stepname)s\\t%(stepID)s\\t&#39; {} &gt;&gt; %(registration_file)s</span>
+<span class="c1"># &quot;&quot;&quot; % { &quot;echo_cmd&quot;          : echo_cmd,                             \</span>
+        <span class="c1"># &quot;results_dir&quot;       : dir_name,                             \</span>
+        <span class="c1"># &quot;registration_file&quot; : self.pipe_data[&quot;registration_file&quot;],  \</span>
+        <span class="c1"># &quot;step&quot;              : self.get_step_step(),                 \</span>
+        <span class="c1"># &quot;stepname&quot;          : self.get_step_name(),                 \</span>
+        <span class="c1"># &quot;stepID&quot;            : qsub_name}</span>
+
+<span class="c1"># # find data/merge/merge1/ -type f | xargs -I {} md5sum {} | xargs -I {} echo &quot;tttt &quot; {} &gt;&gt; t1.txt</span>
+    
+        <span class="c1"># return script</span>
+        
+<div class="viewcode-block" id="Step.register_files"><a class="viewcode-back" href="../Step.html#PLC_step.Step.register_files">[docs]</a>    <span class="k">def</span> <span class="nf">register_files</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">qsub_name</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="n">script</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">stamped_files</span><span class="p">:</span>
+            <span class="n">script</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">register_stamped_files</span><span class="p">(</span><span class="n">qsub_name</span><span class="p">)</span>
+            
+        <span class="c1"># if self.stamped_dirs:</span>
+            <span class="c1"># script += self.register_files_in_dir(qsub_name)</span>
+            
+        <span class="bp">self</span><span class="o">.</span><span class="n">stamped_files</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
+        <span class="c1"># self.stamped_dirs  = list()</span>
+
+        <span class="k">return</span> <span class="n">script</span></div>
+        
+        
+        
+<div class="viewcode-block" id="Step.declare_file"><a class="viewcode-back" href="../Step.html#PLC_step.Step.declare_file">[docs]</a>    <span class="k">def</span> <span class="nf">declare_file</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filename</span><span class="p">,</span> <span class="n">slot</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Declare a file for inserting into sample_data and creating md5 signature</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+                 
+        <span class="c1"># Store file in active file for sample:</span>
+        <span class="n">slot</span> <span class="o">=</span> <span class="n">filename</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">stamp_file</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span></div>
+
+        
+    <span class="k">def</span> <span class="nf">get_qsub_names_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">qsub_names_dict</span></div>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2017, Menachem Sklarz.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../',
+            VERSION:'1.1.0',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="../_static/jquery.js"></script>
+      <script type="text/javascript" src="../_static/underscore.js"></script>
+      <script type="text/javascript" src="../_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

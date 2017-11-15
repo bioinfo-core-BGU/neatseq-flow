@@ -1,0 +1,135 @@
+Output directory structure
+==========================
+
+**Author:** Menachem Sklarz
+
+**Affiliation:** `Bioinformatics Core Facility <http://bioinfo.bgu.ac.il/bsu/index.htm>`_, `National institute of Biotechnology in the Negev <http://in.bgu.ac.il/en/nibn/Pages/default.aspx>`_, Ben-Gurion University
+
+.. contents:: Table of Contents
+   :depth: 2
+   :local:
+   :backlinks: top
+
+
+The main directory structure 
+-----------------------------
+
+The directories are elaborated on below.
+ 
+.. figure:: figs/image003.png
+   :scale: 100 %
+   :alt: NeatSeq-Flow dir structure
+   :align: center
+
+   The directory structure created by **NeatSeq-Flow**
+   
+The scripts directory
+-----------------------------
+
+* Executing ``csh 00.pipe.commands.csh`` will execute the entire workflow.
+* The scripts beginning ``01.merge…`` etc. execute entire steps.
+* The actual scripts running each step per sample or on the entire project are contained in the equivalent directories ``01.merge…`` etc.
+* The scripts are numbered by execution order (see ``00.pipe.commands.csh``)
+
+.. figure:: figs/image005.png
+   :scale: 100 %
+   :alt: Structure of script directory
+   :align: center
+
+   The scripts directory created by **NeatSeq-Flow**
+
+  
+The data directory
+-----------------------------
+
+In the data directory, the analysis outputs are organized by module, by module instance and by sample. 
+
+Below is the data directory for the example, showing the tree organization for the bowtie2_mapper and Multiqc modules. 
+
+.. figure:: figs/image007.png
+   :scale: 100 %
+   :alt: Structure of script directory
+   :align: center
+
+   The data directory created by **NeatSeq-Flow**, showing the tree organization.
+
+  
+The backup directory 
+---------------------
+
+The backup directory contains a history of workflow sample and parameter files.
+ 
+
+.. figure:: figs/image008.png
+   :scale: 100 %
+   :alt: Structure of script directory
+   :align: center
+
+   The backups directory created by **NeatSeq-Flow**
+
+ 
+The logs directory
+-------------------
+
+The logs directory contains various logging files:
+
+1. **version_list**. A list of all the versions of the workflow with equivalent comments 
+2. **file_registration**. A list of files produced, including md5 signatures, and the script and workflow version that produced them
+3. ``log_file_plotter.R``. An R script for producing a plot of the execution times. (Run with Rscript and receives a single argument – a log file to plot)
+4. ``log_<workflow_ID>.txt``. Log of the execution times of the script per workflow version ID.
+5. ``log_<workflow_ID>.txt.html``. Graphical representation of the progress of the WF execution, as produced by the ``log_file_plotter.R`` script (see figure below)
+ 
+ 
+.. figure:: figs/image009.png
+   :scale: 100 %
+   :alt: log directory
+   :align: center
+
+   The logs directory created by **NeatSeq-Flow**
+
+.. figure:: figs/image010.png
+   :scale: 100 %
+   :alt: log directory
+   :align: center
+
+   A graphical representation of the workflow execution.
+
+
+The stderr and stdout directories
+-----------------------------------
+
+* The stderr and stdout directories store the script standard error and outputs, respectively. 
+* These are stored in files containing the module name, module instance, sample name, workflow ID and cluster job ID.
+ 
+The objects directory
+-----------------------------
+
+The objects directory contains various files describing the workflow: 
+
+.. figure:: figs/image014.png
+   :scale: 100 %
+   :alt: log directory
+   :align: center
+
+   The objects directory created by **NeatSeq-Flow**
+
+   
+1. ``pipeline_graph.html``: An SVG diagram of the workflow.
+
+.. figure:: figs/pipeline_graph_old.PNG
+   :scale: 100 %
+   :alt: log directory
+   :align: center
+
+2. ``diagrammer.R``: an R script for producing a DiagrammeR diagram of the workflow. 
+3. ``pipedata.json``: A JSON file containing all the workflow data, for uploading to JSON compliant databases etc. 
+4. ``workflow_graph.html`` is the output from executing ``Rscript diagrammer.R``.
+
+.. figure:: figs/workflow_graph.PNG
+   :scale: 100 %
+   :alt: log directory
+   :align: center
+
+.. note:: The ``diagrammer.R`` script requires installing the ``DiagrammeR`` and ``htmlwidgets`` R packages.
+
+

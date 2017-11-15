@@ -1,0 +1,526 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Building a workflow &mdash; neatseq_flow 1.1.0 documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="genindex.html"/>
+        <link rel="search" title="Search" href="search.html"/>
+    <link rel="top" title="neatseq_flow 1.1.0 documentation" href="index.html"/>
+        <link rel="next" title="Output directory structure" href="03.output.html"/>
+        <link rel="prev" title="NeatSeq-Flow concept" href="01.concept.html"/> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="index.html" class="icon icon-home"> neatseq_flow
+          
+
+          
+            
+            <img src="_static/NeatSeq_Flow_logo.png" class="logo" />
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.1.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+                <p class="caption"><span class="caption-text">Detailed documentation</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="01.concept.html">NeatSeq-Flow concept</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Building a workflow</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#execution">Execution</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#preparing-sample-and-parameter-files">Preparing sample and parameter files</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#parameter-file-definition">Parameter file definition</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#global-parameters">Global parameters</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#step-wise-parameters">Step-wise parameters:</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#required-parameters-for-each-step">Required parameters for each step</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#additional-parameters">Additional parameters</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#redirected-parameters">Redirected parameters</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#comments">Comments</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#sample-file-definition">Sample file definition</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#list-format">List-format</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#tabular-format">Tabular-format</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#chip-seq-specific-definitions">ChIP-seq specific definitions</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#executing-neatseq-flow">Executing neatseq_flow</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#executing-the-workflow">Executing the workflow</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#automatic-execution">Automatic execution:</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#step-wise-execution">Step-wise execution</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#sample-wise-execution">Sample-wise execution.</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="03.output.html">Output directory structure</a></li>
+<li class="toctree-l1"><a class="reference internal" href="06.addnew_module.html">For the programmer - Adding modules</a></li>
+<li class="toctree-l1"><a class="reference internal" href="07.monitor.html">Monitor docs</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="index.html">neatseq_flow</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+ 
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="index.html">Docs</a> &raquo;</li>
+      
+    <li>Building a workflow</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="_sources/02.build_WF.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="building-a-workflow">
+<h1>Building a workflow<a class="headerlink" href="#building-a-workflow" title="Permalink to this headline">¶</a></h1>
+<p><strong>Author:</strong> Menachem Sklarz</p>
+<p><strong>Affiliation:</strong> <a class="reference external" href="http://bioinfo.bgu.ac.il/bsu/index.htm">Bioinformatics Core Facility</a>, <a class="reference external" href="http://in.bgu.ac.il/en/nibn/Pages/default.aspx">National institute of Biotechnology in the Negev</a>, Ben-Gurion University</p>
+<div class="contents local topic" id="table-of-contents">
+<p class="topic-title first">Table of Contents</p>
+<ul class="simple">
+<li><a class="reference internal" href="#execution" id="id4">Execution</a></li>
+<li><a class="reference internal" href="#preparing-sample-and-parameter-files" id="id5">Preparing sample and parameter files</a></li>
+<li><a class="reference internal" href="#parameter-file-definition" id="id6">Parameter file definition</a><ul>
+<li><a class="reference internal" href="#global-parameters" id="id7">Global parameters</a></li>
+<li><a class="reference internal" href="#step-wise-parameters" id="id8">Step-wise parameters:</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#sample-file-definition" id="id9">Sample file definition</a><ul>
+<li><a class="reference internal" href="#list-format" id="id10">List-format</a></li>
+<li><a class="reference internal" href="#tabular-format" id="id11">Tabular-format</a></li>
+<li><a class="reference internal" href="#chip-seq-specific-definitions" id="id12">ChIP-seq specific definitions</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#executing-neatseq-flow" id="id13">Executing neatseq_flow</a></li>
+<li><a class="reference internal" href="#executing-the-workflow" id="id14">Executing the workflow</a><ul>
+<li><a class="reference internal" href="#automatic-execution" id="id15">Automatic execution:</a></li>
+<li><a class="reference internal" href="#step-wise-execution" id="id16">Step-wise execution</a></li>
+<li><a class="reference internal" href="#sample-wise-execution" id="id17">Sample-wise execution.</a></li>
+</ul>
+</li>
+</ul>
+</div>
+<div class="section" id="execution">
+<h2><a class="toc-backref" href="#table-of-contents">Execution</a><a class="headerlink" href="#execution" title="Permalink to this headline">¶</a></h2>
+<p>A typical execution of <code class="docutils literal"><span class="pre">neatseq_flow</span></code> is as follows:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">python</span> <span class="n">neatseq_flow</span><span class="o">.</span><span class="n">py</span>                              \
+    <span class="o">--</span><span class="n">sample_file</span> <span class="n">YAML_pipelines</span><span class="o">/</span><span class="n">PE_tabular</span><span class="o">.</span><span class="n">nsfs</span>    \
+    <span class="o">--</span><span class="n">param_file</span>  <span class="n">YAML_pipelines</span><span class="o">/</span><span class="n">mapping</span><span class="o">.</span><span class="n">yaml</span>       \
+    <span class="o">--</span><span class="n">message</span>     <span class="s2">&quot;an informative message&quot;</span>          \
+    <span class="o">--</span><span class="n">home_dir</span>    <span class="o">/</span><span class="n">path</span><span class="o">/</span><span class="n">to</span><span class="o">/</span><span class="n">workflow</span><span class="o">/</span><span class="n">directory</span>
+</pre></div>
+</div>
+<p>You can leave out the <code class="docutils literal"><span class="pre">--message</span></code> and <code class="docutils literal"><span class="pre">--home_dir</span></code> parameters.
+See basic documentation by executing:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">python</span> <span class="n">neatseq_flow</span><span class="o">.</span><span class="n">py</span> <span class="o">-</span><span class="n">h</span>
+</pre></div>
+</div>
+<p>The sample file and parameter files passed with <code class="docutils literal"><span class="pre">--sample_file</span></code> and <code class="docutils literal"><span class="pre">--param_file</span></code> are described in more detail below.</p>
+</div>
+<div class="section" id="preparing-sample-and-parameter-files">
+<h2><a class="toc-backref" href="#table-of-contents">Preparing sample and parameter files</a><a class="headerlink" href="#preparing-sample-and-parameter-files" title="Permalink to this headline">¶</a></h2>
+<p>A typical usage of neatseq_flow involves the following steps:</p>
+<ol class="arabic simple">
+<li>Preparing a sample file.</li>
+<li>Preparing a parameter file.</li>
+<li>Executing neatseq_flow to create the workflow.</li>
+<li>Executing the workflow on an SGE cluster.</li>
+</ol>
+<p><strong>The parameter file is rarely created from scratch</strong>. Take an existing parameter file defined for the analysis you require and modify it to suit your SGE clsuter and specific requirements.</p>
+</div>
+<div class="section" id="parameter-file-definition">
+<h2><a class="toc-backref" href="#table-of-contents">Parameter file definition</a><a class="headerlink" href="#parameter-file-definition" title="Permalink to this headline">¶</a></h2>
+<p>The parameter file is a YAML file which must include two (unequal) sections:</p>
+<div class="section" id="global-parameters">
+<h3><a class="toc-backref" href="#table-of-contents">Global parameters</a><a class="headerlink" href="#global-parameters" title="Permalink to this headline">¶</a></h3>
+<p>Several SGE parameters can be set globally so that all scripts use them for execution. Overriding the defaults on a step-wise basis is possible in the step-wise section of the parameter file.</p>
+<p>All global parameters are set within a <code class="docutils literal"><span class="pre">Global_params</span></code> block in YAML format.</p>
+<ul class="simple">
+<li><code class="docutils literal"><span class="pre">Qsub_q</span></code>: Defines the default queue to send the jobs to.</li>
+<li><code class="docutils literal"><span class="pre">Qsub_nodes</span></code>: Limits the nodes to which to send the jobs. Must be nodes that are available to the queue requested in <cite>Qsub_q</cite>. The nodes should be passed in a YAML list format.</li>
+<li><code class="docutils literal"><span class="pre">Qsub_opts</span></code>: Other SGE parameters to be set as default for all scripts, <em>e.g.</em> <code class="docutils literal"><span class="pre">-V</span> <span class="pre">-cwd</span></code> etc. The parameters should be passed in one long string and <strong>not</strong> as a list.</li>
+<li><code class="docutils literal"><span class="pre">Qsub_path</span></code>: The path to the <code class="docutils literal"><span class="pre">qstat</span></code> command. If not set, qstat will be used as-is with no path. Sometimes in remote nodes the <code class="docutils literal"><span class="pre">qstat</span></code> command is not in the path and if Qsub_path is not set, the step start and stop logging will fail.</li>
+<li><code class="docutils literal"><span class="pre">Default_wait</span></code>: The time, in seconds, to wait for jobs to enter the queue before terminating the step-level script. Must be an integer. The default is 10, which is usually a good value to start with. If downstream jobs seem to be sent for execution before earlier jobs have terminated, increase this value.</li>
+<li><code class="docutils literal"><span class="pre">module_path</span></code>: Enables including modules not in the main <strong>NeatSeq-Flow</strong> package. This includes the modules downloaded from the <strong>NeatSeq-Flow</strong> module and workflow repository as modules you added yourself (see section <a class="reference internal" href="06.addnew_module.html#for-the-programmer-adding-modules"><span class="std std-ref">For the programmer - Adding modules</span></a>). Keep your modules in a separate path and pass the path to <strong>NeatSeq-Flow</strong> with <code class="docutils literal"><span class="pre">module_path</span></code>. Several of these can be passed in YAML list format for more than one external module path. The list will be searched in order, with the main <strong>NeatSeq-Flow</strong> package being searched last.</li>
+<li><code class="docutils literal"><span class="pre">job_limit</span></code>: If there is an upper limit on the jobs you can send to the job manager, you can use the <code class="docutils literal"><span class="pre">job_limit</span></code> parameter to pass <strong>NeatSeq-Flow</strong> a file with one line, <em>e.g.</em> <cite>limit=1000 sleep=60</cite>. This will make the scripts check every 60 seconds if there are less than 1000 jobs registered for the user. New jobs will be released only when there are less than the specified limit.</li>
+</ul>
+<p>Example of a global-parameter block:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">Global_params</span><span class="p">:</span>
+    <span class="n">Default_wait</span><span class="p">:</span> <span class="mi">10</span>
+    <span class="n">Qsub_path</span><span class="p">:</span> <span class="o">/</span><span class="n">path</span><span class="o">/</span><span class="n">to</span><span class="o">/</span><span class="n">qstat</span>
+    <span class="n">Qsub_q</span><span class="p">:</span> <span class="n">queue</span><span class="o">.</span><span class="n">q</span>
+    <span class="n">Qsub_nodes</span><span class="p">:</span> <span class="p">[</span><span class="n">node1</span><span class="p">,</span><span class="n">node2</span><span class="p">,</span><span class="n">node3</span><span class="p">]</span>
+    <span class="n">Qsub_opts</span><span class="p">:</span>  <span class="o">-</span><span class="n">V</span> <span class="o">-</span><span class="n">cwd</span>
+    <span class="n">module_path</span><span class="p">:</span>
+        <span class="o">-</span> <span class="o">/</span><span class="n">path</span><span class="o">/</span><span class="n">to</span><span class="o">/</span><span class="n">modules1</span>
+        <span class="o">-</span> <span class="o">/</span><span class="n">path</span><span class="o">/</span><span class="n">to</span><span class="o">/</span><span class="n">modules2</span><span class="o">/</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="step-wise-parameters">
+<h3><a class="toc-backref" href="#table-of-contents">Step-wise parameters:</a><a class="headerlink" href="#step-wise-parameters" title="Permalink to this headline">¶</a></h3>
+<p>Step-wise parameters define parameters which are specific to the various steps included in the workflow.</p>
+<p>All step-wise parameters are set within a <code class="docutils literal"><span class="pre">Step_params</span></code> block in YAML format.</p>
+<p>A parameter block for a step (a module instance) should look as follows:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">Step_params</span><span class="p">:</span>
+    <span class="n">trim1</span><span class="p">:</span>
+        <span class="n">module</span><span class="p">:</span> <span class="n">trimmo</span>
+        <span class="n">base</span><span class="p">:</span> <span class="n">merge1</span>
+        <span class="n">script_path</span><span class="p">:</span> <span class="n">java</span> <span class="o">-</span><span class="n">jar</span> <span class="n">trimmomatic</span><span class="o">-</span><span class="mf">0.32</span><span class="o">.</span><span class="n">jar</span>
+        <span class="n">qsub_params</span><span class="p">:</span>
+            <span class="o">-</span><span class="n">pe</span><span class="p">:</span> <span class="n">shared</span> <span class="mi">20</span>
+            <span class="n">node</span><span class="p">:</span> <span class="n">node1</span>
+        <span class="n">todo</span><span class="p">:</span> <span class="n">LEADING</span><span class="p">:</span><span class="mi">20</span> <span class="n">TRAILING</span><span class="p">:</span><span class="mi">20</span>
+        <span class="n">redirects</span><span class="p">:</span>
+            <span class="o">-</span><span class="n">threads</span><span class="p">:</span> <span class="mi">20</span>
+</pre></div>
+</div>
+<p><code class="docutils literal"><span class="pre">trim1</span></code> is the step name. This should be a single-word, informative name (alphanumerc and underscore are permitted) which will be included in the script names and output directory names.</p>
+<p>Following the step name, with indentation, are the step parameters as defined below.</p>
+<p>Step parameters can be divided into the following groups:</p>
+<div class="section" id="required-parameters-for-each-step">
+<span id="required-parameters"></span><h4>Required parameters for each step<a class="headerlink" href="#required-parameters-for-each-step" title="Permalink to this headline">¶</a></h4>
+<ol class="arabic simple">
+<li><code class="docutils literal"><span class="pre">module</span></code> is the name of the module of which this step is an instance.</li>
+<li><code class="docutils literal"><span class="pre">base</span></code> is the name of the step on which the current step is based (not required for the <cite>merge</cite> step, which is always first and single). <code class="docutils literal"><span class="pre">base</span></code> can be a YAML formatted list of base steps.</li>
+<li><code class="docutils literal"><span class="pre">script_path</span></code>: The <strong>full path</strong> to the script executed by this step.</li>
+</ol>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<ol class="last arabic simple">
+<li>If the program executed by the module is on the search PATH of all the nodes in the queue, you can just pass the program name without the full path. This is not usually recommended.</li>
+<li>If the program requires a specific version of python or Rscript, you can append those before the actual path, <em>e.g.</em> <code class="docutils literal"><span class="pre">/path/to/python</span> <span class="pre">/path/to/executable</span></code></li>
+<li>Sometimes, modules can require a path to a directory rather than to an executable. See, <em>e.g.</em>, module <code class="docutils literal"><span class="pre">UCSC_BW_wig</span></code>.</li>
+</ol>
+</div>
+</div>
+<div class="section" id="additional-parameters">
+<span id="id1"></span><h4>Additional parameters<a class="headerlink" href="#additional-parameters" title="Permalink to this headline">¶</a></h4>
+<p>Other parameters you can set for each step to control the execution of the step scripts:</p>
+<ol class="arabic">
+<li><p class="first"><code class="docutils literal"><span class="pre">setenv</span></code>: Set various environment variables for the duration of script execution. For <code class="docutils literal"><span class="pre">bash</span></code> scripts, <code class="docutils literal"><span class="pre">export</span></code> will be used instead of <code class="docutils literal"><span class="pre">setenv</span></code>. Is useful when the software executed by the script requires setting specific environment variables which you do not want to set globally on all nodes.</p>
+</li>
+<li><dl class="first docutils">
+<dt><code class="docutils literal"><span class="pre">qsub_params</span></code>: Set cluster related params which will be effective for the current step alone:</dt>
+<dd><ol class="first last arabic simple">
+<li><code class="docutils literal"><span class="pre">node</span></code>: A node or YAML list of nodes on which to run the step scripts (overrides global parameter <code class="docutils literal"><span class="pre">Qsub_nodes</span></code>)</li>
+<li><code class="docutils literal"><span class="pre">queue</span></code> or <code class="docutils literal"><span class="pre">-q</span></code>: Will limit the execution of the step’s scripts to this queue (overrides global parameter <code class="docutils literal"><span class="pre">Qsub_q</span></code>)</li>
+<li><code class="docutils literal"><span class="pre">-pe</span></code>: Will set the <code class="docutils literal"><span class="pre">-pe</span></code> parameter for all scripts for this module (see SGE <code class="docutils literal"><span class="pre">qsub</span></code> manual).</li>
+<li><code class="docutils literal"><span class="pre">-XXX:</span> <span class="pre">YYY</span></code>: This is a way do define other SGE parameters for all step scripts. This will set the value of qsub parameter <code class="docutils literal"><span class="pre">-XXX</span></code> to <code class="docutils literal"><span class="pre">YYY</span></code></li>
+</ol>
+</dd>
+</dl>
+</li>
+<li><p class="first"><code class="docutils literal"><span class="pre">scope</span></code>: Defines whether to use sample-wise files or project-wise files. Check per-module documentation for whether and how this parameter is defined (see, <em>e.g.</em>, the <code class="docutils literal"><span class="pre">blast</span></code> module).</p>
+</li>
+<li><p class="first"><code class="docutils literal"><span class="pre">sample_list</span></code>: This is an experimental feature. A comma-separated list of samples on which to execute the module. Scripts will be created only for the samples in the list. This selection will be valid for all instances based on this instance, untill the value <code class="docutils literal"><span class="pre">all_samples</span></code> is passed. Use this option with care since the samples not in the list will not own the step outputs, which may well be required downstream. A use case could be when you want to run a step with different parameters for different sample subsets. Both versions of the instance should inherit from a common <code class="docutils literal"><span class="pre">base</span></code> and the downstream step can inherit both versions, thus all samples will have all files, created with different parameters.</p>
+</li>
+<li><p class="first"><code class="docutils literal"><span class="pre">local</span></code>: A local folder which exists in all cluster nodes. Uses a local directory for intermediate files before copying results to final destination in <code class="docutils literal"><span class="pre">data</span></code> dir. This is useful when the cluster manager requires you to limit your IO to the central disk system.</p>
+</li>
+</ol>
+</div>
+<div class="section" id="redirected-parameters">
+<span id="id2"></span><h4>Redirected parameters<a class="headerlink" href="#redirected-parameters" title="Permalink to this headline">¶</a></h4>
+<p>Parameters to be redirected to the actual program executed by the step.</p>
+<p>Redirected parameters are specified within a <code class="docutils literal"><span class="pre">redirects</span></code> block (see example above).</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">the parameter name must include the <code class="docutils literal"><span class="pre">-</span></code> or <code class="docutils literal"><span class="pre">--</span></code> required by the program defined in <code class="docutils literal"><span class="pre">script_path</span></code>.</p>
+</div>
+</div>
+<div class="section" id="comments">
+<h4>Comments<a class="headerlink" href="#comments" title="Permalink to this headline">¶</a></h4>
+<ol class="arabic simple">
+<li>The local directory passed to <code class="docutils literal"><span class="pre">local</span></code> must exist on all nodes in the queue.</li>
+<li>For a list of qsub parameters, see the <a class="reference external" href="http://gridscheduler.sourceforge.net/htmlman/htmlman1/qsub.html">qsub man page</a></li>
+<li>The list of nodes passed to <code class="docutils literal"><span class="pre">node</span></code> within the <code class="docutils literal"><span class="pre">qsub_params</span></code> block will be appended to the queue name (pipeline-global or step specific). Don’t add the queue name to the node names.</li>
+</ol>
+</div>
+</div>
+</div>
+<div class="section" id="sample-file-definition">
+<span id="id3"></span><h2><a class="toc-backref" href="#table-of-contents">Sample file definition</a><a class="headerlink" href="#sample-file-definition" title="Permalink to this headline">¶</a></h2>
+<p>You can code the sample file in two different ways: <a class="reference internal" href="#table-format-definition"><span class="std std-ref">Tabular-format</span></a> and <a class="reference internal" href="#list-format-definition"><span class="std std-ref">List-format</span></a>.</p>
+<div class="section" id="list-format">
+<span id="list-format-definition"></span><h3><a class="toc-backref" href="#table-of-contents">List-format</a><a class="headerlink" href="#list-format" title="Permalink to this headline">¶</a></h3>
+<p>Each sample file must include a single title line with the format:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">Title</span>    <span class="n">name_of_analysis</span>
+</pre></div>
+</div>
+<p>An example of a sample definition:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">Sample</span>     <span class="n">Sample1</span>
+<span class="n">Forward</span>    <span class="o">/</span><span class="n">full</span><span class="o">/</span><span class="n">path</span><span class="o">/</span><span class="n">to</span><span class="o">/</span><span class="n">Sample1_L001_R1_001</span><span class="o">.</span><span class="n">fastq</span><span class="o">.</span><span class="n">gz</span>
+<span class="n">Reverse</span>    <span class="o">/</span><span class="n">full</span><span class="o">/</span><span class="n">path</span><span class="o">/</span><span class="n">to</span><span class="o">/</span><span class="n">Sample1_L001_R2_001</span><span class="o">.</span><span class="n">fastq</span><span class="o">.</span><span class="n">gz</span>
+<span class="n">Forward</span>    <span class="o">/</span><span class="n">full</span><span class="o">/</span><span class="n">path</span><span class="o">/</span><span class="n">to</span><span class="o">/</span><span class="n">Sample1_L001_R1_002</span><span class="o">.</span><span class="n">fastq</span><span class="o">.</span><span class="n">gz</span>
+<span class="n">Reverse</span>    <span class="o">/</span><span class="n">full</span><span class="o">/</span><span class="n">path</span><span class="o">/</span><span class="n">to</span><span class="o">/</span><span class="n">Sample1_L001_R2_002</span><span class="o">.</span><span class="n">fastq</span><span class="o">.</span><span class="n">gz</span>
+</pre></div>
+</div>
+<p>A new sample definition begins with <code class="docutils literal"><span class="pre">Sample</span></code> followed by a sample name (the sample name must <strong>not</strong> contain spaces!)</p>
+<p>Following this line come lines defining the source files for the sample (The files can be compressed. <strong>You do not need to decompress the files before execution</strong>):</p>
+<ul class="simple">
+<li><code class="docutils literal"><span class="pre">Forward</span></code> and <code class="docutils literal"><span class="pre">Reverse</span></code> pairs (<code class="docutils literal"><span class="pre">fastq</span></code> files only).</li>
+<li><code class="docutils literal"><span class="pre">Single</span></code> (<code class="docutils literal"><span class="pre">fastq</span></code> files only)</li>
+<li><code class="docutils literal"><span class="pre">Nucleotide</span></code> (<code class="docutils literal"><span class="pre">fasta</span></code> files only)</li>
+<li><code class="docutils literal"><span class="pre">Protein</span></code> (<code class="docutils literal"><span class="pre">fasta</span></code> files only)</li>
+</ul>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<ol class="last arabic simple">
+<li>A sample can have more than one file. Follow the <code class="docutils literal"><span class="pre">Sample</span></code> line with as many file lines as necessary.</li>
+<li>Keep forward and reverse files in pairs. Each forward file should have it’s reverse file in the following line.</li>
+<li>Each sample can contain different combinations of the above but the user must be careful when doing unexpected things like that…</li>
+</ol>
+</div>
+</div>
+<div class="section" id="tabular-format">
+<span id="table-format-definition"></span><h3><a class="toc-backref" href="#table-of-contents">Tabular-format</a><a class="headerlink" href="#tabular-format" title="Permalink to this headline">¶</a></h3>
+<p>In the tabular format also, the file must contain a single title line with the format:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">Title</span>    <span class="n">name_of_analysis</span>
+</pre></div>
+</div>
+<div class="admonition caution">
+<p class="first admonition-title">Caution</p>
+<p class="last">If more that one title line is included, one of them will be selected and a warning will be generated.</p>
+</div>
+<p>The samples themselves are coded in a table with a header, as follows:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="c1">#SampleID    Type    Path</span>
+</pre></div>
+</div>
+<p>The table <strong>must be in consecutive lines</strong> following the header line.</p>
+<p>The first field is the sample name (no spaces!). The 2nd field is the file type (at the moment, one of: <code class="docutils literal"><span class="pre">Forward</span></code>, <code class="docutils literal"><span class="pre">Reverse</span></code>, <code class="docutils literal"><span class="pre">Single</span></code>, <code class="docutils literal"><span class="pre">Nucleotide</span></code> and <code class="docutils literal"><span class="pre">Protein</span></code>)</p>
+<p>An example of a sample table follows:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="c1">#SampleID    Type     Path</span>
+<span class="n">Sample1</span>    <span class="n">Forward</span>    <span class="o">/</span><span class="n">full</span><span class="o">/</span><span class="n">path</span><span class="o">/</span><span class="n">to</span><span class="o">/</span><span class="n">Sample1_R1_001</span><span class="o">.</span><span class="n">fastq</span><span class="o">.</span><span class="n">gz</span>
+<span class="n">Sample1</span>    <span class="n">Reverse</span>    <span class="o">/</span><span class="n">full</span><span class="o">/</span><span class="n">path</span><span class="o">/</span><span class="n">to</span><span class="o">/</span><span class="n">Sample1_R2_001</span><span class="o">.</span><span class="n">fastq</span><span class="o">.</span><span class="n">gz</span>
+<span class="n">Sample2</span>    <span class="n">Forward</span>    <span class="o">/</span><span class="n">full</span><span class="o">/</span><span class="n">path</span><span class="o">/</span><span class="n">to</span><span class="o">/</span><span class="n">Sample2_R1_001</span><span class="o">.</span><span class="n">fastq</span><span class="o">.</span><span class="n">gz</span>
+<span class="n">Sample2</span>    <span class="n">Reverse</span>    <span class="o">/</span><span class="n">full</span><span class="o">/</span><span class="n">path</span><span class="o">/</span><span class="n">to</span><span class="o">/</span><span class="n">Sample2_R2_001</span><span class="o">.</span><span class="n">fastq</span><span class="o">.</span><span class="n">gz</span>
+</pre></div>
+</div>
+<p>File types are as described above in section <a class="reference internal" href="#list-format-definition"><span class="std std-ref">List-format</span></a>.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<ol class="last arabic simple">
+<li>Each line represents one file. For samples with multiple files, add lines with the same sample name.</li>
+<li>Keep forward and reverse files in pairs. Each forward file should have it’s reverse file in the following line.</li>
+<li>Each sample can contain different combinations of the above but the user must be careful when doing unexpected things like that…</li>
+</ol>
+</div>
+</div>
+<div class="section" id="chip-seq-specific-definitions">
+<h3><a class="toc-backref" href="#table-of-contents">ChIP-seq specific definitions</a><a class="headerlink" href="#chip-seq-specific-definitions" title="Permalink to this headline">¶</a></h3>
+<p>For ChIP-seq experiments, one must define ChIP and Control (‘input’) pairs. This is done in the following manner (in the sample file):</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">Sample_Control</span>        <span class="n">anti_sample1</span><span class="p">:</span><span class="n">input_sample1</span>
+<span class="n">Sample_Control</span>        <span class="n">anti_sample2</span><span class="p">:</span><span class="n">input_sample2</span>
+</pre></div>
+</div>
+<p>Just replace <code class="docutils literal"><span class="pre">anti_sample1</span></code> and <code class="docutils literal"><span class="pre">input_sample1</span></code> with the relevant sample names.</p>
+</div>
+</div>
+<div class="section" id="executing-neatseq-flow">
+<h2><a class="toc-backref" href="#table-of-contents">Executing neatseq_flow</a><a class="headerlink" href="#executing-neatseq-flow" title="Permalink to this headline">¶</a></h2>
+<p>Executing neatseq_flow is the simplest step in the workflow:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">python</span> <span class="n">neatseq_flow</span>                         \
+    <span class="o">-</span><span class="n">s</span> <span class="n">sample_file</span><span class="o">.</span><span class="n">nsfs</span>                     \
+    <span class="o">-</span><span class="n">p</span> <span class="n">param_file1</span><span class="o">.</span><span class="n">nsfp</span><span class="p">,</span><span class="n">param_file2</span><span class="o">.</span><span class="n">nsfp</span>    \
+    <span class="o">-</span><span class="n">m</span> <span class="s2">&quot;message&quot;</span>                            \
+    <span class="o">-</span><span class="n">d</span> <span class="o">/</span><span class="n">path</span><span class="o">/</span><span class="n">to</span><span class="o">/</span><span class="n">workflow</span><span class="o">/</span><span class="n">directory</span>
+</pre></div>
+</div>
+<p><strong>Comments</strong>:</p>
+<ul class="simple">
+<li><code class="docutils literal"><span class="pre">neatseq_flow</span></code> does not require installation. If you have a local copy, append the full path to <code class="docutils literal"><span class="pre">neatseq_flow</span></code>.</li>
+<li>You can pass a comma-separated list of parameter files. neatseq_flow concatenates the files in the order they’re passed. Make sure there are no conflicts or duplicated definitions in the files (this occurs mainly for global parameters)</li>
+<li>Alternatively, you can pass many parameter by specifying more than one <code class="docutils literal"><span class="pre">-p</span></code>.</li>
+<li>It is not compulsory to pass a message via <code class="docutils literal"><span class="pre">-m</span></code> but it is highly recommended for documentation and reproducibility.</li>
+</ul>
+</div>
+<div class="section" id="executing-the-workflow">
+<h2><a class="toc-backref" href="#table-of-contents">Executing the workflow</a><a class="headerlink" href="#executing-the-workflow" title="Permalink to this headline">¶</a></h2>
+<p>The workflow can be executed fully automatically; on a step-by-step basis or for individual samples separately.</p>
+<div class="section" id="automatic-execution">
+<h3><a class="toc-backref" href="#table-of-contents">Automatic execution:</a><a class="headerlink" href="#automatic-execution" title="Permalink to this headline">¶</a></h3>
+<p>Execute the following command within the workflow directory:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">csh</span> <span class="n">scripts</span><span class="o">/</span><span class="mf">00.</span><span class="n">pipe</span><span class="o">.</span><span class="n">commands</span><span class="o">.</span><span class="n">csh</span>
+</pre></div>
+</div>
+<p>The <code class="docutils literal"><span class="pre">scripts/00.pipe.commands.csh</span></code> script runs all the steps at once, leaving flow control entirely to the cluster job manager.</p>
+</div>
+<div class="section" id="step-wise-execution">
+<h3><a class="toc-backref" href="#table-of-contents">Step-wise execution</a><a class="headerlink" href="#step-wise-execution" title="Permalink to this headline">¶</a></h3>
+<p>Each line in <code class="docutils literal"><span class="pre">scripts/00.pipe.commands.csh</span></code> calls a step-wise script in <code class="docutils literal"><span class="pre">scripts/</span></code>, <em>e.g.</em> <code class="docutils literal"><span class="pre">scripts/01.merge_merge1.csh</span></code>, which contains a list of <code class="docutils literal"><span class="pre">qsub</span></code> commands executing the individual scripts on each sample.</p>
+<p>The following command will execute only the <code class="docutils literal"><span class="pre">merge1</span></code> step:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">csh</span> <span class="n">scripts</span><span class="o">/</span><span class="mf">01.</span><span class="n">merge_merge1</span><span class="o">.</span><span class="n">csh</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="sample-wise-execution">
+<h3><a class="toc-backref" href="#table-of-contents">Sample-wise execution.</a><a class="headerlink" href="#sample-wise-execution" title="Permalink to this headline">¶</a></h3>
+<p>The individual sample-level scripts are stored in folders within <code class="docutils literal"><span class="pre">scripts/</span></code>. <em>e.g</em> all <code class="docutils literal"><span class="pre">merge1</span></code> scripts are stored in <code class="docutils literal"><span class="pre">scripts/01.merge_merge1/</span></code>. To execute the step only for a specific sample, execute the relevant script from within the individual script folder.</p>
+</div>
+</div>
+</div>
+
+
+           </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="03.output.html" class="btn btn-neutral float-right" title="Output directory structure" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="01.concept.html" class="btn btn-neutral" title="NeatSeq-Flow concept" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2017, Menachem Sklarz.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'./',
+            VERSION:'1.1.0',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="_static/jquery.js"></script>
+      <script type="text/javascript" src="_static/underscore.js"></script>
+      <script type="text/javascript" src="_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

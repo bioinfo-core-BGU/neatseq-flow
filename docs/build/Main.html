@@ -1,0 +1,354 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Main class &mdash; neatseq_flow 1.1.0 documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="genindex.html"/>
+        <link rel="search" title="Search" href="search.html"/>
+    <link rel="top" title="neatseq_flow 1.1.0 documentation" href="index.html"/> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="index.html" class="icon icon-home"> neatseq_flow
+          
+
+          
+            
+            <img src="_static/NeatSeq_Flow_logo.png" class="logo" />
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.1.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+                <p class="caption"><span class="caption-text">Detailed documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="01.concept.html">NeatSeq-Flow concept</a></li>
+<li class="toctree-l1"><a class="reference internal" href="02.build_WF.html">Building a workflow</a></li>
+<li class="toctree-l1"><a class="reference internal" href="03.output.html">Output directory structure</a></li>
+<li class="toctree-l1"><a class="reference internal" href="06.addnew_module.html">For the programmer - Adding modules</a></li>
+<li class="toctree-l1"><a class="reference internal" href="07.monitor.html">Monitor docs</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="index.html">neatseq_flow</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+ 
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="index.html">Docs</a> &raquo;</li>
+      
+    <li>Main class</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="_sources/Main.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="module-PLC_main">
+<span id="main-class"></span><h1>Main class<a class="headerlink" href="#module-PLC_main" title="Permalink to this headline">¶</a></h1>
+<p>A class defining a pipeline.</p>
+<p>This class takes input files: samples and parameters, and creates a qsub pipeline, including dependencies
+Actual work is done by calling other class types: PLCStep and PLCName</p>
+<dl class="class">
+<dt id="PLC_main.neatseq_flow">
+<em class="property">class </em><code class="descclassname">PLC_main.</code><code class="descname">neatseq_flow</code><span class="sig-paren">(</span><em>sample_file</em>, <em>param_file</em>, <em>home_dir=None</em>, <em>message=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/PLC_main.html#neatseq_flow"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#PLC_main.neatseq_flow" title="Permalink to this definition">¶</a></dt>
+<dd><p>Main pipeline class. Contains sample data and parameters</p>
+<dl class="method">
+<dt id="PLC_main.neatseq_flow.backup_source_files">
+<code class="descname">backup_source_files</code><span class="sig-paren">(</span><em>param_file</em>, <em>sample_file</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/PLC_main.html#neatseq_flow.backup_source_files"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#PLC_main.neatseq_flow.backup_source_files" title="Permalink to this definition">¶</a></dt>
+<dd><p>Copies the parameter and sample files for backup in ‘backups’ directory</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="PLC_main.neatseq_flow.build_scripts">
+<code class="descname">build_scripts</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/PLC_main.html#neatseq_flow.build_scripts"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#PLC_main.neatseq_flow.build_scripts" title="Permalink to this definition">¶</a></dt>
+<dd><p>Run the actual script building</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="PLC_main.neatseq_flow.create_js_graphic">
+<code class="descname">create_js_graphic</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/PLC_main.html#neatseq_flow.create_js_graphic"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#PLC_main.neatseq_flow.create_js_graphic" title="Permalink to this definition">¶</a></dt>
+<dd><p>Use <a class="reference external" href="http://bl.ocks.org/mbostock/1153292">http://bl.ocks.org/mbostock/1153292</a> to make graphic of pipeline</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="PLC_main.neatseq_flow.create_qalter_script">
+<code class="descname">create_qalter_script</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/PLC_main.html#neatseq_flow.create_qalter_script"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#PLC_main.neatseq_flow.create_qalter_script" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function creates the 98.qalter_all script</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="PLC_main.neatseq_flow.create_qdel_script">
+<code class="descname">create_qdel_script</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/PLC_main.html#neatseq_flow.create_qdel_script"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#PLC_main.neatseq_flow.create_qdel_script" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function creates the 99.qdel_all script</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="PLC_main.neatseq_flow.create_registration_file">
+<code class="descname">create_registration_file</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/PLC_main.html#neatseq_flow.create_registration_file"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#PLC_main.neatseq_flow.create_registration_file" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="PLC_main.neatseq_flow.determine_sample_types">
+<code class="descname">determine_sample_types</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/PLC_main.html#neatseq_flow.determine_sample_types"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#PLC_main.neatseq_flow.determine_sample_types" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add a “type” field to each sample with “PE”, “SE” or “Mixed”</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="PLC_main.neatseq_flow.expand_depends">
+<code class="descname">expand_depends</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/PLC_main.html#neatseq_flow.expand_depends"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#PLC_main.neatseq_flow.expand_depends" title="Permalink to this definition">¶</a></dt>
+<dd><p>Extract base info for each step from parameters and expand the dependency info
+i.e. if base(samtools)=[‘Bowtie_mapper’], expand it to [‘merge’,’Bowtie_mapper’]</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="PLC_main.neatseq_flow.get_dict_encoding">
+<code class="descname">get_dict_encoding</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/PLC_main.html#neatseq_flow.get_dict_encoding"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#PLC_main.neatseq_flow.get_dict_encoding" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a dict representation of the pipeline.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="PLC_main.neatseq_flow.get_json_encoding">
+<code class="descname">get_json_encoding</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/PLC_main.html#neatseq_flow.get_json_encoding"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#PLC_main.neatseq_flow.get_json_encoding" title="Permalink to this definition">¶</a></dt>
+<dd><p>Convert pipeline data into JSON format</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="PLC_main.neatseq_flow.get_param_data">
+<code class="descname">get_param_data</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/PLC_main.html#neatseq_flow.get_param_data"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#PLC_main.neatseq_flow.get_param_data" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return parameter data</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="PLC_main.neatseq_flow.get_qsub_command">
+<code class="descname">get_qsub_command</code><span class="sig-paren">(</span><em>step</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/PLC_main.html#neatseq_flow.get_qsub_command"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#PLC_main.neatseq_flow.get_qsub_command" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the qsub command for step to print in main pipeline script, 00….</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="PLC_main.neatseq_flow.get_qsub_names_json_encoding">
+<code class="descname">get_qsub_names_json_encoding</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/PLC_main.html#neatseq_flow.get_qsub_names_json_encoding"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#PLC_main.neatseq_flow.get_qsub_names_json_encoding" title="Permalink to this definition">¶</a></dt>
+<dd><p>Convert qsub names dict into JSON format</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="PLC_main.neatseq_flow.get_step_names">
+<code class="descname">get_step_names</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/PLC_main.html#neatseq_flow.get_step_names"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#PLC_main.neatseq_flow.get_step_names" title="Permalink to this definition">¶</a></dt>
+<dd><p>return a list of step names (=step instances)</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="PLC_main.neatseq_flow.get_step_param_data">
+<code class="descname">get_step_param_data</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/PLC_main.html#neatseq_flow.get_step_param_data"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#PLC_main.neatseq_flow.get_step_param_data" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return step-wise parameter data</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="PLC_main.neatseq_flow.get_steps">
+<code class="descname">get_steps</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/PLC_main.html#neatseq_flow.get_steps"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#PLC_main.neatseq_flow.get_steps" title="Permalink to this definition">¶</a></dt>
+<dd><p>return a list of step types required</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="PLC_main.neatseq_flow.make_depends_dict">
+<code class="descname">make_depends_dict</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/PLC_main.html#neatseq_flow.make_depends_dict"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#PLC_main.neatseq_flow.make_depends_dict" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates and returns the basic depend_dict structure
+step names are keys, values are a list of the step names which are bases for the step</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="PLC_main.neatseq_flow.make_directory_structure">
+<code class="descname">make_directory_structure</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/PLC_main.html#neatseq_flow.make_directory_structure"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#PLC_main.neatseq_flow.make_directory_structure" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creating the directory structure to hold the scripts, data etc.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="PLC_main.neatseq_flow.make_main_pipeline_script">
+<code class="descname">make_main_pipeline_script</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/PLC_main.html#neatseq_flow.make_main_pipeline_script"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#PLC_main.neatseq_flow.make_main_pipeline_script" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create the main pipline script stored in 00.pipe.commands.csh</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="PLC_main.neatseq_flow.make_names_index">
+<code class="descname">make_names_index</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/PLC_main.html#neatseq_flow.make_names_index"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#PLC_main.neatseq_flow.make_names_index" title="Permalink to this definition">¶</a></dt>
+<dd><p>Make a dict of the form name:steps</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="PLC_main.neatseq_flow.make_step_instances">
+<code class="descname">make_step_instances</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/PLC_main.html#neatseq_flow.make_step_instances"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#PLC_main.neatseq_flow.make_step_instances" title="Permalink to this definition">¶</a></dt>
+<dd><p>Makes step instances and stores them in self.step_list.
+The steps are also sorted based on their dependencies. See __lt__ and __gt__ in “Step” class definition.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="PLC_main.neatseq_flow.make_step_type_instance">
+<code class="descname">make_step_type_instance</code><span class="sig-paren">(</span><em>step_name</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/PLC_main.html#neatseq_flow.make_step_type_instance"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#PLC_main.neatseq_flow.make_step_type_instance" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create and return a class of the type defined in step_type
+Gets the module name from Step class, imports it, constructs the suitable subclass and returns it.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="PLC_main.neatseq_flow.sort_step_list">
+<code class="descname">sort_step_list</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/PLC_main.html#neatseq_flow.sort_step_list"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#PLC_main.neatseq_flow.sort_step_list" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function sorts the step list
+By default uses the list.sort function on the step list, which sorts the steps by level, i.e. all direct merge dependents first, then their dependents, etc.
+A different sorting scheme can be added here for depth-wise sorting, for instance.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+           </div>
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2017, Menachem Sklarz.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'./',
+            VERSION:'1.1.0',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="_static/jquery.js"></script>
+      <script type="text/javascript" src="_static/underscore.js"></script>
+      <script type="text/javascript" src="_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

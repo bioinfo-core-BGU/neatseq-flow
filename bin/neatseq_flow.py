@@ -22,7 +22,7 @@ sys.path.pop(0)
 # Append neatseq_flow path to list (when using installed version, will find it before getting to this search path)
 # Problem that might arrise: When trying to run a local copy when it is installed in site-packages/
 sys.path.append(os.path.realpath(os.path.expanduser(os.path.dirname(os.path.abspath(__file__))+os.sep+"..")))
-sys.path.append(os.path.realpath(os.path.expanduser(os.path.dirname(os.path.abspath(__file__))+os.sep+".."+os.sep+"neatseq_flow")))
+#sys.path.append(os.path.realpath(os.path.expanduser(os.path.dirname(os.path.abspath(__file__))+os.sep+".."+os.sep+"neatseq_flow")))
 
 from neatseq_flow.PLC_main import neatseq_flow
 from neatseq_flow.PLC_step import Step

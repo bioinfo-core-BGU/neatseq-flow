@@ -1,0 +1,325 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Generic module &mdash; neatseq_flow 1.1.0 documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="../genindex.html"/>
+        <link rel="search" title="Search" href="../search.html"/>
+    <link rel="top" title="neatseq_flow 1.1.0 documentation" href="../index.html"/> 
+
+  
+  <script src="../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> neatseq_flow
+          
+
+          
+            
+            <img src="../_static/NeatSeq_Flow_logo.png" class="logo" />
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.1.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+                <p class="caption"><span class="caption-text">Detailed documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../01.concept.html">NeatSeq-Flow concept</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../02.build_WF.html">Building a workflow</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../03.output.html">Output directory structure</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../06.addnew_module.html">For the programmer - Adding modules</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../07.monitor.html">Monitor docs</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="../index.html">neatseq_flow</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+ 
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../index.html">Docs</a> &raquo;</li>
+      
+    <li>Generic module</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="../_sources/modules/generic.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="generic-module">
+<h1>Generic module<a class="headerlink" href="#generic-module" title="Permalink to this headline">¶</a></h1>
+<div class="contents local topic" id="modules-included-in-this-section">
+<p class="topic-title first">Modules included in this section</p>
+<ul class="simple">
+<li><a class="reference internal" href="#module-generic" id="id1">Module <code class="docutils literal"><span class="pre">Generic</span></code></a></li>
+</ul>
+</div>
+<span class="target" id="module-step_classes.Generic_module.Generic"></span><div class="section" id="module-generic">
+<h2><a class="toc-backref" href="#id1">Module <code class="docutils literal"><span class="pre">Generic</span></code></a><a class="headerlink" href="#module-generic" title="Permalink to this headline">¶</a></h2>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Authors:</th><td class="field-body">Liron Levin</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Affiliation:</th><td class="field-body">Bioinformatics core facility</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Organization:</th><td class="field-body">National Institute of Biotechnology in the Negev, Ben Gurion University.</td>
+</tr>
+</tbody>
+</table>
+<dl class="docutils">
+<dt>SHORT DESCRIPTION</dt>
+<dd>A generic module that enables the user to design new modules that can handle most cases.</dd>
+</dl>
+<div class="section" id="requires">
+<h3>Requires<a class="headerlink" href="#requires" title="Permalink to this headline">¶</a></h3>
+<blockquote>
+<div>In this module the users define the required file types in the inputs section</div></blockquote>
+</div>
+<div class="section" id="output">
+<h3>Output<a class="headerlink" href="#output" title="Permalink to this headline">¶</a></h3>
+<blockquote>
+<div>In this module the users define the output file types in the outputs section
+The scope of the output file types is determinant by the module scope</div></blockquote>
+</div>
+<div class="section" id="parameters-that-can-be-set">
+<h3>Parameters that can be set<a class="headerlink" href="#parameters-that-can-be-set" title="Permalink to this headline">¶</a></h3>
+<table border="1" class="docutils">
+<colgroup>
+<col width="43%" />
+<col width="29%" />
+<col width="29%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Parameter</th>
+<th class="head">Values</th>
+<th class="head">Comments</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>scope</td>
+<td>sample/project</td>
+<td>The scope of this module could be sample/project, the default is by sample</td>
+</tr>
+<tr class="row-odd"><td>shell</td>
+<td>csh/bash</td>
+<td>Type of shell [csh OR bash]. csh is the default</td>
+</tr>
+<tr class="row-even"><td>inputs_last</td>
+<td>&#160;</td>
+<td>The inputs arguments will be at the end of the command</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="comments">
+<h3>Comments<a class="headerlink" href="#comments" title="Permalink to this headline">¶</a></h3>
+<blockquote>
+<div>The order of the input/output arguments in the final command 
+will be according to the order of their appearance in the parameter file.
+The redirect arguments are always first.</div></blockquote>
+</div>
+<div class="section" id="lines-for-parameter-file">
+<h3>Lines for parameter file<a class="headerlink" href="#lines-for-parameter-file" title="Permalink to this headline">¶</a></h3>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">Step_Name</span><span class="p">:</span>                      <span class="c1"># Name of this step</span>
+    <span class="n">module</span><span class="p">:</span> <span class="n">Generic</span>             <span class="c1"># Name of module</span>
+    <span class="n">base</span><span class="p">:</span>                       <span class="c1"># Name of the step [or list of names] to run after [must be after steps that generates the inputs File_Types] </span>
+    <span class="n">script_path</span><span class="p">:</span>                <span class="c1"># Main command for this module</span>
+    <span class="n">scope</span><span class="p">:</span>                      <span class="c1"># The scope of this module could be sample/project, the default is by sample</span>
+    <span class="n">shell</span><span class="p">:</span>                      <span class="c1"># Type of shell [csh OR bash]. csh is the default</span>
+    <span class="n">inputs_last</span><span class="p">:</span>                <span class="c1"># The inputs arguments will be at the end of the command. [The default is inputs arguments at the beginning of the command] </span>
+    <span class="n">inputs</span><span class="p">:</span>                     <span class="c1"># The inputs for this module</span>
+        <span class="n">STR</span><span class="p">:</span>                    <span class="c1"># Input argument, e.g. -i, --input [could be also &#39;empty1&#39;, &#39;empty2&#39;..] </span>
+            <span class="n">scope</span><span class="p">:</span>              <span class="c1"># The scope of this input argument could be sample/project</span>
+                                <span class="c1"># If the module scope is project and the argument scope is sample:</span>
+                                <span class="c1"># all the samples inputs File_Types of this argument will be listed as: argument File_Type(of sample #) </span>
+            <span class="n">File_Type</span><span class="p">:</span>          <span class="c1"># The input File_Type could be any File_Type available from previous (in this branch) steps</span>
+            <span class="n">base</span><span class="p">:</span>               <span class="c1"># From which previous step to take the input File_Type. The default it the current step.</span>
+            <span class="n">sep</span><span class="p">:</span>                <span class="c1"># If the module scope is project and the argument scope is sample:  </span>
+                                <span class="c1">#       All the samples inputs File_Types of this argument will be listed delimited by sep</span>
+            <span class="k">del</span><span class="p">:</span>                <span class="c1"># Delete the files in the input File_Type after the step ends [use to save space for large files you don&#39;t need downstream]</span>
+                                <span class="c1"># Will generate empty file with the same name and a suffix of _DELETED</span>
+    <span class="n">outputs</span><span class="p">:</span>                    <span class="c1"># The outputs for this module</span>
+        <span class="n">STR</span><span class="p">:</span>                    <span class="c1"># Output argument, e.g. -o, --out , the scope of the output arguments is determinant by the module scope</span>
+                                <span class="c1"># could be also &#39;empty1&#39;, &#39;empty2&#39;.. OR &quot;No_run&quot; for only entering the file information to output File_Type </span>
+            <span class="n">File_Type</span><span class="p">:</span>          <span class="c1"># The output File_Type could be any File_Type name for the current branch downstream work </span>
+                                <span class="c1"># If the File_Type exists its content will be override for the current branch downstream work </span>
+            <span class="n">prefix</span><span class="p">:</span>             <span class="c1"># A prefix for this output argument file name</span>
+            <span class="n">suffix</span><span class="p">:</span>             <span class="c1"># A suffix for this output argument file name</span>
+                                <span class="c1"># between prefix and suffix will be the sample name [in sample scope] or the project title [in project scope] </span>
+            <span class="n">constant_file_name</span><span class="p">:</span> <span class="c1"># Use constant file name for this output argument [ignore prefix and suffix]</span>
+                                <span class="c1"># If empty [&#39;&#39;] will enter the output directory location</span>
+            <span class="n">use_base_name</span><span class="p">:</span>      <span class="c1"># use only the base name of the output file [ignored if constant_file_name is used]</span>
+    <span class="n">copy_File_Types</span><span class="p">:</span>            <span class="c1"># Transferring information between File_Types</span>
+        <span class="n">STR</span><span class="p">:</span>                    <span class="c1"># Unique name for the transfer</span>
+            <span class="n">source</span><span class="p">:</span>
+                <span class="n">File_Type</span><span class="p">:</span>      <span class="c1"># Copy the content of source File_Type to the target File_Type [copy from here]</span>
+                <span class="n">scope</span><span class="p">:</span>          <span class="c1"># Copy the source File_Type From this scope [if not specified the default is sample]</span>
+                <span class="n">base</span><span class="p">:</span>           <span class="c1"># The source step to copy the File_Type from (from previous steps). The default it the current step.</span>
+            <span class="n">target</span><span class="p">:</span>
+                <span class="n">File_Type</span><span class="p">:</span>      <span class="c1"># Copy the content of source File_Type to the target File_Type [copy to here]</span>
+                <span class="n">scope</span><span class="p">:</span>          <span class="c1"># Copy to the target File_Type in this scope [if not specified the default is sample]</span>
+    <span class="n">qsub_params</span><span class="p">:</span>                <span class="c1"># Parameters for qsub [number of cpus or memory to reserve etc ]</span>
+        <span class="n">STR</span><span class="p">:</span> 
+    <span class="n">redirects</span><span class="p">:</span>                  <span class="c1"># Parameters to pass directly to the command</span>
+        <span class="n">STR</span><span class="p">:</span> 
+</pre></div>
+</div>
+</div>
+<div class="section" id="references">
+<h3>References<a class="headerlink" href="#references" title="Permalink to this headline">¶</a></h3>
+</div>
+</div>
+</div>
+
+
+           </div>
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2017, Menachem Sklarz.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../',
+            VERSION:'1.1.0',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="../_static/jquery.js"></script>
+      <script type="text/javascript" src="../_static/underscore.js"></script>
+      <script type="text/javascript" src="../_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>
