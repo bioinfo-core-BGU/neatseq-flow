@@ -32,7 +32,7 @@ setup(
     scripts             = ['bin/neatseq_flow_monitor.py',
                             'bin/neatseq_flow.py'],
     data_files          = [('Workflows',['Workflows/mapping.yaml']),
-                            ('Workflows/Sample_sets',['parameter_sets/sample_sets/PE.nsfs'])],
+                            ('Workflows/Sample_sets',['Workflows/PE_tabular.nsfs'])],
     install_requires    = [
                         "pyyaml >= 3.12",
                         "bunch == 1.0.1",
