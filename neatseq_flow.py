@@ -17,7 +17,7 @@ import os, sys
 import argparse
 from pprint import pprint as pp
 
-sys.path.insert(0, os.path.realpath(os.path.expanduser(os.path.dirname(__file__))) + "/src")
+sys.path.insert(0, os.path.realpath(os.path.expanduser(os.path.dirname(__file__))) + "/neatseq_flow")
 
 
 from PLC_main import neatseq_flow
