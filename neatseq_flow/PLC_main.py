@@ -457,7 +457,9 @@ qsub -N %(step_step)s_%(step_name)s_%(run_code)s \\
             # Import the module:
             exec "from %s import %s as StepClass" % (step_module_loc,'Step_' + step_type)
         except ImportError:
-            sys.exit("An error has occured loading module %s.\n" % step_module_loc)
+            print "An error has occured loading module %s.\n" % step_module_loc
+            print "CMD: from %s import %s as StepClass\n" % (step_module_loc,'Step_' + step_type)
+            raise
 
         # Run constructor:
         try:
