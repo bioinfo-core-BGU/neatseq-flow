@@ -80,7 +80,7 @@ class Step_makeblastdb(Step):
             Good place for parameter testing.
             Wrong place for sample data testing
         """
-        self.shell = "csh"      # Can be set to "bash" by inheriting instances
+        self.shell = "bash"      # Can be set to "bash" by inheriting instances
         self.file_tag = ".makeblastdb.out"
 
         # Checking this once and then applying to each sample:
