@@ -4,12 +4,12 @@
 *.pyc
 git-gui*
 jupyter-notebook-Shortcut*
-pipe_dirs/
-doc/build/
+pipe_dirs/**
+doc/build/**
 additional_modules
-jupyter/
+jupyter/**
 pull_commands.csh
-parameter_sets/
+parameter_sets/**
 comparison_with_others.docx
 .project
 .pydevproject
