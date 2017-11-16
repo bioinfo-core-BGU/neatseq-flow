@@ -95,7 +95,7 @@ def test_vars(node):
             if re.search("^[0-9]",key):
                 raise Exception("Variables must begin with a alphabetic symbol or underscore (%s)" % key, "Variables")
             if node[key] == None:
-                raise Exception("It seems you have an empty variable! (%s)" % key, "Variables")
+                sys.stderr.write("It seems you have an empty variable! (%s)" % key, "Variables")
             test_vars(node[key])
     elif isinstance(node,list):
         raise Exception("Please don't use lists in variables section!", "Variables")
