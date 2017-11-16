@@ -219,7 +219,20 @@ def get_param_data_YAML(filelines):
     if "conda" in param_data["Global"]:
         if "path" not in param_data["Global"]["conda"] or "env" not in param_data["Global"]["conda"]:
             raise Exception("When using 'conda', you must supply a 'path' with the dir in which 'activate' is located and an 'env'.","parameters")
-    
+        if param_data["Global"]["conda"]["path"] == None:  # Path is empty, take from $CONDA_PREFIX
+            if "CONDA_PREFIX" in os.environ:
+                # CONDA_PREFIX is: conda_path/'envs'/env_name
+                # First split gets the env name
+                # Second split gets the conda_path and adds 'bin'
+                (t1,env) = os.path.split(os.environ["CONDA_PREFIX"])
+                param_data["Global"]["conda"]["path"] = os.path.join(os.path.split(t1)[0],"bin")
+                if  param_data["Global"]["conda"]["env"]==None:
+                    param_data["Global"]["conda"]["env"] = env
+
+            else:
+                raise Exception("'conda' 'path' is empty, but no CONDA_PREFIX is defined. Make sure you are in an active conda environment.")
+        
+        
     # Extract step-wise parameter dict from lines:
     param_data["Step"] = convert_param_format(yaml_params["Step_params"])
     

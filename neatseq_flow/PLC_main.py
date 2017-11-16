@@ -468,7 +468,9 @@ qsub -N %(step_step)s_%(step_name)s_%(run_code)s \\
                              step_params, \
                              self.pipe_data)
         except AssertionExcept as assertErr:
-            sys.exit("An error has occured in step initialization. See comment above.\n")
+            print("An error has occured in step initialization (type: %s). See comment above.\n" % step_type)
+            sys.exit()
+            # raise
 
                         
     def determine_sample_types(self):

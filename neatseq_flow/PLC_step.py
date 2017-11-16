@@ -137,16 +137,42 @@ class Step:
             # sys.stderr.write("Dir %s exists for results of %s \n" % (self.base_dir,self.name))
 
         # Testing 'conda' parameters
-        if "conda" in self.params:
-            if not self.params["conda"]:
-                self.write_warning("'conda' is provided but empty. Not 'activating' for this step")
-            elif "path" not in self.params["conda"] or "env" not in self.params["conda"]:
-                raise AssertionExcept("'conda' must include 'path' and 'env'")
-            elif filter(lambda x: x not in ["path","env"],self.params["conda"].keys()):
-                self.write_warning("You provided extra 'conda' parameters. They will be ignored!")
-            else:
-                pass
-                                            
+        try:
+            if "conda" in self.params:
+                if not self.params["conda"]:
+                    self.write_warning("'conda' is provided but empty. Not 'activating' for this step")
+                elif "path" not in self.params["conda"] or "env" not in self.params["conda"]:
+                    raise AssertionExcept("'conda' must include 'path' and 'env'")
+                elif filter(lambda x: x not in ["path","env"],self.params["conda"].keys()):
+                    self.write_warning("You provided extra 'conda' parameters. They will be ignored!")
+                else:
+                    pass
+                
+                
+                if self.params["conda"]["path"] == None:  # Path is empty, take from $CONDA_PREFIX
+                    if "CONDA_PREFIX" in os.environ:
+                        # CONDA_PREFIX is: conda_path/'envs'/env_name
+                        # First split gets the env name
+                        # Second split gets the conda_path and adds 'bin'
+                        (t1,env) = os.path.split(os.environ["CONDA_PREFIX"])
+                        self.params["conda"]["path"] = os.path.join(os.path.split(t1)[0],"bin")
+                        if  self.params["conda"]["env"]==None:
+                            self.params["conda"]["env"] = env
+        
+                    else:
+                        raise AssertionExcept("'conda' 'path' is empty, but no CONDA_PREFIX is defined. Make sure you are in an active conda environment.")
+                elif self.params["conda"]["env"] == None:
+                    if "conda" in self.pipe_data:
+                        self.params["conda"]["env"] = self.pipe_data["conda"]["env"]
+                        self.write_warning("No 'env' supplied for 'conda'. Using global 'env'")
+                    else: 
+                        raise AssertionExcept("'conda' 'path' is defined, but no 'env' was passed in step or global parameters.")
+        except AssertionExcept as assertErr:
+            print assertErr.get_error_str(self.get_step_name())
+            raise
+                        
+   
+                                                    
         # Setting qsub options in step parameters:
         self.manage_qsub_opts()
        
