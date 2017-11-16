@@ -136,7 +136,17 @@ class Step:
             # TODO: Do the following only if verbose is set:
             # sys.stderr.write("Dir %s exists for results of %s \n" % (self.base_dir,self.name))
 
-            
+        # Testing 'conda' parameters
+        if "conda" in self.params:
+            if not self.params["conda"]:
+                self.write_warning("'conda' is provided but empty. Not 'activating' for this step")
+            elif "path" not in self.params["conda"] or "env" not in self.params["conda"]:
+                raise AssertionExcept("'conda' must include 'path' and 'env'")
+            elif filter(lambda x: x not in ["path","env"],self.params["conda"].keys()):
+                self.write_warning("You provided extra 'conda' parameters. They will be ignored!")
+            else:
+                pass
+                                            
         # Setting qsub options in step parameters:
         self.manage_qsub_opts()
        
@@ -864,6 +874,9 @@ fi
             sys.exit("Wrong 'type' passed to create_activate_lines")
             
         if "conda" in self.params:
+            if not self.params["conda"]:  # Was provided with 'null' or empty - do not do activate overriding possible global conda defs
+                
+                return ""
             if "path" in self.params["conda"] and "env" in self.params["conda"]:
                 activate_path = os.path.join(self.params["conda"]["path"],type)
                 environ       = self.params["conda"]["env"]

@@ -48,11 +48,9 @@ class neatseq_flow:
                 sys.exit()
             elif len(raisedex.args)>1:
                 if raisedex.args[1] in ["Variables","parameters"]:
-                    print raisedex.args[0]
-                    sys.exit()
+                    sys.exit(raisedex.args[0])
                 else:  # Unknown
-                    print "unknown exception type"
-                    sys.exit()
+                    sys.exit("unknown exception type")
             else:
                 raise
             # sys.stderr.write("An exception has occured in parameter file reading. Double check!")
@@ -459,8 +457,7 @@ qsub -N %(step_step)s_%(step_name)s_%(run_code)s \\
             # Import the module:
             exec "from %s import %s as StepClass" % (step_module_loc,'Step_' + step_type)
         except ImportError:
-            print "An error has occured loading module %s.\n" % step_module_loc
-            sys.exit()
+            sys.exit("An error has occured loading module %s.\n" % step_module_loc)
 
         # Run constructor:
         try:
@@ -469,8 +466,7 @@ qsub -N %(step_step)s_%(step_name)s_%(run_code)s \\
                              step_params, \
                              self.pipe_data)
         except AssertionExcept as assertErr:
-            print "An error has occured in step initialization. See comment above.\n"
-            sys.exit()
+            sys.exit("An error has occured in step initialization. See comment above.\n")
 
                         
     def determine_sample_types(self):
