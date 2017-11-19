@@ -10,4 +10,4 @@ ARCHIVE_EXTENSIONS = ".7z .s7z .ace .afa .alz .apk .arc .arj .b1 .ba .bh .cab .c
 
 
 
-KNOWN_FILE_EXTENSIONS = ".fastq .fasta .fa .fq .fna .faa .vlc .sam .bam".split(" ")
+KNOWN_FILE_EXTENSIONS = ".g.vcf .fastq .fasta .fa .fq .fna .faa .vlc .sam .bam".split(" ")

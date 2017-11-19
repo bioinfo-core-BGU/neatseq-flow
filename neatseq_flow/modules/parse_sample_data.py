@@ -12,8 +12,11 @@ import os, sys
 from pprint import pprint as pp
 import re
 
-
-RECOGNIZED_FILE_TYPES = ['Single', 'Forward', 'Reverse', 'Nucleotide','Protein', 'SAM', 'BAM', 'REFERENCE']
+FASTQ_FILE_TPYES = ['Single', 'Forward', 'Reverse']
+FASTA_FILE_TYPES = ['Nucleotide','Protein']
+ALIGNMENT_FILE_TYPES = ['SAM','BAM','REFERENCE']
+VARIANT_FILE_TYPES = ['VCF','G.VCF']
+RECOGNIZED_FILE_TYPES = FASTQ_FILE_TPYES + FASTA_FILE_TYPES + ALIGNMENT_FILE_TYPES + VARIANT_FILE_TYPES 
 GLOBAL_SAMPLE_LIST = ['Title', 'Sample', 'Single', 'Sample_Control'] + RECOGNIZED_FILE_TYPES
 
 from  neatseq_flow.modules.global_defs import ZIPPED_EXTENSIONS, ARCHIVE_EXTENSIONS, KNOWN_FILE_EXTENSIONS
@@ -181,7 +184,7 @@ def parse_classic_sample_data(lines):
     ## Read BAM/SAM files:
     bam_sam = {alldirect:[(filename) for (direction,filename) in \
                     [re.split("\s+", line, maxsplit=1) for line in lines] \
-            if direction==alldirect] for alldirect in {"SAM","BAM","REFERENCE"}}
+            if direction==alldirect] for alldirect in ALIGNMENT_FILE_TYPES}
     # Remove empty lists 
     bam_sam = {direct:files for direct,files in bam_sam.iteritems() if files != []}
     
@@ -194,10 +197,18 @@ def parse_classic_sample_data(lines):
             print "You tried passing more than one REFERENCE with SAM and BAM files..."
             raise Exception("Issue in sample file")
         
-        # Put these files in a separate entry in the reads structure called "mapping"
-        if bam_sam:
-            sample_x_data.update(bam_sam)
+        sample_x_data.update(bam_sam)
     
+    ## Read vcf files:
+    vcf_files = {alldirect:[(filename) for (direction,filename) in \
+                    [re.split("\s+", line, maxsplit=1) for line in lines] \
+            if direction==alldirect] for alldirect in VARIANT_FILE_TYPES}
+    # Remove empty lists 
+    vcf_files = {direct:files for direct,files in vcf_files.iteritems() if files != []}
+    
+    # Complain if more or less than 1 REFERENCE was passed:
+    if(vcf_files):    # Do the following only if BAM/SAM files were passed:
+        sample_x_data.update(vcf_files)
 
     return sample_x_data
     
@@ -352,7 +363,8 @@ def parse_tabular_sample_data(sample_lines):
     for line in sample_lines:
         line_data = re.split("\s+", line)
         
-        if line_data[1] in ["Forward", "Reverse","Single", "Nucleotide", "Protein", "SAM", "BAM", "REFERENCE"]:   
+        print line_data[1]
+        if line_data[1] in RECOGNIZED_FILE_TYPES:# ["Forward", "Reverse","Single", "Nucleotide", "Protein", "SAM", "BAM", "REFERENCE"]:   
             if line_data[1] in sample_x_dict.keys():
                 if line_data[1] == "REFERENCE":
                     sys.exit("Only one REFERENCE permitted per sample")
