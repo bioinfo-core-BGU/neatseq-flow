@@ -52,15 +52,15 @@ class Step:
         # It adds the default path ($CONDA_PREFIX/lib/python2.7/site-packages/neatseq_flow_modules) to modules_path
         if "conda" in pipe_data:
             if "CONDA_PREFIX" in os.environ:
-                print "--%s--" % os.environ["CONDA_PREFIX"]
+#                print "--%s--" % os.environ["CONDA_PREFIX"]
                 conda_module_path = os.path.join(os.environ["CONDA_PREFIX"], "lib/python2.7/site-packages/neatseq_flow_modules")
                 sys.stderr.write("Adding conda default additional modules path (%s). If it is different, please add manually to 'module_path' in 'Global_params'." % conda_module_path)
                 if "module_path" in param_data["Global"]:
                     if conda_module_path not in param_data["Global"]["module_path"]:
                         param_data["Global"]["module_path"].append(conda_module_path)
                 else:
-                    param_data["Global"]["module_path"] = os.path.join(conda_module_path )
-                print param_data["Global"]["module_path"]
+                    param_data["Global"]["module_path"] = [os.path.join(conda_module_path)]
+ #               print param_data["Global"]["module_path"]
 
 
 
