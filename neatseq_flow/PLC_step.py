@@ -18,15 +18,22 @@ __version__ = "1.1.0"
 class AssertionExcept(Exception):
     """A class to be raised by modules failing at assertions
     """
-    def __init__(self, comment = "Unknown problem", sample = None):
+    def __init__(self, comment = "Unknown problem", sample = None, step = None):
         """initializize with error comment and sample, if exists)
         """
         self.sample = sample
         self.comment = comment
+        self.step = step
         
-    def get_error_str(self, step_name):
+    def get_error_str(self, step_name = None):
+        
         if self.sample: # If a sample was passed. The exception is specific to a sample
             return "ERROR  : In %s (sample %s): %s" % (step_name, self.sample, self.comment)
+        elif not step_name:
+            if self.step:
+                return "ERROR  : In %s: %s" % (self.step, self.comment)
+            else:
+                return "ERROR  : %s" % (self.comment)
         else:       
             return "ERROR  : In %s: %s" % (step_name, self.comment)
         
@@ -136,41 +143,74 @@ class Step:
             # TODO: Do the following only if verbose is set:
             # sys.stderr.write("Dir %s exists for results of %s \n" % (self.base_dir,self.name))
 
+        # -----------------------------------------------------
         # Testing 'conda' parameters
-        try:
-            if "conda" in self.params:
-                if not self.params["conda"]:
-                    self.write_warning("'conda' is provided but empty. Not 'activating' for this step")
-                elif "path" not in self.params["conda"] or "env" not in self.params["conda"]:
-                    raise AssertionExcept("'conda' must include 'path' and 'env'")
+        #=======================================================================
+        # try:
+        #=======================================================================
+        if "conda" in self.pipe_data and "conda" not in self.params: # Only global "conda" params defined:
+            self.params["conda"] = self.pipe_data["conda"]
+        if "conda" in self.params:
+            if not self.params["conda"]:
+                self.write_warning("'conda' is provided but empty. Not 'activating' for this step")
+            else:  # Conda is not empty
+                if "path" not in self.params["conda"] or "env" not in self.params["conda"]:
+                    raise AssertionExcept("'conda' must include 'path' and 'env'", step=self.get_step_name())
+
                 elif filter(lambda x: x not in ["path","env"],self.params["conda"].keys()):
                     self.write_warning("You provided extra 'conda' parameters. They will be ignored!")
                 else:
                     pass
                 
+                print "In 1: %s" % self.get_step_name()
                 
-                if self.params["conda"]["path"] == None:  # Path is empty, take from $CONDA_PREFIX
+                if not self.params["conda"]["path"]: # == None:  # Path is empty (None or "", take from $CONDA_PREFIX
                     if "CONDA_PREFIX" in os.environ:
                         # CONDA_PREFIX is: conda_path/'envs'/env_name
                         # First split gets the env name
                         # Second split gets the conda_path and adds 'bin'
                         (t1,env) = os.path.split(os.environ["CONDA_PREFIX"])
                         self.params["conda"]["path"] = os.path.join(os.path.split(t1)[0],"bin")
-                        if  self.params["conda"]["env"]==None:
+                        if  not self.params["conda"]["env"]: ##==None:
                             self.params["conda"]["env"] = env
         
                     else:
-                        raise AssertionExcept("'conda' 'path' is empty, but no CONDA_PREFIX is defined. Make sure you are in an active conda environment.")
-                elif self.params["conda"]["env"] == None:
+                        raise AssertionExcept("'conda' 'path' is empty, but no CONDA_PREFIX is defined. Make sure you are in an active conda environment.",step=self.get_step_name())
+                        
+                elif not self.params["conda"]["env"]:# == None:
+                    print "In 2: %s" % self.get_step_name()
                     if "conda" in self.pipe_data:
+                        print "In 3: %s" % self.get_step_name()
                         self.params["conda"]["env"] = self.pipe_data["conda"]["env"]
                         self.write_warning("No 'env' supplied for 'conda'. Using global 'env'")
                     else: 
-                        raise AssertionExcept("'conda' 'path' is defined, but no 'env' was passed in step or global parameters.")
-        except AssertionExcept as assertErr:
-            print assertErr.get_error_str(self.get_step_name())
-            raise
+                        print "In 4: %s" % self.get_step_name()
+#                        sys.stderr.write
+                        raise AssertionExcept("'conda' 'path' is defined, but no 'env' was passed in step or global parameters.", step=self.get_step_name())
+        #=======================================================================
+        # except AssertionExcept as assertErr:
+        #     print assertErr.get_error_str(self.get_step_name())
+        #     raise
+        #=======================================================================
+        # -----------------------------------------------------
                         
+        #=======================================================================
+        # if "conda" in self.params:
+        #     if not self.params["conda"]:  # Was provided with 'null' or empty - do not do activate overriding possible global conda defs
+        #         
+        #         return ""
+        #     if "path" in self.params["conda"] and "env" in self.params["conda"]:
+        #         activate_path = os.path.join(self.params["conda"]["path"],type)
+        #         environ       = self.params["conda"]["env"]
+        #     else:
+        #         raise AssertionExcept("'conda' parameter must include 'path' and 'env'")
+        #     
+        # elif "conda" in self.pipe_data:
+        #     activate_path  = os.path.join(self.pipe_data["conda"]["path"],type)
+        #     environ        = self.pipe_data["conda"]["env"]
+        # else:
+        #     return ""
+        #=======================================================================
    
                                                     
         # Setting qsub options in step parameters:
@@ -277,7 +317,7 @@ class Step:
                 
                 
         else:
-            raise AssertionExcept("Somehow base_step is defined more than once" % (self.name))
+            raise AssertionExcept("Somehow base_step is defined more than once", self.get_step_name())
         
     def get_base_step_list(self):
         try:
@@ -369,7 +409,7 @@ class Step:
                 else:
                     # Do nothing, but check not discarding values from other_sample_data
                     if (sample_data[k] != other_sample_data[k]):
-                        print "In step %s: There is a difference from %s in key %s\n" % (self.name, other_step_name, k)
+                        sys.stderr.write("In step %s: There is a difference from %s in key %s\n" % (self.name, other_step_name, k))
             else:
                 sample_data[k] = deepcopy(other_sample_data[k])
         
@@ -909,9 +949,11 @@ fi
             else:
                 raise AssertionExcept("'conda' parameter must include 'path' and 'env'")
             
-        elif "conda" in self.pipe_data:
-            activate_path  = os.path.join(self.pipe_data["conda"]["path"],type)
-            environ        = self.pipe_data["conda"]["env"]
+        #=======================================================================
+        # elif "conda" in self.pipe_data:
+        #     activate_path  = os.path.join(self.pipe_data["conda"]["path"],type)
+        #     environ        = self.pipe_data["conda"]["env"]
+        #=======================================================================
         else:
             return ""
             

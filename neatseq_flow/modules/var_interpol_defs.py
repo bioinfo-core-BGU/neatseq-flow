@@ -14,33 +14,44 @@ from pprint import pprint as pp
 # The local copy is loc_variables_bunch, and is set as global so that eval will recognise it.
 def make_interpol_func(variables_bunch):
     # Define a regular expression for variables (any contiguous alphanumeric or period between {})
-    var_re = re.compile("\{([\w\.\-]+?)\}")
+    var_re = re.compile("\{(Vars\.[\w\.\-]+?)\}")
+    global loc_variables_bunch
     loc_variables_bunch = variables_bunch
     
-    global loc_variables_bunch
     # Define function to return:
     def interpol_atom(atom):
 
         if isinstance(atom, str):
 
             m = var_re.search(atom)
+            
+            
+            #if m:
+            #    print "Atom: {atom} of type {type}; Match: {match}".format(atom=atom, type=type(atom),match=m.group(1))
+            #    print eval("loc_variables_bunch.%s" % m.group(1))
+                # sys.exit()
             # While a match exists:
             while (m):
                 # print "in here: %s\n" % atom
                 # print "loc_variables_bunch.%s\n" % m.group(1)
                 
+                # print "Atom: " + atom
                 try:
                     # Replace the matched variable with something from variables_bunch
-                    atom = var_re.sub(eval("loc_variables_bunch.%s" % m.group(1)),atom,count=1)
+                    repl_str = eval("loc_variables_bunch.%s" % m.group(1))
+                    if repl_str==None:
+                        repl_str = ""
+
+                    atom = var_re.sub(repl_str,atom,count=1)
                 except AttributeError:
                     # If not found, raise exception
-                    raise Exception("Unrecognised variable %s" % m.group(1), "Variables")
+                    raise Exception("Unrecognised variable '%s'" % m.group(1), "Variables")
                 except TypeError:
                     raise Exception("A 'TypeError' exception has occured. This may happen when variables are left empty. Make sure all your variables have values. ", "Variables")
-                    
-                    # # print "---> %s <-----\n" % m.group(1)
+                    # print "---> %s <-----\n" % m.group(1)
                     # pass
                 m = var_re.search(atom)
+
 
         return atom
 
@@ -76,7 +87,8 @@ def walk(node, variables_bunch, callback):
     else:
         # print "in 3\n"
         if isinstance(node, str):
-            # print "Node:\n\n%s\n\n" % node
+            # print "Node: \n\n'%s'\n\n" % node
+
             # node = interpol_atom(node, variables_bunch)
             node = callback(node)
         else:
@@ -95,13 +107,15 @@ def test_vars(node):
             if re.search("^[0-9]",key):
                 raise Exception("Variables must begin with a alphabetic symbol or underscore (%s)" % key, "Variables")
             if node[key] == None:
-                sys.stderr.write("It seems you have an empty variable! (%s)" % key)
+                # sys.stderr.write("It seems you have an empty variable! (%s)" % key)
+                sys.stderr.write("It seems you have an empty variable! (%s)\n" % key)
             test_vars(node[key])
     elif isinstance(node,list):
         raise Exception("Please don't use lists in variables section!", "Variables")
     elif isinstance(node,str):
         pass
     elif node==None:
-        raise Exception("It seems you have an empty variable!" % key, "Variables")
+        # raise Exception("It seems you have an empty variable!" % key, "Variables")
+        print("WARNING: It seems you have an empty variable!", "Variables")
     else:
         raise Exception("Unrecognised variable type (%s)" % node, "Variables")

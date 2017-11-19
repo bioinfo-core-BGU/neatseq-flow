@@ -49,8 +49,10 @@ class neatseq_flow:
             elif len(raisedex.args)>1:
                 if raisedex.args[1] in ["Variables","parameters"]:
                     sys.exit(raisedex.args[0])
+                    # raise
                 else:  # Unknown
-                    sys.exit("unknown exception type")
+                    # sys.stderr.write("unknown exception type")
+                    raise
             else:
                 raise
             # sys.stderr.write("An exception has occured in parameter file reading. Double check!")
@@ -469,6 +471,8 @@ qsub -N %(step_step)s_%(step_name)s_%(run_code)s \\
                              self.pipe_data)
         except AssertionExcept as assertErr:
             print("An error has occured in step initialization (type: %s). See comment above.\n" % step_type)
+            print assertErr.get_error_str()
+
             sys.exit()
             # raise
 

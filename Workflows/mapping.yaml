@@ -4,9 +4,9 @@ Global_params:
     Qsub_q: bioinfo.q
     Qsub_nodes: [node1,node2,node3]
     Qsub_opts:  -V -cwd
-    # conda:
-        # path:   /gpfs0/bioinfo/apps/Miniconda2/Miniconda_v4.3.21/bin/
-        # env:    fkhdkhfkd
+    conda:
+        path:   '{Vars.conda.path}'
+        env:    '{Vars.conda.env}'
     module_path: 
         - /path/to/modules2/
 Documentation: |
@@ -25,6 +25,9 @@ Documentation: |
     ----------------------------------------------------------------
 
 Vars:
+    conda:
+        path:
+        env:
     paths:
         trimmo:             /path/to/java -jar /path/to/trimmomatic-0.32.jar
         bowtie:             /path/to/bowtie
@@ -91,8 +94,8 @@ Step_params:
         del_sam: 
         del_unsorted: 
         # conda:
-            # path:           /path/to/conda
-            # env:        #    NSF3.5    
+            # path:   #        /path/to/conda
+            # env:            NSF3.5    
     genCovBed_bwt1:
         module:             genomeCoverageBed
         base:               sam_bwt1
@@ -116,7 +119,7 @@ Step_params:
             -pe:            shared 20
         get_map_log: 
         ref_genome:         {Vars.reference.ref_genome}
-        # conda:  
+        conda:  
         redirects:
             -p:             20
             -q: 

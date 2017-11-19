@@ -182,7 +182,9 @@ def get_param_data_YAML(filelines):
 
         # Actual code to run when 'Vars' exists:
         # Walk over params dict and interpolate strings:
+
         yaml_params = walk(yaml_params, variables_bunch, callback= f_interpol)
+
         
     
     
