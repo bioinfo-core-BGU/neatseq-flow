@@ -48,6 +48,23 @@ class Step:
         """ A class method for finding the location of a module for a given step
         """
 
+        # This will automatically load modules installed in "conda"
+        # It adds the default path ($CONDA_PREFIX/lib/python2.7/site-packages/neatseq_flow_modules) to modules_path
+        if "conda" in pipe_data:
+            if "CONDA_PREFIX" in os.environ:
+                print "--%s--" % os.environ["CONDA_PREFIX"]
+                conda_module_path = os.path.join(os.environ["CONDA_PREFIX"], "lib/python2.7/site-packages/neatseq_flow_modules")
+                sys.stderr.write("Adding conda default additional modules path (%s). If it is different, please add manually to 'module_path' in 'Global_params'." % conda_module_path)
+                if "module_path" in param_data["Global"]:
+                    if conda_module_path not in param_data["Global"]["module_path"]:
+                        param_data["Global"]["module_path"].append(conda_module_path)
+                else:
+                    param_data["Global"]["module_path"] = os.path.join(conda_module_path )
+                print param_data["Global"]["module_path"]
+
+
+
+            
         # Searching module paths passed by user in parameter file:
         if "module_path" in param_data["Global"]:
             for module_path_raw in param_data["Global"]["module_path"]:#.split(" "):
@@ -145,9 +162,7 @@ class Step:
 
         # -----------------------------------------------------
         # Testing 'conda' parameters
-        #=======================================================================
-        # try:
-        #=======================================================================
+
         if "conda" in self.pipe_data and "conda" not in self.params: # Only global "conda" params defined:
             self.params["conda"] = self.pipe_data["conda"]
         if "conda" in self.params:
@@ -162,7 +177,6 @@ class Step:
                 else:
                     pass
                 
-                print "In 1: %s" % self.get_step_name()
                 
                 if not self.params["conda"]["path"]: # == None:  # Path is empty (None or "", take from $CONDA_PREFIX
                     if "CONDA_PREFIX" in os.environ:
@@ -178,40 +192,14 @@ class Step:
                         raise AssertionExcept("'conda' 'path' is empty, but no CONDA_PREFIX is defined. Make sure you are in an active conda environment.",step=self.get_step_name())
                         
                 elif not self.params["conda"]["env"]:# == None:
-                    print "In 2: %s" % self.get_step_name()
                     if "conda" in self.pipe_data:
-                        print "In 3: %s" % self.get_step_name()
                         self.params["conda"]["env"] = self.pipe_data["conda"]["env"]
                         self.write_warning("No 'env' supplied for 'conda'. Using global 'env'")
                     else: 
-                        print "In 4: %s" % self.get_step_name()
 #                        sys.stderr.write
                         raise AssertionExcept("'conda' 'path' is defined, but no 'env' was passed in step or global parameters.", step=self.get_step_name())
-        #=======================================================================
-        # except AssertionExcept as assertErr:
-        #     print assertErr.get_error_str(self.get_step_name())
-        #     raise
-        #=======================================================================
         # -----------------------------------------------------
-                        
-        #=======================================================================
-        # if "conda" in self.params:
-        #     if not self.params["conda"]:  # Was provided with 'null' or empty - do not do activate overriding possible global conda defs
-        #         
-        #         return ""
-        #     if "path" in self.params["conda"] and "env" in self.params["conda"]:
-        #         activate_path = os.path.join(self.params["conda"]["path"],type)
-        #         environ       = self.params["conda"]["env"]
-        #     else:
-        #         raise AssertionExcept("'conda' parameter must include 'path' and 'env'")
-        #     
-        # elif "conda" in self.pipe_data:
-        #     activate_path  = os.path.join(self.pipe_data["conda"]["path"],type)
-        #     environ        = self.pipe_data["conda"]["env"]
-        # else:
-        #     return ""
-        #=======================================================================
-   
+  
                                                     
         # Setting qsub options in step parameters:
         self.manage_qsub_opts()
