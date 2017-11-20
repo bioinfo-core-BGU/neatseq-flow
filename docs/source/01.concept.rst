@@ -11,15 +11,17 @@ NeatSeq-Flow concept
    :local:
    :backlinks: top
 
+.. include:: links.rst
 
 Introduction
 --------------------
 
-Usage of **NeatSeq-Flow** works at three levels:
+**NeatSeq-Flow** can be operated at three levels, from easy to advanced:
 
-1. :ref:`Basic_usage`: A workflow is coded in a parameter file. All the user has to do is create a sample file describing the samples and their associated files. (See :ref:`Sample_file_definition`.)
-2. :ref:`workflow_contruction`: Creating a workflow parameter file based on existing modules. The user has to create both a parameter file and a sample file.
-3. :ref:`adding_modules`: Creating a workflow based on tools not yet included in **NeatSeq-Flow**. This requires the user to add modules for each program he expects to run.
+1. :ref:`Basic_usage`: A workflow is pre-coded in a parameter file downloaded from the `Workflows repository`_ or elsewhere. All the user has to do is modify the program paths in the parameter file and create a sample file describing the samples and their associated files. (See :ref:`Sample_file_definition`.)
+2. :ref:`workflow_contruction`: The user defines a sample file as above, but also defines a workflow parameter file based on existing modules (see `Modules and workflows repository`_). Of course, the user can take and existing workflow and modify and expand it according to the job at hand.
+3. :ref:`adding_modules`: Creating a workflow based on tools not yet included in **NeatSeq-Flow**. This requires the user to add modules for each program he expects to run. Alternatively, the user can use the `Generic module`_ to include programs without defining modules.
+
 
 
 
@@ -30,10 +32,11 @@ Basic usage
 
 Basic usage does not require much. 
 
-1. Copy a ready-made parameter file (you can find some in ``Workflows`` dir in the main **NeatSeq-Flow** directory).
-2. Adjust the script paths to the correct paths on your system.
+1. Copy a ready-made parameter file (you can find some in the ``Workflows`` dir in the main **NeatSeq-Flow** directory and at the `Modules and workflows repository`_).
+2. Adjust the script paths to the correct paths on your system (These are usually coded as *variables* in the ``Vars`` section at the top of the parameter file).
 3. Create a sample file following the directions in :ref:`Sample_file_definition`.
 4. Execute **NeatSeq-Flow** (see :ref:`Execution_section`)
+
 
 .. _workflow_contruction:
 
@@ -42,9 +45,9 @@ Workflow construction
 
 In order to construct workflows, one needs to combine modules in such a way that files are transferred seamlessly between them. 
 
-The module output filenames are organised within **NeatSeq-Flow** in a python dictionary (this dictionary is included in the JSON file in the ``objects`` directory). This dictionary is called ``sample_data``. The dictionary tracks the locations of the output files from each module, saving each file type in a dedicated slot. For instance, reads are stored in ``readsX`` slots, where ``X`` is either ``F``, ``R`` or ``S`` for forward-, reverse- and single-end reads, respectively. *FASTA*, *SAM* and *BAM* files, too, have dedicated slots.  
+The module output filenames are organised within **NeatSeq-Flow** in a python dictionary called ``sample_data`` (after executing **NeatSeq-Flow**, this dictionary can be found in the JSON file ``WorkflowData.json`` in the ``objects`` directory). The dictionary tracks the locations of the output files from each module, saving each file type in a dedicated slot. For instance, *fastq* reads are stored in ``reads.X`` slots, where ``X`` is either ``F``, ``R`` or ``S`` for forward-, reverse- and single-end reads, respectively. *FASTA*, *SAM* and *BAM* files, too, have dedicated slots.  
 
-A workflow is a combination of module instances that inherit the above-mentioned dictionary from other modules (these are called the ``base`` of the instance). Each module expects to find specific files in specific slots in the dictionary, which should be put there by one of the modules it inherits from, and puts the files its scripts will create in slots in the dictionary. You can see these requirements in the module documentation, in the *Requires* and *Output* sections. 
+A workflow is a combination of module instances that inherit the above-mentioned dictionary from other modules (these are called the ``base step`` of the instance). Each module expects to find specific files in specific slots in the ``sample_data`` dictionary, which should be put there by one of the modules it inherits from. The instance then stores the filenames of its scripts outputs in slots in the dictionary. You can see these requirements in the module documentation, in the *Requires* and *Output* sections. 
 
 Often, the files are sample-specific, such as fastq files. In this case, they are stored in a dedicated sample slot in the dictionary, *e.g.* ``sample_data["Sample1"]``. Project-wide files, such as an assembly created from all the project fastq files, are stored in the main ``sample_data`` dictionary.
 
@@ -60,11 +63,11 @@ Sometimes, modules *overwrite* existing slots. This **does not mean the files wi
     
     Module instances can be based on more than one instance. *e.g.* if instance ``i`` is based on instances ``j,k``, it is the same as having ``j`` based on ``k`` and ``i`` based on ``j``. In other words, if both ``k`` and ``j`` write to the same slot, ``i`` will have access only to the output from ``j``. 
     
-    If ``k`` and ``j`` are independent, then basing ``i`` on ``j,k`` enables ``j`` and ``k`` to run in parallel, possibly reducing runtime.
+    If ``k`` and ``j`` are independent of each other, then basing ``i`` on ``j,k`` enables ``j`` and ``k`` to run in parallel, possibly reducing runtime.
     
-    
-    
-    
+.. tip::  If you run **NeatSeq-Flow** with the word ``stop_and_show:`` in one of the instances' parameter blocks, **NeatSeq-Flow** will terminate at that instance and show the structure of the ``sample_data`` dictionary. You can use the output to decide which modules can inherit from the instance.
+
+
 .. _adding_modules:
     
 Adding modules
@@ -72,7 +75,7 @@ Adding modules
 
 Adding modules is the most difficult part of creating a workflow. Please make sure a module does not already exist for the program you want to run before trying to create a module.
 
-It is our hope that a community of users will provide access to a wide range of modules, making the process of developing new pipelines more straightforward for non-programmers.
+It is our hope that a community of users will provide access to a wide range of modules, making the process of developing new workflows more straightforward for non-programmers.
 
 For detailed instructions for writing modules, see :ref:`for_the_programmer_Adding_modules`. The idea is to use the ``sample_data`` dictionary for input and output files while leaving as many of the other parameters as possible to the user. This will enable as much flexibility as possible while releaving the user of the need to track input and output files.
 
@@ -93,8 +96,9 @@ For standard file types, you should use the appropriate slots (check out similar
     "GFF", "Sample", ``sample_data[<sample>]['gff']``
     "GFF", "Project", ``sample_data['gff']``
 
+
 .. tip:: 
-    
+
     As mentioned above, module instances can be based on more than one instance. *i.e.* ``i`` can be based on ``j,k``. It was stated that in this case, if ``j`` and ``k`` instances write to the same slot, ``i`` will have access only to the version created by ``j``.
     
     However, you can write modules such that ``i`` has access to the same slot both in ``k`` and in ``j``: Previous versions of the ``sample_data`` dict are stored in the ``base_sample_data`` slot within the ``sample_data`` dict. The ``base_sample_data`` dict is keyed by the base instance name. This can be used to access *overwridden* versions of files created by instances upstream to the present module.

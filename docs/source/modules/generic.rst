@@ -1,3 +1,5 @@
+.. _Generic module: 
+
 Generic module
 ========================================
 
@@ -7,5 +9,5 @@ Generic module
    :depth: 1
 
 
-.. automodule:: step_classes.Generic_module.Generic
+.. automodule:: neatseq_flow.step_classes.Generic_module.Generic
 

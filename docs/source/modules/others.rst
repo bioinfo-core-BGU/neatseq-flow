@@ -7,13 +7,13 @@ BAM conversion to other formats
    :local:
    :depth: 1
 
-.. automodule:: step_classes.mapping.genomeCoverageBed
+.. automodule:: neatseq_flow.step_classes.mapping.genomeCoverageBed
 
-.. automodule:: step_classes.UCSCtools.UCSC_BW_wig
+.. automodule:: neatseq_flow.step_classes.UCSCtools.UCSC_BW_wig
 
-.. automodule:: step_classes.IGVtools.IGV_count
+.. automodule:: neatseq_flow.step_classes.IGVtools.IGV_count
 
-.. automodule:: step_classes.IGVtools.IGV_toTDF
+.. automodule:: neatseq_flow.step_classes.IGVtools.IGV_toTDF
 
 ChIP-seq peak calling
 ========================================
@@ -22,7 +22,7 @@ ChIP-seq peak calling
    :local:
    :depth: 1
 
-.. automodule:: step_classes.ChIP_seq.macs2_callpeak
+.. automodule:: neatseq_flow.step_classes.ChIP_seq.macs2_callpeak
 
 
 

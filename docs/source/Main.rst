@@ -2,6 +2,6 @@ Main class
 ========================================
 
 
-.. automodule:: PLC_main
+.. automodule:: neatseq_flow.PLC_main
    :members:
 

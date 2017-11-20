@@ -1,3 +1,4 @@
+====================
 Building a workflow
 ====================
 
@@ -12,38 +13,38 @@ Building a workflow
    :local:
    :backlinks: top
 
+.. include:: links.rst
+
+.. Execution
+.. ---------
+.. 
+.. A typical execution of ``neatseq_flow`` is as follows::
+.. 
+..     python neatseq_flow.py                              \
+..         --sample_file YAML_pipelines/PE_tabular.nsfs    \
+..         --param_file  YAML_pipelines/mapping.yaml       \
+..         --message     "an informative message"          \
+..         --home_dir    /path/to/workflow/directory
+.. 
+.. You can leave out the ``--message`` and ``--home_dir`` parameters.
+.. See basic documentation by executing::
+..     
+..     python neatseq_flow.py -h
+.. 
+.. The sample file and parameter files passed with ``--sample_file`` and ``--param_file`` are described in more detail below.
 
 
-Execution
----------
+Typical usage of **NeatSeq-Flow**
+====================================
 
-A typical execution of ``neatseq_flow`` is as follows::
-
-    python neatseq_flow.py                              \
-        --sample_file YAML_pipelines/PE_tabular.nsfs    \
-        --param_file  YAML_pipelines/mapping.yaml       \
-        --message     "an informative message"          \
-        --home_dir    /path/to/workflow/directory
-
-You can leave out the ``--message`` and ``--home_dir`` parameters.
-See basic documentation by executing::
-    
-    python neatseq_flow.py -h
-
-The sample file and parameter files passed with ``--sample_file`` and ``--param_file`` are described in more detail below.
-
-
-Preparing sample and parameter files
-------------------------------------
-
-A typical usage of neatseq_flow involves the following steps:
+A typical usage of **NeatSeq-Flow** involves the following steps:
 
 1. Preparing a sample file.
 2. Preparing a parameter file.
-3. Executing neatseq_flow to create the workflow.
-4. Executing the workflow on an SGE cluster.
+3. Executing **NeatSeq-Flow** to create the workflow scripts.
+4. Executing the workflow scripts on an SGE cluster.
 
-**The parameter file is rarely created from scratch**. Take an existing parameter file defined for the analysis you require and modify it to suit your SGE clsuter and specific requirements.
+.. Tip:: **The parameter file is rarely created from scratch**. Take an existing parameter file defined for the analysis you require and modify it to suit your SGE cluster and specific requirements.
 
 
 Parameter file definition
@@ -54,20 +55,43 @@ The parameter file is a YAML file which must include two (unequal) sections:
 Global parameters 
 ~~~~~~~~~~~~~~~~~
 
-Several SGE parameters can be set globally so that all scripts use them for execution. Overriding the defaults on a step-wise basis is possible in the step-wise section of the parameter file.
+Several SGE and other parameters can be set globally so that all scripts use them for execution. Overriding the defaults on a step-wise basis is possible in the step-wise section of the parameter file.
 
 All global parameters are set within a ``Global_params`` block in YAML format.
 
-- ``Qsub_q``: Defines the default queue to send the jobs to.
-- ``Qsub_nodes``: Limits the nodes to which to send the jobs. Must be nodes that are available to the queue requested in `Qsub_q`. The nodes should be passed in a YAML list format.
-- ``Qsub_opts``: Other SGE parameters to be set as default for all scripts, *e.g.* ``-V -cwd`` etc. The parameters should be passed in one long string and **not** as a list.
-- ``Qsub_path``: The path to the ``qstat`` command. If not set, qstat will be used as-is with no path. Sometimes in remote nodes the ``qstat`` command is not in the path and if Qsub_path is not set, the step start and stop logging will fail.
-- ``Default_wait``: The time, in seconds, to wait for jobs to enter the queue before terminating the step-level script. Must be an integer. The default is 10, which is usually a good value to start with. If downstream jobs seem to be sent for execution before earlier jobs have terminated, increase this value.
-- ``module_path``: Enables including modules not in the main **NeatSeq-Flow** package. This includes the modules downloaded from the **NeatSeq-Flow** module and workflow repository as modules you added yourself (see section :ref:`for_the_programmer_Adding_modules`). Keep your modules in a separate path and pass the path to **NeatSeq-Flow** with ``module_path``. Several of these can be passed in YAML list format for more than one external module path. The list will be searched in order, with the main **NeatSeq-Flow** package being searched last.
-- ``job_limit``: If there is an upper limit on the jobs you can send to the job manager, you can use the ``job_limit`` parameter to pass **NeatSeq-Flow** a file with one line, *e.g.* `limit=1000 sleep=60`. This will make the scripts check every 60 seconds if there are less than 1000 jobs registered for the user. New jobs will be released only when there are less than the specified limit. 
+``Qsub_q``
+    Defines the default queue to send the jobs to (this is the value passed to ``qsub`` with the ``-q`` parameter).
+    
+``Qsub_nodes``
+    Limits the nodes to which to send the jobs. Must be nodes that are available to the queue requested in ``Qsub_q``. The nodes should be passed in a YAML list format. *e.g.* ::
+
+        Qsub_nodes:
+            - node1
+            - node2
+
+``Qsub_opts``
+    Other SGE parameters to be set as default for all scripts, *e.g.* ``-V -cwd`` etc. The parameters should be passed in one long string and **not** as a list.
+    
+``Qsub_path``
+    The path to the ``qstat`` command. If not set, qstat will be used as-is with no path. Sometimes in remote nodes the ``qstat`` command is not in the path and if Qsub_path is not set, the step start and stop logging will fail.
+
+``Default_wait``
+    The time, in seconds, to wait for jobs to enter the queue before terminating the step-level script. Must be an integer. The default is 10, which is usually a good value to start with. If downstream jobs seem to be sent for execution before earlier jobs have terminated, increase this value.
+
+``module_path``
+    Enables including modules not in the main **NeatSeq-Flow** package. This includes the modules downloaded from the **NeatSeq-Flow** `Modules and workflows repository`_ as well as modules you added yourself (see section :ref:`for_the_programmer_Adding_modules`). Keep your modules in a separate path and pass the path to **NeatSeq-Flow** with ``module_path``. Several of these can be passed in YAML list format for more than one external module path. The list will be searched in order, with the main **NeatSeq-Flow** package being searched last.
+    
+.. attention:: When executing **NeatSeq-Flow** within a `conda` environment, **NeatSeq-Flow** will add the path to the modules repository automatically (See :ref:`installing with conda`). You don't have to worry about setting it in the parameter file unless you have your own modules installed in a different location.
+
+``job_limit``
+    If there is an upper limit on the jobs you can send to the job manager, you can use the ``job_limit`` parameter to pass **NeatSeq-Flow** a file with one line, *e.g.*::
+        
+        limit=1000 sleep=60
+        
+    This will make the scripts check every 60 seconds if there are less than 1000 jobs registered for the user. New jobs will be released only when there are less than the specified limit. 
 
 
-Example of a global-parameter block::
+Following is an example of a global-parameters block::
     
     Global_params:
         Default_wait: 10
@@ -76,12 +100,13 @@ Example of a global-parameter block::
         Qsub_nodes: [node1,node2,node3]
         Qsub_opts:  -V -cwd
         module_path: 
-            - /path/to/modules1
+            - /path/to/modules1/
             - /path/to/modules2/
 
 
+.. _step_wise_parameters:
 
-Step-wise parameters:
+Step-wise parameters
 ~~~~~~~~~~~~~~~~~~~~~
 
 Step-wise parameters define parameters which are specific to the various steps included in the workflow. 
@@ -114,9 +139,14 @@ Step parameters can be divided into the following groups:
 Required parameters for each step
 ++++++++++++++++++++++++++++++++++
 
-1. ``module`` is the name of the module of which this step is an instance. 
-2. ``base`` is the name of the step on which the current step is based (not required for the `merge` step, which is always first and single). ``base`` can be a YAML formatted list of base steps.
-3. ``script_path``: The **full path** to the script executed by this step. 
+``module``
+    The name of the module of which this step is an instance. 
+    
+``base``
+    The name of the step on which the current step is based (not required for the `merge` step, which is always first and single). ``base`` can be a YAML formatted list of base steps.
+
+``script_path``
+    The **full path** to the script executed by this step. 
 
 .. Note:: 
 
@@ -131,15 +161,37 @@ Additional parameters
 
 Other parameters you can set for each step to control the execution of the step scripts:
 
-1. ``setenv``: Set various environment variables for the duration of script execution. For ``bash`` scripts, ``export`` will be used instead of ``setenv``. Is useful when the software executed by the script requires setting specific environment variables which you do not want to set globally on all nodes.
-2. ``qsub_params``: Set cluster related params which will be effective for the current step alone:
-    1. ``node``: A node or YAML list of nodes on which to run the step scripts (overrides global parameter ``Qsub_nodes``)
-    2. ``queue`` or ``-q``: Will limit the execution of the step's scripts to this queue (overrides global parameter ``Qsub_q``)
-    3. ``-pe``: Will set the ``-pe`` parameter for all scripts for this module (see SGE ``qsub`` manual).
-    4. ``-XXX: YYY``: This is a way do define other SGE parameters for all step scripts. This will set the value of qsub parameter ``-XXX`` to ``YYY``
-3. ``scope``: Defines whether to use sample-wise files or project-wise files. Check per-module documentation for whether and how this parameter is defined (see, *e.g.*, the ``blast`` module).
-4. ``sample_list``: This is an experimental feature. A comma-separated list of samples on which to execute the module. Scripts will be created only for the samples in the list. This selection will be valid for all instances based on this instance, untill the value ``all_samples`` is passed. Use this option with care since the samples not in the list will not own the step outputs, which may well be required downstream. A use case could be when you want to run a step with different parameters for different sample subsets. Both versions of the instance should inherit from a common ``base`` and the downstream step can inherit both versions, thus all samples will have all files, created with different parameters.
-5. ``local``: A local folder which exists in all cluster nodes. Uses a local directory for intermediate files before copying results to final destination in ``data`` dir. This is useful when the cluster manager requires you to limit your IO to the central disk system. 
+``setenv``
+    Set various environment variables for the duration of script execution. This is useful when the software executed by the script requires setting specific environment variables which you do not want to set globally on all nodes.
+
+.. For ``bash`` scripts, ``export`` will be used instead of ``setenv``. 
+    
+``qsub_params``
+    Set cluster related params which will be effective for the current step alone:
+    
+    ``node``
+        A node or YAML list of nodes on which to run the step scripts (overrides global parameter ``Qsub_nodes``)
+
+    ``queue`` or ``-q``
+        Will limit the execution of the step's scripts to this queue (overrides global parameter ``Qsub_q``)
+        
+    ``-pe``
+        Will set the ``-pe`` parameter for all scripts for this module (see SGE ``qsub`` manual).
+        
+    ``-XXX: YYY``
+        Set the value of qsub parameter ``-XXX`` to ``YYY``. This is a way to define other SGE parameters for all step scripts. 
+        
+``scope``
+    Defines whether to use sample-wise files or project-wise files. Check per-module documentation for whether and how this parameter is defined (see, *e.g.*, the ``blast`` module).
+
+``sample_list``
+    This is an experimental feature. A comma-separated list of samples on which to execute the module. Scripts will be created only for the samples in the list. This selection will be valid for all instances based on this instance, untill the value ``all_samples`` is passed. Use this option with care since the samples not in the list will not own the step outputs, which may well be required downstream. 
+    
+.. Tip:: A use case could be when you want to run a step with different parameters for different sample subsets. Both versions of the instance should inherit from a common ``base`` and the downstream step can inherit both versions, thus all samples will have all files, created with different parameters.
+
+
+``local``
+    A local folder which exists in all cluster nodes. Uses a local directory for intermediate files before copying results to final destination in ``data`` dir. This is useful when the cluster manager requires you to limit your IO to the central disk system. 
 
 .. _redirected_parameters:
 
@@ -148,7 +200,7 @@ Redirected parameters
 
 Parameters to be redirected to the actual program executed by the step.
 
-Redirected parameters are specified within a ``redirects`` block (see example above).
+Redirected parameters are specified within a ``redirects:`` block (see example in :ref:`step_wise_parameters` above).
 
 .. Note:: the parameter name must include the ``-`` or ``--`` required by the program defined in ``script_path``.
 
@@ -159,8 +211,12 @@ Comments
 ++++++++++
 
 1. The local directory passed to ``local`` must exist on all nodes in the queue.
-2. For a list of qsub parameters, see the `qsub man page <http://gridscheduler.sourceforge.net/htmlman/htmlman1/qsub.html>`_ 
-3. The list of nodes passed to ``node`` within the ``qsub_params`` block will be appended to the queue name (pipeline-global or step specific). Don't add the queue name to the node names.
+2. For a list of qsub parameters, see the `qsub man page`_ 
+3. The list of nodes passed to ``node`` within the ``qsub_params`` block will be appended to the queue name (global or step specific). Don't add the queue name to the node names.
+
+
+.. ##############################################################
+
 
 .. _Sample_file_definition:
 
@@ -179,7 +235,9 @@ Each sample file must include a single title line with the format::
 
     Title    name_of_analysis
 
-An example of a sample definition::
+The title name must be a single word - no spaces are allowed.
+
+Following the project title, add a block of lines for each sample. An example of a sample definition::
 
     Sample     Sample1
     Forward    /full/path/to/Sample1_L001_R1_001.fastq.gz
@@ -190,12 +248,15 @@ An example of a sample definition::
 
 A new sample definition begins with ``Sample`` followed by a sample name (the sample name must **not** contain spaces!)
 
-Following this line come lines defining the source files for the sample (The files can be compressed. **You do not need to decompress the files before execution**):
+Following this line come lines defining the source files for the sample (The files can be compressed. **You do not need to decompress the files before execution**, however, as of **NeatSeq-Flow** v1.1.0, all files must be either compressed or decompressed.):
  
 - ``Forward`` and ``Reverse`` pairs (``fastq`` files only).
 - ``Single`` (``fastq`` files only)
 - ``Nucleotide`` (``fasta`` files only)
 - ``Protein`` (``fasta`` files only)   
+- ``SAM`` (`SAM` files)
+- ``BAM`` (`BAM` files)
+- ``REFERENCE`` (When passing `SAM` or `BAM` files, you are required to pass the referenece genome against which the reads were aligned)
 
 .. Note:: 
     1. A sample can have more than one file. Follow the ``Sample`` line with as many file lines as necessary.
@@ -220,7 +281,7 @@ The samples themselves are coded in a table with a header, as follows::
 
 The table **must be in consecutive lines** following the header line.
 
-The first field is the sample name (no spaces!). The 2nd field is the file type (at the moment, one of: ``Forward``, ``Reverse``, ``Single``, ``Nucleotide`` and ``Protein``)
+The first field is the sample name (no spaces!). The 2nd field is the file type (at the moment, one of: ``Forward``, ``Reverse``, ``Single``, ``Nucleotide``, ``Protein``, ``SAM``, ``BAM`` and ``REFERENCE``)
 
 An example of a sample table follows::
 
@@ -238,6 +299,10 @@ File types are as described above in section :ref:`list_format_definition`.
     2. Keep forward and reverse files in pairs. Each forward file should have it's reverse file in the following line.
     3. Each sample can contain different combinations of the above but the user must be careful when doing unexpected things like that... 
 
+.. Attention:: As of **NeatSeq-Flow** version 1.1.0, the sample file can only contain **sample files**. No project files are permitted. 
+
+    * If you have project files, create a single sample which will represent your project. 
+    * If you have mainly sample files, such as `fastq` files, and some project level files such as reference genomes, pass them to the modules through the parameter file.
 
 ChIP-seq specific definitions
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -251,12 +316,12 @@ For ChIP-seq experiments, one must define ChIP and Control ('input') pairs. This
 Just replace ``anti_sample1`` and ``input_sample1`` with the relevant sample names.
 
   
-Executing neatseq_flow
-------------------------
+Executing **NeatSeq-Flow**
+---------------------------
 
-Executing neatseq_flow is the simplest step in the workflow::
+Executing **NeatSeq-Flow** is the simplest step in the workflow (make sure ``python`` and ``neatseq_flow.py`` are in your search path)::
 
-    python neatseq_flow                         \
+    python neatseq_flow.py                      \
         -s sample_file.nsfs                     \
         -p param_file1.nsfp,param_file2.nsfp    \
         -m "message"                            \
@@ -264,8 +329,8 @@ Executing neatseq_flow is the simplest step in the workflow::
 
 **Comments**:
 
-- ``neatseq_flow`` does not require installation. If you have a local copy, append the full path to ``neatseq_flow``.
-- You can pass a comma-separated list of parameter files. neatseq_flow concatenates the files in the order they're passed. Make sure there are no conflicts or duplicated definitions in the files (this occurs mainly for global parameters)
+- **NeatSeq-Flow** does not require installation. If you have a local copy, append the full path to ``neatseq_flow.py``.
+- You can pass a comma-separated list of parameter files. **NeatSeq-Flow** concatenates the files in the order they're passed. Make sure there are no conflicts or duplicated definitions in the files (this occurs mainly for global parameters)
 - Alternatively, you can pass many parameter by specifying more than one ``-p``.
 - It is not compulsory to pass a message via ``-m`` but it is highly recommended for documentation and reproducibility.
 
@@ -291,7 +356,7 @@ Each line in ``scripts/00.pipe.commands.csh`` calls a step-wise script in ``scri
 
 The following command will execute only the ``merge1`` step::
 
-    csh scripts/01.merge_merge1.csh
+    qsub scripts/01.merge_merge1.csh
 
 Sample-wise execution.
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

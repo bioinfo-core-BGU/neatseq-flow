@@ -6,9 +6,9 @@ Searching
    :depth: 1
 
 
-.. automodule:: step_classes.searching.makeblastdb
+.. automodule:: neatseq_flow.step_classes.searching.makeblastdb
 
-.. automodule:: step_classes.searching.blast
+.. automodule:: neatseq_flow.step_classes.searching.blast
 
 
    

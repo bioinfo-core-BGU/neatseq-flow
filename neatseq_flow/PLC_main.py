@@ -163,7 +163,7 @@ class neatseq_flow:
             
         except AssertionExcept as assertErr:
             print "An error has occured. See comment above.\nPrinting current JSON and exiting\n"
-            with open(self.pipe_data["objects_dir"]+"pipedata.json","w") as json_fh:
+            with open(self.pipe_data["objects_dir"]+"WorkflowData.json","w") as json_fh:
                 json_fh.write(self.get_json_encoding())
             # sys.exit() 
             return
@@ -180,7 +180,7 @@ class neatseq_flow:
         self.create_diagrammer_graphic()
         
         # Writing JSON encoding ofg pipeline:
-        with open(self.pipe_data["objects_dir"]+"pipedata.json","w") as json_fh:
+        with open(self.pipe_data["objects_dir"]+"WorkflowData.json","w") as json_fh:
             json_fh.write(self.get_json_encoding())
         # Writing JSON encoding of qsub names (can be used by remote progress monitor)
         with open(self.pipe_data["objects_dir"]+"qsub_names.json","w") as json_fh:
@@ -800,7 +800,7 @@ function transform(d) {
 
 </script>  """ % {"links_p":links_part, "d3_loc":"https://d3js.org/d3.v3.min.js"}
         
-        with open(self.pipe_data["objects_dir"]+os.sep+"pipeline_graph.html" , "w") as pipejs:
+        with open(self.pipe_data["objects_dir"]+os.sep+"WorkflowGraph.svg.html" , "w") as pipejs:
             pipejs.write(html_text)
             
             
@@ -900,60 +900,10 @@ digraph a_nice_graph {
 """ % { "nodes_p" : nodes_part,
         "links_p" : links_part,
         "foot_p"  : footnote_part,
-        "out_file_name" : self.pipe_data["objects_dir"] + "workflow_graph.html"}
+        "out_file_name" : self.pipe_data["objects_dir"] + "WorkflowGraph.html"}
         
         with open(self.pipe_data["objects_dir"] + "diagrammer.R" , "w") as diagrammer:
             diagrammer.write(Gviz_text)
                 
                 
                 
-    # def convert_data_to_YAML(self):
-        # """ Export all sample and param data in YAML format.
-        
-        # """
-
-        # param_yaml = yaml.dump({"Global_params":self.param_data.pop("Global")},default_flow_style = False, indent = 4)
-
-        # endparams = {}
-        # for step in self.step_list:
-        
-            # # Renaming "redir_params" to "redirects" if exists and is not empty.            
-            # # 'redir_params' always exists. If empty, removing. Else, changing ro 'redirects'
-            # if step.params["redir_params"]:
-                # step.params["redirects"] = step.params.pop("redir_params")
-            # else:
-                # step.params.pop("redir_params")
-                
-            # # Removing depend_list which is the only element in the param_data dict that does not appear in the param file:
-            # step.params.pop("depend_list")
-            
-            # # Removing empty node indicators from step
-            # if not step.params["qsub_params"]["node"]:
-                # step.params["qsub_params"].pop("node")
-            # # Removing qstat_path when using default
-            # if step.params["qsub_params"]["qstat_path"] in ["qstat",self.pipe_data["qsub_params"]["qstat_path"]]:
-                # step.params["qsub_params"].pop("qstat_path")
-            # # Removing queue when using default
-            # if step.params["qsub_params"]["queue"] == self.pipe_data["qsub_params"]["queue"]:
-                # step.params["qsub_params"].pop("queue")
-            # step.params["module"] = step.get_step_step()
-            # # Converting single base from list to string:
-            # if "base" in step.params and len(step.params["base"])==1:
-                # step.params["base"] = step.params["base"][0]
-            # # Adding step number to step name.
-            # # This is a workaround to output steps in working order.
-            # # The numbers can be removed with a simple RE ('\s{4}\d+\.' replace with 4 spaces) in notepad++
-            # new_step_name = "%s.%s" % (step.step_number, step.get_step_name())
-            # endparams[new_step_name] = step.params
-            # # temp_yaml = yaml.dump({step.get_step_name():step.params},default_flow_style=False)
-            
-            
-        # param_yaml += yaml.dump({"Step_params":endparams},default_flow_style = False, indent = 4)
-
-        # import re
-        # param_yaml = re.sub(pattern = '\s{4}\d+\.', repl = '    ', string = param_yaml)
-        
-        # # print param_yaml
-        # print "Param data converted to YAML format in file: \n%s" % self.pipe_data["objects_dir"]+"param_data.yaml"
-        # with open(self.pipe_data["objects_dir"]+"param_data.yaml","w") as yaml_fh:
-            # yaml_fh.write(param_yaml)

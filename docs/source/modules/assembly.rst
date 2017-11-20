@@ -6,9 +6,9 @@ Genome Assembly
    :local:
    :depth: 1
 
-.. automodule:: step_classes.Assembly.spades_assembl
+.. automodule:: neatseq_flow.step_classes.Assembly.spades_assembl
 
-.. automodule:: step_classes.Assembly.quast
+.. automodule:: neatseq_flow.step_classes.Assembly.quast
 
 
 RNA-seq Aassembly
@@ -19,6 +19,6 @@ RNA-seq Aassembly
    :depth: 1
 
 
-.. automodule:: step_classes.RNA_seq.trinity
+.. automodule:: neatseq_flow.step_classes.RNA_seq.trinity
 
-.. automodule:: step_classes.RNA_seq.add_trinity_tags
+.. automodule:: neatseq_flow.step_classes.RNA_seq.add_trinity_tags

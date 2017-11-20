@@ -79,10 +79,21 @@ class Step:
                 if not os.path.isdir(module_path):
                     sys.stderr.write("Path %s from module_path does not exist. Skipping...\n" % module_path)
                     continue
+
+                
+                def walkerr(err):
+                    """ Helper function for os.walk below. Catches errors during walking and reports on them.
+                    """
+                    print "WARNING: Error while searching for modules:"
+                    print  err
+
                     
                 mod_t = step
-                dir_generator = os.walk(module_path)       # Each .next call on this generator returns a level tuple as follows:
-                level = dir_generator.next()           # level is a tuple with: (current dir. [list of dirs],[list of files])
+                dir_generator = os.walk(module_path, onerror = walkerr)       # Each .next call on this generator returns a level tuple as follows:
+                try:
+                    level = dir_generator.next()           # level is a tuple with: (current dir. [list of dirs],[list of files])
+                except StopIteration:
+                    sys.stderr.write("Module path %s seems to be empty! Possibly issue with permissions..." % module_path)
                 while(mod_t + ".py" not in level[2]):     # Repeat while expected filename is NOT in current dir contents (=level[2]. see above)
                     try:
                         level = dir_generator.next()    # Try getting another level    
@@ -108,8 +119,12 @@ class Step:
 
         # If not found, do the same with self.Cwd:
         mod_t = step
-        dir_generator = os.walk(self.Cwd)       # Each .next call on this generator returns a level tuple as follows:
-        level = dir_generator.next()           # level is a tuple with: (current dir. [list of dirs],[list of files])
+        dir_generator = os.walk(self.Cwd, onerror = walkerr)     # Each .next call on this generator returns a level tuple as follows:
+        try:
+            level = dir_generator.next()           # level is a tuple with: (current dir. [list of dirs],[list of files])
+        except StopIteration:
+            sys.stderr.write("Module path %s seems to be empty! Possibly issue with permissions..." % self.Cwd)
+
         while(mod_t + ".py" not in level[2]):     # Repeat while expected filename is NOT in current dir contents (=level[2]. see above)
             try:
                 level = dir_generator.next()    # Try getting another level    

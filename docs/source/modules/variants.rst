@@ -9,5 +9,5 @@ Variant Calling and Analysis
 
 
 
-.. automodule:: step_classes.variants.vcftools
+.. automodule:: neatseq_flow.step_classes.variants.vcftools
 

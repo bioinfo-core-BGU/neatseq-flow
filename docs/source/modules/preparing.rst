@@ -7,11 +7,11 @@ Preparation and QC
    :depth: 1
 
 
-.. automodule:: step_classes.preparing.merge
+.. automodule:: neatseq_flow.step_classes.preparing.merge
 
-.. automodule:: step_classes.preparing.fastqc_html
+.. automodule:: neatseq_flow.step_classes.preparing.fastqc_html
 
-.. automodule:: step_classes.preparing.trimmo
+.. automodule:: neatseq_flow.step_classes.preparing.trimmo
 
-.. automodule:: step_classes.Reports.Multiqc
+.. automodule:: neatseq_flow.step_classes.Reports.Multiqc
 

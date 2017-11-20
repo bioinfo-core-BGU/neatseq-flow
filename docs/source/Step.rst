@@ -1,6 +1,6 @@
 Step master class
 ========================================
 
-.. automodule:: PLC_step
+.. automodule:: neatseq_flow.PLC_step
    :members:
 
