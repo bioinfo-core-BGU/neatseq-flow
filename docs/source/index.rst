@@ -45,40 +45,9 @@ What is **NeatSeq-Flow**?
 	* utilization of cluster parallelization capabilities;
 	* documentation, version control as well as time & memory usage reports and 
 	* adding modules and expanding existing WFs requires only basic python skills.
-* **NeatSeq-Flow** is available on `github <https://github.com/bioinfo-core-BGU/neatseq-flow>`_ (See :ref:`installation_section` below)
+* **NeatSeq-Flow** is available on `github <https://github.com/bioinfo-core-BGU/neatseq-flow>`_ (See :ref:`installation_section`)
 
     
-.. _installation_section:
-
-Download and Install
---------------------
-
-1. Clone the package from github:
-
-``git clone https://github.com/bioinfo-core-BGU/neatseq-flow.git``
-
-2. You may have to install two `python` dependencies: `yaml` and `bunch`. This can be done with:
-
-``pip install yaml bunch``
-
-3. Clone the package of modules from github:
-
-``git clone https://github.com/bioinfo-core-BGU/neatseq-flow-modules.git``
-
-.. Note:: You can also download the repository code from the following links:
-
-   * Main **NeatSeq-Flow** source code: https://github.com/bioinfo-core-BGU/neatseq-flow/archive/master.zip
-   * Module and workflow repository: https://github.com/bioinfo-core-BGU/neatseq-flow-modules/archive/master.zip
-
-Getting started
-----------------
-
-Create a new directory anywhere, `cd` into it and execute the following commands (``$NSF_main`` is the directory where **NeatSeq-Flow** is installed)::
-
-    python $NSF_main/neatseq_flow.py                         \
-        --sample_file $NSF_main/Workflows/PE_tabular.nsfs    \
-        --param_file  $NSF_main/Workflows/mapping.yaml       \
-        --message     "an informative message"
 
 Modules
 -------
@@ -96,6 +65,12 @@ Authors
 
 .. Detailed documentation
 .. -----------------------
+
+.. toctree::
+   :maxdepth: 3
+   :caption: Installation
+
+   00.getting_started
 
 .. toctree::
    :maxdepth: 1

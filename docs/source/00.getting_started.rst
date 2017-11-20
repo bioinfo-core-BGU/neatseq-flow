@@ -1,0 +1,85 @@
+===============================
+NeatSeq-Flow Getting Started 
+===============================
+
+.. include:: links.rst
+
+**Author:** Menachem Sklarz
+
+**Affiliation:** |affiliation|
+
+.. contents:: Table of Contents
+   :depth: 2
+   :local:
+   :backlinks: top
+
+
+.. _installation_section:
+
+
+Download and Install
+===============================
+
+
+1. Clone the package from github:
+
+``git clone https://github.com/bioinfo-core-BGU/neatseq-flow.git``
+
+2. You may have to install two `python` dependencies: `yaml` and `bunch`. This can be done with:
+
+``pip install yaml bunch``
+
+3. Clone the package of modules from github:
+
+``git clone https://github.com/bioinfo-core-BGU/neatseq-flow-modules.git``
+
+.. Note:: You can also download the repository code from the following links:
+
+   * Main **NeatSeq-Flow** source code: https://github.com/bioinfo-core-BGU/neatseq-flow/archive/master.zip
+   * Module and workflow repository: https://github.com/bioinfo-core-BGU/neatseq-flow-modules/archive/master.zip
+
+Executing **NeatSeq-Flow**
+-----------------------------
+
+Create a new directory anywhere, `cd` into it and execute the following commands (``$NSF_main`` is the directory where **NeatSeq-Flow** is installed)::
+
+    python $NSF_main/neatseq_flow.py                         \
+        --sample_file $NSF_main/Workflows/PE_tabular.nsfs    \
+        --param_file  $NSF_main/Workflows/mapping.yaml       \
+        --message     "an informative message"
+
+.. _install_with_conda:
+
+Install and execute with **Conda**
+====================================
+
+1. Install `Miniconda`_.
+2. Download the **NeatSeq-Flow** |conda_env|. 
+3. Create an environment::
+
+    conda-env create -f NeatSeq_Flow_conda_env.yaml
+
+4. Activate the environment::
+
+    source activate NeatSeq_Flow
+
+5. Make a dir for your project and change into it::
+
+    mkdir first_neatseq_flow_proj; cd first_neatseq_flow_proj
+    
+6. Execute **NeatSeq-Flow**::
+
+    neatseq_flow.py                                                          \
+        --sample_file $CONDA_PREFIX/Workflows/Sample_sets/PE_tabular.nsfs    \
+        --param_file  $CONDA_PREFIX/Workflows/mapping.yaml                   \
+        --message     "an informative message"
+
+    
+7. When done, deactivate the environment::
+
+    source deactivate
+
+.. Note:: You don't need to have the environment activated in order to execute the scripts!
+
+.. Attention:: See the `tutorial`_ for a full example of how to use **NeatSeq-Flow**
+

@@ -874,7 +874,7 @@ library(reshape2); library(googleVis); args <- commandArgs(trailingOnly =T);log_
         
         Gviz_text =  """
 # Check if required packages are installed:
-if(not(all(c("DiagrammeR","htmlwidgets") %%in%% installed.packages()))) {
+if(!(all(c("DiagrammeR","htmlwidgets") %%in%% installed.packages()))) {
     cat("'DiagrammeR' and 'htmlwidgets' are not installed.\nYou must install them for this script to work!\nInstall by running the following commands:\ninstall.packages('DiagrammeR')\ninstall.packages('htmlwidgets')")
 }
 library(DiagrammeR)

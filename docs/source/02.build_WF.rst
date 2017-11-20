@@ -2,18 +2,17 @@
 Building a workflow
 ====================
 
+.. include:: links.rst
+
 **Author:** Menachem Sklarz
 
-**Affiliation:** `Bioinformatics Core Facility <http://bioinfo.bgu.ac.il/bsu/index.htm>`_, `National institute of Biotechnology in the Negev <http://in.bgu.ac.il/en/nibn/Pages/default.aspx>`_, Ben-Gurion University
-
-
+**Affiliation:** |affiliation|
 
 .. contents:: Table of Contents
    :depth: 2
    :local:
    :backlinks: top
 
-.. include:: links.rst
 
 .. Execution
 .. ---------
@@ -46,6 +45,7 @@ A typical usage of **NeatSeq-Flow** involves the following steps:
 
 .. Tip:: **The parameter file is rarely created from scratch**. Take an existing parameter file defined for the analysis you require and modify it to suit your SGE cluster and specific requirements.
 
+.. _parameter_file_definition:
 
 Parameter file definition
 -------------------------
@@ -81,7 +81,7 @@ All global parameters are set within a ``Global_params`` block in YAML format.
 ``module_path``
     Enables including modules not in the main **NeatSeq-Flow** package. This includes the modules downloaded from the **NeatSeq-Flow** `Modules and workflows repository`_ as well as modules you added yourself (see section :ref:`for_the_programmer_Adding_modules`). Keep your modules in a separate path and pass the path to **NeatSeq-Flow** with ``module_path``. Several of these can be passed in YAML list format for more than one external module path. The list will be searched in order, with the main **NeatSeq-Flow** package being searched last.
     
-.. attention:: When executing **NeatSeq-Flow** within a `conda` environment, **NeatSeq-Flow** will add the path to the modules repository automatically (See :ref:`installing with conda`). You don't have to worry about setting it in the parameter file unless you have your own modules installed in a different location.
+.. attention:: When executing **NeatSeq-Flow** within a `conda` environment, **NeatSeq-Flow** will add the path to the modules repository automatically (See |conda|). You don't have to worry about setting it in the parameter file unless you have your own modules installed in a different location.
 
 ``job_limit``
     If there is an upper limit on the jobs you can send to the job manager, you can use the ``job_limit`` parameter to pass **NeatSeq-Flow** a file with one line, *e.g.*::
@@ -189,6 +189,7 @@ Other parameters you can set for each step to control the execution of the step 
     
 .. Tip:: A use case could be when you want to run a step with different parameters for different sample subsets. Both versions of the instance should inherit from a common ``base`` and the downstream step can inherit both versions, thus all samples will have all files, created with different parameters.
 
+.. _local_step_parameter:
 
 ``local``
     A local folder which exists in all cluster nodes. Uses a local directory for intermediate files before copying results to final destination in ``data`` dir. This is useful when the cluster manager requires you to limit your IO to the central disk system. 

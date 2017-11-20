@@ -1,5 +1,12 @@
+=======================
 NeatSeq-Flow Monitor
-====================================================
+=======================
+
+.. include:: links.rst
+
+**Author:** Liron Levin
+
+**Affiliation:** |affiliation|
 
 .. contents:: Table of Contents
    :depth: 2
