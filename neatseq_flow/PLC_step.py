@@ -48,6 +48,12 @@ class Step:
         """ A class method for finding the location of a module for a given step
         """
 
+        def walkerr(err):
+            """ Helper function for os.walk below. Catches errors during walking and reports on them.
+            """
+            print "WARNING: Error while searching for modules:"
+            print  err
+
         # This will automatically load modules installed in "conda"
         # It adds the default path ($CONDA_PREFIX/lib/python2.7/site-packages/neatseq_flow_modules) to modules_path
         if "conda" in pipe_data:
@@ -81,11 +87,6 @@ class Step:
                     continue
 
                 
-                def walkerr(err):
-                    """ Helper function for os.walk below. Catches errors during walking and reports on them.
-                    """
-                    print "WARNING: Error while searching for modules:"
-                    print  err
 
                     
                 mod_t = step
