@@ -146,7 +146,7 @@ def get_classic_sample_data(filelines):
         controls = parse_sample_control_data(Sample_Control,sample_names=sample_data.keys())
         
     # Add a list of sample names to sample_data
-    sample_data["samples"] = sample_data.keys()
+    sample_data["samples"] = sorted(sample_data.keys())
 
     # Add project title sample_data
     sample_data["Title"] = title
@@ -307,7 +307,8 @@ def get_tabular_sample_data(filelines):
     # sys.exit()
     
     # Add a list of sample names to sample_data
-    sample_data["samples"] = sample_data.keys()
+    sample_data["samples"] = sorted(sample_data.keys())
+    
 
     # Add project title sample_data
     sample_data["Title"] = title
@@ -363,7 +364,7 @@ def parse_tabular_sample_data(sample_lines):
     for line in sample_lines:
         line_data = re.split("\s+", line)
         
-        print line_data[1]
+        # print line_data[1]
         if line_data[1] in RECOGNIZED_FILE_TYPES:# ["Forward", "Reverse","Single", "Nucleotide", "Protein", "SAM", "BAM", "REFERENCE"]:   
             if line_data[1] in sample_x_dict.keys():
                 if line_data[1] == "REFERENCE":
@@ -427,7 +428,7 @@ def get_project_title(filelines):
 
     # Removing trailing spaces and converting whitespace to underscore
     if re.search("\s+", title[0]):
-        print "in here"
+        # print "in here"
         title[0] = title[0].strip()
         title[0] = re.sub("\s+", "_", title[0])
         sys.stderr.write("The title contains white spaces. Converting to underscores. (%s)\n" % title[0])
