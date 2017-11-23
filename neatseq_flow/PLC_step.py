@@ -9,6 +9,7 @@ import datetime
 
 from copy import *
 from pprint import pprint as pp
+from matplotlib.cbook import get_sample_data
 
 __author__ = "Menachem Sklarz"
 __version__ = "1.1.0"
@@ -1221,3 +1222,21 @@ source {activate_path} {environ}
     def get_qsub_names_dict(self):
     
         return self.qsub_names_dict
+    
+    
+    
+    #===========================================================================
+    # def create_sample_file(self):
+    #     """ Creates a sample file based on the current version of get_sample_data
+    #     """
+    #     
+    #     with open(self.base_dir+'sample_file.nsfs', 'w') as smp_f:
+    #         smp_f.write("Title\t{title}\n\n".format(title=self.sample_data["Title"]))
+    #         for sample in self.sample_data["samples"]:
+    #             for direction in self.params["sample_file"]:
+    #===========================================================================
+            
+                                       
+                                       
+                                       
+                                       

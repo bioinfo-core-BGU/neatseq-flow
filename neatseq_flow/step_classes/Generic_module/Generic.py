@@ -1,24 +1,25 @@
 #!/fastspace/bioinfo_apps/python-2.7_SL6/bin/python
 # -*- coding: UTF-8 -*-
 """ 
-Module ``Generic``
+``Generic``
 -----------------------
 
 :Authors: Liron Levin
 :Affiliation: Bioinformatics core facility
 :Organization: National Institute of Biotechnology in the Negev, Ben Gurion University.
 
-SHORT DESCRIPTION
+Short Description
+~~~~~~~~~~~~~~~~~~~~~
     A generic module that enables the user to design new modules that can handle most cases.
 
 Requires
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    In this module the users define the required file types in the inputs section 
+    * In this module the users define the required file types in the inputs section 
 
 Output
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    In this module the users define the output file types in the outputs section
-    The scope of the output file types is determinant by the module scope
+    * In this module the users define the output file types in the outputs section
+    * The scope of the output file types is determinant by the module scope
 
 Parameters that can be set
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -37,6 +38,17 @@ Comments
     will be according to the order of their appearance in the parameter file.
     The redirect arguments are always first. 
 
+Example of usage and implementation of the generic module:
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. figure:: Generic_Module_Example.png
+    :align: center
+    :alt: Generic Module Example
+    :figclass: align-center
+
+    A generic module is used to generate a BLAST database for each sample and a subsequent generic step queries each database with sequences from an external FASTA file. This example is a typical use of BLAST in many biological scenarios such as searching for virulence/resistance genes (whose sequences are in the external FASTA file) in bacterial genomes 
+    **A.** Calling a generic module to generate a BLAST database (using makeblastdb) from each sample. This step can be used after (base:) any step that creates a nucleotide FASTA file (File_Type:  ``fasta.nucl``), e.g. after merge (if the raw files are in nucleotide FASTA format) or after a de novo assembly step. The location of the BLAST database for each sample is saved as a blast_db file type (File_Type: blast_db) for downstream use. **B.** Calling a generic module which performs a BLAST search (tblastn) of an external query protein fasta file (``-query`` :  path to query protein fasta file) against the previously generated BLAST data base per sample. This step can be used after the Make_BLAST_DB step (base: Make_BLAST_DB). The user can pass additional parameters directly to the used program in the redirects section (e.g. ``–dbtype``, ``–evalue``, ``-num_descriptions`` etc.). 
+
 
 Lines for parameter file
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -48,22 +60,22 @@ Lines for parameter file
         base:                       # Name of the step [or list of names] to run after [must be after steps that generates the inputs File_Types] 
         script_path:                # Main command for this module
         scope:                      # The scope of this module could be sample/project, the default is by sample
-        shell:                      # Type of shell [csh OR bash]. csh is the default
+        shell:                      # Type of shell [csh OR bash]. bash is the default. only bash can be used in conda environment  
         inputs_last:                # The inputs arguments will be at the end of the command. [The default is inputs arguments at the beginning of the command] 
         inputs:                     # The inputs for this module
-            STR:                    # Input argument, e.g. -i, --input [could be also 'empty1', 'empty2'..] 
+            STR:                    # Input argument, e.g. -i, --input [could be also 'Empty1', 'Empty2'.. for no input argument string] 
                 scope:              # The scope of this input argument could be sample/project
                                     # If the module scope is project and the argument scope is sample:
-                                    # all the samples inputs File_Types of this argument will be listed as: argument File_Type(of sample #) 
+                                    # all the samples inputs File_Types of this argument will be listed as: [input argument] [File_Type(sample#)] e.g. -i sample1.bam -i sample2.bam ... 
                 File_Type:          # The input File_Type could be any File_Type available from previous (in this branch) steps
                 base:               # From which previous step to take the input File_Type. The default it the current step.
                 sep:                # If the module scope is project and the argument scope is sample:  
-                                    #       All the samples inputs File_Types of this argument will be listed delimited by sep
+                                    #       All the samples inputs File_Types of this argument will be listed delimited by sep. e.g. [sep=,] -i sample1.bam,sample2.bam ... 
                 del:                # Delete the files in the input File_Type after the step ends [use to save space for large files you don't need downstream]
                                     # Will generate empty file with the same name and a suffix of _DELETED
         outputs:                    # The outputs for this module
             STR:                    # Output argument, e.g. -o, --out , the scope of the output arguments is determinant by the module scope
-                                    # could be also 'empty1', 'empty2'.. OR "No_run" for only entering the file information to output File_Type 
+                                    # could be also 'Empty1', 'Empty2'.. for no output argument string OR 'No_run1', 'No_run2'.. for only entering the file information to output File_Type 
                 File_Type:          # The output File_Type could be any File_Type name for the current branch downstream work 
                                     # If the File_Type exists its content will be override for the current branch downstream work 
                 prefix:             # A prefix for this output argument file name
@@ -85,10 +97,10 @@ Lines for parameter file
             STR: 
         redirects:                  # Parameters to pass directly to the command
             STR: 
-    
+
 References
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
+    When using this module cite the main NeatSeq-Flow article
 
 """
 
@@ -345,7 +357,7 @@ class Step_Generic(Step):
                         File_Type=inputs_sample_data[get_File_Type_data(self.params["inputs"],[inputs,"File_Type"])]
                     else:
                         File_Type=inputs_sample_data[sample][get_File_Type_data(self.params["inputs"],[inputs,"File_Type"])]
-                    if inputs.startswith("empty"):
+                    if inputs.startswith("Empty"):
                         inputs_script +="%s   \\\n\t"    % File_Type
                     else:
                         inputs_script +="%s  %%s \\\n\t" % inputs \
@@ -390,7 +402,7 @@ class Step_Generic(Step):
                         output_filename = "".join([use_dir ,get_File_Type_data(self.params["outputs"],[outputs,"constant_file_name"])])
                     File_Type=""
                     if outputs.startswith("No_run")==False:
-                        if outputs.startswith("empty"):
+                        if outputs.startswith("Empty"):
                             outputs_script +="%s   \\\n\t"    % output_filename
                         else:
                             outputs_script +="%s  %%s \\\n\t" % outputs \
@@ -466,7 +478,7 @@ class Step_Generic(Step):
                     if len(get_File_Type_data(self.params["inputs"],[inputs,"sep"]))>0:
                         sep=get_File_Type_data(self.params["inputs"],[inputs,"sep"])
                     else:
-                        if inputs.startswith("empty"):
+                        if inputs.startswith("Empty"):
                             sep=" "
                         else:
                             sep=" \\\n\t"+inputs+"  "
@@ -475,7 +487,7 @@ class Step_Generic(Step):
                         File_Type+=sep
                     File_Type=File_Type.strip(sep)
                 
-                if inputs.startswith("empty"):
+                if inputs.startswith("Empty"):
                     inputs_script +="%s   \\\n\t"    % File_Type
                 else:
                     inputs_script +="%s  %%s \\\n\t" % inputs \
@@ -523,7 +535,7 @@ class Step_Generic(Step):
                 else:
                     output_filename = "".join([use_dir ,get_File_Type_data(self.params["outputs"],[outputs,"constant_file_name"])])            
                 if outputs.startswith("No_run")==False:
-                    if outputs.startswith("empty"):
+                    if outputs.startswith("Empty"):
                         outputs_script +="%s   \\\n\t"    % output_filename
                     else:
                         outputs_script +="%s  %%s \\\n\t" % outputs \

@@ -73,6 +73,13 @@ Authors
    00.getting_started
 
 .. toctree::
+   :maxdepth: 3
+   :caption: Totorial
+
+   Example_WF
+
+   
+.. toctree::
    :maxdepth: 1
    :caption: Detailed documentation
 

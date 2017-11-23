@@ -1,0 +1,300 @@
+========================================
+Tutorial
+========================================
+
+.. include:: links.rst
+
+**Author:** Liron Levin
+
+**Affiliation:** |affiliation|
+
+.. contents:: Table of Contents
+   :depth: 2
+   :local:
+   :backlinks: top
+
+This tutorial describes how to create the workflow described in the **NeatSeq-Flow** manuscript.
+
+.. In order to execute the scripts, you will need access to a computer cluster running an SGE job scheduler.
+
+--------------------
+Short Description
+--------------------
+
+This example Workflow performs:
+
+* Quality testing and trimming of raw reads (paired or single).
+* Alignment (“mapping”) of the reads to each sample’s reference genome using two different programs.
+* Produce sorted bam file for each sample as final results.
+* Creates a report on reads and mapping quality.
+
+This Workflow is a classical starting point for a bacterial sequencing analysis Workflow, of which additional steps can be implemented such as de-novo assembly, variant calling etc.
+
+**The example Workflow is distributed as part of NeatSeq-Flow for quick testing.**
+
+The Workflow consists of the following steps. The modules performing the steps are indicated in brackets.
+
+.. csv-table:: 
+    :header: "Step", "Module"
+    :widths: 15, 10
+
+    "Merge",                  "Merge"
+    "Fastqc_Merge",           "fastqc_html"
+    "Trimmomatic",            "trimmo"
+    "FastQC_Trimmomatic",     "fastqc_html"
+    "BWA_Index_Builder",      "bwa_builder"
+    "BWA",                    "bwa_mapper"
+    "Bwt2_Index_Builder",     "bowtie2_builder"
+    "Bwt2",                   "bowtie2_mapper"
+    "Samtools_BWA",           "samtools"
+    "Samtools_Bwt2",          "samtools"
+    "QC_and_Map_MultQC",      "Multiqc"
+
+
+
+
+DAG
+-----
+
+.. image:: figs/Example_WF.PNG
+   :alt: Example Workflow DAG
+
+Required data
+--------------
+
+This WF requires samples with ``fastq`` file(s) (paired or single) and for each sample it's reference genome in ``fasta`` format.
+
+.. Note:: The files for the tutorial are included in the installation procedure below.
+
+Required programs
+------------------
+
+* fastqc
+* trimmomatic
+* multiqc
+* samtools=1.3
+* BWA
+* bowtie2
+
+.. Note:: When installing with `conda`, the programs are installed as part of the installation process.
+
+Sample File for Example 
+-------------------------
+
+::
+
+    Title       Example_WF_From_the_manuscript
+
+    #SampleID	Type			Path
+    Sample1	Forward		Sample1F.fastq
+    Sample1	Reverse		Sample1R.fastq
+    Sample1	Nucleotide		Reference.fasta
+    Sample2	Forward		Sample2F.fastq
+    Sample2	Reverse		Sample2R.fastq
+    Sample2	Nucleotide		Reference.fasta
+    Sample3	Forward		Sample3F.fastq
+    Sample3	Reverse		Sample3R.fastq
+    Sample3	Nucleotide		Reference.fasta
+
+----------------------
+Running the Workflow
+----------------------
+
+Using `conda` virtual environments
+-----------------------------------
+
+The easiest way to run the WF is through `conda` virtual environment.
+
+For that you will need:
+
+* Conda installed on your system (see `miniconda  <https://conda.io/miniconda.html>`_) and **in your path**.
+* The NeatSeq-Flow conda environment installer yaml file :download:`NeatSeq_Flow_conda_env.yaml <NeatSeq_Flow_conda_env.yaml>`
+
+To install, perform the following steps:
+
+1. Create NeatSeq-Flow project directory
+
+.. code-block:: csh
+
+    mkdir Example_WF
+    cd Example_WF
+
+2. Install the NeatSeq-Flow environment
+
+The following commands will install NeatSeq-Flow and all the required modules and programs.
+
+.. code-block:: csh
+
+    conda-env create -f  NeatSeq_Flow_conda_env.yaml
+
+.. Attention:: From the following step onwards, you should be in ``bash`` shell
+
+    .. code-block:: csh
+
+        bash
+
+3. Activate the NeatSeq-Flow environment
+
+.. code-block:: csh
+
+    source activate NeatSeq_Flow
+
+4. Edit the example Workflow parameter file to suit your cluster
+
+You can do this either with any text editor of your liking.
+
+.. warning::  Don't forget to save the file when you done!
+
+Edit the global params section::
+
+    Global_params:
+        Qsub_opts: -cwd
+        Qsub_path: /PATH_TO_YOUR_QSUB/
+        Qsub_q: your.q
+        Default_wait: 10
+
+
+
+Run NeatSeq-Flow
+~~~~~~~~~~~~~~~~~
+
+In the command line type:
+
+.. code-block:: csh
+
+    neatseq_flow.py                                                         \
+        --sample_file $CONDA_PREFIX/Workflows/Samples.nsfs                  \
+        --param_file  $CONDA_PREFIX/Workflows/Example_WF_conda_env.yaml     \
+        --message     "an informative message"
+
+.. note::  If NeatSeq-Flow says :``Finished successfully....`` it is OK to move on.
+
+
+Execute the Example Workflow
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+In the command line type:
+
+.. code-block:: csh
+
+    csh scripts/00.pipe.commands.csh
+
+Running the NeatSeq-Flow monitor
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+In the command line type:
+
+.. code-block:: csh
+
+    neatseq_flow_monitor.py
+
+Deactivate the NeatSeq-Flow environment
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+In the command line type:
+
+.. code-block:: csh
+
+    source deactivate NeatSeq_Flow
+
+Remove the NeatSeq-Flow environment
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. code-block:: csh
+
+    conda remove --name  NeatSeq_Flow --all
+
+Using local copy of NeatSeq-Flow
+------------------------------------
+
+If you have all the required programs installed on your system you can install and run NeatSeq-Flow locally.
+
+**For that you will need:**
+
+* Python 2.7 installed
+* The python dependencies: yaml and bunch (you can install them by using ``pip install yaml bunch`` in the command line).
+
+**Clone the NeatSeq-Flow package from github:**
+
+In the command line type:
+
+.. code-block:: csh
+
+  git clone https://github.com/bioinfo-core-BGU/neatseq-flow.git
+
+
+**Create NeatSeq-Flow project directory:**
+
+In the command line type:
+
+.. code-block:: csh
+
+mkdir Example_WF
+cd Example_WF
+
+
+**Now you will need to edit the example Workflow parameter file to suit your cluster**
+
+In the command line type:
+
+.. code-block:: csh
+
+nano  ../neatseq-flow/Workflows/Example_WF.yaml
+
+.. note::  **Don't forget to save the file when you done!**
+
+
+
+Edit the global params section:
+::
+
+Global_params:
+    Qsub_opts: -cwd
+    Qsub_path: /PATH_TO_YOUR_QSUB/
+    Qsub_q: your.q
+    Default_wait: 10
+
+And edit the definition of variables section (add the **FULL PATHs** for all required programs):
+
+::
+
+Vars:
+    Programs:
+        FastQC: /FULL_PATH_TO/fastqc_Executable
+        Trimmomatic: /FULL_PATH_TO/trimmomatic_Executable
+        BWA: /FULL_PATH_TO/bwa_Executable
+        bowtie2: /FULL_PATH_TO/bowtie2_Executable
+        bowtie2_builder: /FULL_PATH_TO/bowtie2-build_Executable
+        samtools: /FULL_PATH_TO/samtools_Executable
+        multiqc: /FULL_PATH_TO/multiqc_Executable
+
+
+
+**To run NeatSeq-Flow:**
+
+In the command line type:
+
+.. code-block:: csh
+
+python ../neatseq-flow/bin/neatseq_flow.py                         \
+--sample_file ../neatseq-flow/Workflows/Samples_from_FTP.nsfs      \
+--param_file ../neatseq-flow/Workflows/Example_WF.yaml             \
+--message     "an informative message"
+
+.. note::  If NeatSeq-Flow says : ``Finished successfully....`` it is OK to move on.
+
+**To run the Example_WF Workflow:**
+
+In the command line type:
+
+.. code-block:: csh
+
+csh scripts/00.pipe.commands.csh
+
+**To run the NeatSeq-Flow monitor:**
+
+In the command line type:
+
+.. code-block:: csh
+
+python ../neatseq-flow/bin/neatseq_flow_monitor.py
