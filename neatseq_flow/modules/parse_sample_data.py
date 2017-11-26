@@ -161,18 +161,26 @@ def parse_classic_sample_data(lines):
     Given lines for one sample, return a dictionary holding the data for that sample:
     """
     sample_x_data = dict()
+    #===========================================================================
+    # # Create dict with lists of files for each possible direction 
+    # reads = {alldirect:[(filename) for (direction,filename) in \
+    #                 [re.split("\s+", line, maxsplit=1) for line in lines] \
+    #         if direction==alldirect] for alldirect in {"Forward","Reverse","Single"}}
+    #===========================================================================
     # Create dict with lists of files for each possible direction 
-    reads = {alldirect:[(filename) for (direction,filename) in \
+    reads = {alldirect:[os.path.abspath(os.path.expanduser(filename)) for (direction,filename) in \
                     [re.split("\s+", line, maxsplit=1) for line in lines] \
             if direction==alldirect] for alldirect in {"Forward","Reverse","Single"}}
     # Remove empty lists 
     reads = {direct:files for direct,files in reads.iteritems() if files != []}
+    
+
     # Create dict for storing full sequences, e.g. genomes and proteins. Will be searching for 'Nucleotide' and 'Protein' keywords
     if reads:
         sample_x_data.update(reads)
     
     ## Read fasta files:
-    fasta = {alldirect:[(filename) for (direction,filename) in \
+    fasta = {alldirect:[os.path.abspath(os.path.expanduser(filename)) for (direction,filename) in \
                     [re.split("\s+", line, maxsplit=1) for line in lines] \
             if direction==alldirect] for alldirect in {"Nucleotide","Protein"}}
     # Remove empty lists 
@@ -182,7 +190,7 @@ def parse_classic_sample_data(lines):
         sample_x_data.update(fasta)
     
     ## Read BAM/SAM files:
-    bam_sam = {alldirect:[(filename) for (direction,filename) in \
+    bam_sam = {alldirect:[os.path.abspath(os.path.expanduser(filename)) for (direction,filename) in \
                     [re.split("\s+", line, maxsplit=1) for line in lines] \
             if direction==alldirect] for alldirect in ALIGNMENT_FILE_TYPES}
     # Remove empty lists 
@@ -200,7 +208,7 @@ def parse_classic_sample_data(lines):
         sample_x_data.update(bam_sam)
     
     ## Read vcf files:
-    vcf_files = {alldirect:[(filename) for (direction,filename) in \
+    vcf_files = {alldirect:[os.path.abspath(os.path.expanduser(filename)) for (direction,filename) in \
                     [re.split("\s+", line, maxsplit=1) for line in lines] \
             if direction==alldirect] for alldirect in VARIANT_FILE_TYPES}
     # Remove empty lists 
