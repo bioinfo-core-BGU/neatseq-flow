@@ -40,7 +40,7 @@ parser.add_argument("-s","--sample_file", help="Location of sample file, in clas
 parser.add_argument("-p","--param_file", help="Location of parameter file. Can be a comma-separated list - all will be used as one. Alternatively, -p can be passed many times with different param files", action="append")
 parser.add_argument("-d","--home_dir", help="Location of pipeline. Default is currect directory", default=os.getcwd())
 parser.add_argument("-m","--message", help="A message describing the pipeline", default="")
-parser.add_argument("-r","--run-id", help="Don't create new run ID. Use this one.", default="")
+parser.add_argument("-r","--runid", help="Don't create new run ID. Use this one.", default="")
 # parser.add_argument("-c","--convert2yaml", help="Convert parameter file to yaml format?", action='store_true')
 parser.add_argument("-v","--version", help="Convert parameter file to yaml format?", action='store_true')
 
@@ -70,7 +70,8 @@ args.param_file = ",".join(args.param_file)
 neatseq_flow(sample_file   = args.sample_file,   \
              param_file    = args.param_file,    \
              home_dir      = args.home_dir,      \
-             message       = args.message)
+             message       = args.message,       \
+             runid         = args.runid)
              
 
 

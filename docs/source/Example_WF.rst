@@ -141,17 +141,16 @@ The following commands will install NeatSeq-Flow and all the required modules an
 
 4. Edit the example Workflow parameter file to suit your cluster
 
-You can do this either with any text editor of your liking.
+Edit the global params section, particularly the following two lines::
+
+    Global_params:
+        Qsub_path:      /PATH_TO_YOUR_QSUB/
+        Qsub_q:         NAME_OF_YOUR_QUEUE.q
+
+You can do this with any text editor of your liking.
 
 .. warning::  Don't forget to save the file when you done!
 
-Edit the global params section::
-
-    Global_params:
-        Qsub_opts: -cwd
-        Qsub_path: /PATH_TO_YOUR_QSUB/
-        Qsub_q: your.q
-        Default_wait: 10
 
 
 
@@ -179,122 +178,146 @@ In the command line type:
 
     csh scripts/00.pipe.commands.csh
 
-Running the NeatSeq-Flow monitor
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Running the **NeatSeq-Flow** monitor
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-In the command line type:
+When the workflow is running, you can check it's progress by running the built-in monitor: 
 
 .. code-block:: csh
 
     neatseq_flow_monitor.py
 
-Deactivate the NeatSeq-Flow environment
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Checking the workflow output
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-In the command line type:
+Browse the ``data/`` directory for the outputs from the programs executed by the workflow.
+
+Deactivate the **NeatSeq-Flow** environment
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+To leave the **NeatSeq-Flow** virtual *conda* environment, execute the following command:
 
 .. code-block:: csh
 
     source deactivate NeatSeq_Flow
 
-Remove the NeatSeq-Flow environment
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Removing the **NeatSeq-Flow** environment
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+When done, you can remove the *conda* environment you created with the following command:
 
 .. code-block:: csh
 
     conda remove --name  NeatSeq_Flow --all
 
-Using local copy of NeatSeq-Flow
-------------------------------------
 
-If you have all the required programs installed on your system you can install and run NeatSeq-Flow locally.
+Using a local copy of **NeatSeq-Flow**
+---------------------------------------
 
-**For that you will need:**
+If you have all the required programs installed on your system you can download and run **NeatSeq-Flow** without installation.
+
+You will need:
 
 * Python 2.7 installed
 * The python dependencies: yaml and bunch (you can install them by using ``pip install yaml bunch`` in the command line).
 
-**Clone the NeatSeq-Flow package from github:**
+Download the **NeatSeq-Flow** repositories from github
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-In the command line type:
+First, create a directory for the tutorial:
+
+.. code-block:: csh
+
+    mkdir neatseq-flow-tutorial
+    cd neatseq-flow-tutorial
+   
+The following commands will download the repositories you will need for this tutorial:
+
+1. The main **NeatSeq-Flow** repository.
+2. The tutorial datasets and workflow repository.
 
 .. code-block:: csh
 
   git clone https://github.com/bioinfo-core-BGU/neatseq-flow.git
+  git clone https://github.com/bioinfo-core-BGU/neatseq-flow-tutorial.git
 
 
-**Create NeatSeq-Flow project directory:**
-
-In the command line type:
-
-.. code-block:: csh
-
-mkdir Example_WF
-cd Example_WF
-
-
-**Now you will need to edit the example Workflow parameter file to suit your cluster**
-
-In the command line type:
+Finally, create a directory for the **NeatSeq-Flow** project, and copy the tutorial parameter file into it:
 
 .. code-block:: csh
 
-nano  ../neatseq-flow/Workflows/Example_WF.yaml
+    mkdir Example_WF
+    cd Example_WF
+    cp ../neatseq-flow-tutorial/Example_WF.yaml ./
+
+
+Preparing the workflow parameter file
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Edit the example Workflow parameter file to suit your cluster.
+
+.. code-block:: csh
+
+    nano  Example_WF.yaml
 
 .. note::  **Don't forget to save the file when you done!**
 
 
+Edit the global params section, particularly the following two lines::
 
-Edit the global params section:
-::
+    Global_params:
+        Qsub_path:      /PATH_TO_YOUR_QSUB/
+        Qsub_q:         NAME_OF_YOUR_QUEUE.q
 
-Global_params:
-    Qsub_opts: -cwd
-    Qsub_path: /PATH_TO_YOUR_QSUB/
-    Qsub_q: your.q
-    Default_wait: 10
+And edit the definitions in the variables section (add the **FULL PATHs** for all required programs)::
 
-And edit the definition of variables section (add the **FULL PATHs** for all required programs):
-
-::
-
-Vars:
-    Programs:
-        FastQC: /FULL_PATH_TO/fastqc_Executable
-        Trimmomatic: /FULL_PATH_TO/trimmomatic_Executable
-        BWA: /FULL_PATH_TO/bwa_Executable
-        bowtie2: /FULL_PATH_TO/bowtie2_Executable
-        bowtie2_builder: /FULL_PATH_TO/bowtie2-build_Executable
-        samtools: /FULL_PATH_TO/samtools_Executable
-        multiqc: /FULL_PATH_TO/multiqc_Executable
+    Vars:
+        Programs:
+            FastQC:             /FULL_PATH_TO/fastqc_Executable
+            Trimmomatic:        /FULL_PATH_TO/trimmomatic_Executable
+            BWA:                /FULL_PATH_TO/bwa_Executable
+            bowtie2:            /FULL_PATH_TO/bowtie2_Executable
+            bowtie2_builder:    /FULL_PATH_TO/bowtie2-build_Executable
+            samtools:           /FULL_PATH_TO/samtools_Executable
+            multiqc:            /FULL_PATH_TO/multiqc_Executable
 
 
 
-**To run NeatSeq-Flow:**
+Run NeatSeq-Flow
+~~~~~~~~~~~~~~~~~
 
 In the command line type:
 
 .. code-block:: csh
 
-python ../neatseq-flow/bin/neatseq_flow.py                         \
---sample_file ../neatseq-flow/Workflows/Samples_from_FTP.nsfs      \
---param_file ../neatseq-flow/Workflows/Example_WF.yaml             \
---message     "an informative message"
+    python ../neatseq-flow/bin/neatseq_flow.py                         \
+    --sample_file ../neatseq-flow/Workflows/Samples_from_FTP.nsfs      \
+    --param_file ../neatseq-flow/Workflows/Example_WF.yaml             \
+    --message     "an informative message"
 
-.. note::  If NeatSeq-Flow says : ``Finished successfully....`` it is OK to move on.
+.. note::  If **NeatSeq-Flow** says : ``Finished successfully....`` it is OK to move on.
 
-**To run the Example_WF Workflow:**
-
-In the command line type:
-
-.. code-block:: csh
-
-csh scripts/00.pipe.commands.csh
-
-**To run the NeatSeq-Flow monitor:**
+Execute the Example Workflow
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 In the command line type:
 
 .. code-block:: csh
 
-python ../neatseq-flow/bin/neatseq_flow_monitor.py
+    csh scripts/00.pipe.commands.csh
+
+Running the **NeatSeq-Flow** monitor
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+When the workflow is running, you can check it's progress by running the built-in monitor: 
+
+.. code-block:: csh
+
+    neatseq_flow_monitor.py
+
+You can also check out the log files in the ``logs`` directory and the standard output and error files in ``stdout/`` and ``stderr/`` directories, respectively.
+
+Checking the workflow output
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Browse the ``data/`` directory for the outputs from the programs executed by the workflow.

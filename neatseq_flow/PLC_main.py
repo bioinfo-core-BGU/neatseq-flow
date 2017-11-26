@@ -28,7 +28,7 @@ class neatseq_flow:
     """Main pipeline class. Contains sample data and parameters
     """
     
-    def __init__(self, sample_file, param_file, home_dir = None, message = None):
+    def __init__(self, sample_file, param_file, home_dir = None, message = None, runid = None):
         
         # Read and parse the sample and parameter files:
 
@@ -91,7 +91,10 @@ class neatseq_flow:
         # Create run code to identify the scripts etc.
         # Original: just random number: self.run_code = str(randint(0,1e6)) # Is always used as a string
         # Current: Date+rand num (to preserve order of pipelines)
-        self.run_code = datetime.now().strftime("%Y%m%d%H%M%S") # Is always used as a string
+        if runid:
+            self.run_code = runid
+        else:
+            self.run_code = datetime.now().strftime("%Y%m%d%H%M%S") # Is always used as a string
         self.pipe_data["run_code"] = self.run_code
         if "Default_wait" in self.param_data["Global"].keys():
             self.pipe_data["Default_wait"] = self.param_data["Global"]["Default_wait"]
@@ -560,9 +563,12 @@ qsub -N %(step_step)s_%(step_name)s_%(run_code)s \\
         
         # Set log file name in pipe_data
         self.pipe_data["log_file"] = "".join([self.pipe_data["logs_dir"], "log_" ,  self.pipe_data["run_code"] , ".txt"])
+
         # Initialize log file with current datetime:
-        with open(self.pipe_data["log_file"],"w") as logf:
-            logf.write("""
+        # Only if file does not exist yet. This is to enable rerunning with the same runcode
+        if not os.path.exists(self.pipe_data["log_file"]):
+            with open(self.pipe_data["log_file"],"w") as logf:
+                logf.write("""
 Pipeline %(run_code)s logfile:
 ----------------
 
@@ -572,12 +578,12 @@ Pipeline %(run_code)s logfile:
                 {"datetime" : datetime.now().strftime("%d %b %Y, %H:%M"),\
                  "run_code" : self.pipe_data["run_code"]})
             
-            if(self.pipe_data["message"] != None):
-                logf.write("Message: %s\n" % self.pipe_data["message"])
-            else:
-                logf.write("Message: No message passed for this pipeline\n")  # This is here to keep the number of header lines constant. The reason - R reading the log file for graphing!
-
-            logf.write("""
+                if(self.pipe_data["message"] != None):
+                    logf.write("Message: %s\n" % self.pipe_data["message"])
+                else:
+                    logf.write("Message: No message passed for this pipeline\n")  # This is here to keep the number of header lines constant. The reason - R reading the log file for graphing!
+    
+                logf.write("""
 Timestamp\tEvent\tModule\tInstance\tJob name\tLevel\tHost\tMax mem
 """)
 
@@ -585,8 +591,10 @@ Timestamp\tEvent\tModule\tInstance\tJob name\tLevel\tHost\tMax mem
         # Set file name for storing list of pipeline versions:
         self.pipe_data["version_list_file"] = "".join([self.pipe_data["logs_dir"], "version_list.txt"])
         # Initialize log file with current datetime:
-        with open(self.pipe_data["version_list_file"],"a") as logf:
-            logf.write("%s\t%s\n" % (self.pipe_data["run_code"], self.pipe_data["message"]))
+        # Only if file does not exist yet. This is to enable rerunning with the same runcode
+        if not os.path.exists(self.pipe_data["version_list_file"]):
+            with open(self.pipe_data["version_list_file"],"a") as logf:
+                logf.write("%s\t%s\n" % (self.pipe_data["run_code"], self.pipe_data["message"]))
 
 
             
@@ -652,9 +660,12 @@ Date\tStep\tName\tScript\tFile\tmd5sum\n
                                                                 i))
             i += 1
         
-        os.mkdir("{bck_dir}{run_code}".format(bck_dir = self.pipe_data["backups_dir"], \
-                                              run_code = self.pipe_data["run_code"]))
-        pass
+        modules_bck_dir = "{bck_dir}{run_code}".format(bck_dir = self.pipe_data["backups_dir"], \
+                                                       run_code = self.pipe_data["run_code"]) 
+        if not os.path.exists(modules_bck_dir):
+            os.mkdir(modules_bck_dir)
+        
+        
 
         
     def create_js_graphic(self):
