@@ -378,10 +378,12 @@ def parse_tabular_sample_data(sample_lines):
                 if line_data[1] == "REFERENCE":
                     sys.exit("Only one REFERENCE permitted per sample")
                 # If type exists, append path to list
-                sample_x_dict[line_data[1]].append(line_data[2])
+                sample_x_dict[line_data[1]].append(os.path.abspath(os.path.expanduser(line_data[2])))
+                
             else:
                 # If not, create list with path
-                sample_x_dict[line_data[1]] = [line_data[2]]
+                sample_x_dict[line_data[1]] = [os.path.abspath(os.path.expanduser(line_data[2]))]
+                
 
         else:
             sys.exit("Unrecognised file type in line %s" % line)

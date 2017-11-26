@@ -146,7 +146,7 @@ The following commands will install NeatSeq-Flow and all the required modules an
 
 .. code-block:: csh
 
-    source activate Neatseq_Flow_Tutorial
+    source activate NeatSeq_Flow_Tutorial
 
 
 Run NeatSeq-Flow
@@ -231,7 +231,7 @@ When done, you can remove the *conda* environment you created with the following
 
 .. code-block:: csh
 
-    conda remove --name  Neatseq_Flow_Tutorial --all
+    conda remove --name  NeatSeq_Flow_Tutorial --all
 
 
 Using a local copy of **NeatSeq-Flow**
