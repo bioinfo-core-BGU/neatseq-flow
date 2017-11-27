@@ -15,3 +15,4 @@ comparison_with_others.docx
 .pydevproject
 dist
 NeatSeq_Flow.egg-info
+!env_vars.sh
