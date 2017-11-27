@@ -70,8 +70,8 @@ Install and execute with **Conda**
 6. Execute **NeatSeq-Flow**::
 
     neatseq_flow.py                                                          \
-        --sample_file $CONDA_PREFIX/Workflows/PE_tabular.nsfs    \
-        --param_file  $CONDA_PREFIX/Workflows/mapping.yaml                   \
+        --sample_file $CONDA_PREFIX/NeatSeq-Flow-Workflows/PE_tabular.nsfs    \
+        --param_file  $CONDA_PREFIX/NeatSeq-Flow-Workflows/mapping.yaml                   \
         --message     "an informative message"
 
     
