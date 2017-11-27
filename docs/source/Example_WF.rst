@@ -126,7 +126,7 @@ You will need to copy the |conda_tut_install| file into the current directory, o
 
 .. code-block:: csh
 
-    curl http://neatseq-flow.readthedocs.io/en/latest/_downloads/Neatseq_flow_install.yaml > Neatseq_flow_install.yaml
+    curl http://neatseq-flow.readthedocs.io/en/latest/_downloads/NeatSeq_flow_install.yaml > NeatSeq_flow_install.yaml
     
 3. Install the NeatSeq-Flow environment
 
