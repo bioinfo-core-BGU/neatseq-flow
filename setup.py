@@ -30,7 +30,9 @@ setup(
                             'neatseq_flow.step_classes.variants',
                             'neatseq_flow.step_classes',],
     scripts             = ['bin/neatseq_flow_monitor.py',
-                            'bin/neatseq_flow.py'],
+                            'bin/neatseq_flow.py',
+                            'etc/activate.d/env_vars.sh',
+                            'etc/deactivate.d/env_vars.sh'],
     data_files          = [('Workflows',['Workflows/mapping.yaml']),
                             ('Workflows/Sample_sets',['Workflows/PE_tabular.nsfs'])],
     install_requires    = [

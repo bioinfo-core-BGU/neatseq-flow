@@ -10,16 +10,19 @@
 
 Short Description
 ~~~~~~~~~~~~~~~~~~~~~
-    A generic module that enables the user to design new modules that can handle most cases.
+
+A generic module that enables the user to design new modules that can handle most cases.
 
 Requires
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    * In this module the users define the required file types in the inputs section 
+
+* In this module the users define the required file types in the inputs section 
 
 Output
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    * In this module the users define the output file types in the outputs section
-    * The scope of the output file types is determinant by the module scope
+
+* In this module the users define the output file types in the outputs section
+* The scope of the output file types is determinant by the module scope
 
 Parameters that can be set
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -29,7 +32,7 @@ Parameters that can be set
     :widths: 15, 10, 10
 
     "scope",  "sample/project", "The scope of this module could be sample/project, the default is by sample"
-    "shell","csh/bash","Type of shell [csh OR bash]. csh is the default"
+    "shell","csh/bash","Type of shell [csh OR bash]. bash is the default, **only bash can be used in conda environment**"
     "inputs_last","","The inputs arguments will be at the end of the command"
 
 Comments
@@ -38,15 +41,22 @@ Comments
     will be according to the order of their appearance in the parameter file.
     The redirect arguments are always first. 
 
+
+
 Example of usage and implementation of the generic module:
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-.. figure:: Generic_Module_Example.png
-    :align: center
-    :alt: Generic Module Example
-    :figclass: align-center
+.. attention:: 
 
-    A generic module is used to generate a BLAST database for each sample and a subsequent generic step queries each database with sequences from an external FASTA file. This example is a typical use of BLAST in many biological scenarios such as searching for virulence/resistance genes (whose sequences are in the external FASTA file) in bacterial genomes 
+    
+    .. figure:: Generic_Module_Example.png
+        :align: center
+        :alt: Generic Module Example
+        :figclass: align-left
+    
+    **A generic module is used to generate a BLAST database for each sample and a subsequent generic step queries each database with sequences from an external FASTA file. This example is a typical use of BLAST in many biological scenarios such as searching for virulence/resistance genes (whose sequences are in the external FASTA file) in bacterial genomes**
+
+
     **A.** Calling a generic module to generate a BLAST database (using makeblastdb) from each sample. This step can be used after (base:) any step that creates a nucleotide FASTA file (File_Type:  ``fasta.nucl``), e.g. after merge (if the raw files are in nucleotide FASTA format) or after a de novo assembly step. The location of the BLAST database for each sample is saved as a blast_db file type (File_Type: blast_db) for downstream use. **B.** Calling a generic module which performs a BLAST search (tblastn) of an external query protein fasta file (``-query`` :  path to query protein fasta file) against the previously generated BLAST data base per sample. This step can be used after the Make_BLAST_DB step (base: Make_BLAST_DB). The user can pass additional parameters directly to the used program in the redirects section (e.g. ``–dbtype``, ``–evalue``, ``-num_descriptions`` etc.). 
 
 
@@ -68,7 +78,7 @@ Lines for parameter file
                                     # If the module scope is project and the argument scope is sample:
                                     # all the samples inputs File_Types of this argument will be listed as: [input argument] [File_Type(sample#)] e.g. -i sample1.bam -i sample2.bam ... 
                 File_Type:          # The input File_Type could be any File_Type available from previous (in this branch) steps
-                base:               # From which previous step to take the input File_Type. The default it the current step.
+                base:               # From which previous step to take the input File_Type. The default is the current step.
                 sep:                # If the module scope is project and the argument scope is sample:  
                                     #       All the samples inputs File_Types of this argument will be listed delimited by sep. e.g. [sep=,] -i sample1.bam,sample2.bam ... 
                 del:                # Delete the files in the input File_Type after the step ends [use to save space for large files you don't need downstream]
@@ -98,9 +108,6 @@ Lines for parameter file
         redirects:                  # Parameters to pass directly to the command
             STR: 
 
-References
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    When using this module cite the main NeatSeq-Flow article
 
 """
 
