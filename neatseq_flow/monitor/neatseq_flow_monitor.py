@@ -1,7 +1,7 @@
 #!/usr/bin/env python2                                                       
 # -*- coding: UTF-8 -*-
 """ 
-:Neatseq-Flow Monitor
+Neatseq-Flow Monitor
 -----------------------
 
 :Authors: Liron Levin
@@ -12,9 +12,9 @@
 .. image:: Neatseq_Flow_Monitor.png
    :alt: Neatseq-Flow Monitor
 
-.. contents:: Table of Contents
-    :local:
-    :depth: 2
+.. .. contents:: Table of Contents
+..     :local:
+..     :depth: 2
    
 
 
@@ -63,7 +63,7 @@ Comments
     
     .. tip:: Running ``Neatseq_Flow_Monitor.py`` from the project directory without arguments will use all the default parameters and will show the project available log files.
 
-Help message:
+Help message
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 ::
