@@ -9,6 +9,7 @@
 .. |conda_env|          replace:: :download:`conda environment file <_static/NeatSeq_Flow_conda_env.yaml>`
 
 .. |conda|          replace:: :ref:`install_with_conda`
+.. |tutorial|       replace:: :ref:`tutorial`
 .. |affiliation|    replace:: `Bioinformatics Core Facility`_, `National institute of Biotechnology in the Negev`_, `Ben-Gurion University`_.
 
 .. |conda_tut_install|  replace:: :download:`Tutorial conda installer <_static/NeatSeq_Flow_Tutorial_Install.yaml>`

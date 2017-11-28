@@ -42,7 +42,8 @@ parser.add_argument("-d","--home_dir", help="Location of pipeline. Default is cu
 parser.add_argument("-m","--message", help="A message describing the pipeline", default="")
 parser.add_argument("-r","--runid", help="Don't create new run ID. Use this one.", default="")
 # parser.add_argument("-c","--convert2yaml", help="Convert parameter file to yaml format?", action='store_true')
-parser.add_argument("-v","--version", help="Convert parameter file to yaml format?", action='store_true')
+parser.add_argument("-V","--verbose", help="Print admonitions?", action='store_true')
+parser.add_argument("-v","--version", help="Print version and exit.", action='store_true')
 
 args = parser.parse_args()
 
@@ -71,7 +72,8 @@ neatseq_flow(sample_file   = args.sample_file,   \
              param_file    = args.param_file,    \
              home_dir      = args.home_dir,      \
              message       = args.message,       \
-             runid         = args.runid)
+             runid         = args.runid,         \
+             verbose       = args.verbose)
              
 
 

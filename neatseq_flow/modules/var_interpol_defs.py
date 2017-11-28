@@ -2,7 +2,7 @@
 """
 
 __author__ = "Menachem Sklarz"
-__version__ = "1.1.0"
+__version__ = "1.2.0"
 
 
 
@@ -108,14 +108,15 @@ def test_vars(node):
                 raise Exception("Variables must begin with a alphabetic symbol or underscore (%s)" % key, "Variables")
             if node[key] == None:
                 # sys.stderr.write("It seems you have an empty variable! (%s)" % key)
-                sys.stderr.write("It seems you have an empty variable! (%s)\n" % key)
+                sys.stderr.write("ATTENTION: It seems you have an empty variable! (%s)\n" % key)
             test_vars(node[key])
     elif isinstance(node,list):
-        raise Exception("Please don't use lists in variables section!", "Variables")
+        raise Exception("ERROR: Please don't use lists in variables section!", "Variables")
     elif isinstance(node,str):
         pass
     elif node==None:
         # raise Exception("It seems you have an empty variable!" % key, "Variables")
-        print("WARNING: It seems you have an empty variable!", "Variables")
+        # sys.stderr.write("ATTENTION: It seems you have an empty variable!\n")
+        pass
     else:
-        raise Exception("Unrecognised variable type (%s)" % node, "Variables")
+        raise Exception("ERROR: Unrecognised variable type (%s)" % node, "Variables")

@@ -1,5 +1,7 @@
+.. _tutorial:
+
 ========================================
-Tutorial
+**NeatSeq-Flow** Tutorial
 ========================================
 
 .. include:: links.rst
@@ -16,6 +18,7 @@ Tutorial
 This tutorial describes how to create the workflow described in the **NeatSeq-Flow** manuscript.
 
 .. In order to execute the scripts, you will need access to a computer cluster running an SGE job scheduler.
+
 
 --------------------
 Short Description
@@ -56,7 +59,7 @@ The Workflow consists of the following steps. The modules performing the steps a
 DAG
 -----
 
-.. image:: figs/Example_WF.PNG
+.. image:: figs/Example_WF.png
    :alt: Example Workflow DAG
 
 Required data

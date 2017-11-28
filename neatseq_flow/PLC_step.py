@@ -12,7 +12,7 @@ from pprint import pprint as pp
 from matplotlib.cbook import get_sample_data
 
 __author__ = "Menachem Sklarz"
-__version__ = "1.1.0"
+__version__ = "1.2.0"
 
 
 
@@ -55,19 +55,21 @@ class Step:
             print "WARNING: Error while searching for modules:"
             print  err
 
-        # This will automatically load modules installed in "conda"
-        # It adds the default path ($CONDA_PREFIX/lib/python2.7/site-packages/neatseq_flow_modules) to modules_path
-        if "conda" in pipe_data:
-            if "CONDA_PREFIX" in os.environ:
-#                print "--%s--" % os.environ["CONDA_PREFIX"]
-                conda_module_path = os.path.join(os.environ["CONDA_PREFIX"], "lib/python2.7/site-packages/neatseq_flow_modules")
-                sys.stderr.write("Adding conda default additional modules path (%s). If it is different, please add manually to 'module_path' in 'Global_params'." % conda_module_path)
-                if "module_path" in param_data["Global"]:
-                    if conda_module_path not in param_data["Global"]["module_path"]:
-                        param_data["Global"]["module_path"].append(conda_module_path)
-                else:
-                    param_data["Global"]["module_path"] = [os.path.join(conda_module_path)]
- #               print param_data["Global"]["module_path"]
+#===============================================================================
+#         # This will automatically load modules installed in "conda"
+#         # It adds the default path ($CONDA_PREFIX/lib/python2.7/site-packages/neatseq_flow_modules) to modules_path
+#         if "conda" in pipe_data:
+#             if "CONDA_PREFIX" in os.environ:
+# #                print "--%s--" % os.environ["CONDA_PREFIX"]
+#                 conda_module_path = os.path.join(os.environ["CONDA_PREFIX"], "lib/python2.7/site-packages/neatseq_flow_modules")
+#                 sys.stderr.write("ATTENTION: Adding conda default additional modules path (%s). If it is different, please add manually to 'module_path' in 'Global_params'." % conda_module_path)
+#                 if "module_path" in param_data["Global"]:
+#                     if conda_module_path not in param_data["Global"]["module_path"]:
+#                         param_data["Global"]["module_path"].append(conda_module_path)
+#                 else:
+#                     param_data["Global"]["module_path"] = [os.path.join(conda_module_path)]
+#  #               print param_data["Global"]["module_path"]
+#===============================================================================
 
 
 
@@ -84,7 +86,7 @@ class Step:
 
                 # Check the dir exists:
                 if not os.path.isdir(module_path):
-                    sys.stderr.write("Path %s from module_path does not exist. Skipping...\n" % module_path)
+                    sys.stderr.write("WARNING: Path %s from module_path does not exist. Skipping...\n" % module_path)
                     continue
 
                 
@@ -95,7 +97,7 @@ class Step:
                 try:
                     level = dir_generator.next()           # level is a tuple with: (current dir. [list of dirs],[list of files])
                 except StopIteration:
-                    sys.stderr.write("Module path %s seems to be empty! Possibly issue with permissions..." % module_path)
+                    sys.stderr.write("WARNING: Module path %s seems to be empty! Possibly issue with permissions..." % module_path)
                 while(mod_t + ".py" not in level[2]):     # Repeat while expected filename is NOT in current dir contents (=level[2]. see above)
                     try:
                         level = dir_generator.next()    # Try getting another level    
@@ -125,7 +127,7 @@ class Step:
         try:
             level = dir_generator.next()           # level is a tuple with: (current dir. [list of dirs],[list of files])
         except StopIteration:
-            sys.stderr.write("Module path %s seems to be empty! Possibly issue with permissions..." % self.Cwd)
+            sys.stderr.write("WARNING: Module path %s seems to be empty! Possibly issue with permissions..." % self.Cwd)
 
         while(mod_t + ".py" not in level[2]):     # Repeat while expected filename is NOT in current dir contents (=level[2]. see above)
             try:
@@ -170,7 +172,7 @@ class Step:
         # Move to general init function:
         # Make dir for $qsub_name results
         if not os.path.isdir(self.base_dir):
-            sys.stderr.write("Making dir for results of %s at %s \n" % (self.name,self.base_dir))
+            self.write_warning("Making dir for results of %s at %s \n" % (self.name,self.base_dir), admonition = "ATTENTION")
             os.makedirs(self.base_dir) 
         else:
             pass
@@ -259,16 +261,16 @@ class Step:
                 "base"    : self.get_base_step_list, \
                 "depends" : self.get_depend_list()}
         
-    def write_warning(self, warning = "Unknown problem", sample = None):
+    def write_warning(self, warning = "Unknown problem", sample = None, admonition = "WARNING"):
         """ Write a warning when doing something that might be foolish.
             If the foolishness is sample-specific, pass the sample as an argument
         """
-    
-    # def get_error_str(self, step_name):
-        if sample: # If a sample was passed. The exception is specific to a sample
-            sys.stdout.write("WARNING: In %s (sample %s): %s\n" % (self.get_step_name(), sample, warning))
-        else:
-            sys.stdout.write("WARNING: In %s: %s\n" % (self.get_step_name(), warning))
+        if self.pipe_data["verbose"]:   # At the moment not set anywhere. Maybe in the future
+
+            if sample: # If a sample was passed. The exception is specific to a sample
+                sys.stderr.write("%s: In %s (sample %s): %s\n" % (admonition, self.get_step_name(), sample, warning))
+            else:
+                sys.stderr.write("%s: In %s: %s\n" % (admonition, self.get_step_name(), warning))
         
         
     
@@ -414,7 +416,7 @@ class Step:
                 else:
                     # Do nothing, but check not discarding values from other_sample_data
                     if (sample_data[k] != other_sample_data[k]):
-                        sys.stderr.write("In step %s: There is a difference from %s in key %s\n" % (self.name, other_step_name, k))
+                        self.write_warning("There is a difference from %s in key %s\n" % (other_step_name, k))
             else:
                 sample_data[k] = deepcopy(other_sample_data[k])
         
@@ -573,12 +575,12 @@ class Step:
         # Without logging:
         # self.script = qsub_header + self.script
         # With logging:
-        self.script = "\n".join([qsub_header,                                           \
-                                self.create_log_lines(self.spec_qsub_name,"Started", level="low"),   \
-                                self.create_activate_lines(type = "activate"),          \
-                                self.script,                                            \
-                                self.register_files(self.spec_qsub_name),      \
-                                self.create_activate_lines(type = "deactivate"),          \
+        self.script = "\n".join([qsub_header,                                                       \
+                                self.create_log_lines(self.spec_qsub_name,"Started", level="low"),  \
+                                self.create_activate_lines(type = "activate"),                      \
+                                self.script,                                                        \
+                                self.register_files(self.spec_qsub_name),                           \
+                                self.create_activate_lines(type = "deactivate"),                    \
                                 self.create_log_lines(self.spec_qsub_name,"Finished", level="low")])
         
 
@@ -618,10 +620,10 @@ perl -e 'use Env qw(USER); open(my $fh, "<", "%(limit_file)s"); ($l,$s) = <$fh>=
         self.step_scripts_dir = self.pipe_data["scripts_dir"] + ".".join([self.step_number,"_".join([self.step,self.name])]) + os.sep
         # Create, if not existing 
         if not os.path.isdir(self.step_scripts_dir):
-            sys.stderr.write("Making dir (%s) at %s \n" % (self.name,self.step_scripts_dir))
+            self.write_warning("Making dir (%s) at %s \n" % (self.name,self.step_scripts_dir), admonition = "ATTENTION")
             os.makedirs(self.step_scripts_dir) 
         else:
-            sys.stderr.write("Dir %s exists (step %s) \n" % (self.step_scripts_dir,self.name))
+            self.write_warning("Dir %s exists (step %s) \n" % (self.step_scripts_dir,self.name), admonition = "ATTENTION")
 
             
     def create_high_level_script(self):
@@ -715,12 +717,15 @@ perl -e 'use Env qw(USER); open(my $fh, "<", "%(limit_file)s"); ($l,$s) = <$fh>=
         # Orignal line: 
         # self.script = qsub_header +  self.script
         # New, with host reporting and time logging:
-        self.script = "\n".join([qsub_header, \
-                        self.create_log_lines(self.spec_qsub_name, "Started", level="prelim"), \
-                        self.script, \
-                        self.register_files(self.spec_qsub_name),      \
+        self.script = "\n".join([qsub_header,                                                   \
+                        self.create_log_lines(self.spec_qsub_name, "Started", level="prelim"),  \
+                        self.create_activate_lines(type = "activate"),                          \
+                        self.script,                                                            \
+                        self.register_files(self.spec_qsub_name),                               \
+                        self.create_activate_lines(type = "deactivate"),                        \
                         self.create_log_lines(self.spec_qsub_name, "Finished", level="prelim")])
 
+                                
 
         with open(self.spec_script_name, "w") as script_fh:
             script_fh.write(self.script)
@@ -779,10 +784,12 @@ perl -e 'use Env qw(USER); open(my $fh, "<", "%(limit_file)s"); ($l,$s) = <$fh>=
         # Orignal line: 
         # self.script = qsub_header +  self.script
         # New, with host reporting and time logging:
-        self.script = "\n".join([qsub_header, \
-                        self.create_log_lines(self.spec_qsub_name, "Started", level="wrapping"), \
-                        self.script, \
-                        self.register_files(self.spec_qsub_name),      \
+        self.script = "\n".join([qsub_header,                                                       \
+                        self.create_log_lines(self.spec_qsub_name, "Started", level="wrapping"),    \
+                        self.create_activate_lines(type = "activate"),                              \
+                        self.script,                                                                \
+                        self.register_files(self.spec_qsub_name),                                   \
+                        self.create_activate_lines(type = "deactivate"),                            \
                         self.create_log_lines(self.spec_qsub_name, "Finished", level="wrapping")])
 
 
@@ -932,7 +939,7 @@ fi
 
         else:
             script = ""
-            sys.stderr.write("In %s:\tshell not recognized. Not creating log writing lines in scripts.\n" % self.name)
+            self.write_warning("shell not recognized. Not creating log writing lines in scripts.\n", admonition = "WARNING")
         
         return script
         
@@ -983,13 +990,12 @@ source {activate_path} {environ}
         
         sample_folder = self.base_dir + sample + os.sep
         if not os.path.isdir(sample_folder):
-            if "verbose" in self.params:   # At the moment not set anywhere. Maybe in the future
-                sys.stderr.write("Making dir (%s) at %s \n" % (self.name,sample_folder))
+            self.write_warning("Making dir at %s \n" % sample_folder, admonition = "ATTENTION")
             os.makedirs(sample_folder) 
         else:
-            if "verbose" in self.params:   # At the moment not set anywhere. Maybe in the future
-                sys.stderr.write("Dir %s exists (step %s) \n" % (sample_folder,self.name))
-        
+            # if "verbose" in self.params:   # At the moment not set anywhere. Maybe in the future
+            self.write_warning("Dir %s exists\n" % sample_folder, admonition = "WARNING")
+    
         return sample_folder
         
         

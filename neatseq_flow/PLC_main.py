@@ -6,7 +6,7 @@ Actual work is done by calling other class types: PLCStep and PLCName
 """
 
 __author__ = "Menachem Sklarz"
-__version__ = "1.1.0"
+__version__ = "1.2.0"
 
 
 import os, sys, json, shutil, time, yaml
@@ -28,7 +28,7 @@ class neatseq_flow:
     """Main pipeline class. Contains sample data and parameters
     """
     
-    def __init__(self, sample_file, param_file, home_dir = None, message = None, runid = None):
+    def __init__(self, sample_file, param_file, home_dir = None, message = None, runid = None, verbose = False):
         
         # Read and parse the sample and parameter files:
 
@@ -80,6 +80,8 @@ class neatseq_flow:
         # See definition of PLC_step.set_sample_data()
         self.pipe_data["samples"] = self.sample_data["samples"]
         
+        self.pipe_data["verbose"] = verbose
+
         # Making a step name index (dict of form {step_name:step_type})
         # Storing in self.name_index
         self.make_names_index()
@@ -129,10 +131,7 @@ class neatseq_flow:
         
         # --------------------------------
         # Define conda parameters
-        if "conda" in self.param_data["Global"]:
-            self.pipe_data["conda"] = self.param_data["Global"]["conda"]
-
-        # --------------------------------
+        self.define_conda_params()
         
         # Create directory structure:
         self.make_directory_structure()
@@ -193,7 +192,8 @@ class neatseq_flow:
         
         self.create_log_plotter()
         
-        print("Finished successfully....")
+        sys.stderr.flush()
+        sys.stdout.write("Finished successfully....")
         
     # Handlers
     def get_param_data(self):
@@ -384,9 +384,11 @@ class neatseq_flow:
             # Concatenate the directory name to the home path:
             self.pipe_data[directory] = self.pipe_data["home_dir"] + os.sep + dir_name + os.sep
             if (os.path.isdir(self.pipe_data[directory])):
-                sys.stderr.write(dir_name + " folder exists. Overwriting existing! (existing files will not be deleted)\n")
+                if self.pipe_data["verbose"]:
+                    sys.stderr.write("WARNING: {dirname} folder exists. Overwriting existing! (existing files will not be deleted)\n".format(dirname=dir_name))
             else:
-                sys.stderr.write("Creating " + dir_name + " directory at " + self.pipe_data[directory] + "\n")
+                if self.pipe_data["verbose"]:
+                    sys.stderr.write("WARNING: Creating {dir_name} directory\n".format(dir_name=dir_name))
                 os.mkdir(self.pipe_data[directory])
         
 
@@ -479,6 +481,28 @@ qsub -N %(step_step)s_%(step_name)s_%(run_code)s \\
             sys.exit()
             # raise
 
+    def define_conda_params(self):
+        """ If conda params are required, define them:
+        """
+        
+        if "conda" in self.param_data["Global"]:
+            self.pipe_data["conda"] = self.param_data["Global"]["conda"]
+            if "CONDA_PREFIX" in os.environ:
+                conda_module_path = os.path.join(os.environ["CONDA_PREFIX"], "lib/python2.7/site-packages/neatseq_flow_modules")
+                if not os.path.isdir(conda_module_path):
+                    if self.pipe_data["verbose"]:
+                        sys.stderr.write("WARNING: conda default additional modules path (%s) does not exist!\n" % conda_module_path)
+                else:
+                    if self.pipe_data["verbose"]:
+                        sys.stderr.write("ATTENTION: Adding conda default additional modules path (%s). If it is different, please add manually to 'module_path' in 'Global_params'." % conda_module_path)
+                    if "module_path" in self.param_data["Global"]:
+                        if conda_module_path not in self.param_data["Global"]["module_path"]:
+                            self.param_data["Global"]["module_path"].append(conda_module_path)
+                    else:
+                        self.param_data["Global"]["module_path"] = [os.path.join(conda_module_path)]
+
+    
+        
                         
     def determine_sample_types(self):
         """ Add a "type" field to each sample with "PE", "SE" or "Mixed"
@@ -517,10 +541,12 @@ qsub -N %(step_step)s_%(step_name)s_%(run_code)s \\
         # Create directory for step-wise qdel 
         stepWiseDir = "%s99.qdel_all%s" % (self.pipe_data["scripts_dir"],os.sep)
         if not os.path.isdir(stepWiseDir):
-            sys.stderr.write("Making dir 99.qdel_all directory at %s\n" % stepWiseDir)
+            if self.pipe_data["verbose"]:
+                sys.stderr.write("Making dir 99.qdel_all directory at %s\n" % stepWiseDir)
             os.makedirs(stepWiseDir) 
         else:
-            sys.stderr.write("Dir %s exists. Will overwrite... \n" % stepWiseDir)
+            if self.pipe_data["verbose"]:
+                sys.stderr.write("Dir %s exists. Will overwrite... \n" % stepWiseDir)
 
         
         

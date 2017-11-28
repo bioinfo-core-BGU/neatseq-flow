@@ -88,6 +88,8 @@ __version__ = "1.1.0"
 fasta_types_dict = {"Nucleotide":"fasta.nucl","Protein":"fasta.prot"}
 sam_bam_dict     = {"SAM":"sam", "BAM":"bam", "REFERENCE":"reference"}
 vcf_dict         = {"VCF":"vcf","G.VCF":"g.vcf"}
+
+
 class Step_merge(Step):
     
     def step_specific_init(self):
@@ -221,7 +223,7 @@ class Step_merge(Step):
 
             for direction in filter(lambda x: x in sam_bam_dict.keys(), self.sample_data[sample].keys()):
                     # Do not attempt merging the single reference permitted:
-                    print direction
+
                     if direction == "REFERENCE":
                         continue
                         

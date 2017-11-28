@@ -66,6 +66,8 @@ Install and execute with **Conda**
 5. Make a dir for your project and change into it::
 
     mkdir first_neatseq_flow_proj; cd first_neatseq_flow_proj
+
+.. _Execution_section:
     
 6. Execute **NeatSeq-Flow**::
 
@@ -81,5 +83,5 @@ Install and execute with **Conda**
 
 .. Note:: You don't need to have the environment activated in order to execute the scripts!
 
-.. Attention:: See the `tutorial`_ for a full example of how to use **NeatSeq-Flow**
+.. Attention:: See the |tutorial| for a full example of how to use **NeatSeq-Flow**
 

@@ -4,9 +4,9 @@ Global_params:
     Qsub_q: bioinfo.q
     Qsub_nodes: [node1,node2,node3]
     Qsub_opts:  -V -cwd
-    conda:
-        path:   '{Vars.conda.path}'
-        env:    '{Vars.conda.env}'
+    # conda:
+        # path:   '{Vars.conda.path}'
+        # env:    '{Vars.conda.env}'
     module_path: 
         - /path/to/modules2/
 Documentation: |
@@ -119,7 +119,7 @@ Step_params:
             -pe:            shared 20
         get_map_log: 
         ref_genome:         {Vars.reference.ref_genome}
-        conda:  
+        # conda:  
         redirects:
             -p:             20
             -q: 

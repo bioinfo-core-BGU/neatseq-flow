@@ -4,7 +4,7 @@
 """
 
 __author__ = "Menachem Sklarz"
-__version__ = "1.1.0"
+__version__ = "1.2.0"
 
 
 import os, sys, re, yaml
@@ -177,7 +177,7 @@ def get_param_data_YAML(filelines):
         test_vars(yaml_params["Vars"])
 
         variables_bunch = Bunch.fromDict({"Vars":yaml_params["Vars"]})
-        print variables_bunch
+        # print variables_bunch
         f_interpol = make_interpol_func(variables_bunch)
 
         # Actual code to run when 'Vars' exists:
@@ -207,6 +207,19 @@ def get_param_data_YAML(filelines):
             pass # OK
         else:
             raise Exception("Unrecognised 'module_path' format. 'module_path' in 'Global_params' must be a single path or a list. \n", "parameters")
+        # Check existence of the paths:
+        #=======================================================================
+        # for module_path_raw in param_data["Global"]["module_path"]:#.split(" "):
+        #     module_path = module_path_raw.rstrip(os.sep)
+        #     if not os.path.isdir(module_path):
+        #         sys.stderr.write("WARNING: Path %s from module_path does not exist. Skipping...\n" % module_path)
+        #=======================================================================
+        bad_paths = filter(lambda x: not os.path.isdir(x) , param_data["Global"]["module_path"])
+        good_paths = filter(lambda x: os.path.isdir(x) , param_data["Global"]["module_path"])
+        if bad_paths:
+            sys.stderr.write("WARNING: The following module paths do not exist and will be removed from search path: {badpaths}\n".format(badpaths=", ".join(bad_paths)))
+            param_data["Global"]["module_path"] = good_paths
+        
     # Converting single Qsub_nodes into single element list
     if "Qsub_nodes" in param_data["Global"]:
         if isinstance(param_data["Global"]["Qsub_nodes"],str):

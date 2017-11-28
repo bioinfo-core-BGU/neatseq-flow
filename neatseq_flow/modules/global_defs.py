@@ -1,5 +1,5 @@
 __author__ = "Menachem Sklarz"
-__version__ = "0.2.0"
+__version__ = "1.2.0"
 
 
 ZIPPED_EXTENSIONS = ".bz2 .F .gz .lz .lzma .lzo .rz .sfark .sz .xz .z .Z .infl .dsrc2".split(" ")
