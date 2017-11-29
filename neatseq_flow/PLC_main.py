@@ -157,6 +157,9 @@ class neatseq_flow:
 
         # Make main script:
         self.make_main_pipeline_script()
+
+        # Make the qdel script:
+        self.create_qdel_script()
         
         # Do the actual script building:
         # Also, catching assetion exceptions raised by class build_scripts() and 
@@ -172,8 +175,6 @@ class neatseq_flow:
             
 
         
-        # Make the qdel script:
-        self.create_qdel_script()
         # Make the qalter script:
         self.create_qalter_script()
         
@@ -193,7 +194,7 @@ class neatseq_flow:
         self.create_log_plotter()
         
         sys.stderr.flush()
-        sys.stdout.write("Finished successfully....")
+        sys.stdout.write("Finished successfully....\n\n")
         
     # Handlers
     def get_param_data(self):
@@ -563,9 +564,10 @@ qsub -N %(step_step)s_%(step_name)s_%(run_code)s \\
                 with open(step_del_script_fn, "w") as step_del_script:
                     # Write header
                     step_del_script.write("#!/bin/csh\n\n")
-                    # For every jid, add a qdel line:
-                    for jid in step.get_jid_list():
-                        step_del_script.write("qdel %s\n" % jid)
+                    step.set_qdel_file(step_del_script_fn)
+                    # # For every jid, add a qdel line:
+                    # for jid in step.get_jid_list():
+                        # step_del_script.write("qdel %s\n" % jid)
                 # Add call to step-specific qdel script to main qdel script:
                 script_fh.write("csh %s\n" % step_del_script_fn)
             # Add logging:

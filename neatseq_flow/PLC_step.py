@@ -577,6 +577,7 @@ class Step:
         # With logging:
         self.script = "\n".join([qsub_header,                                                       \
                                 self.create_log_lines(self.spec_qsub_name,"Started", level="low"),  \
+                                self.add_qdel_line(),                                               \
                                 self.create_activate_lines(type = "activate"),                      \
                                 self.script,                                                        \
                                 self.register_files(self.spec_qsub_name),                           \
@@ -905,7 +906,17 @@ perl -e 'use Env qw(USER); open(my $fh, "<", "%(limit_file)s"); ($l,$s) = <$fh>=
         else:
             return "\n".join([qsub_shell,qsub_queue,qsub_name,qsub_stderr,qsub_stdout,qsub_holdjids]) + "\n\n"
 
-            
+    def set_qdel_file(self, qdel_filename):
+        """ Called by PLC_main to store the qdel filename for the step.
+        """
+        
+        self.qdel_filename = qdel_filename
+        
+        
+    def add_qdel_line(self):
+        
+        return "echo 'qdel {script_name}' >> {qdel_file}".format(script_name = self.spec_script_name, qdel_file = self.qdel_filename)
+                                           
     def create_log_lines(self, qsub_name, type = "Started", level = "high"):
         """ Create logging lines. Added before and after script to return start and end times
         """
