@@ -940,7 +940,7 @@ perl -e 'use Env qw(USER); open(my $fh, "<", "%(limit_file)s"); ($l,$s) = <$fh>=
             qdel_cmd = "qdel {script_name}".format(script_name = self.high_spec_qsub_name)
             
             if type == "Start":
-                return "# Adding qdel command to qdel file.\nsed -i -e 's:^# entry_point$:# entry_point\n{qdel_cmd}:' {qdel_file}\n\n\n".format(qdel_cmd = re.escape(qdel_cmd), qdel_file = self.qdel_filename_main)
+                return "# Adding qdel command to qdel file.\nsed -i -e 's:^# entry_point$:# entry_point\\n{qdel_cmd}:' {qdel_file}\n\n\n".format(qdel_cmd = re.escape(qdel_cmd), qdel_file = self.qdel_filename_main)
             elif type == "Stop":
                 return "# Removing qdel command from qdel file.\nsed -i -e 's:^{qdel_cmd}$:#&:' {qdel_file}\n\n".format(qdel_cmd = re.escape(qdel_cmd), qdel_file = self.qdel_filename_main)
             else:
