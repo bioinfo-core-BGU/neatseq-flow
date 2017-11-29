@@ -928,7 +928,7 @@ perl -e 'use Env qw(USER); open(my $fh, "<", "%(limit_file)s"); ($l,$s) = <$fh>=
         """
         
         if level == "low":
-            qdel_cmd = "qdel {script_name}".format(script_name = self.spec_script_name)
+            qdel_cmd = "qdel {script_name}".format(script_name = self.spec_qsub_name)
             
             if type == "Start":
                 return "# Adding qdel command to qdel file.\necho '{qdel_cmd}' >> {qdel_file}\n\n".format(qdel_cmd = qdel_cmd, qdel_file = self.qdel_filename)
