@@ -643,7 +643,18 @@ perl -e 'use Env qw(USER); open(my $fh, "<", "%(limit_file)s"); ($l,$s) = <$fh>=
         # Adding high-level jid to jid_list
         self.add_jid_to_jid_list()
         
-
+        # Add qdel command to main qdel script:
+        f = open(self.qdel_filename_main,'r')
+        qdel_file = f.read()
+        f.close()
+         
+        qdel_file = re.sub("# entry_point", "# entry_point\nqdel {qsubname}".format(qsubname=self.spec_qsub_name),qdel_file)
+         
+        f = open(self.qdel_filename_main,'w')
+        f.write(qdel_file)
+        f.close()
+        # -------------------------------------
+        
         # Get dependency jid list and add prelimanry jids if exist 
             # (if not, is an empty list and will not affect the outcome)
         dependency_jid_list = self.get_dependency_jid_list() + self.preliminary_jids  
@@ -655,7 +666,6 @@ perl -e 'use Env qw(USER); open(my $fh, "<", "%(limit_file)s"); ($l,$s) = <$fh>=
         
         script = "\n".join([qsub_header,                                                         \
                             self.create_log_lines(self.spec_qsub_name,"Started", level="high"),  \
-                            self.add_qdel_line(type="Start",level="high"),                       \
                             "# Calling low level scripts:\n\n"])
         
 
@@ -682,7 +692,6 @@ perl -e 'use Env qw(USER); open(my $fh, "<", "%(limit_file)s"); ($l,$s) = <$fh>=
 
 
         script = "\n".join(["sleep %d\n\ncsh %s98.qalter_all.csh\n\n" % (self.pipe_data["Default_wait"], self.pipe_data["scripts_dir"]), \
-                            self.add_qdel_line(type="Stop",level="high"),                       \
                             self.create_log_lines(self.high_spec_qsub_name, "Finished", level="high")])
         
         with open(self.high_level_script_name, "a") as script_fh:
@@ -922,29 +931,20 @@ perl -e 'use Env qw(USER); open(my $fh, "<", "%(limit_file)s"); ($l,$s) = <$fh>=
         self.qdel_filename_main = qdel_filename_main  # Project global qdel filename
         
         
-    def add_qdel_line(self, type = "Start", level = "low"):
+    def add_qdel_line(self, type = "Start"):
         """ Add and remove qdel lines from qdel file.
             type can be "Start" or "Stop"
         """
         
-        if level == "low":
-            qdel_cmd = "qdel {script_name}".format(script_name = self.spec_qsub_name)
-            
-            if type == "Start":
-                return "# Adding qdel command to qdel file.\necho '{qdel_cmd}' >> {qdel_file}\n\n".format(qdel_cmd = qdel_cmd, qdel_file = self.qdel_filename)
-            elif type == "Stop":
-                return "# Removing qdel command from qdel file.\nsed -i -e 's:^{qdel_cmd}$:#&:' {qdel_file}\n\n".format(qdel_cmd = re.escape(qdel_cmd), qdel_file = self.qdel_filename)
-            else:
-                raise AssertionExcept("Bad type value in qdd_qdel_lines")
+
+        qdel_cmd = "qdel {script_name}".format(script_name = self.spec_qsub_name)
+        
+        if type == "Start":
+            return "# Adding qdel command to qdel file.\necho '{qdel_cmd}' >> {qdel_file}\n\n".format(qdel_cmd = qdel_cmd, qdel_file = self.qdel_filename)
+        elif type == "Stop":
+            return "# Removing qdel command from qdel file.\nsed -i -e 's:^{qdel_cmd}$:#&:' {qdel_file}\n\n".format(qdel_cmd = re.escape(qdel_cmd), qdel_file = self.qdel_filename)
         else:
-            qdel_cmd = "qdel {script_name}".format(script_name = self.high_spec_qsub_name)
-            
-            if type == "Start":
-                return "# Adding qdel command to qdel file.\nsed -i -e 's:^# entry_point$:# entry_point\\n{qdel_cmd}:' {qdel_file}\n\n\n".format(qdel_cmd = re.escape(qdel_cmd), qdel_file = self.qdel_filename_main)
-            elif type == "Stop":
-                return "# Removing qdel command from qdel file.\nsed -i -e 's:^{qdel_cmd}$:#&:' {qdel_file}\n\n".format(qdel_cmd = re.escape(qdel_cmd), qdel_file = self.qdel_filename_main)
-            else:
-                raise AssertionExcept("Bad type value in qdd_qdel_lines")
+            raise AssertionExcept("Bad type value in qdd_qdel_lines")
             
             
                                            
