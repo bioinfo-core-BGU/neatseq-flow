@@ -577,11 +577,12 @@ class Step:
         # With logging:
         self.script = "\n".join([qsub_header,                                                       \
                                 self.create_log_lines(self.spec_qsub_name,"Started", level="low"),  \
-                                self.add_qdel_line(),                                               \
+                                self.add_qdel_line(type="Start"),                                   \
                                 self.create_activate_lines(type = "activate"),                      \
                                 self.script,                                                        \
                                 self.register_files(self.spec_qsub_name),                           \
                                 self.create_activate_lines(type = "deactivate"),                    \
+                                self.add_qdel_line(type="Stop"),                                    \
                                 self.create_log_lines(self.spec_qsub_name,"Finished", level="low")])
         
 
@@ -913,9 +914,19 @@ perl -e 'use Env qw(USER); open(my $fh, "<", "%(limit_file)s"); ($l,$s) = <$fh>=
         self.qdel_filename = qdel_filename
         
         
-    def add_qdel_line(self):
+    def add_qdel_line(self, type = "Start"):
+        """ Add and remove qdel lines from qdel file.
+            type can be "Start" or "Stop"
+        """
         
-        return "echo 'qdel {script_name}' >> {qdel_file}".format(script_name = self.spec_script_name, qdel_file = self.qdel_filename)
+        qdel_cmd = "qdel {script_name}".format(script_name = self.spec_script_name)
+        
+        if type == "Start":
+            return "# Adding qdel command to qdel file.\necho '{qdel_cmd}' >> {qdel_file}\n\n".format(qdel_cmd = qdel_cmd, qdel_file = self.qdel_filename)
+        elif type == "Stop":
+            return "# Removing qdel command from qdel file.\nsed -i -e 's:^{qdel_cmd}$:#&:' {qdel_file}\n\n".format(qdel_cmd = re.escape(qdel_cmd), qdel_file = self.qdel_filename)
+        else:
+            raise AssertionExcept("Bad type value in qdd_qdel_lines")
                                            
     def create_log_lines(self, qsub_name, type = "Started", level = "high"):
         """ Create logging lines. Added before and after script to return start and end times
