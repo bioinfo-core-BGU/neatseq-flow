@@ -638,6 +638,11 @@ perl -e 'use Env qw(USER); open(my $fh, "<", "%(limit_file)s"); ($l,$s) = <$fh>=
 
         
         self.spec_qsub_name = self.get_qsub_name()   #"_".join([self.step,self.name,self.pipe_data["run_code"]])
+        # Storing name of high level script (only used for correct logging at "Finshed" step)
+        self.high_spec_qsub_name = self.spec_qsub_name
+        # Adding high-level jid to jid_list
+        self.add_jid_to_jid_list()
+        
 
         # Get dependency jid list and add prelimanry jids if exist 
             # (if not, is an empty list and will not affect the outcome)
@@ -647,17 +652,18 @@ perl -e 'use Env qw(USER); open(my $fh, "<", "%(limit_file)s"); ($l,$s) = <$fh>=
         qsub_header = self.make_qsub_header(jid_list   = ",".join(dependency_jid_list) if dependency_jid_list else None,\
                                             script_lev = "high")
         script = qsub_header
+        
+        script = "\n".join([qsub_header,                                                         \
+                            self.create_log_lines(self.spec_qsub_name,"Started", level="high"),  \
+                            self.add_qdel_line(type="Start",level="high"),                       \
+                            "# Calling low level scripts:\n\n"])
+        
 
         # script += "# Adding line to log file:\n"
         # script += "set Date1 = `date '+%d/%m/%Y %H:%M:%S'`\n"
         # script += "echo $Date1 '\\tStarted step %s' >> %s\n\n\n" % (self.name, self.pipe_data["log_file"])
         
-        # Storing name of high level script (only used for correct logging at "Finshed" step)
-        self.high_spec_qsub_name = self.spec_qsub_name
-        # Adding high-level jid to jid_list
-        self.add_jid_to_jid_list()
-        
-        script = script + self.create_log_lines(self.high_spec_qsub_name, "Started", level = "high")
+        # script = script + self.create_log_lines(self.high_spec_qsub_name, "Started", level = "high")
         
         with open(self.high_level_script_name, "w") as script_fh:
             script_fh.write(script)        
@@ -674,9 +680,10 @@ perl -e 'use Env qw(USER); open(my $fh, "<", "%(limit_file)s"); ($l,$s) = <$fh>=
         """ Add lines at the end of the high level script:
         """
 
-        script = "sleep %d\n\ncsh %s98.qalter_all.csh\n\n" % (self.pipe_data["Default_wait"], self.pipe_data["scripts_dir"])
 
-        script = script + self.create_log_lines(self.high_spec_qsub_name, "Finished", level="high")
+        script = "\n".join(["sleep %d\n\ncsh %s98.qalter_all.csh\n\n" % (self.pipe_data["Default_wait"], self.pipe_data["scripts_dir"]), \
+                            self.add_qdel_line(type="Stop",level="high"),                       \
+                            self.create_log_lines(self.high_spec_qsub_name, "Finished", level="high")])
         
         with open(self.high_level_script_name, "a") as script_fh:
             script_fh.write(script)        
@@ -907,26 +914,39 @@ perl -e 'use Env qw(USER); open(my $fh, "<", "%(limit_file)s"); ($l,$s) = <$fh>=
         else:
             return "\n".join([qsub_shell,qsub_queue,qsub_name,qsub_stderr,qsub_stdout,qsub_holdjids]) + "\n\n"
 
-    def set_qdel_file(self, qdel_filename):
+    def set_qdel_files(self, qdel_filename, qdel_filename_main):
         """ Called by PLC_main to store the qdel filename for the step.
         """
         
-        self.qdel_filename = qdel_filename
+        self.qdel_filename = qdel_filename  # Step-specific qdel filename
+        self.qdel_filename_main = qdel_filename_main  # Project global qdel filename
         
         
-    def add_qdel_line(self, type = "Start"):
+    def add_qdel_line(self, type = "Start", level = "low"):
         """ Add and remove qdel lines from qdel file.
             type can be "Start" or "Stop"
         """
         
-        qdel_cmd = "qdel {script_name}".format(script_name = self.spec_script_name)
-        
-        if type == "Start":
-            return "# Adding qdel command to qdel file.\necho '{qdel_cmd}' >> {qdel_file}\n\n".format(qdel_cmd = qdel_cmd, qdel_file = self.qdel_filename)
-        elif type == "Stop":
-            return "# Removing qdel command from qdel file.\nsed -i -e 's:^{qdel_cmd}$:#&:' {qdel_file}\n\n".format(qdel_cmd = re.escape(qdel_cmd), qdel_file = self.qdel_filename)
+        if level == "low":
+            qdel_cmd = "qdel {script_name}".format(script_name = self.spec_script_name)
+            
+            if type == "Start":
+                return "# Adding qdel command to qdel file.\necho '{qdel_cmd}' >> {qdel_file}\n\n".format(qdel_cmd = qdel_cmd, qdel_file = self.qdel_filename)
+            elif type == "Stop":
+                return "# Removing qdel command from qdel file.\nsed -i -e 's:^{qdel_cmd}$:#&:' {qdel_file}\n\n".format(qdel_cmd = re.escape(qdel_cmd), qdel_file = self.qdel_filename)
+            else:
+                raise AssertionExcept("Bad type value in qdd_qdel_lines")
         else:
-            raise AssertionExcept("Bad type value in qdd_qdel_lines")
+            qdel_cmd = "qdel {script_name}".format(script_name = self.high_spec_qsub_name)
+            
+            if type == "Start":
+                return "# Adding qdel command to qdel file.\nsed -i -e 's:^# entry_point$:# entry_point\n{qdel_cmd}:' {qdel_file}\n\n\n".format(qdel_cmd = re.escape(qdel_cmd), qdel_file = self.qdel_filename_main)
+            elif type == "Stop":
+                return "# Removing qdel command from qdel file.\nsed -i -e 's:^{qdel_cmd}$:#&:' {qdel_file}\n\n".format(qdel_cmd = re.escape(qdel_cmd), qdel_file = self.qdel_filename_main)
+            else:
+                raise AssertionExcept("Bad type value in qdd_qdel_lines")
+            
+            
                                            
     def create_log_lines(self, qsub_name, type = "Started", level = "high"):
         """ Create logging lines. Added before and after script to return start and end times

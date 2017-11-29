@@ -9,7 +9,7 @@ __author__ = "Menachem Sklarz"
 __version__ = "1.2.0"
 
 
-import os, sys, json, shutil, time, yaml
+import os, sys, json, shutil, time, yaml, re
 
 
 from copy import *
@@ -557,14 +557,18 @@ qsub -N %(step_step)s_%(step_name)s_%(run_code)s \\
             script_fh.write("# Adding line to log file:\n")
             script_fh.write("date '+%%d %%b %%Y, %%H:%%M' >> %s\n" % (self.pipe_data["log_file"]))
             script_fh.write("echo '\\t\\tDeleting all jobs with 99.qdel_all.csh' >> %s\n\n\n" % (self.pipe_data["log_file"]))
-            # For every step:
+
+            script_fh.write("# Remove high level scripts:\n# entry_point\n\n\n")
+            
+            # For every step, create separate qdel file with step jobs.
+            # These files are populated and de-populated on the run:
             for step in self.step_list:
                 # Create step-specific del script:
                 step_del_script_fn = "%s99.qdel_all_%s.csh" % (stepWiseDir,step.name)
                 with open(step_del_script_fn, "w") as step_del_script:
                     # Write header
                     step_del_script.write("#!/bin/csh\n\n")
-                    step.set_qdel_file(step_del_script_fn)
+                    step.set_qdel_files(step_del_script_fn, self.qdel_script_name)
                     # # For every jid, add a qdel line:
                     # for jid in step.get_jid_list():
                         # step_del_script.write("qdel %s\n" % jid)
