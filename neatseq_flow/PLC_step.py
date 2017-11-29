@@ -55,23 +55,6 @@ class Step:
             print "WARNING: Error while searching for modules:"
             print  err
 
-#===============================================================================
-#         # This will automatically load modules installed in "conda"
-#         # It adds the default path ($CONDA_PREFIX/lib/python2.7/site-packages/neatseq_flow_modules) to modules_path
-#         if "conda" in pipe_data:
-#             if "CONDA_PREFIX" in os.environ:
-# #                print "--%s--" % os.environ["CONDA_PREFIX"]
-#                 conda_module_path = os.path.join(os.environ["CONDA_PREFIX"], "lib/python2.7/site-packages/neatseq_flow_modules")
-#                 sys.stderr.write("ATTENTION: Adding conda default additional modules path (%s). If it is different, please add manually to 'module_path' in 'Global_params'." % conda_module_path)
-#                 if "module_path" in param_data["Global"]:
-#                     if conda_module_path not in param_data["Global"]["module_path"]:
-#                         param_data["Global"]["module_path"].append(conda_module_path)
-#                 else:
-#                     param_data["Global"]["module_path"] = [os.path.join(conda_module_path)]
-#  #               print param_data["Global"]["module_path"]
-#===============================================================================
-
-
 
             
         # Searching module paths passed by user in parameter file:
@@ -668,13 +651,7 @@ perl -e 'use Env qw(USER); open(my $fh, "<", "%(limit_file)s"); ($l,$s) = <$fh>=
                             self.create_log_lines(self.spec_qsub_name,"Started", level="high"),  \
                             "# Calling low level scripts:\n\n"])
         
-
-        # script += "# Adding line to log file:\n"
-        # script += "set Date1 = `date '+%d/%m/%Y %H:%M:%S'`\n"
-        # script += "echo $Date1 '\\tStarted step %s' >> %s\n\n\n" % (self.name, self.pipe_data["log_file"])
-        
-        # script = script + self.create_log_lines(self.high_spec_qsub_name, "Started", level = "high")
-        
+        # Write script to high-level script
         with open(self.high_level_script_name, "w") as script_fh:
             script_fh.write(script)        
         

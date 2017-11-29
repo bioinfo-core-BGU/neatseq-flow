@@ -32,6 +32,7 @@ class neatseq_flow:
         
         # Read and parse the sample and parameter files:
 
+        sys.stdout.write("Reading files...\n")
 
         try:
             self.sample_data = parse_sample_file(sample_file)
@@ -134,6 +135,7 @@ class neatseq_flow:
         self.define_conda_params()
         
         # Create directory structure:
+        sys.stdout.write("Creating direcotry structure...\n")
         self.make_directory_structure()
 
         # Create log file:
@@ -146,6 +148,7 @@ class neatseq_flow:
         self.backup_source_files(param_file, sample_file)
         
         # Create step instances:
+        sys.stdout.write("Making step instances...\n")
         self.make_step_instances()
         
         # if convert2yaml:
@@ -163,6 +166,7 @@ class neatseq_flow:
         
         # Do the actual script building:
         # Also, catching assetion exceptions raised by class build_scripts() and 
+        sys.stdout.write("Building scripts...\n")
         try:
             self.build_scripts()
             
@@ -173,16 +177,18 @@ class neatseq_flow:
             # sys.exit() 
             return
             
-
+        
         
         # Make the qalter script:
         self.create_qalter_script()
         
         # Make js graphical representation (maybe add parameter to not include this feature?)
+        sys.stdout.write("Making workflow plots...\n")
         self.create_js_graphic()
         self.create_diagrammer_graphic()
         
         # Writing JSON encoding ofg pipeline:
+        sys.stdout.write("Writing JSON files...\n")
         with open(self.pipe_data["objects_dir"]+"WorkflowData.json","w") as json_fh:
             json_fh.write(self.get_json_encoding())
         # Writing JSON encoding of qsub names (can be used by remote progress monitor)
@@ -326,18 +332,6 @@ class neatseq_flow:
             
         
         return self.depend_dict 
-
-        
-    # def get_base_list(self,step_params):
-        # """ helper function. Extracts base info for steps in form {name:[base]}
-            # This is later expanded by expand_depends()
-        # """
-        # names_ind = self.make_names_index()
-        # t1 = {names_ind[base[0]] for base in [[val for param,val in name_p.items() if(param=="base")] for name,name_p in step_params.items()]}
-        
-        # print t1
-        
-        # return t1
 
 
     def sort_step_list(self):
