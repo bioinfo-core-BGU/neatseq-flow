@@ -9,7 +9,6 @@ import datetime
 
 from copy import *
 from pprint import pprint as pp
-from matplotlib.cbook import get_sample_data
 
 __author__ = "Menachem Sklarz"
 __version__ = "1.2.0"
@@ -323,10 +322,17 @@ class Step:
             A side effect is that parallel branches are sorted top-down rather than branch-wise.
             You can redefine the 'sort' method in Pipeline class to change this behaviour.
         """
+        #print self.pipe_data["step_order"]
         if self.name in other.get_depend_list():
             return True
         if other.name in self.get_depend_list():
             return False
+        # Returning order by order in param file:
+        if self.pipe_data["step_order"].index(other.name) > self.pipe_data["step_order"].index(self.name):
+            return True
+        if self.pipe_data["step_order"].index(other.name) < self.pipe_data["step_order"].index(self.name):
+            return False
+         
         if len(self.get_depend_list()) < len(other.get_depend_list()):
             return True
         if len(self.get_depend_list()) > len(other.get_depend_list()):
@@ -340,10 +346,19 @@ class Step:
     def __gt__(self,other):
         """ See doc string for __lt__
         """
+        
+        print self.pipe_data["step_order"]
+        sys.exit()
         if self.name in other.get_depend_list():
             return False
         if other.name in self.get_depend_list():
             return True
+        # Returning order by order in param file:
+        if self.pipe_data["step_order"].index(other.name) > self.pipe_data["step_order"].index(self.name):
+            return False
+        if self.pipe_data["step_order"].index(other.name) < self.pipe_data["step_order"].index(self.name):
+            return True
+
         if len(self.get_depend_list()) > len(other.get_depend_list()):
             return True
         if len(self.get_depend_list()) < len(other.get_depend_list()):

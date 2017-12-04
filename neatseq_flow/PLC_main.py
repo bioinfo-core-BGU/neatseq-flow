@@ -64,6 +64,9 @@ class neatseq_flow:
         # Prepare dictionary for pipe data (in perl version: pipe_hash)
         self.pipe_data = dict()
 
+        self.pipe_data["step_order"] = self.param_data["step_order"]
+        del(self.param_data["step_order"])
+
         # Determine type of sample: SE, PE or mixed:
         self.determine_sample_types()
 

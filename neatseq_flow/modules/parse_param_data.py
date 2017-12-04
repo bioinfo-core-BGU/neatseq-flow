@@ -165,7 +165,7 @@ def get_param_data_YAML(filelines):
     # yaml_params = yaml.load("\n".join(filelines),  Loader=yaml.SafeLoader)
     # yaml_params = yaml.safe_load("\n".join(filelines))
     yaml_params = ordered_load("\n".join(filelines), yaml.SafeLoader)
-
+    step_order = yaml_params["Step_params"].keys()
     
     # If there is a Variables section, interpolate any appearance of the variables in the params
     if "Vars" in yaml_params.keys():
@@ -250,7 +250,8 @@ def get_param_data_YAML(filelines):
         
     # Extract step-wise parameter dict from lines:
     param_data["Step"] = convert_param_format(yaml_params["Step_params"])
-    
+    # Returning original step order. Will be stored in pipe_data and used to sort scripts in 00.main script
+    param_data["step_order"] = step_order
     
     param_data_testing(param_data)
       
