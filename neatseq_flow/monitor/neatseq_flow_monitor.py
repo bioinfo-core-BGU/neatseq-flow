@@ -9,7 +9,7 @@ Neatseq-Flow Monitor
 :Organization: National Institute of Biotechnology in the Negev, Ben Gurion University.
 
 
-.. image:: Neatseq_Flow_Monitor.png
+.. image:: figs/neatseq_flow_monitor.png
    :alt: Neatseq-Flow Monitor
 
 .. .. contents:: Table of Contents
