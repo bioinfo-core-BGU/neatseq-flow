@@ -65,6 +65,7 @@ class neatseq_flow:
         self.pipe_data = dict()
 
         self.pipe_data["step_order"] = self.param_data["step_order"]
+        #print(self.pipe_data["step_order"])
         del(self.param_data["step_order"])
 
         # Determine type of sample: SE, PE or mixed:
@@ -344,6 +345,7 @@ class neatseq_flow:
         """
         
         self.step_list.sort()    # Sort by internal __lt__ and __gt__
+        
             
     def make_step_instances(self):
         """ Makes step instances and stores them in self.step_list.
@@ -354,7 +356,6 @@ class neatseq_flow:
         self.step_list = [self.make_step_type_instance(step_n) for step_n in self.get_step_names()]
 
         self.sort_step_list()
-
         
         # Send number of step to the instances:
         # This is used for numbering the scripts in the scripts_dir

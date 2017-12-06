@@ -327,11 +327,14 @@ class Step:
             return True
         if other.name in self.get_depend_list():
             return False
-        # Returning order by order in param file:
-        if self.pipe_data["step_order"].index(other.name) > self.pipe_data["step_order"].index(self.name):
-            return True
-        if self.pipe_data["step_order"].index(other.name) < self.pipe_data["step_order"].index(self.name):
-            return False
+        #=======================================================================
+        # print "in __lt__: other index %s (%s)\nself index %s (%s)\n" % (self.pipe_data["step_order"].index(other.name), other.name, self.pipe_data["step_order"].index(self.name),self.name)
+        # # Returning order by order in param file:
+        # if self.pipe_data["step_order"].index(other.name) > self.pipe_data["step_order"].index(self.name):
+        #     return True
+        # if self.pipe_data["step_order"].index(other.name) < self.pipe_data["step_order"].index(self.name):
+        #     return False
+        #=======================================================================
          
         if len(self.get_depend_list()) < len(other.get_depend_list()):
             return True
@@ -347,17 +350,18 @@ class Step:
         """ See doc string for __lt__
         """
         
-        print self.pipe_data["step_order"]
-        sys.exit()
         if self.name in other.get_depend_list():
             return False
         if other.name in self.get_depend_list():
             return True
-        # Returning order by order in param file:
-        if self.pipe_data["step_order"].index(other.name) > self.pipe_data["step_order"].index(self.name):
-            return False
-        if self.pipe_data["step_order"].index(other.name) < self.pipe_data["step_order"].index(self.name):
-            return True
+        #=======================================================================
+        # # Returning order by order in param file:
+        # print "in __gt__: other index %s (%s)\nself index %s (%s)\n" % (self.pipe_data["step_order"].index(other.name), other.name, self.pipe_data["step_order"].index(self.name),self.name)
+        # if self.pipe_data["step_order"].index(other.name) > self.pipe_data["step_order"].index(self.name):
+        #     return False
+        # if self.pipe_data["step_order"].index(other.name) < self.pipe_data["step_order"].index(self.name):
+        #     return True
+        #=======================================================================
 
         if len(self.get_depend_list()) > len(other.get_depend_list()):
             return True
