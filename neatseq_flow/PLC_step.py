@@ -165,18 +165,27 @@ class Step:
         # Testing 'conda' parameters
 
         if "conda" in self.pipe_data and "conda" not in self.params: # Only global "conda" params defined:
-            self.params["conda"] = self.pipe_data["conda"]
+            self.params["conda"] = copy(self.pipe_data["conda"])
         if "conda" in self.params:
             if not self.params["conda"]:
                 self.write_warning("'conda' is provided but empty. Not 'activating' for this step")
+                
             else:  # Conda is not empty
-                if "path" not in self.params["conda"] or "env" not in self.params["conda"]:
-                    raise AssertionExcept("'conda' must include 'path' and 'env'", step=self.get_step_name())
-
-                elif filter(lambda x: x not in ["path","env"],self.params["conda"].keys()):
+                if "conda" in self.pipe_data:
+                    # If different from global, fill in data from global
+                    t1 = deepcopy(self.pipe_data["conda"])
+                    t1.update(self.params["conda"])
+                    self.params["conda"] = deepcopy(t1)
+                    #===========================================================
+                    # if "path" in self.pipe_data["conda"] and "path" not in self.params["conda"]:
+                    #      self.params["conda"]["path"] = self.pipe_data["conda"]["path"]
+                    # if "env" in self.pipe_data["conda"] and "env" not in self.params["conda"]:
+                    #      self.params["conda"]["env"] = self.pipe_data["conda"]["env"]
+                    #===========================================================
+                          
+                
+                if filter(lambda x: x not in ["path","env"],self.params["conda"].keys()):
                     self.write_warning("You provided extra 'conda' parameters. They will be ignored!")
-                else:
-                    pass
                 
                 
                 if not self.params["conda"]["path"]: # == None:  # Path is empty (None or "", take from $CONDA_PREFIX
@@ -185,20 +194,33 @@ class Step:
                         # First split gets the env name
                         # Second split gets the conda_path and adds 'bin'
                         (t1,env) = os.path.split(os.environ["CONDA_PREFIX"])
-                        self.params["conda"]["path"] = os.path.join(os.path.split(t1)[0],"bin")
-                        if  not self.params["conda"]["env"]: ##==None:
+                        self.params["conda"]["path"] = os.environ["CONDA_PREFIX"]
+                        if "env" not in self.params["conda"] or not self.params["conda"]["env"]: ##==None:
                             self.params["conda"]["env"] = env
         
                     else:
                         raise AssertionExcept("'conda' 'path' is empty, but no CONDA_PREFIX is defined. Make sure you are in an active conda environment.",step=self.get_step_name())
-                        
-                elif not self.params["conda"]["env"]:# == None:
-                    if "conda" in self.pipe_data:
-                        self.params["conda"]["env"] = self.pipe_data["conda"]["env"]
-                        self.write_warning("No 'env' supplied for 'conda'. Using global 'env'")
-                    else: 
-#                        sys.stderr.write
-                        raise AssertionExcept("'conda' 'path' is defined, but no 'env' was passed in step or global parameters.", step=self.get_step_name())
+                
+                    
+                    
+                if "env" not in self.params["conda"] or not self.params["conda"]["env"]:# == None:
+                    
+                    re_env = re.search("envs/(\S+)", self.params["conda"]["path"])
+                    try:
+                        self.params["conda"]["env"] = re_env.group(1)
+                    except:
+                        raise AssertionExcept("Bad conda env path. Make sure it ends with 'envs/ENV_NAME'", step=self.get_step_name())
+                
+                # Add bin at end of path
+                self.params["conda"]["path"] = os.path.join(self.params["conda"]["path"],"bin")    
+#===============================================================================
+#                     if "conda" in self.pipe_data:
+#                         self.params["conda"]["env"] = self.pipe_data["conda"]["env"]
+#                         self.write_warning("No 'env' supplied for 'conda'. Using global 'env'")
+#                     else: 
+# #                        sys.stderr.write
+#                         raise AssertionExcept("'conda' 'path' is defined, but no 'env' was passed in step or global parameters.", step=self.get_step_name())
+#===============================================================================
         # -----------------------------------------------------
   
                                                     

@@ -175,10 +175,11 @@ The ``Qsub_path`` parameter can be determined by executing the following command
 
 You can do the editting with any text editor of your liking.
 
+
 .. warning::  Don't forget to save the file when you done!
 
 
-2. Execute **NeatSeq-Flow** to create the workflow scripts:
+3. Execute **NeatSeq-Flow** to create the workflow scripts:
 
 .. code-block:: csh
 
@@ -303,19 +304,21 @@ The ``Qsub_path`` parameter can be determined by executing the following command
 
     dirname `which qsub`
     
-1. Edit the definitions in the variables section (add the **FULL PATHs** for all required programs)::
+2. Edit the definitions in the variables section (add the **FULL PATHs** for all required programs)::
 
     Vars:
         Programs:
             FastQC:             /FULL_PATH_TO/fastqc_Executable
-            Trimmomatic:        /FULL_PATH_TO/trimmomatic_Executable
+            Trimmomatic: 
+                Bin:            /FULL_PATH_TO/trimmomatic
+                Adapters:       /FULL_PATH_TO/TruSeq3-PE.fa
             BWA:                /FULL_PATH_TO/bwa_Executable
             bowtie2:            /FULL_PATH_TO/bowtie2_Executable
             bowtie2_builder:    /FULL_PATH_TO/bowtie2-build_Executable
             samtools:           /FULL_PATH_TO/samtools_Executable
             multiqc:            /FULL_PATH_TO/multiqc_Executable
 
-
+.. Note:: Please notice that ``Trimmomatic`` takes two parameters. The location of the executable (``{Vars.Programs.Trimmomatic.Bin}``) and the location of the Adapters file (``{Vars.Programs.Trimmomatic.Adapters}``)
 
 Run NeatSeq-Flow
 ~~~~~~~~~~~~~~~~~

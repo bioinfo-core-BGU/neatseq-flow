@@ -62,7 +62,7 @@ def walk(node, variables_bunch, callback):
         
     if isinstance(node,dict):
         # Special case: The dict is actually a variable wrongly interpreted by the YAML parser as a dict!
-        if len(node.keys()) == 1 and node.values()==[None] and re.match("([\w\.]+?)",node.keys()[0]):
+        if len(node.keys()) == 1 and node.values()==[None] and re.match("Vars\.([\w\.]+?)",node.keys()[0]):
             node = callback("{%s}" % node.keys()[0])
         else:
             for key, item in node.items():
