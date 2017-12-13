@@ -90,6 +90,16 @@ All global parameters are set within a ``Global_params`` block in YAML format.
         
     This will make the scripts check every 60 seconds if there are less than 1000 jobs registered for the user. New jobs will be released only when there are less than the specified limit. 
 
+.. _conda_param_definition:
+
+``conda``
+    If you want to use a conda environment to execute the scripts, pass this parameter with the following two sub-parameters:
+    
+    ``path``
+        The path to the environment you want to use. **If left empty, and a ``conda`` environment is active, NeatSeq-Flow will use the path to the active environment**.
+        
+    ``env``
+        The name of the environment to use. If absent or left empty, **NeatSeq-Flow** will extract the name from the ``path`` parameter. 
 
 Following is an example of a global-parameters block::
     
@@ -188,6 +198,11 @@ Other parameters you can set for each step to control the execution of the step 
     This is an experimental feature. A comma-separated list of samples on which to execute the module. Scripts will be created only for the samples in the list. This selection will be valid for all instances based on this instance, untill the value ``all_samples`` is passed. Use this option with care since the samples not in the list will not own the step outputs, which may well be required downstream. 
     
 .. Tip:: A use case could be when you want to run a step with different parameters for different sample subsets. Both versions of the instance should inherit from a common ``base`` and the downstream step can inherit both versions, thus all samples will have all files, created with different parameters.
+
+``conda``
+    Is used to define step specific `conda` parameters. The syntax is the same as for the global ``conda`` definition (:ref:`see here <conda_param_definition>`). If set, the ``path`` and ``env`` will be used to execute the scripts of this step only. If a global ``conda`` exists, the local definition will override the global definition. 
+    
+.. Attention:: If you have set global `conda` parameters, and want a step to execute **not within** a `conda` environment, pass an empty ``conda`` field.
 
 .. _local_step_parameter:
 
