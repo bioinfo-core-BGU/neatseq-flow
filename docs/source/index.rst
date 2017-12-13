@@ -62,6 +62,10 @@ Authors
 * Liron Levin
 * Vered Chalifa-Caspi
 
+Customers
+-----------
+
+* `The National Knowledge Center for Rare / Orphan Diseases <http://in.bgu.ac.il/en/rod/Pages/default.aspx>`_.
 
 .. Detailed documentation
 .. -----------------------

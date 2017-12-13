@@ -70,6 +70,10 @@ Execution is then done as follows:
 
 Check out `workflow_dirs` for the workflow directories and scripts.
 
+# Customers
+
+[The National Knowledge Center for Rare / Orphan Diseases](http://in.bgu.ac.il/en/rod/Pages/default.aspx)
+
 # Contact
 
 Please contact Menachem Sklarz at: [sklarz@bgu.ac.il](mailto:sklarz@bgu.ac.il)
