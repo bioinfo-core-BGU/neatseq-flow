@@ -95,6 +95,7 @@ class neatseq_flow:
         # Storing in self.depend_dict 
         self.expand_depends()
 
+        
         # Create run code to identify the scripts etc.
         # Original: just random number: self.run_code = str(randint(0,1e6)) # Is always used as a string
         # Current: Date+rand num (to preserve order of pipelines)
@@ -155,6 +156,10 @@ class neatseq_flow:
         sys.stdout.write("Making step instances...\n")
         self.make_step_instances()
         
+        # Storing names index in pipe_data. Could be used by the step instances 
+        self.pipe_data["names_index"] = self.get_names_index()
+
+
         # if convert2yaml:
             # # Convert to YAML
             # self.convert_data_to_YAML()
@@ -328,7 +333,7 @@ class neatseq_flow:
         # Remove empty strings ('') from the lists of dependencies:
         local_depend_dict = {step:[depend for depend in local_depend_dict[step] if depend != ""] for step in local_depend_dict}    
         self.depend_dict = local_depend_dict
-
+        
         # Store dependencies in param structure:
         for step in step_data:
             for name in self.param_data["Step"][step]:

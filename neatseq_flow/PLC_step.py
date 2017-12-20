@@ -144,6 +144,8 @@ class Step:
         self.params = params
         self.pipe_data = pipe_data
         
+        
+        
         ###### Place for testing parameters:
         try:
             self.params["script_path"]
@@ -259,11 +261,14 @@ class Step:
         """ Print a summary of the class: name, step and depend list
         """
         
-        return "Name: %(name)s\nStep: %(step)s\nBase %(base)s\nDependencies %(depends)s" % \
-                {"name"   : self.name, \
-                "step"    : self.step, \
-                "base"    : self.get_base_step_list, \
-                "depends" : self.get_depend_list()}
+        return """
+Name:         {name}
+Step:         {module}
+Base:         {base}
+Dependencies: {depends}""".format(name = self.name, 
+                                module = self.step, 
+                                base   = [step.get_step_name() for step in self.get_base_step_list()], 
+                                depends = self.get_depend_list())
         
     def write_warning(self, warning = "Unknown problem", sample = None, admonition = "WARNING"):
         """ Write a warning when doing something that might be foolish.
