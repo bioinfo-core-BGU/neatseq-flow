@@ -578,6 +578,8 @@ Dependencies: {depends}""".format(name = self.name,
         # Adding path to spec_script_name: 
         self.spec_script_name = os.path.join(self.step_scripts_dir, \
                                              ".".join([self.step_number,self.spec_script_name,"csh" if self.shell=="csh" else "sh"])) 
+        # local spec_qsub_name will store the qsub_name without the run_code.
+        spec_qsub_name = self.spec_qsub_name
         self.spec_qsub_name = "_".join([self.spec_qsub_name,self.pipe_data["run_code"]])
 
         
@@ -606,7 +608,7 @@ Dependencies: {depends}""".format(name = self.name,
         # With logging:
         self.script = "\n".join([qsub_header,                                                       \
                                 self.create_log_lines(self.spec_qsub_name,"Started", level="low"),  \
-                                self.add_qdel_line(type="Start"),                                   \
+#                                self.add_qdel_line(type="Start"),                                   \ Now added in high-level script before qsub. This will enable qdeling jobs in qw state...
                                 self.create_activate_lines(type = "activate"),                      \
                                 self.script,                                                        \
                                 self.register_files(self.spec_qsub_name),                           \
@@ -639,6 +641,9 @@ perl -e 'use Env qw(USER); open(my $fh, "<", "%(limit_file)s"); ($l,$s) = <$fh>=
         # Append the qsub command to the 2nd level script:
         # script_name = self.pipe_data["scripts_dir"] + ".".join([self.step_number,"_".join([self.step,self.name]),self.shell]) 
         with open(self.high_level_script_name, "a") as script_fh:
+            script_fh.write("# ---------------- Code for %s ------------------\n" % spec_qsub_name)
+            script_fh.write(self.add_qdel_line(type="Start"))
+            script_fh.write("# Adding qsub command:\n")        
             script_fh.write("qsub " + self.spec_script_name + "\n\n")        
         
         # Adding to qsub_names_dict:
@@ -672,6 +677,7 @@ perl -e 'use Env qw(USER); open(my $fh, "<", "%(limit_file)s"); ($l,$s) = <$fh>=
         # Adding high-level jid to jid_list
         self.add_jid_to_jid_list()
         
+        # -------------------------------------
         # Add qdel command to main qdel script:
         f = open(self.qdel_filename_main,'r')
         qdel_file = f.read()
