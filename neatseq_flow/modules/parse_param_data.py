@@ -486,7 +486,7 @@ def param_data_testing_global(param_data):
 def param_data_testing_step_wise(param_data):
 
     issue_warning = ""
-    issue_count = 0
+    issue_count = 1
     # List of all step names:
     names = reduce(lambda x, y: x+y, [param_data[step].keys() for step in param_data.keys()])
 

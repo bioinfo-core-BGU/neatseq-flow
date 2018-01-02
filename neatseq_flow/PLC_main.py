@@ -140,7 +140,7 @@ class neatseq_flow:
         self.define_conda_params()
         
         # Create directory structure:
-        sys.stdout.write("Creating direcotry structure...\n")
+        sys.stdout.write("Creating directory structure...\n")
         self.make_directory_structure()
 
         # Create log file:
@@ -180,6 +180,7 @@ class neatseq_flow:
             self.build_scripts()
             
         except AssertionExcept as assertErr:
+            print assertErr.get_error_str()
             print "An error has occured. See comment above.\nPrinting current JSON and exiting\n"
             with open(self.pipe_data["objects_dir"]+"WorkflowData.json","w") as json_fh:
                 json_fh.write(self.get_json_encoding())
@@ -479,11 +480,12 @@ qsub -N %(step_step)s_%(step_name)s_%(run_code)s \\
                              step_params, \
                              self.pipe_data)
         except AssertionExcept as assertErr:
-            print("An error has occured in step initialization (type: %s). See comment above.\n" % step_type)
             print assertErr.get_error_str()
+            print("An error has occured in step initialization (type: %s). See comment above.\n" % step_type)
 
             sys.exit()
-            # raise
+        else:
+            raise
 
     def define_conda_params(self):
         """ If conda params are required, define them:

@@ -19,23 +19,26 @@ class AssertionExcept(Exception):
     """A class to be raised by modules failing at assertions
     """
     def __init__(self, comment = "Unknown problem", sample = None, step = None):
-        """initializize with error comment and sample, if exists)
+        """ initializize with error comment and sample, if exists)
+            step is not required. Can be set later with set_step_name()
         """
         self.sample = sample
         self.comment = comment
         self.step = step
         
-    def get_error_str(self, step_name = None):
+    def set_step_name(self, step_name = None):
+        if not step_name:
+            sys.exit("You must specify step_name when calling set_step_name()")
+        self.step = step_name
+        
+    def get_error_str(self):
         
         if self.sample: # If a sample was passed. The exception is specific to a sample
-            return "ERROR  : In %s (sample %s): %s" % (step_name, self.sample, self.comment)
-        elif not step_name:
-            if self.step:
-                return "ERROR  : In %s: %s" % (self.step, self.comment)
-            else:
-                return "ERROR  : %s" % (self.comment)
+            self.comment =  "In %s (sample %s): %s" % (self.step, self.sample, self.comment)
         else:       
-            return "ERROR  : In %s: %s" % (step_name, self.comment)
+            self.comment = "In %s: %s" % (self.step, self.comment)
+        
+        return self.comment
         
 
 class Step:
@@ -243,9 +246,12 @@ class Step:
         try:
             self.step_specific_init()
         except AssertionExcept as assertErr:
-            print assertErr.get_error_str(self.get_step_name())
-            raise
-        
+            print "step_specific_init"
+            assertErr.set_step_name(self.get_step_name)
+            print assertErr.get_error_str()
+            # raise AssertionExcept(assertErr.get_error_str(),step=self.get_step_name())
+            raise assertErr #AssertionExcept(assertErr.get_error_str(step_name = self.get_step_name()))
+
         
         # Create a list for filenames to register with md5sum for each script:
         self.stamped_files = list()
@@ -318,7 +324,7 @@ Dependencies: {depends}""".format(name = self.name,
 
         # assert base_step_list == [] or all(map(lambda x: isinstance(x,Step), base_step_list)), "For some reason, step %s has an invalid base list." % self.name
         if base_step_list != [] and not all(map(lambda x: isinstance(x,Step), base_step_list)):
-            raise AssertionExcept("Invalid base list\n")
+            raise AssertionExcept("Invalid base list\n", step = self.get_step_name())
         
         try:
             self.base_step_list
@@ -494,8 +500,11 @@ Dependencies: {depends}""".format(name = self.name,
             if self.params["sample_list"] == "all_samples":
                 self.sample_data["samples"] = self.pipe_data["samples"]
             else:
-                self.sample_data["samples"] = re.split("[, ]+", self.params["sample_list"])
-            
+                if not isinstance(self.params["sample_list"] , list):
+                    self.sample_data["sample_list"] = re.split("[, ]+", self.params["sample_list"])
+                if set(self.params["sample_list"])-set(self.pipe_data["samples"]):
+                    raise AssertionExcept("'sample_list' includes samples not defined in sample data!", step=self.get_step_name())
+                self.sample_data["samples"] = self.params["sample_list"]
             # print(self.sample_data["samples"])
             # sys.exit()
             # self.sample_data[samples]
@@ -506,9 +515,9 @@ Dependencies: {depends}""".format(name = self.name,
         except AttributeError:
             pass    # It dosen't have to be defined.
         except AssertionExcept as assertErr: 
-            # An error was raised during specific sample initiation
-            print assertErr.get_error_str(self.get_step_name())
-            raise
+            assertErr.set_step_name(self.get_step_name())
+            raise assertErr
+
 
 
             
@@ -884,8 +893,14 @@ perl -e 'use Env qw(USER); open(my $fh, "<", "%(limit_file)s"); ($l,$s) = <$fh>=
                 self.close_high_level_script()
 
             except AssertionExcept as assertErr:
-                print assertErr.get_error_str(self.get_step_name())
-                raise
+                # print assertErr.get_error_str(self.get_step_name())
+                # raise
+                # print assertErr.get_error_str(self.get_step_name())
+                # raise AssertionExcept(assertErr.get_error_str(),step=self.get_step_name())
+
+                assertErr.set_step_name(self.get_step_name())
+                raise assertErr
+
     
         if "stop_and_show" in self.params:
             print "project slots:\n-------------"
@@ -973,7 +988,7 @@ perl -e 'use Env qw(USER); open(my $fh, "<", "%(limit_file)s"); ($l,$s) = <$fh>=
         elif type == "Stop":
             return "# Removing qdel command from qdel file.\nsed -i -e 's:^{qdel_cmd}$:#&:' {qdel_file}\n\n".format(qdel_cmd = re.escape(qdel_cmd), qdel_file = self.qdel_filename)
         else:
-            raise AssertionExcept("Bad type value in qdd_qdel_lines")
+            raise AssertionExcept("Bad type value in qdd_qdel_lines", step = self.get_step_name())
             
             
                                            
@@ -1030,7 +1045,7 @@ fi
                 activate_path = os.path.join(self.params["conda"]["path"],type)
                 environ       = self.params["conda"]["env"]
             else:
-                raise AssertionExcept("'conda' parameter must include 'path' and 'env'")
+                raise AssertionExcept("'conda' parameter must include 'path' and 'env'", step = self.get_step_name())
             
         #=======================================================================
         # elif "conda" in self.pipe_data:
