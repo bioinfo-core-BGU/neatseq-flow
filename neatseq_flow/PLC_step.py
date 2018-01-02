@@ -1331,4 +1331,28 @@ source {activate_path} {environ}
                                        
                                        
                                        
-                                       
+    def add_exit_status_check(self, success_status = 0):
+        """ This should be called during script building to add success status testing and exiting 
+        """
+        
+        if self.shell == "csh":
+            return """
+# Testing exit status
+if ( $? != {success} ) then
+    echo "Exiting with error. Check stderr file.\\n"
+    exit
+endif
+
+""".format(success=success_status)
+        elif self.shell=="bash":
+            return """
+# Testing exit status
+if [[ $? != {success} ]]; then 
+    echo "Exited with error. Check stderr file.\\n"
+    exit
+fi
+
+""".format(success=success_status)
+            
+            
+            
