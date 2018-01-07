@@ -8,6 +8,8 @@ __version__ = "1.2.0"
 
 
 import os, sys
+from urlparse import urlparse
+
 
 from pprint import pprint as pp
 import re
@@ -168,7 +170,7 @@ def parse_classic_sample_data(lines):
     #         if direction==alldirect] for alldirect in {"Forward","Reverse","Single"}}
     #===========================================================================
     # Create dict with lists of files for each possible direction 
-    reads = {alldirect:[os.path.abspath(os.path.expanduser(filename)) for (direction,filename) in \
+    reads = {alldirect:[get_full_path(filename) for (direction,filename) in \
                     [re.split("\s+", line, maxsplit=1) for line in lines] \
             if direction==alldirect] for alldirect in {"Forward","Reverse","Single"}}
     # Remove empty lists 
@@ -180,7 +182,7 @@ def parse_classic_sample_data(lines):
         sample_x_data.update(reads)
     
     ## Read fasta files:
-    fasta = {alldirect:[os.path.abspath(os.path.expanduser(filename)) for (direction,filename) in \
+    fasta = {alldirect:[get_full_path(filename) for (direction,filename) in \
                     [re.split("\s+", line, maxsplit=1) for line in lines] \
             if direction==alldirect] for alldirect in {"Nucleotide","Protein"}}
     # Remove empty lists 
@@ -190,7 +192,7 @@ def parse_classic_sample_data(lines):
         sample_x_data.update(fasta)
     
     ## Read BAM/SAM files:
-    bam_sam = {alldirect:[os.path.abspath(os.path.expanduser(filename)) for (direction,filename) in \
+    bam_sam = {alldirect:[get_full_path(filename) for (direction,filename) in \
                     [re.split("\s+", line, maxsplit=1) for line in lines] \
             if direction==alldirect] for alldirect in ALIGNMENT_FILE_TYPES}
     # Remove empty lists 
@@ -208,7 +210,7 @@ def parse_classic_sample_data(lines):
         sample_x_data.update(bam_sam)
     
     ## Read vcf files:
-    vcf_files = {alldirect:[os.path.abspath(os.path.expanduser(filename)) for (direction,filename) in \
+    vcf_files = {alldirect:[get_full_path(filename) for (direction,filename) in \
                     [re.split("\s+", line, maxsplit=1) for line in lines] \
             if direction==alldirect] for alldirect in VARIANT_FILE_TYPES}
     # Remove empty lists 
@@ -378,11 +380,11 @@ def parse_tabular_sample_data(sample_lines):
                 if line_data[1] == "REFERENCE":
                     sys.exit("Only one REFERENCE permitted per sample")
                 # If type exists, append path to list
-                sample_x_dict[line_data[1]].append(os.path.abspath(os.path.expanduser(line_data[2])))
+                sample_x_dict[line_data[1]].append(get_full_path(line_data[2]))
                 
             else:
                 # If not, create list with path
-                sample_x_dict[line_data[1]] = [os.path.abspath(os.path.expanduser(line_data[2]))]
+                sample_x_dict[line_data[1]] = [get_full_path(line_data[2])]
                 
 
         else:
@@ -444,3 +446,18 @@ def get_project_title(filelines):
         sys.stderr.write("The title contains white spaces. Converting to underscores. (%s)\n" % title[0])
   
     return title[0]
+    
+    
+    
+def get_full_path(path):
+    """ Creates a full path from the given path. This is done in one of two ways:
+        1. If it is a URL, IDENTIFIED BY THE PROTOCOL (or scheme): leave it unchanged
+        2. Otherwise: use expanduser and abspath on the path IF IT IS NOT ABSOLUTE ALREADY
+    """
+    
+    url = urlparse(path)
+    if not url.scheme:   # Regular path
+        if not os.path.isabs(path):
+            return os.path.abspath(os.path.expanduser(path)) 
+    return path
+    
