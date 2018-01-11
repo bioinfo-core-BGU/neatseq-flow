@@ -9,6 +9,7 @@
    :align: center
    :alt: NeatSeq-Flow logo
 
+.. include:: links.rst
 
 .. image:: https://readthedocs.org/projects/neatseq-flow/badge/?version=latest
    :target: http://neatseq-flow.readthedocs.io/en/latest/
@@ -45,14 +46,14 @@ What is **NeatSeq-Flow**?
 	* utilization of cluster parallelization capabilities;
 	* documentation, version control as well as time & memory usage reports and 
 	* adding modules and expanding existing WFs requires only basic python skills.
-* **NeatSeq-Flow** is available on `github <https://github.com/bioinfo-core-BGU/neatseq-flow>`_ (See :ref:`installation_section`)
+* **NeatSeq-Flow** is available on |github| (See :ref:`installation_section`)
 
     
 
 Modules
 -------
 
-While a basic number of modules come with **NeatSeq-Flow**, the main source of modules is the **NeatSeq-Flow module and workflow repository**. This repository is available on `github <https://github.com/bioinfo-core-BGU/neatseq-flow-modules>`_. Check out the `list of modules in the modules repository <http://neatseq-flow.readthedocs.io/projects/neatseq-flow-modules/en/latest/>`_.
+While a basic number of modules come with **NeatSeq-Flow**, the main source of modules is the **NeatSeq-Flow module and workflow repository**. This repository is available on |github|. Check out the `list of modules in the modules repository <http://neatseq-flow.readthedocs.io/projects/neatseq-flow-modules/en/latest/>`_.
 
 Authors
 ---------

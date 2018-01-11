@@ -627,11 +627,9 @@ Timestamp\tEvent\tModule\tInstance\tJob name\tLevel\tHost\tMax mem
                 
         # Set file name for storing list of pipeline versions:
         self.pipe_data["version_list_file"] = "".join([self.pipe_data["logs_dir"], "version_list.txt"])
-        # Initialize log file with current datetime:
-        # Only if file does not exist yet. This is to enable rerunning with the same runcode
-        if not os.path.exists(self.pipe_data["version_list_file"]):
-            with open(self.pipe_data["version_list_file"],"a") as logf:
-                logf.write("%s\t%s\n" % (self.pipe_data["run_code"], self.pipe_data["message"]))
+        # if not os.path.exists(self.pipe_data["version_list_file"]):
+        with open(self.pipe_data["version_list_file"],"a") as logf:
+            logf.write("%s\t%s\n" % (self.pipe_data["run_code"], self.pipe_data["message"]))
 
 
             

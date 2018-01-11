@@ -19,3 +19,5 @@
 .. _Ben-Gurion University: http://in.bgu.ac.il/en/Pages/default.aspx
 
 
+.. |github|         replace:: `github`_
+.. _github: https://github.com/bioinfo-core-BGU/neatseq-flow

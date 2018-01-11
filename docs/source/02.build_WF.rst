@@ -241,6 +241,13 @@ Sample file definition
 
 You can code the sample file in two different ways: :ref:`table_format_definition` and :ref:`list_format_definition`.
 
+.. Attention:: It is recommended to provide full paths to the files listed in the sample file. However, if relative paths are provided, **NeatSeq-Flow** will attempt to expand them to full paths, using the current directory as the base directory. 
+
+.. Important:: When passing URLs as sample locations (see documentation for ``merge`` module), it is **compulsory** to append the protocol, or scheme, at the beginning of the URL.
+
+    * Good: ``ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR453/SRR453032/SRR453032_1.fastq.gz``
+    * Bad:  ``ftp.sra.ebi.ac.uk/vol1/fastq/SRR453/SRR453032/SRR453032_1.fastq.gz``
+
 
 .. _list_format_definition:
 
