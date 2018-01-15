@@ -597,7 +597,8 @@ qsub -N %(step_step)s_%(step_name)s_%(run_code)s \\
                     script_fh.write("qalter \\\n\t-hold_jid %s \\\n\t%s\n\n" % (",".join(step.get_dependency_jid_list()), step.get_qsub_name()))
               
     def create_log_file(self):
-        
+        """ Create a initialize the log file.
+        """
         # Set log file name in pipe_data
         self.pipe_data["log_file"] = "".join([self.pipe_data["logs_dir"], "log_" ,  self.pipe_data["run_code"] , ".txt"])
 
@@ -630,6 +631,7 @@ Timestamp\tEvent\tModule\tInstance\tJob name\tLevel\tHost\tMax mem
         # if not os.path.exists(self.pipe_data["version_list_file"]):
         with open(self.pipe_data["version_list_file"],"a") as logf:
             logf.write("%s\t%s\n" % (self.pipe_data["run_code"], self.pipe_data["message"]))
+
 
 
             

@@ -630,31 +630,10 @@ Dependencies: {depends}""".format(name = self.name,
         # sys.stdout.write(self.spec_script_name + "\n")
         with open(self.spec_script_name, "w") as script_fh:
             script_fh.write(self.script)
-######
-        
-        if "job_limit" in self.pipe_data.keys():
-           
-            job_limit = """
-# Sleeping while jobs exceed limit
-perl -e 'use Env qw(USER); open(my $fh, "<", "%(limit_file)s"); ($l,$s) = <$fh>=~/limit=(\d+) sleep=(\d+)/; close($fh); while (scalar split("\\n",qx(%(qstat)s -u $USER)) > $l) {sleep $s; open(my $fh, "<", "%(limit_file)s"); ($l,$s) = <$fh>=~/limit=(\d+) sleep=(\d+)/} print 0; exit 0'
-
-""" % {"limit_file" : self.pipe_data["job_limit"],\
-            "qstat" : self.pipe_data["qsub_params"]["qstat_path"]}
-
             
-            # Append the qsub command to the 2nd level script:
-            with open(self.high_level_script_name, "a") as script_fh:
-                script_fh.write(job_limit + "\n\n")        
+        # Adding qdel and qsub lines to high level
+        self.write_low_cmds_to_high_level_script(spec_qsub_name)
 
-#######            
-        # Append the qsub command to the 2nd level script:
-        # script_name = self.pipe_data["scripts_dir"] + ".".join([self.step_number,"_".join([self.step,self.name]),self.shell]) 
-        with open(self.high_level_script_name, "a") as script_fh:
-            script_fh.write("# ---------------- Code for %s ------------------\n" % spec_qsub_name)
-            script_fh.write(self.add_qdel_line(type="Start"))
-            script_fh.write("# Adding qsub command:\n")        
-            script_fh.write("qsub " + self.spec_script_name + "\n\n")        
-        
         # Adding to qsub_names_dict:
         self.qsub_names_dict["low_qsubs"].append(self.spec_qsub_name)
         
@@ -729,9 +708,17 @@ perl -e 'use Env qw(USER); open(my $fh, "<", "%(limit_file)s"); ($l,$s) = <$fh>=
         """
 
 
-        script = "\n".join(["sleep %d\n\ncsh %s98.qalter_all.csh\n\n" % (self.pipe_data["Default_wait"], self.pipe_data["scripts_dir"]), \
-                            self.create_log_lines(self.high_spec_qsub_name, "Finished", level="high")])
-        
+        # script = "\n".join(["sleep %d\n\ncsh %s98.qalter_all.csh\n\n" % (self.pipe_data["Default_wait"], self.pipe_data["scripts_dir"]), \
+                            # self.create_log_lines(self.high_spec_qsub_name, "Finished", level="high")])
+        script = """
+sleep {sleep}
+csh {scripts_dir}98.qalter_all.csh
+
+{log_line}
+""".format(sleep = self.pipe_data["Default_wait"],
+           scripts_dir = self.pipe_data["scripts_dir"],
+           log_line = self.create_log_lines(self.high_spec_qsub_name, "Finished", level="high"))
+
         with open(self.high_level_script_name, "a") as script_fh:
             script_fh.write(script)        
 
@@ -754,7 +741,10 @@ perl -e 'use Env qw(USER); open(my $fh, "<", "%(limit_file)s"); ($l,$s) = <$fh>=
         if not self.script.strip():                 # If script is empty, do not create a wrapper function
             return 
         
+        # Create name without the run code:
         self.spec_qsub_name = "_".join([self.step,self.name,"preliminary"])
+        # Storing local copy without runcode:
+        spec_qsub_name = self.spec_qsub_name
 
         self.spec_script_name = os.path.join(self.step_scripts_dir, \
                                              ".".join([self.step_number,self.spec_qsub_name,"csh" if self.shell=="csh" else "sh"])) 
@@ -779,17 +769,20 @@ perl -e 'use Env qw(USER); open(my $fh, "<", "%(limit_file)s"); ($l,$s) = <$fh>=
                         self.script,                                                            \
                         self.register_files(self.spec_qsub_name),                               \
                         self.create_activate_lines(type = "deactivate"),                        \
+                        self.add_qdel_line(type="Stop"),                                        \
                         self.create_log_lines(self.spec_qsub_name, "Finished", level="prelim")])
 
-                                
+
 
         with open(self.spec_script_name, "w") as script_fh:
             script_fh.write(self.script)
             
-        # Append the qsub command to the 2nd level script:
-        # script_name = self.pipe_data["scripts_dir"] + ".".join([self.step_number,"_".join([self.step,self.name]),self.shell]) 
-        with open(self.high_level_script_name, "a") as script_fh:
-            script_fh.write("qsub " + self.spec_script_name + "\n\n")        
+        # Adding qdel and qsub lines to high level
+        self.write_low_cmds_to_high_level_script(spec_qsub_name)
+
+        # # Append the qsub command to the 2nd level script:
+        # with open(self.high_level_script_name, "a") as script_fh:
+            # script_fh.write("qsub " + self.spec_script_name + "\n\n")        
             
         # This is here because I want to use jid_list to make wrapping_up script dependent on this step's main low-level scripts
         # Explantion: get_jid_list() was used above (line 'qsub_header...') to make the wrapping_up script dependent on the other scripts created by the step
@@ -820,7 +813,8 @@ perl -e 'use Env qw(USER); open(my $fh, "<", "%(limit_file)s"); ($l,$s) = <$fh>=
 
 
         self.spec_qsub_name = "_".join([self.step,self.name,"wrapping_up"])
-
+        spec_qsub_name = self.spec_qsub_name
+        
         self.spec_script_name = os.path.join(self.step_scripts_dir, \
                                              ".".join([self.step_number,self.spec_qsub_name,"csh" if self.shell=="csh" else "sh"])) 
 
@@ -846,16 +840,20 @@ perl -e 'use Env qw(USER); open(my $fh, "<", "%(limit_file)s"); ($l,$s) = <$fh>=
                         self.script,                                                                \
                         self.register_files(self.spec_qsub_name),                                   \
                         self.create_activate_lines(type = "deactivate"),                            \
+                        self.add_qdel_line(type="Stop"),                                            \
                         self.create_log_lines(self.spec_qsub_name, "Finished", level="wrapping")])
 
 
         with open(self.spec_script_name, "w") as script_fh:
             script_fh.write(self.script)
             
-        # Append the qsub command to the 2nd level script:
-        # script_name = self.pipe_data["scripts_dir"] + ".".join([self.step_number,"_".join([self.step,self.name]),self.shell]) 
-        with open(self.high_level_script_name, "a") as script_fh:
-            script_fh.write("qsub " + self.spec_script_name + "\n\n")        
+        # Adding qdel and qsub lines to high level
+        self.write_low_cmds_to_high_level_script(spec_qsub_name)
+
+        # # Append the qsub command to the 2nd level script:
+        # # script_name = self.pipe_data["scripts_dir"] + ".".join([self.step_number,"_".join([self.step,self.name]),self.shell]) 
+        # with open(self.high_level_script_name, "a") as script_fh:
+            # script_fh.write("qsub " + self.spec_script_name + "\n\n")        
             
         # This is here because I want to use jid_list to make wrapping_up script dependent on this step's main low-level scripts
         # Explantion: get_jid_list() was used above (line 'qsub_header...') to make the wrapping_up script dependent on the other scripts created by the step
@@ -984,11 +982,11 @@ perl -e 'use Env qw(USER); open(my $fh, "<", "%(limit_file)s"); ($l,$s) = <$fh>=
         qdel_cmd = "qdel {script_name}".format(script_name = self.spec_qsub_name)
         
         if type == "Start":
-            return "# Adding qdel command to qdel file.\necho '{qdel_cmd}' >> {qdel_file}\n\n".format(qdel_cmd = qdel_cmd, qdel_file = self.qdel_filename)
+            return "# Adding qdel command to qdel file.\necho '{qdel_cmd}' >> {qdel_file}\n".format(qdel_cmd = qdel_cmd, qdel_file = self.qdel_filename)
         elif type == "Stop":
-            return "# Removing qdel command from qdel file.\nsed -i -e 's:^{qdel_cmd}$:#&:' {qdel_file}\n\n".format(qdel_cmd = re.escape(qdel_cmd), qdel_file = self.qdel_filename)
+            return "# Removing qdel command from qdel file.\nsed -i -e 's:^{qdel_cmd}$:#&:' {qdel_file}\n".format(qdel_cmd = re.escape(qdel_cmd), qdel_file = self.qdel_filename)
         else:
-            raise AssertionExcept("Bad type value in qdd_qdel_lines", step = self.get_step_name())
+            raise AssertionExcept("Bad type value in add_qdel_lines()", step = self.get_step_name())
             
             
                                            
@@ -1008,19 +1006,19 @@ perl -e 'use Env qw(USER); open(my $fh, "<", "%(limit_file)s"); ($l,$s) = <$fh>=
         
             script = """
 if ($?JOB_ID) then 
-    # Adding line to log file:  Date    Step    Host
-    echo `date '+%%d/%%m/%%Y %%H:%%M:%%S'`'\\t%(type)s\\t%(step)s\\t%(stepname)s\\t%(stepID)s\\t%(level)s\\t'$HOSTNAME'\\t'`%(qstat_path)s -j $JOB_ID | grep maxvmem | cut -d = -f 6` >> %(file)s
+	# Adding line to log file:  Date    Step    Host
+	echo `date '+%%d/%%m/%%Y %%H:%%M:%%S'`'\\t%(type)s\\t%(step)s\\t%(stepname)s\\t%(stepID)s\\t%(level)s\\t'$HOSTNAME'\\t'`%(qstat_path)s -j $JOB_ID | grep maxvmem | cut -d = -f 6` >> %(file)s
 endif
-####\n\n
+####
 """ % log_cols_dict
         
         elif self.shell == "bash":
             script = """
 if [ ! -z "$JOB_ID" ]; then
-    # Adding line to log file:  Date    Step    Host
-    echo -e $(date '+%%d/%%m/%%Y %%H:%%M:%%S')'\\t%(type)s\\t%(step)s\\t%(stepname)s\\t%(stepID)s\\t%(level)s\\t'$HOSTNAME'\\t'$(%(qstat_path)s -j $JOB_ID | grep maxvmem | cut -d = -f 6) >> %(file)s
+	# Adding line to log file:  Date    Step    Host
+	echo -e $(date '+%%d/%%m/%%Y %%H:%%M:%%S')'\\t%(type)s\\t%(step)s\\t%(stepname)s\\t%(stepID)s\\t%(level)s\\t'$HOSTNAME'\\t'$(%(qstat_path)s -j $JOB_ID | grep maxvmem | cut -d = -f 6) >> %(file)s
 fi
-####\n\n
+####
 """ % log_cols_dict
 
         else:
@@ -1335,24 +1333,70 @@ source {activate_path} {environ}
         """ This should be called during script building to add success status testing and exiting 
         """
         
+        
+        
         if self.shell == "csh":
             return """
 # Testing exit status
 if ( $? != {success} ) then
-    echo "Exiting with error. Check stderr file.\\n"
-    exit
+	echo "Exiting with error. Check stderr file.\\n"
+	{erro2log}
+	exit
 endif
 
-""".format(success=success_status)
+""".format(success  = success_status, 
+           erro2log = re.sub(pattern = "\n",
+                             repl    = "\n\t",
+                             string  = self.create_log_lines(self.spec_qsub_name,"ERROR", level="low")))       
+           
         elif self.shell=="bash":
             return """
 # Testing exit status
 if [[ $? != {success} ]]; then 
-    echo "Exited with error. Check stderr file.\\n"
-    exit
+	echo "Exited with error. Check stderr file.\\n"
+	{erro2log}
+	exit
 fi
 
-""".format(success=success_status)
-            
-            
-            
+""".format(success  = success_status, 
+           erro2log = re.sub(pattern = "\n",
+                             repl    = "\n\t",
+                             string  = self.create_log_lines(self.spec_qsub_name,"ERROR", level="low")))
+
+    def write_low_cmds_to_high_level_script(self, spec_qsub_name):
+        """ Writing low level lines to high level script: job_limit loop, adding qdel line and qsub line
+            spec_qsub_name is the qsub name without the run code (see caller)
+        """
+        
+
+        with open(self.high_level_script_name, "a") as script_fh:
+        
+            if "job_limit" in self.pipe_data.keys():
+               
+                job_limit = """
+    # Sleeping while jobs exceed limit
+    perl -e 'use Env qw(USER); open(my $fh, "<", "%(limit_file)s"); ($l,$s) = <$fh>=~/limit=(\d+) sleep=(\d+)/; close($fh); while (scalar split("\\n",qx(%(qstat)s -u $USER)) > $l) {sleep $s; open(my $fh, "<", "%(limit_file)s"); ($l,$s) = <$fh>=~/limit=(\d+) sleep=(\d+)/} print 0; exit 0'
+
+    """ % {"limit_file" : self.pipe_data["job_limit"],\
+                "qstat" : self.pipe_data["qsub_params"]["qstat_path"]}
+
+                
+                # Append the qsub command to the 2nd level script:
+                script_fh.write(job_limit + "\n\n")        
+
+#######            
+            # Append the qsub command to the 2nd level script:
+            # script_name = self.pipe_data["scripts_dir"] + ".".join([self.step_number,"_".join([self.step,self.name]),self.shell]) 
+            script_fh.write("""
+# ---------------- Code for {spec_qsub} ------------------
+{qdel_line}
+# Adding qsub command:
+qsub {script_name}
+
+""".format(qdel_line = self.add_qdel_line(type="Start"),
+            script_name = self.spec_script_name,
+            spec_qsub = spec_qsub_name))
+            # script_fh.write("# ---------------- Code for %s ------------------\n" % spec_qsub_name)
+            # script_fh.write(self.add_qdel_line(type="Start"))
+            # script_fh.write("# Adding qsub command:\n")        
+            # script_fh.write("qsub " + self.spec_script_name + "\n\n")        
