@@ -1,6 +1,6 @@
 # -*- coding: UTF-8 -*-
 """ 
-``add_trinity_tags``
+``add_trinity_tags`` :sup:`*`
 -----------------------------------------------------------------
 :Authors: Menachem Sklarz
 :Affiliation: Bioinformatics core facility
@@ -74,7 +74,7 @@ class Step_add_trinity_tags(Step):
     def step_specific_init(self):
         self.shell = "bash"      # Can be set to "bash" by inheriting instances
         self.file_tag = "trin_tags.fq"
-
+        
     def step_sample_initiation(self):
         """ A place to do initiation stages following setting of sample_data
         """
@@ -93,8 +93,7 @@ class Step_add_trinity_tags(Step):
       
     def build_scripts(self):
         
-        
-         
+
         # Each iteration must define the following class variables:
             # spec_script_name
             # script
@@ -122,7 +121,10 @@ class Step_add_trinity_tags(Step):
                     
                     # self.script += self.get_script_const()
                     ""
-                    self.script += "awk '{ if (NR%%4==1) { gsub(\" \",\"_\"); print $0\"%(tag)s\" } else { print } }' \\\n\t" % {"tag" : {"R":"/2","F":"/1","S":""}[direction[0]]}
+                    if self.params["script_path"]:
+                        self.script += self.params["script_path"]
+                    else:
+                        self.script += "awk '{ if (NR%%4==1) { gsub(\" .*\",\"\"); print $0\"%(tag)s\" } else { print } }' \\\n\t" % {"tag" : {"R":"/2","F":"/1","S":"/1"}[direction[0]]}
                     self.script += "%s \\\n\t" % self.sample_data[sample][file_slot]
                     self.script += "> %s\n\n" % (use_dir + fq_fn)
 

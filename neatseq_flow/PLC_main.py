@@ -492,7 +492,10 @@ qsub -N %(step_step)s_%(step_name)s_%(run_code)s \\
         """
         
         if "conda" in self.param_data["Global"]:
+            # 1. Add the conda parameters to pipe_data
             self.pipe_data["conda"] = self.param_data["Global"]["conda"]
+            # 2. If inside active conda environment (CONDA_PREFIX defined), 
+            #    search for additional module dir and add to search path
             if "CONDA_PREFIX" in os.environ:
                 conda_module_path = os.path.join(os.environ["CONDA_PREFIX"], "lib/python2.7/site-packages/neatseq_flow_modules")
                 if not os.path.isdir(conda_module_path):

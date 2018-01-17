@@ -1,6 +1,6 @@
 # -*- coding: UTF-8 -*-
 """ 
-``bowtie2_builder``
+``bowtie2_builder`` :sup:`*`
 -----------------------------------------------------------------
 :Authors: Menachem Sklarz
 :Affiliation: Bioinformatics core facility

@@ -1,6 +1,6 @@
 # -*- coding: UTF-8 -*-
 """ 
-``bowtie2_mapper``
+``bowtie2_mapper`` :sup:`*`
 -----------------------------------------------------------------
 
 :Authors: Menachem Sklarz
@@ -145,7 +145,7 @@ class Step_bowtie2_mapper(Step):
                 raise AssertionExcept("There is a mismatch between 'scope' and the existing bowtie2 index\n", sample)
                 
             if "ref_genome" in self.params.keys():
-                raise AssertionExcept("ref_genome was passed, and 'scope' was defined. Resolve!\n")
+                raise AssertionExcept("ref_genome was passed, and 'scope' was defined. Ignoring ref_genome\n")
         else:
             # If scope is not defined, require '-x'
             if not "-x" in self.params["redir_params"]:
@@ -162,6 +162,8 @@ class Step_bowtie2_mapper(Step):
             else:
                 self.write_warning("No reference given. It is highly recommended to give one!\n")
 
+        # for output_type in ["--un","--un-gz","--un-bz2","--un-lz4","--al","--al-gz","--al-bz2","--al-lz4","--un-conc","--un-conc-gz","--un-conc-bz2","--un-conc-lz4","--al-conc","--al-conc-gz","--al-conc-bz2", "--al-conc-lz4"]:
+            # if output_type in 
         
     def create_spec_wrapping_up_script(self):
         """ Add stuff to check and agglomerate the output data

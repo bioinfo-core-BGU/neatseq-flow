@@ -1,6 +1,6 @@
 # -*- coding: UTF-8 -*-
 """ 
-``makeblastdb``
+``makeblastdb`` :sup:`*`
 -----------------------------------------------------------------
 
 :Authors: Menachem Sklarz
@@ -116,7 +116,7 @@ class Step_makeblastdb(Step):
                 self.dbtype = self.params["redir_params"]["-dbtype"]
                 self.sample_data[sample]["fasta." + self.dbtype]
             except KeyError:
-                raise AssertionExcept("No file exists in sample for specified -dbtype (%s)\n" % dbtype, sample)
+                raise AssertionExcept("No file exists in sample for specified -dbtype (%s)\n" % self.dbtype, sample)
 
     def step_sample_initiation_byproject(self):
 

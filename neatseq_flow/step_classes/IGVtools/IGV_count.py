@@ -1,6 +1,6 @@
 # -*- coding: UTF-8 -*-
 """ 
-``IGV_count``
+``IGV_count`` :sup:`*`
 -----------------------------------------------------------------
 
 :Authors: Menachem Sklarz

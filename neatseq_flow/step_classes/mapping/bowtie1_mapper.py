@@ -1,6 +1,6 @@
 # -*- coding: UTF-8 -*-
 """ 
-``bowtie1_mapper``
+``bowtie1_mapper`` :sup:`*`
 -----------------------------------------------------------------
 :Authors: Menachem Sklarz
 :Affiliation: Bioinformatics core facility

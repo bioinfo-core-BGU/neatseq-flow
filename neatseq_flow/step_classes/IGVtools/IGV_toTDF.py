@@ -1,6 +1,6 @@
 # -*- coding: UTF-8 -*-
 """ 
-``IGV_toTDF``
+``IGV_toTDF`` :sup:`*`
 -----------------------------------------------------------------
 
 :Authors: Menachem Sklarz

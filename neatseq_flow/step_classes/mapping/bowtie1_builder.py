@@ -1,6 +1,6 @@
 # -*- coding: UTF-8 -*-
 """ 
-``bowtie1_builder``
+``bowtie1_builder`` :sup:`*`
 -----------------------------------------------------------------
 
 :Authors: Menachem Sklarz

@@ -1,6 +1,6 @@
 # -*- coding: UTF-8 -*-
 """ 
-``samtools``
+``samtools`` :sup:`*`
 -----------------------------------------------------------------
 
 :Authors: Menachem Sklarz
@@ -69,11 +69,11 @@ Lines for parameter file
             -pe: shared 20
         view: -buh  -q 30 -@ 20 -F 4
         sort: -@ 20
-        flagstat: null
-        index: null
+        flagstat: 
+        index: 
         stats: --remove-dups
-        del_sam: null
-        del_unsorted: null
+        del_sam: 
+        del_unsorted: 
 
  
 References
@@ -99,6 +99,10 @@ class Step_samtools(Step):
     def step_specific_init(self):
         self.shell = "bash"      # Can be set to "bash" by inheriting instances
 
+        if "type2use" in self.params:
+            if not isinstance(self.params["type2use"],str) or self.params["type2use"] not in ["sam","bam"]:
+                raise AssertionExcept("'type2use' must be either 'sam' or 'bam'")
+                
     def step_sample_initiation(self):
         """ A place to do initiation stages following setting of sample_data
         """
@@ -106,7 +110,12 @@ class Step_samtools(Step):
         for sample in self.sample_data["samples"]:      # Getting list of samples out of samples_hash
 
             # Check that a sam or bam exists
-            if "bam" in self.sample_data[sample]:
+            if "bam" in self.sample_data[sample] and "sam" in self.sample_data[sample]:
+                if "type2use" in self.params:
+                    self.file2use = self.params["type2use"]
+                else:
+                    raise AssertionExcept("Both BAM and SAM file types exist for sample. Specify which one to use with 'type2use'.\n", sample)
+            elif "bam" in self.sample_data[sample]:
                 self.file2use = "bam"
             elif "sam" in self.sample_data[sample]:
                 self.file2use = "sam"
@@ -182,7 +191,9 @@ class Step_samtools(Step):
                     self.local_finish(use_dir,sample_dir)       # Sees to copying local files to final destination (and other stuff)
                     self.create_low_level_script()
                     continue
-               
+                self.script += self.add_exit_status_check()
+                
+                
             # The following can be merged into the main 'view' section
             if "filter_by_tag" in self.params.keys():
             
@@ -197,6 +208,8 @@ class Step_samtools(Step):
                 self.script += "-o %s \\\n\t" % (use_dir + filtered_name)
                 self.script += "- \n\n" 
 
+                self.script += self.add_exit_status_check()
+                
                 # If user requires than unsorted bam be removed:
                 if "del_unfiltered" in self.params.keys():
                     self.script += "###########\n# Removing unfiltered BAM\n#----------------\n"
@@ -227,6 +240,9 @@ class Step_samtools(Step):
                     self.script += "%s \\\n\t" % self.params["sort"]
                 self.script += "-o %s \\\n\t" % (use_dir + sort_name)
                 self.script += "%s\n\n" % (bam_name)
+                
+                self.script += self.add_exit_status_check()
+
                 # Storing sorted bam in 'bam' slot and unsorted bam in unsorted_bam slot
                 self.sample_data[sample]["unsorted_bam"] = sample_dir + os.path.basename(bam_name)
                 self.sample_data[sample]["bam"] = sample_dir + sort_name
@@ -245,14 +261,16 @@ class Step_samtools(Step):
                     self.script += "%s \\\n\t" % self.params["index"]
                 self.script += "%s\n\n" % (use_dir + bam_name)
                 self.sample_data[sample]["index"] = sample_dir + index_name
-        
+                self.script += self.add_exit_status_check()
+
             if "flagstat" in self.params.keys():
                 self.script += "###########\n# Calculating BAM statistics:\n#----------------\n"
                 self.script += "%s flagstat \\\n\t" % self.get_script_env_path()
                 self.script += "%s \\\n\t" % (use_dir + bam_name)
                 self.script += "> %s.flagstat \n\n" % (use_dir + bam_name)
                 self.sample_data[sample]["flagstat"] = "%s%s.flagstat" % (sample_dir, bam_name)
-        
+                self.script += self.add_exit_status_check()
+
             if "stats" in self.params.keys():
                 self.script += "###########\n# Calculating BAM statistics:\n#----------------\n"
                 self.script += "%s stats \\\n\t" % self.get_script_env_path()
@@ -261,16 +279,42 @@ class Step_samtools(Step):
                 self.script += "%s \\\n\t" % (use_dir + bam_name)
                 self.script += "> %s.stats \n\n" % (use_dir + bam_name)
                 self.sample_data[sample]["stats"] = "%s%s.stats" % (sample_dir, bam_name)
-                
+                self.script += self.add_exit_status_check()
+
             if "idxstats" in self.params.keys():
                 self.script += "###########\n# Calculating index statistics (idxstats):\n#----------------\n"
                 self.script += "%s idxstats \\\n\t" % self.get_script_env_path()
                 # idxstats has no uder defined parameters...
                 self.script += "%s \\\n\t" % (use_dir + bam_name)
                 self.script += "> %s.idxstat.tab \n\n" % (use_dir + bam_name)
-                self.sample_data[sample]["stats"] = "%s%s.stats" % (sample_dir, bam_name)
                 self.sample_data[sample]["idxstats"] = "%s%s.idxstat.tab" % (sample_dir, bam_name)
+                self.script += self.add_exit_status_check()
+            # Adding code for fastq or fasta extraction from bam:
+            for type in (set(self.params.keys()) & set(["fasta","fastq"])):
+                self.script += """###########\n# Extracting fastq files from BAM:\n#----------------\n"""
+                self.script += self.get_script_env_path()
+                self.script += "{command} {params} \\\n\t".format(command = type, params = self.params[type])
+                if "fastq.F" in self.sample_data[sample]:
+                    self.script += "-1  {readsF} \\\n\t".format(readsF = (use_dir + bam_name + ".F." + type))
+                    self.script += "-2  {readsR} \\\n\t".format(readsR = (use_dir + bam_name + ".R." + type))
+                else:
+                    self.script += "-s  {readsS} \\\n\t".format(readsS = (use_dir + bam_name + ".S." + type))
+                # -0 and mixed paired-single not supported yet
+                self.script += "{bam} \n\n".format(bam = (use_dir + bam_name))
                 
+                # Storing and Stamping files
+                if "fastq.F" in self.sample_data[sample]:
+                    self.sample_data[sample]["%s.F"    % type] = "%s%s.F.%s" % (sample_dir, bam_name   , type)   
+                    self.sample_data[sample]["%s.R"    % type] = "%s%s.R.%s" % (sample_dir, bam_name   , type)   
+                    self.stamp_file(self.sample_data[sample]["%s.F"    % type] )
+                    self.stamp_file(self.sample_data[sample]["%s.R"    % type] )
+                else:
+                    self.sample_data[sample]["%s.S"    % type] = "%s%s.S.%s" % (sample_dir, bam_name   , type)   
+                    self.stamp_file(self.sample_data[sample]["%s.S"    % type] )
+                
+                self.script += self.add_exit_status_check()
+
+
                 
             if "del_sam" in self.params.keys() and "sam" in self.sample_data[sample]:
                 self.script += "###########\n# Removing SAM\n#----------------\n\n"

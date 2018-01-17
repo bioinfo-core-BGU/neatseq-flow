@@ -16,3 +16,5 @@ comparison_with_others.docx
 dist
 NeatSeq_Flow.egg-info
 !env_vars.sh
+cp_to_main.bat
+my_backup_log.txt

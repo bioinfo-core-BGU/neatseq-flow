@@ -1,5 +1,5 @@
 """ 
-``spades_assembl``
+``spades_assembl`` :sup:`*`
 -----------------------------------------------------------------
 
 :Authors: Menachem Sklarz

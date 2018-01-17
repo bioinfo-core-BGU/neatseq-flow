@@ -1,7 +1,7 @@
 # -*- coding: UTF-8 -*-
-""" 
-``merge``
-----------------------------------------------------------------
+"""
+``merge`` :sup:`*`
+-------------------
 
 :Authors: Menachem Sklarz
 :Affiliation: Bioinformatics core facility
@@ -12,16 +12,27 @@ A module for merging <and unzipping> fastqc and fasta files
 Requires
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-* fastq files in one of the following slots:
+* A list of fastq files in the following slots:
 
     * ``sample_data[<sample>]["Forward"]``
     * ``sample_data[<sample>]["Reverse"]``
     * ``sample_data[<sample>]["Single"]``
 
-* or fasta files in one of the following slots:
+* or a list of fasta files in the following slots:
 
     * ``sample_data[<sample>]["Nucleotide"]``
     * ``sample_data[<sample>]["Protein"]``
+    
+* or a list of BAM/SAM files in the following slots:
+
+    * ``sample_data[<sample>]["SAM"]``
+    * ``sample_data[<sample>]["BAM"]``
+    * ``sample_data[<sample>]["REFERENCE"]`` - The reference fasta used to align the reads in the BAM/SAM files.
+    
+* or a list of VCF files in the following slots:
+
+    * ``sample_data[<sample>]["VCF"]``
+    * ``sample_data[<sample>]["G.VCF"]``
     
 Output
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -34,13 +45,20 @@ Output
     
     * ``sample_data[<sample>]["fasta.nucl"|"fasta.prot"]``
 
+* puts SAM/BAM output files in the following slots:
+    
+    * ``sample_data[<sample>]["sam|bam|reference"]``
+
+* puts VCF and G.VCF output files in the following slots:
+    
+    * ``sample_data[<sample>]["vcf|g.vcf"]``
+
 .. note:: In the *merge* parameters, set the *script_path* parameter according to the type of raw files you've got. 
     e.g., if they are gzipped, it should be ``gzip -cd``, etc.
 
 .. attention:: If you want to do something more complex with the combined files, you can use the ``pipe`` parameter to send extra commands to be piped on the files after the main command. **This is an experimental feature and should be used with care**.
 
     e.g.: You can get files from a remote location by setting ``script_path`` to ``curl`` and ``pipe`` to ``gzip -cd``. This will download the files with curl, unzip them and concatenate them into the target file.  In the sample file, specify remote URLs instead of local pathes. **This will work only for one file per sample**.
-    
     
     
 Parameters that can be set
@@ -88,7 +106,6 @@ __version__ = "1.1.0"
 fasta_types_dict = {"Nucleotide":"fasta.nucl","Protein":"fasta.prot"}
 sam_bam_dict     = {"SAM":"sam", "BAM":"bam", "REFERENCE":"reference"}
 vcf_dict         = {"VCF":"vcf","G.VCF":"g.vcf"}
-
 
 class Step_merge(Step):
     
@@ -223,7 +240,6 @@ class Step_merge(Step):
 
             for direction in filter(lambda x: x in sam_bam_dict.keys(), self.sample_data[sample].keys()):
                     # Do not attempt merging the single reference permitted:
-
                     if direction == "REFERENCE":
                         continue
                         
@@ -266,7 +282,8 @@ class Step_merge(Step):
                     # # Store file in active file for sample:
 
                     self.sample_data[sample][direction_tag] = self.base_dir + fq_fn
-                    self.sample_data[sample]["reference"] = self.sample_data[sample]["REFERENCE"]
+                    if "REFERENCE" in self.sample_data[sample]:
+                        self.sample_data[sample]["reference"] = self.sample_data[sample]["REFERENCE"]
           
                     self.stamp_file(self.sample_data[sample][direction_tag])
 
@@ -333,4 +350,4 @@ class Step_merge(Step):
                     self.local_finish(use_dir,self.base_dir)       # Sees to copying local files to final destination (and other stuff)
 
                     self.create_low_level_script()
-                    
+            

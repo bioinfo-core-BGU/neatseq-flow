@@ -1,6 +1,6 @@
 # -*- coding: UTF-8 -*-
 """ 
-``vcftools``
+``vcftools`` :sup:`*`
 -----------------------------------------------------------------
 
 :Authors: Menachem Sklarz
@@ -94,7 +94,9 @@ from neatseq_flow.PLC_step import Step,AssertionExcept
 
 
 __author__ = "Menachem Sklarz"
-__version__ = "0.2.0"
+__version__ = "1.2.0"
+
+
 class Step_vcftools(Step):
 
    

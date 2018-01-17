@@ -1,6 +1,6 @@
 # -*- coding: UTF-8 -*-
 """ 
-``genomeCoverageBed``
+``genomeCoverageBed`` :sup:`*`
 -----------------------------------------------------------------
 :Authors: Menachem Sklarz
 :Affiliation: Bioinformatics core facility

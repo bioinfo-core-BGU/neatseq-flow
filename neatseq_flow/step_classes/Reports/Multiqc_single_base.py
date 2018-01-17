@@ -47,7 +47,7 @@ from neatseq_flow.PLC_step import Step,AssertionExcept
 __author__ = "Levinl based on Menachem Sklarz"
 # Run Multiqc on all base directories
 
-class Step_Multiqc(Step):
+class Step_Multiqc_single_base(Step):
     """ A class that defines a pipeline step name (=instance).
     """
     
@@ -91,9 +91,9 @@ class Step_Multiqc(Step):
         #Multiqc main command
         self.script += self.get_script_const()
         # dir_base_list = get_all_bases_dir(self,dir_base_list)
-        dir_base_list = " ".join(get_base_dirs_str(self))
+        dir_base_list = [step.base_dir for step in self.base_step_list]  #" ".join(get_base_dirs_str(self))
         
-        self.script += "%s \\\n\t" % dir_base_list
+        self.script += "%s \\\n\t" % " ".join(dir_base_list)
         if "modules" in self.params.keys():
             if self.params["modules"]!="All":
                 modules=self.params["modules"].split(",")
