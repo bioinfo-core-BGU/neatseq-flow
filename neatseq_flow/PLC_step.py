@@ -179,9 +179,17 @@ class Step:
         # Is used to add a prelimanry step, equivalent to the "wrapping up" step that is dependent on all previous scripts
         self.preliminary_jids =[]  
 
-        self.skip_scripts = False   # This is supposed to enable steps to avoid script building by setting to True.
-                                    # See for example del_type and move_type
-
+        # self.skip_scripts determines whether scripts will be created. 
+        # Defaults to False, unless SKIP is defined in parameters.
+        # This is supposed:
+        # A. to enable steps to avoid script building by setting to True.
+        #    See for example del_type, move_type (now generalized in manage_types)
+        # B. To enable skipping a step while leaving the flow scheme intact (i.e. a step is like a channel for types without actually doing anything. Same as commenting it out but saves resetting bases...)
+        if "SKIP" in self.params:
+            self.skip_scripts = True
+        else:
+            self.skip_scripts = False   
+            
         # Catch exceptions of type AssertionExcept raised by the specific initiation code
         try:
             self.step_specific_init()

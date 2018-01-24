@@ -135,9 +135,20 @@ You will need to copy the |conda_tut_install| file into the current directory, o
 
 The following commands will install NeatSeq-Flow and all the required modules and programs. 
 
+.. Attention:: This tutorial assumes `conda` is installed and on the search path. If it is not, append the `conda` path to all `conda`, `activate` and `deactivate` commands below.
+
+
 .. code-block:: csh
 
-    conda-env create -f  NeatSeq_Flow_Tutorial_Install.yaml
+    conda env create -f  NeatSeq_Flow_Tutorial_Install.yaml
+
+.. Note:: For some versions of conda, you might have to replace ``conda env`` with ``conda-env``. If the command above does not work, try the following command:
+
+
+    .. code-block:: csh
+
+        conda-env create -f  NeatSeq_Flow_Tutorial_Install.yaml
+
 
 .. Attention:: From the following step onwards, you should be in ``bash`` shell
 
@@ -150,6 +161,7 @@ The following commands will install NeatSeq-Flow and all the required modules an
 .. code-block:: csh
 
     source activate NeatSeq_Flow_Tutorial
+
 
 
 Run NeatSeq-Flow
@@ -178,8 +190,13 @@ You can do the editting with any text editor of your liking.
 
 .. warning::  Don't forget to save the file when you done!
 
+3. Execute the following command to tell **NeatSeq-Flow** where the base conda installation is located:
 
-3. Execute **NeatSeq-Flow** to create the workflow scripts:
+.. code-block:: csh
+
+    export CONDA_BASE=$(conda info --root)
+
+4. Execute **NeatSeq-Flow** to create the workflow scripts:
 
 .. code-block:: csh
 
