@@ -943,7 +943,7 @@ csh {scripts_dir}98.qalter_all.csh
             
             
                                            
-    def create_log_lines(self, qsub_name, type = "Started", level = "high", status = "OK"):
+    def create_log_lines(self, qsub_name, type = "Started", level = "high", status = "\033[0;32mOK\033[m"):
         """ Create logging lines. Added before and after script to return start and end times
         """
 
@@ -961,7 +961,7 @@ csh {scripts_dir}98.qalter_all.csh
             script = """
 if ($?JOB_ID) then 
 	# Adding line to log file:  Date    Step    Host
-	echo `date '+%%d/%%m/%%Y %%H:%%M:%%S'`'\\t%(type)s\\t%(step)s\\t%(stepname)s\\t%(stepID)s\\t%(level)s\\t'$HOSTNAME'\\t%(status)s\\t'`%(qstat_path)s -j $JOB_ID | grep maxvmem | cut -d = -f 6` >> %(file)s
+	echo `date '+%%d/%%m/%%Y %%H:%%M:%%S'`'\\t%(type)s\\t%(step)s\\t%(stepname)s\\t%(stepID)s\\t%(level)s\\t'$HOSTNAME'\\t'`%(qstat_path)s -j $JOB_ID | grep maxvmem | cut -d = -f 6`'\\t%(status)s' >> %(file)s
 endif
 ####
 """ % log_cols_dict
@@ -970,7 +970,7 @@ endif
             script = """
 if [ ! -z "$JOB_ID" ]; then
 	# Adding line to log file:  Date    Step    Host
-	echo -e $(date '+%%d/%%m/%%Y %%H:%%M:%%S')'\\t%(type)s\\t%(step)s\\t%(stepname)s\\t%(stepID)s\\t%(level)s\\t'$HOSTNAME'\\t%(status)s\\t'$(%(qstat_path)s -j $JOB_ID | grep maxvmem | cut -d = -f 6) >> %(file)s
+	echo -e $(date '+%%d/%%m/%%Y %%H:%%M:%%S')'\\t%(type)s\\t%(step)s\\t%(stepname)s\\t%(stepID)s\\t%(level)s\\t'$HOSTNAME'\\t'$(%(qstat_path)s -j $JOB_ID | grep maxvmem | cut -d = -f 6)'\\t%(status)s' >> %(file)s
 fi
 ####
 """ % log_cols_dict
