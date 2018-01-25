@@ -184,11 +184,16 @@ class Step:
         # This is supposed:
         # A. to enable steps to avoid script building by setting to True.
         #    See for example del_type, move_type (now generalized in manage_types)
+        #    In this case, set skip_scripts to True in step_specific_init(). skip_step_sample_initiation will be set to False by default.
         # B. To enable skipping a step while leaving the flow scheme intact (i.e. a step is like a channel for types without actually doing anything. Same as commenting it out but saves resetting bases...)
+        #    In this case, both skip_scripts and skip_step_sample_initiation are set to True, because some of the modifications to sample_data are performed in self.step_sample_initiation(). 
+        #    In the step_specific_init() function no changes to sample_data are possible because it is not set yet at that stage!
         if "SKIP" in self.params:
             self.skip_scripts = True
+            self.skip_step_sample_initiation = True   # This is so that modifications to sample_data requested in step_sample_initiation() will not be performed if SKIP is set.
         else:
             self.skip_scripts = False   
+            self.skip_step_sample_initiation = False
             
         # Catch exceptions of type AssertionExcept raised by the specific initiation code
         try:
@@ -197,8 +202,7 @@ class Step:
             print "step_specific_init"
             assertErr.set_step_name(self.get_step_name)
             print assertErr.get_error_str()
-            # raise AssertionExcept(assertErr.get_error_str(),step=self.get_step_name())
-            raise assertErr #AssertionExcept(assertErr.get_error_str(step_name = self.get_step_name()))
+            raise assertErr 
 
         
         # Create a list for filenames to register with md5sum for each script:
@@ -459,7 +463,8 @@ Dependencies: {depends}""".format(name = self.name,
             
         # Trying running step specific sample initiation script:
         try:
-            self.step_sample_initiation()
+            if not self.skip_step_sample_initiation:
+                self.step_sample_initiation()
         except AttributeError:
             pass    # It dosen't have to be defined.
         except AssertionExcept as assertErr: 
