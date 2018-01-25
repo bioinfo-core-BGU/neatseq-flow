@@ -943,24 +943,25 @@ csh {scripts_dir}98.qalter_all.csh
             
             
                                            
-    def create_log_lines(self, qsub_name, type = "Started", level = "high"):
+    def create_log_lines(self, qsub_name, type = "Started", level = "high", status = "OK"):
         """ Create logging lines. Added before and after script to return start and end times
         """
 
-        log_cols_dict = {"type"        : type,                                        \
-        "step"       : self.get_step_step(),                        \
-        "stepname"   : self.get_step_name(),                        \
-        "stepID"     : qsub_name,                                   \
-        "qstat_path" : self.pipe_data["qsub_params"]["qstat_path"], \
-        "level"      : level, \
-        "file"       : self.pipe_data["log_file"]}
+        log_cols_dict = {"type"       : type,                                        \
+                         "step"       : self.get_step_step(),                        \
+                         "stepname"   : self.get_step_name(),                        \
+                         "stepID"     : qsub_name,                                   \
+                         "qstat_path" : self.pipe_data["qsub_params"]["qstat_path"], \
+                         "level"      : level,                                       \
+                         "status"     : status,                                      \
+                         "file"       : self.pipe_data["log_file"]}
         
         if self.shell=="csh":
         
             script = """
 if ($?JOB_ID) then 
 	# Adding line to log file:  Date    Step    Host
-	echo `date '+%%d/%%m/%%Y %%H:%%M:%%S'`'\\t%(type)s\\t%(step)s\\t%(stepname)s\\t%(stepID)s\\t%(level)s\\t'$HOSTNAME'\\t'`%(qstat_path)s -j $JOB_ID | grep maxvmem | cut -d = -f 6` >> %(file)s
+	echo `date '+%%d/%%m/%%Y %%H:%%M:%%S'`'\\t%(type)s\\t%(step)s\\t%(stepname)s\\t%(stepID)s\\t%(level)s\\t'$HOSTNAME'\\t%(status)s\\t'`%(qstat_path)s -j $JOB_ID | grep maxvmem | cut -d = -f 6` >> %(file)s
 endif
 ####
 """ % log_cols_dict
@@ -969,7 +970,7 @@ endif
             script = """
 if [ ! -z "$JOB_ID" ]; then
 	# Adding line to log file:  Date    Step    Host
-	echo -e $(date '+%%d/%%m/%%Y %%H:%%M:%%S')'\\t%(type)s\\t%(step)s\\t%(stepname)s\\t%(stepID)s\\t%(level)s\\t'$HOSTNAME'\\t'$(%(qstat_path)s -j $JOB_ID | grep maxvmem | cut -d = -f 6) >> %(file)s
+	echo -e $(date '+%%d/%%m/%%Y %%H:%%M:%%S')'\\t%(type)s\\t%(step)s\\t%(stepname)s\\t%(stepID)s\\t%(level)s\\t'$HOSTNAME'\\t%(status)s\\t'$(%(qstat_path)s -j $JOB_ID | grep maxvmem | cut -d = -f 6) >> %(file)s
 fi
 ####
 """ % log_cols_dict
@@ -1282,7 +1283,7 @@ source {activate_path} {environ}
                                        
                                        
                                        
-    def add_exit_status_check(self, success_status = 0):
+    def add_exit_status_check(self, success_status = 0, comment = ""):
         """ This should be called during script building to add success status testing and exiting 
         """
         
@@ -1292,30 +1293,38 @@ source {activate_path} {environ}
             return """
 # Testing exit status
 if ( $? != {success} ) then
-	echo "Exiting with error. Check stderr file.\\n"
+	echo "\033[31m Exiting with error: {comment}. Check stderr file.\033[m\\n"
 	{erro2log}
 	exit
 endif
 
 """.format(success  = success_status, 
-           erro2log = re.sub(pattern = "\n",
-                             repl    = "\n\t",
-                             string  = self.create_log_lines(self.spec_qsub_name,"ERROR", level="low")))       
+           comment  = comment,
+           erro2log = self.create_log_lines(self.spec_qsub_name,"Finished", level="low", status = "\033[31mERROR\033[m"))
+           # erro2log = re.sub(pattern = "\n",
+                             # repl    = "\n\t",
+                             # string  = self.create_log_lines(self.spec_qsub_name,"ERROR", level="low")))       
            
         elif self.shell=="bash":
             return """
 # Testing exit status
 if [[ $? != {success} ]]; then 
-	echo "Exited with error. Check stderr file.\\n"
+	echo -e "\033[31m Exiting with error: {comment}. Check stderr file.\033[m\\n"
 	{erro2log}
 	exit
 fi
 
 """.format(success  = success_status, 
-           erro2log = re.sub(pattern = "\n",
-                             repl    = "\n\t",
-                             string  = self.create_log_lines(self.spec_qsub_name,"ERROR", level="low")))
+           comment  = comment,
+           erro2log = self.create_log_lines(self.spec_qsub_name,"Finished", level="low", status = "\033[31mERROR\033[m"))
 
+           # erro2log = re.sub(pattern = "\n",
+                             # repl    = "\n\t",
+                             # string  = self.create_log_lines(self.spec_qsub_name,"ERROR", level="low")))
+
+                             
+                             
+                             
     def write_low_cmds_to_high_level_script(self, spec_qsub_name):
         """ Writing low level lines to high level script: job_limit loop, adding qdel line and qsub line
             spec_qsub_name is the qsub name without the run code (see caller)

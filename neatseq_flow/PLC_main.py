@@ -625,7 +625,7 @@ Pipeline %(run_code)s logfile:
                     logf.write("Message: No message passed for this pipeline\n")  # This is here to keep the number of header lines constant. The reason - R reading the log file for graphing!
     
                 logf.write("""
-Timestamp\tEvent\tModule\tInstance\tJob name\tLevel\tHost\tMax mem
+Timestamp\tEvent\tModule\tInstance\tJob name\tLevel\tHost\tMax mem\tStatus
 """)
 
                 
