@@ -986,11 +986,11 @@ fi
             # Only if shell is bash, adding trap and set pipefail to trap errors in script.
             if type == "Started":
                 script += """
-trap \"if [ ! -z "$JOB_ID" ]; then echo -e $(date '+%%d/%%m/%%Y %%H:%%M:%%S')'\\t{type}\\t{step}\\t{stepname}\\t{stepID}\\t{level}\\t'$HOSTNAME'\\t'$({qstat_path} -j $JOB_ID | grep maxvmem | cut -d = -f 6)'\\t{status}' >> {file}; else echo -e $(date '+%%d/%%m/%%Y %%H:%%M:%%S')'\\t{type}\\t{step}\\t{stepname}\\t{stepID}\\t{level}\\t'$HOSTNAME'\\t-\\t{status}' >> {file}; fi\" ERR
+trap \"if [ ! -z "$JOB_ID" ]; then echo -e $(date '+%d/%m/%Y %H:%M:%S')'\\t{type}\\t{step}\\t{stepname}\\t{stepID}\\t{level}\\t'$HOSTNAME'\\t'$({qstat_path} -j $JOB_ID | grep maxvmem | cut -d = -f 6)'\\t{status}' >> {file}; else echo -e $(date '+%d/%m/%Y %H:%M:%S')'\\t{type}\\t{step}\\t{stepname}\\t{stepID}\\t{level}\\t'$HOSTNAME'\\t-\\t{status}' >> {file}; fi\" ERR
 
 set -euxo pipefail
 
-        """.format(type       = type,                                        \
+        """.format(type       = "Finished",                                        \
                    step       = self.get_step_step(),                        \
                    stepname   = self.get_step_name(),                        \
                    stepID     = qsub_name,                                   \
