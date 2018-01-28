@@ -558,9 +558,11 @@ Dependencies: {depends}""".format(name = self.name,
         
         # Print script to level 3 script file
         
-        # Get dependency jid list and add prelimanry jids if exist 
-            # (if not, is an empty list and will not affect the outcome)
-        dependency_jid_list = self.get_dependency_jid_list() + self.preliminary_jids  
+        # Get dependency jid list 
+        dependency_jid_list = self.get_dependency_jid_list() 
+        # Add prelimanry jids if exist (if not, is an empty list and will not affect the outcome)
+        # Adding at the head of the list. That's why is done in two steps - just to make it clearer.
+        dependency_jid_list = self.preliminary_jids + dependency_jid_list
         
         # Create header with dependency_jid_list:
         qsub_header = self.make_qsub_header(jid_list = ",".join(dependency_jid_list) if dependency_jid_list else None)
@@ -633,7 +635,7 @@ Dependencies: {depends}""".format(name = self.name,
         
         # Get dependency jid list and add prelimanry jids if exist 
             # (if not, is an empty list and will not affect the outcome)
-        dependency_jid_list = self.get_dependency_jid_list() + self.preliminary_jids  
+        dependency_jid_list = self.get_dependency_jid_list()# + self.preliminary_jids  
         
         # Create header with dependency_jid_list:
         qsub_header = self.make_qsub_header(jid_list   = ",".join(dependency_jid_list) if dependency_jid_list else None,\
@@ -708,7 +710,7 @@ csh {scripts_dir}98.qalter_all.csh
             
         # Get dependency jid list and add preliminary jids if exist (if not, is an empty list and will not affect the outcome)
         #    Also, add all jids of current step, as this script is to run only after all previous steps have completed.
-        dependency_jid_list = self.get_dependency_jid_list() + self.get_jid_list()
+        dependency_jid_list = self.get_dependency_jid_list() #+ self.get_jid_list()
         
         # Create header with dependency_jid_list:
         qsub_header = self.make_qsub_header(jid_list = ",".join(dependency_jid_list) if dependency_jid_list else None)
@@ -754,7 +756,7 @@ csh {scripts_dir}98.qalter_all.csh
             Ideal place for putting testing and agglomeration procedures.
         """
         
-        # Creating script. If 'create_spec_preliminary_script' is not defined or returns nothing, return from here without doing anything
+        # Creating script. If 'create_spec_wrapping_up_script' is not defined or returns nothing, return from here without doing anything
         self.script = ""
         try:
             self.create_spec_wrapping_up_script()
@@ -779,7 +781,7 @@ csh {scripts_dir}98.qalter_all.csh
             
         # Get dependency jid list and add prelimanry jids if exist (if not, is an empty list and will not affect the outcome)
         #    Also, add all jids of current step, as this script is to run only after all previous steps have completed.
-        dependency_jid_list = self.get_dependency_jid_list() + self.preliminary_jids + self.get_jid_list()
+        dependency_jid_list = self.preliminary_jids + self.get_jid_list() + self.get_dependency_jid_list()
         
         # Create header with dependency_jid_list:
         qsub_header = self.make_qsub_header(jid_list = ",".join(dependency_jid_list) if dependency_jid_list else None)
@@ -945,6 +947,7 @@ csh {scripts_dir}98.qalter_all.csh
                                            
     def create_log_lines(self, qsub_name, type = "Started", level = "high", status = "\033[0;32mOK\033[m"):
         """ Create logging lines. Added before and after script to return start and end times
+            If bash, adding at beginning of script also lines for error trapping
         """
 
         log_cols_dict = {"type"       : type,                                        \
@@ -962,6 +965,8 @@ csh {scripts_dir}98.qalter_all.csh
 if ($?JOB_ID) then 
 	# Adding line to log file:  Date    Step    Host
 	echo `date '+%%d/%%m/%%Y %%H:%%M:%%S'`'\\t%(type)s\\t%(step)s\\t%(stepname)s\\t%(stepID)s\\t%(level)s\\t'$HOSTNAME'\\t'`%(qstat_path)s -j $JOB_ID | grep maxvmem | cut -d = -f 6`'\\t%(status)s' >> %(file)s
+else
+	echo `date '+%%d/%%m/%%Y %%H:%%M:%%S'`'\\t%(type)s\\t%(step)s\\t%(stepname)s\\t%(stepID)s\\t%(level)s\\t'$HOSTNAME'\\t-\\t%(status)s' >> %(file)s
 endif
 ####
 """ % log_cols_dict
@@ -971,9 +976,28 @@ endif
 if [ ! -z "$JOB_ID" ]; then
 	# Adding line to log file:  Date    Step    Host
 	echo -e $(date '+%%d/%%m/%%Y %%H:%%M:%%S')'\\t%(type)s\\t%(step)s\\t%(stepname)s\\t%(stepID)s\\t%(level)s\\t'$HOSTNAME'\\t'$(%(qstat_path)s -j $JOB_ID | grep maxvmem | cut -d = -f 6)'\\t%(status)s' >> %(file)s
+else
+	# Adding line to log file:  Date    Step    Host
+	echo -e $(date '+%%d/%%m/%%Y %%H:%%M:%%S')'\\t%(type)s\\t%(step)s\\t%(stepname)s\\t%(stepID)s\\t%(level)s\\t'$HOSTNAME'\\t-\\t%(status)s' >> %(file)s
 fi
 ####
 """ % log_cols_dict
+            
+            # Only if shell is bash, adding trap and set pipefail to trap errors in script.
+            if type == "Started":
+                script += """
+trap \"if [ ! -z "$JOB_ID" ]; then echo -e $(date '+%%d/%%m/%%Y %%H:%%M:%%S')'\\t%(type)s\\t%(step)s\\t%(stepname)s\\t%(stepID)s\\t%(level)s\\t'$HOSTNAME'\\t'$(%(qstat_path)s -j $JOB_ID | grep maxvmem | cut -d = -f 6)'\\t%(status)s' >> %(file)s; else echo -e $(date '+%%d/%%m/%%Y %%H:%%M:%%S')'\\t%(type)s\\t%(step)s\\t%(stepname)s\\t%(stepID)s\\t%(level)s\\t'$HOSTNAME'\\t-\\t%(status)s' >> %(file)s; fi\" ERR
+
+set -euxo pipefail
+
+        """.format(type       = type,                                        \
+                   step       = self.get_step_step(),                        \
+                   stepname   = self.get_step_name(),                        \
+                   stepID     = qsub_name,                                   \
+                   qstat_path = self.pipe_data["qsub_params"]["qstat_path"], \
+                   level      = level,                                       \
+                   status     = status,                                      \
+                   file       = self.pipe_data["log_file"])
 
         else:
             script = ""
@@ -981,6 +1005,8 @@ fi
         
         return script
         
+
+            
     def create_activate_lines(self, type):
         """ Function for adding activate/deactivate lines to scripts so that virtual environments can be used 
             A workflow that uses this option is the QIIME2 workflow.
