@@ -996,7 +996,7 @@ set -euxo pipefail
                    stepID     = qsub_name,                                   \
                    qstat_path = self.pipe_data["qsub_params"]["qstat_path"], \
                    level      = level,                                       \
-                   status     = status,                                      \
+                   status     = "\033[0;31mERROR\033[m",                                      \
                    file       = self.pipe_data["log_file"])
 
         else:
