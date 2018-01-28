@@ -986,7 +986,7 @@ fi
             # Only if shell is bash, adding trap and set pipefail to trap errors in script.
             if type == "Started":
                 script += """
-trap \"if [ ! -z "$JOB_ID" ]; then echo -e $(date '+%%d/%%m/%%Y %%H:%%M:%%S')'\\t%(type)s\\t%(step)s\\t%(stepname)s\\t%(stepID)s\\t%(level)s\\t'$HOSTNAME'\\t'$(%(qstat_path)s -j $JOB_ID | grep maxvmem | cut -d = -f 6)'\\t%(status)s' >> %(file)s; else echo -e $(date '+%%d/%%m/%%Y %%H:%%M:%%S')'\\t%(type)s\\t%(step)s\\t%(stepname)s\\t%(stepID)s\\t%(level)s\\t'$HOSTNAME'\\t-\\t%(status)s' >> %(file)s; fi\" ERR
+trap \"if [ ! -z "$JOB_ID" ]; then echo -e $(date '+%%d/%%m/%%Y %%H:%%M:%%S')'\\t{type}\\t{step}\\t{stepname}\\t{stepID}\\t{level}\\t'$HOSTNAME'\\t'$({qstat_path} -j $JOB_ID | grep maxvmem | cut -d = -f 6)'\\t{status}' >> {file}; else echo -e $(date '+%%d/%%m/%%Y %%H:%%M:%%S')'\\t{type}\\t{step}\\t{stepname}\\t{stepID}\\t{level}\\t'$HOSTNAME'\\t-\\t{status}' >> {file}; fi\" ERR
 
 set -euxo pipefail
 
