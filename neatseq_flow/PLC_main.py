@@ -913,13 +913,13 @@ library(reshape2); library(googleVis); args <- commandArgs(trailingOnly =T);log_
                                                     1+nodes_list.index(step.get_step_name())))
                     
                 
-        skipped_props = ", color = red, penwidth = 5" # Additional properties for skipped steps.
+        skipped_props = ", style = dashed" # Additional properties for skipped steps.
         
         # sys.exit()
         links_part = "\n".join(links_part)
         nodes_part = "\n".join(["{node_num} [label = '@@{node_num}', fillcolor = {step_col} {skipped}]".format( \
                                 node_num = 1+counter,  \
-                                step_col = step_colors_index[nodes_list_step[counter]], \
+                                step_col = "gray" if "SKIP" in self.step_list[self.step_list_index.index(step)].params else step_colors_index[nodes_list_step[counter]], \
                                 skipped  = skipped_props if "SKIP" in self.step_list[self.step_list_index.index(step)].params else "") \
                                     for counter,step in enumerate(nodes_list)])
         footnote_part = "\n".join(["[%d]: '%s\\\\n(%s)'" % (1+counter, step, nodes_list_step[counter]) \

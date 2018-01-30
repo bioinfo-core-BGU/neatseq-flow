@@ -8,7 +8,7 @@
 :Affiliation: Bioinformatics core facility
 :Organization: National Institute of Biotechnology in the Negev, Ben Gurion University.
 
-A module for merging sample tables into a single project wide table. The table can be with or without a header line.
+A module for merging sample tables into a single project-wide table. The table can be with or without header line(s).
 
 Requires
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -36,7 +36,8 @@ Parameters that can be set
     :header: "Parameter", "Values", "Comments"
 
     "type", "", "A file type that exists in all samples."
-    "script_path", "cat", "This must be *cat*. Do not change it..."
+    "script_path", "", "Is ignored. Can be left empty."
+    "header", "numeric", "If the tables to merge have header lines, indicate the number of header lines here. Tables will be merged after removing this number of lines from the head of each."
 
 
 
@@ -50,6 +51,7 @@ Lines for parameter file
         base:           merge1
         script_path:    cat
         type:           [blast,blast.prot]
+
 
 
 """

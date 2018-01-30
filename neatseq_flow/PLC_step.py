@@ -572,10 +572,13 @@ Dependencies: {depends}""".format(name = self.name,
         # With logging:
         self.script = "\n".join([qsub_header,                                                       \
                                 self.create_log_lines(self.spec_qsub_name,"Started", level="low"),  \
+                                self.create_trap_line(self.spec_qsub_name,level="low"),             \
 #                                self.add_qdel_line(type="Start"),                                   \ Now added in high-level script before qsub. This will enable qdeling jobs in qw state...
                                 self.create_activate_lines(type = "activate"),                      \
+                                self.create_set_options_line(self.spec_qsub_name,level="low", type="set"),  \
                                 self.script,                                                        \
                                 self.register_files(self.spec_qsub_name),                           \
+                                self.create_set_options_line(self.spec_qsub_name,level="low", type="unset"),  \
                                 self.create_activate_lines(type = "deactivate"),                    \
                                 self.add_qdel_line(type="Stop"),                                    \
                                 self.create_log_lines(self.spec_qsub_name,"Finished", level="low")])
@@ -644,6 +647,8 @@ Dependencies: {depends}""".format(name = self.name,
         
         script = "\n".join([qsub_header,                                                         \
                             self.create_log_lines(self.spec_qsub_name,"Started", level="high"),  \
+                            self.create_trap_line(self.spec_qsub_name, level="high"),  \
+                            self.create_set_options_line(self.spec_qsub_name, level="high", type="set"),  \
                             "# Calling low level scripts:\n\n"])
         
         # Write script to high-level script
@@ -662,17 +667,17 @@ Dependencies: {depends}""".format(name = self.name,
         """ Add lines at the end of the high level script:
         """
 
-
-        # script = "\n".join(["sleep %d\n\ncsh %s98.qalter_all.csh\n\n" % (self.pipe_data["Default_wait"], self.pipe_data["scripts_dir"]), \
-                            # self.create_log_lines(self.high_spec_qsub_name, "Finished", level="high")])
         script = """
 sleep {sleep}
 csh {scripts_dir}98.qalter_all.csh
 
+{unset_line}
+
 {log_line}
-""".format(sleep = self.pipe_data["Default_wait"],
+""".format(sleep       = self.pipe_data["Default_wait"],
            scripts_dir = self.pipe_data["scripts_dir"],
-           log_line = self.create_log_lines(self.high_spec_qsub_name, "Finished", level="high"))
+           unset_line  = self.create_set_options_line(self.high_spec_qsub_name, level="high", type="unset"),
+           log_line    = self.create_log_lines(self.high_spec_qsub_name, "Finished", level="high"))
 
         with open(self.high_level_script_name, "a") as script_fh:
             script_fh.write(script)        
@@ -720,13 +725,15 @@ csh {scripts_dir}98.qalter_all.csh
         # New, with host reporting and time logging:
         self.script = "\n".join([qsub_header,                                                   \
                         self.create_log_lines(self.spec_qsub_name, "Started", level="prelim"),  \
+                        self.create_trap_line(self.spec_qsub_name,level="prelim"),                 \
                         self.create_activate_lines(type = "activate"),                          \
+                        self.create_set_options_line(self.spec_qsub_name,level="prelim", type="set"),  \
                         self.script,                                                            \
                         self.register_files(self.spec_qsub_name),                               \
+                        self.create_set_options_line(self.spec_qsub_name,level="prelim", type="unset"),  \
                         self.create_activate_lines(type = "deactivate"),                        \
                         self.add_qdel_line(type="Stop"),                                        \
                         self.create_log_lines(self.spec_qsub_name, "Finished", level="prelim")])
-
 
 
         with open(self.spec_script_name, "w") as script_fh:
@@ -791,9 +798,12 @@ csh {scripts_dir}98.qalter_all.csh
         # New, with host reporting and time logging:
         self.script = "\n".join([qsub_header,                                                       \
                         self.create_log_lines(self.spec_qsub_name, "Started", level="wrapping"),    \
+                        self.create_trap_line(self.spec_qsub_name,level="wrapping"),             \
                         self.create_activate_lines(type = "activate"),                              \
+                        self.create_set_options_line(self.spec_qsub_name,level="wrapping", type="set"),  \
                         self.script,                                                                \
                         self.register_files(self.spec_qsub_name),                                   \
+                        self.create_set_options_line(self.spec_qsub_name,level="wrapping", type="unset"),  \
                         self.create_activate_lines(type = "deactivate"),                            \
                         self.add_qdel_line(type="Stop"),                                            \
                         self.create_log_lines(self.spec_qsub_name, "Finished", level="wrapping")])
@@ -983,13 +993,40 @@ fi
 ####
 """ % log_cols_dict
             
-            # Only if shell is bash, adding trap and set pipefail to trap errors in script.
-            if type == "Started":
-                script += """
-trap \"if [ ! -z "$JOB_ID" ]; then echo -e $(date '+%d/%m/%Y %H:%M:%S')'\\t{type}\\t{step}\\t{stepname}\\t{stepID}\\t{level}\\t'$HOSTNAME'\\t'$({qstat_path} -j $JOB_ID | grep maxvmem | cut -d = -f 6)'\\t{status}' >> {file}; else echo -e $(date '+%d/%m/%Y %H:%M:%S')'\\t{type}\\t{step}\\t{stepname}\\t{stepID}\\t{level}\\t'$HOSTNAME'\\t-\\t{status}' >> {file}; fi\" ERR
+            # # Only if shell is bash, adding trap and set pipefail to trap errors in script.
+            # if type == "Started":
+                # script += """
+# trap \"if [ ! -z "$JOB_ID" ]; then echo -e $(date '+%d/%m/%Y %H:%M:%S')'\\t{type}\\t{step}\\t{stepname}\\t{stepID}\\t{level}\\t'$HOSTNAME'\\t'$({qstat_path} -j $JOB_ID | grep maxvmem | cut -d = -f 6)'\\t{status}' >> {file}; else echo -e $(date '+%d/%m/%Y %H:%M:%S')'\\t{type}\\t{step}\\t{stepname}\\t{stepID}\\t{level}\\t'$HOSTNAME'\\t-\\t{status}' >> {file}; fi\" ERR
 
-set -euxo pipefail
+# set -Eeuxo pipefail
 
+        # """.format(type       = "Finished",                                        \
+                   # step       = self.get_step_step(),                        \
+                   # stepname   = self.get_step_name(),                        \
+                   # stepID     = qsub_name,                                   \
+                   # qstat_path = self.pipe_data["qsub_params"]["qstat_path"], \
+                   # level      = level,                                       \
+                   # status     = "\033[0;31mERROR\033[m",                                      \
+                   # file       = self.pipe_data["log_file"])
+
+        else:
+            script = ""
+            self.write_warning("shell not recognized. Not creating log writing lines in scripts.\n", admonition = "WARNING")
+        
+        return script
+        
+    def create_trap_line(self, qsub_name, level = "high"):
+        """ Returns the lines for ERR trapping
+            bash only!
+        """
+
+        if self.shell=="csh":
+            self.write_warning("Error trapping not defined for csh scripts. Consider using bash instead.\n", admonition = "WARNING")
+
+            script = ""
+            
+        elif self.shell == "bash":
+            script = """trap \"if [ ! -z "$JOB_ID" ]; then echo -e $(date '+%d/%m/%Y %H:%M:%S')'\\t{type}\\t{step}\\t{stepname}\\t{stepID}\\t{level}\\t'$HOSTNAME'\\t'$({qstat_path} -j $JOB_ID | grep maxvmem | cut -d = -f 6)'\\t{status}' >> {file}; else echo -e $(date '+%d/%m/%Y %H:%M:%S')'\\t{type}\\t{step}\\t{stepname}\\t{stepID}\\t{level}\\t'$HOSTNAME'\\t-\\t{status}' >> {file}; fi\" ERR
         """.format(type       = "Finished",                                        \
                    step       = self.get_step_step(),                        \
                    stepname   = self.get_step_name(),                        \
@@ -1001,11 +1038,29 @@ set -euxo pipefail
 
         else:
             script = ""
-            self.write_warning("shell not recognized. Not creating log writing lines in scripts.\n", admonition = "WARNING")
-        
+            self.write_warning("shell not recognized. Not creating error trapping lines.\n", admonition = "WARNING")
+        # set -Eeuxo pipefail        
         return script
         
+    def create_set_options_line(self, qsub_name, level = "high", type = "set"):
+        """ Adds line for activating and deactivating certain bash options
+        """
+        
+        if self.shell=="csh":
+            self.write_warning("Option setting is not defined for csh. Consider using bash for your modules.\n", admonition = "WARNING")
 
+            script = ""
+            
+        elif self.shell == "bash":
+            if type=="set":
+                script = """set -Eeuxo pipefail\n\n"""
+            else:
+                script = """set +Eeuxo pipefail\n\n"""
+        else:
+            script = ""
+            self.write_warning("shell not recognized.\n", admonition = "WARNING")
+            
+        return script
             
     def create_activate_lines(self, type):
         """ Function for adding activate/deactivate lines to scripts so that virtual environments can be used 
