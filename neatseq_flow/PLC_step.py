@@ -33,10 +33,15 @@ class AssertionExcept(Exception):
         
     def get_error_str(self):
         
+        if self.step:
+            error_str = "In %s" % self.step
+        else:
+            error_str = ""
+            
         if self.sample: # If a sample was passed. The exception is specific to a sample
-            self.comment =  "In %s (sample %s): %s" % (self.step, self.sample, self.comment)
+            self.comment =  error_str + " (sample %s): %s" % (self.sample, self.comment)
         else:       
-            self.comment = "In %s: %s" % (self.step, self.comment)
+            self.comment = error_str + ": " + self.comment if error_str else self.comment
         
         return self.comment
         
@@ -1494,11 +1499,14 @@ Make sure you are in an active conda environment, and that you executed the foll
                     
                     
                 if "env" not in self.params["conda"] or not self.params["conda"]["env"]:# == None:
-                    if self.pipe_data["conda"]["env"]:
-                        self.write_warning("'env' is empty. Using global 'env'")
+                    # if self.pipe_data["conda"]["env"]:
+                        # self.write_warning("'env' is empty. Using global 'env'")
+                    try:
                         self.params["conda"]["env"] = self.pipe_data["conda"]["env"]
-                    else:
+                    except KeyError:
                         raise AssertionExcept("You must supply an 'env' in conda params.", step=self.get_step_name())
+                    else:
+                        self.write_warning("'env' is empty. Using global 'env'")
                     # re_env = re.search("envs/(\S+)", self.params["conda"]["path"])
                     # try:
                         # self.params["conda"]["env"] = re_env.group(1)

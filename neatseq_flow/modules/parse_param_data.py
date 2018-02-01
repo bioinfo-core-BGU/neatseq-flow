@@ -248,6 +248,10 @@ def get_param_data_YAML(filelines):
 
             else:
                 raise Exception("'conda' 'path' is empty, but no CONDA_PREFIX is defined. Make sure you are in an active conda environment.")
+                
+        if "env" not in param_data["Global"]["conda"] or param_data["Global"]["conda"]["env"] == None:
+            raise Exception("When using 'conda', you must supply an 'env' containing the name of the environment to use.\n","parameters")
+        
         
         
     # Extract step-wise parameter dict from lines:
