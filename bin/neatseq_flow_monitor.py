@@ -142,7 +142,9 @@ class nsfgm:
     # function for generating the progress bar
     def gen_bar(self,Bar_len,Bar_Marker,Bar_Spacer):
         char_value=float(self.logpiv["Finished"].max().total_seconds())/Bar_len
-        return [char_value,map(lambda x,y: (int(x.total_seconds()/char_value)*Bar_Spacer + (int(-(-(y.total_seconds()-x.total_seconds())//char_value))*Bar_Marker)).ljust(Bar_len,Bar_Spacer)  ,self.logpiv["Started"],self.logpiv["Finished"])]
+        if char_value==0:
+            char_value=1.0/Bar_len
+        return [char_value,map(lambda x,y: (int(x.total_seconds()/char_value)*Bar_Spacer + (int(-(-(y.total_seconds()-x.total_seconds())/char_value))*Bar_Marker)).ljust(Bar_len,Bar_Spacer)  ,self.logpiv["Started"],self.logpiv["Finished"])]
     
     # main function for parsing log file
     def read_run_log(self,runlog_file,Bar_len,Bar_Marker,Bar_Spacer,q=None,Instance=True,read_from_disk=True):

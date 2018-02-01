@@ -15,7 +15,7 @@ setup(
     download_url        = 'https://github.com/bioinfo-core-BGU/neatseq-flow.git',
     platforms           = ["POSIX","Windows"],
     packages            = find_packages(),
-    # include_package_data= True,  # See  MANIFEST.in
+    include_package_data= True,  # See  MANIFEST.in
     # packages            = ['neatseq_flow',
                             # 'neatseq_flow.modules',
                             # 'neatseq_flow.monitor',
