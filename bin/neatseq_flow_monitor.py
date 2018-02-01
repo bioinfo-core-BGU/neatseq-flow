@@ -8,17 +8,10 @@
 :Affiliation: Bioinformatics core facility
 :Organization: National Institute of Biotechnology in the Negev, Ben Gurion University.
 
-
 .. image:: Neatseq_Flow_Monitor.png
    :alt: Neatseq-Flow Monitor
 
-.. contents:: Table of Contents
-    :local:
-    :depth: 2
-   
-
-
-Short Description
+SHORT DESCRIPTION
 ~~~~~~~~~~~~~~~~~~~~~
     Neatseq-Flow Monitor can be used to track the progress of running work-flows of a specific project in **real-time**. 
     
@@ -104,7 +97,7 @@ from multiprocessing import Process, Queue
 
 SCREEN_W=200
 SCREEN_H=100
-VERSION= "v1.1"
+VERSION= "v1.2"
 PARAM_LIST = ["Dir"]
 __author__ = "Liron Levin"
 
@@ -164,6 +157,9 @@ class nsfgm:
             # If there is a level column: Remove information about high level scripts runs
             if "Level" in runlog_Data.columns:
                 runlog_Data=runlog_Data.loc[runlog_Data["Level"]!="high",]
+            # If there is a Status column: Convert to OK or ERROR
+            if "Status" in runlog_Data.columns:
+                runlog_Data['Status']=map(lambda x: 'OK' if 'OK' in x else 'ERROR' ,runlog_Data['Status'])
             # Format the Timestamp column
             runlog_Data.Timestamp = map(lambda x: datetime.strptime(x, '%d/%m/%Y %H:%M:%S'),runlog_Data.Timestamp) 
             # sort the Data-Frame according to the Timestamp column
@@ -210,10 +206,18 @@ class nsfgm:
                 self.items['Host']=map(lambda x: str(list(runlog_Data.loc[runlog_Data['Job name']==x,'Host'])[0]),logpiv.index.values)
                 self.items['Memory']=map(lambda x: str(max(list(runlog_Data.loc[runlog_Data['Job name']==x,'Max mem']))),logpiv.index.values)
                 self.items['Running?']=map(lambda x: str(list(runlog_Data.loc[runlog_Data['Job name']==x,'State'])[0]),logpiv.index.values)                
+                
                 #mark un-Finished samples
                 self.rowmode=map(lambda x: 2 if x =='' else 1,self.items['Finished'])
                 self.rowmode=map(lambda x,y: 3 if len(y)>0  else x,self.rowmode,self.items['Running?'])
                 self.items['Running?']=map(lambda x: x  if len(x)>0  else "No" ,self.items['Running?'])
+                
+                # If there is a Status column: Display the samples status
+                if "Status" in runlog_Data.columns:
+                    self.items['Status']=map(lambda x: str(list(runlog_Data.loc[(runlog_Data['Job name']==x)&(runlog_Data['Event']=='Finished'),'Status'])).replace('[','').replace(']','').replace("'",'')  ,logpiv.index.values)
+                    #mark samples with ERRORs
+                    self.rowmode=map(lambda x,y: y if 'OK' in x else 2, self.items['Status'],self.rowmode)
+                    
                 if q!=None:
                     q.put(self)
                 return 
@@ -253,7 +257,7 @@ class nsfgm:
             # generate the progress bar column
             [char_value,bar]=self.gen_bar(Bar_len,Bar_Marker,Bar_Spacer)
             Runs_str="Progress #=" + str(char_value)+"seconds"
-            # get the running information from qstat
+            # get the running information from qstat and add the information to the Data-Frame
             qstat=self.get_qstat()
             if len(qstat)>0:
                 runlog_Data=runlog_Data.merge(qstat,how='left')
@@ -261,6 +265,7 @@ class nsfgm:
             else:
                 runlog_Data["State"]=''
             logpiv=logpiv.join(runlog_Data.groupby("Instance")["State"].apply(lambda x:list(x).count("running")),how="left", rsuffix='running')            
+
             # generate the items Data-Frame to show in the window
             self.items =pd.DataFrame()
             # Make sure the instances names are no longer then 20 chars
@@ -272,10 +277,18 @@ class nsfgm:
             self.items["#Started"]=map(lambda x: str(x),logpiv["#Started"])
             self.items["#Finished"]=map(lambda x: str(x),logpiv["#Finished"])
             self.items["#Running"]=logpiv["State"].values
+            
             # Set the lines colour mode
             self.rowmode=logpiv["#Started"]-logpiv["#Finished"]  
             self.rowmode=map(lambda x: 2 if x > 0 else 1,self.rowmode)
             self.rowmode=map(lambda x,y: 3 if (y >0)&(x==2) else x,self.rowmode, self.items["#Running"])
+            
+            # If there is a Status column: Display the steps status error count
+            if "Status" in runlog_Data.columns:
+                logpiv=logpiv.join(runlog_Data.groupby("Instance")["Status"].apply(lambda x:list(x).count("ERROR")),how="left", rsuffix='ERROR')
+                self.items["#ERRORs"]=logpiv["Status"].values
+                self.rowmode=map(lambda x,y: 2 if x>0 else y, self.items["#ERRORs"],self.rowmode)
+            
         except :
             if Instance==True:
                 self.items=pd.DataFrame(columns=["Steps","Progress","Started","Finished","#Started","#Finished","#Running"])
@@ -737,7 +750,7 @@ if __name__ == '__main__':
     parser.add_argument('-D', dest='directory',metavar="STR", type=str,default=os.getcwd(),
                         help='Neatseq-flow project directory [default=cwd]')
     parser.add_argument('-R', dest='Regular',metavar="STR" , type=str,default="log_[0-9]+.txt$",
-                        help='Log file Regular Expression [in ./log/ ] [default=log_[0-9]+.txt$]')
+                        help='Log file Regular Expression [in ./logs/ ] [default=log_[0-9]+.txt$]')
     parser.add_argument('--Monitor_RF',metavar="FLOAT", type=float,dest='Monitor_RF',default=1,
                         help='Monitor Refresh rate [default=1]')
     parser.add_argument('--File_browser_RF',metavar="FLOAT", type=float,dest='File_browser_RF',default=1,
@@ -746,8 +759,8 @@ if __name__ == '__main__':
                         help='Progress Bar Marker [default=#]')
     parser.add_argument('--Bar_Spacer',metavar="CHAR",type=str,dest='Bar_Spacer',default=" ",
                         help='Progress Bar Spacer [default=Space]')
-    parser.add_argument('--Bar_len',metavar="INT",type=int,dest='Bar_len',default=50,
-                        help='Progress Bar Total Length [in chars] [default=50]')
+    parser.add_argument('--Bar_len',metavar="INT",type=int,dest='Bar_len',default=40,
+                        help='Progress Bar Total Length [in chars] [default=40]')
     args = parser.parse_args()
     #Ruining main function
     curses.wrapper(neatseq_flow_monitor,args)
