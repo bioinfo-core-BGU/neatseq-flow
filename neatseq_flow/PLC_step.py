@@ -671,12 +671,15 @@ Dependencies: {depends}""".format(name = self.name,
     def close_high_level_script(self):
         """ Add lines at the end of the high level script:
         """
-
+        
+        # Unsetting error trapping and flags before qalter, since qalter usually fails (because dependencies don't exist, etc.)
         script = """
 sleep {sleep}
-csh {scripts_dir}98.qalter_all.csh
 
+trap '' ERR
 {unset_line}
+
+csh {scripts_dir}98.qalter_all.csh
 
 {log_line}
 """.format(sleep       = self.pipe_data["Default_wait"],

@@ -124,6 +124,7 @@ class nsfgm:
             file_sys["Last Modified"]=map(lambda x: datetime.fromtimestamp(os.path.getmtime(os.path.join(self.params["Dir"],x))).strftime('%d/%m/%Y %H:%M:%S')  ,file_sys["Name"])
             # get the available log files sizes
             file_sys["Size"]=map(lambda x: os.path.getsize(os.path.join(self.params["Dir"],x))  ,file_sys["Name"])
+            file_sys=file_sys.sort_values(by="Last Modified",ascending=False).reset_index(drop=True).copy()
         except :
             file_sys=pd.DataFrame(columns=["Name","Created","Last Modified","Size"])
         return file_sys
@@ -144,7 +145,7 @@ class nsfgm:
         char_value=float(self.logpiv["Finished"].max().total_seconds())/Bar_len
         if char_value==0:
             char_value=1.0/Bar_len
-        return [char_value,map(lambda x,y: (int(x.total_seconds()/char_value)*Bar_Spacer + (int(-(-(y.total_seconds()-x.total_seconds())/char_value))*Bar_Marker)).ljust(Bar_len,Bar_Spacer)  ,self.logpiv["Started"],self.logpiv["Finished"])]
+        return [char_value,map(lambda x,y: (int(x.total_seconds()/char_value)*Bar_Spacer + (int(-(-(y.total_seconds()-x.total_seconds())//char_value))*Bar_Marker)).ljust(Bar_len,Bar_Spacer)  ,self.logpiv["Started"],self.logpiv["Finished"])]
     
     # main function for parsing log file
     def read_run_log(self,runlog_file,Bar_len,Bar_Marker,Bar_Spacer,q=None,Instance=True,read_from_disk=True):
@@ -218,7 +219,7 @@ class nsfgm:
                 if "Status" in runlog_Data.columns:
                     self.items['Status']=map(lambda x: str(list(runlog_Data.loc[(runlog_Data['Job name']==x)&(runlog_Data['Event']=='Finished'),'Status'])).replace('[','').replace(']','').replace("'",'')  ,logpiv.index.values)
                     #mark samples with ERRORs
-                    self.rowmode=map(lambda x,y: y if 'OK' in x else 2, self.items['Status'],self.rowmode)
+                    self.rowmode=map(lambda x,y: 2 if 'ERROR' in x else y, self.items['Status'],self.rowmode)
                     
                 if q!=None:
                     q.put(self)
@@ -334,6 +335,7 @@ class window(object):
         self.clear()
         # Indicator if the window is active 
         self.active=True
+        self.id=None
 
         
     # a function for changing the highlighted line in the window 
@@ -342,7 +344,10 @@ class window(object):
         if self.position < 0:                                                
             self.position = 0                                                
         elif self.position >= len(self.items):                               
-            self.position = len(self.items)-1  
+            self.position = len(self.items)-1 
+        # change the id to the current highlighted line first column cell
+        if len(self.items)>0:
+            self.id=list(self.items[self.items.columns[0]])[self.position]
     
     # a function for changing the highlighted line in the window 
     def navigate_sideway(self, n):                                                   
@@ -356,7 +361,7 @@ class window(object):
     def clear(self):
         # the current starting view in the window
         self.side_position=0
-        # the current highlighted line in the window
+        # the width of the window
         self.max_width = 0
         # the current highlighted line in the window
         self.position = 0
@@ -369,7 +374,7 @@ class window(object):
         # No items in the window
         self.items=pd.DataFrame(columns=["              Loading...  Please wait              "])
         self.screen.redrawwin()
-        
+        self.id=None
         
     # the main display function for the window
     def display(self):
@@ -378,12 +383,22 @@ class window(object):
             default_color=curses.color_pair(4)  
         else:
             default_color=curses.color_pair(0) 
-            
         #if the size of the pandas Data-Frame has changed initialize the window graphics and the highlighted line position
         if self.len_items!=len(self.items):
-            self.position = 0 
+            self.position = 0
+            self.page = 0
             self.len_items=len(self.items)
             self.screen.redrawwin()
+        # if the id is found in the first column of the data-frame change the highlighted position (and the page count) to the id line
+        if (self.id!=None)&(len(self.items)>0):
+            if self.id in list(self.items[self.items.columns[0]]):
+                self.position=list(self.items[self.items.columns[0]]).index(self.id)
+                self.page = self.position/self.line_size_
+        if len(self.items)>0:
+        # change the id to the current highlighted line first column cell
+            self.id=list(self.items[self.items.columns[0]])[self.position]
+        else:
+            self.id=None
         # do not wait for user input
         self.screen.nodelay(1)
         # if the Data-Frame has less lines than the max lines to display: show only the number of lines in the Data-Frame 
