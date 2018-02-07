@@ -133,7 +133,8 @@ class Step_merge(Step):
             src = src | set(self.sample_data[sample].keys())
         if "src" not in self.params:
             src = list(src)
-            src.remove("type")
+            if "type" in src: 
+                src.remove("type")   # 'type' is the type of sample (PE, etc.)
             self.params["src"] = src
         else: # Check that all src's exist somewhere in sample_data:
             if not set(self.params["src"]) < src:

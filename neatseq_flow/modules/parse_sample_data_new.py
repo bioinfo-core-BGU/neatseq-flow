@@ -10,6 +10,8 @@ __version__ = "1.2.0"
 import os, sys
 from urlparse import urlparse
 
+import csv 
+from StringIO import StringIO
 
 from pprint import pprint as pp
 import re
@@ -67,7 +69,7 @@ def parse_sample_file(filename):
                 
     check_newlines(file_conts)
     sample_data = get_sample_data(file_conts)
-    check_sample_constancy(sample_data)
+    # check_sample_constancy(sample_data)  # Letting user use both zipped and unzipped files. Not recommended
     
     # pp(sample_data)
     # sys.exit()
@@ -96,7 +98,9 @@ def guess_sample_data_format(filelines):
     # Get all unique first words on line (=set)
     # This can contain parameter file stuff as well, when they are merged!
     myset = {re.split("\s+", line, maxsplit=1)[0] for line in filelines}
-
+    # Changing to lower case:
+    myset = set(map(lambda x: x.lower(), myset))
+    
     # sys.exit({"Title", "Sample"} <= myset)
     # pp(myset)
     # Check if one of the following words exists in the set by checking the intersection of the sets:
@@ -105,11 +109,12 @@ def guess_sample_data_format(filelines):
         # 1. Does myset contain Title and Sample?
         # 2. Does myset include at least one of the RECOGNIZED_FILE_TYPES?
         return "Classic";
-    elif ({"Title","#SampleID"} <= myset):
+    elif ({"title","#sampleid"} <= myset) or ({"title","#type"} <= myset):
         # 1. If myset contains Title and #SampleID
         return "Tabular"
     else:
-        sys.exit("Unknown sample file type.")
+        sys.exit("Unknown sample file format. Make sure you have a 'Title' line in the sample file.")
+    
     
 
 def get_classic_sample_data(filelines):
@@ -261,15 +266,7 @@ def check_sample_constancy(sample_data):
     # For each file type in each sample, get a list of extension types:
     ext_types = set()
     for sample in sample_data["samples"]:      # Getting list of samples out of samples_hash
-        # for type in sample_data[sample].keys():
-            # if type in ["type"]:
-                # continue
-            # for direction in sample_data[sample][type].keys():
-                # # Get a list of file extensions (chars to the RHS of the last period in the filename)
-                # extensions = list(set([os.path.splitext(fn)[1] for fn in sample_data[sample][type][direction]]))
-                # # Convert file extension to 'zip' or 'regular', depending on the extension:
-                # # Keep only unique values (using set: {}) and adding to ext_types
-                # ext_types = ext_types | {"zip" if ext in ZIPPED_EXTENSIONS else "regular" for ext in extensions}
+
         for direction in sample_data[sample].keys():
             # Get a list of file extensions (chars to the RHS of the last period in the filename)
             # extensions = list(set([os.path.splitext(fn)[1] for fn in sample_data[sample][type][direction]]))
@@ -287,51 +284,36 @@ def get_tabular_sample_data(filelines):
     """
     Get sample data from filelines
     """
-    # Extract sample-related lines from filelines:
-    filelines = get_tabular_sample_data_lines(filelines)
-    
-
-    title = get_project_title(filelines)
-
-
-    sample_lines = [line for line in filelines if re.split("\s+", line, maxsplit=1)[0] not in ["Title","Sample_Control"]]
-
-    # sys.exit(sample_lines)
-    
-    sample_names = set([re.split("\s+", line, maxsplit=1)[0] for line in sample_lines])
-
+    # Extract sample-related data from filelines:
+    # Returns a dict with keys: "Title", "Sample_data" and/or "Project_data" and possibly "ChIP_data"
+    raw_data = get_tabular_sample_data_lines(filelines)
     sample_data = dict()
+
+    if "Sample_data" in raw_data:
+        sample_names = set([fileline[0] for fileline in raw_data["Sample_data"]])
+    else:
+        sample_names = []
     
+    # Add a list of sample names to sample_data
+    sample_data["samples"] = sorted(sample_names)  
+    
+    pp(raw_data["Sample_data"])     
     for sample in sample_names:
         # Parse lines for a single sample.
         # Get the lines that have the sample name in first column and extract data from them with parse_tabular_sample_data()
-        sample_data[sample] = parse_tabular_sample_data([line for line in sample_lines if re.split("\s+", line, maxsplit=1)[0]==sample])
+        sample_data[sample] = parse_tabular_sample_data([line for line in raw_data["Sample_data"] if line[0]==sample])
     # pp(sample_data)
     
     
     # Get Sample_Control data for ChIP-seq samples:
-    Sample_Control = [re.split("\s+", line, maxsplit=1)[1] for line in filelines if re.split("\s+", line, maxsplit=1)[0]=="Sample_Control"]
-    if Sample_Control:
-        controls = parse_sample_control_data(Sample_Control,sample_names=sample_data.keys())
+    if "ChIP_data" in raw_data:
+        sample_data["Controls"] = parse_sample_control_data(raw_data["ChIP_data"],sample_names=sample_data.keys())
         
-    # pp(sample_data)
-    # sys.exit()
-    
-    # Add a list of sample names to sample_data
-    sample_data["samples"] = sorted(sample_data.keys())
+    # Add project title sample_data
+    sample_data["Title"] = raw_data["Title"]
     
 
-    # Add project title sample_data
-    sample_data["Title"] = title
-    
-    if Sample_Control:
-        sample_data["Controls"] = controls 
-    
     return sample_data
-    
-    
-    
-    
     
 def get_tabular_sample_data_lines(filelines):
     """ Get sample data from "Tabular" sample data lines
@@ -340,93 +322,86 @@ def get_tabular_sample_data_lines(filelines):
         The reason for this is that the user should have the option of embedding the sample file in the parameter file. This way, all line except the title and the consecutive sample lines will be discarded
     """
 
+    return_results = {}
+    
     # filelines = remove_comments(filelines)
-    title_line = [line for line in filelines if re.split("\s+", line, maxsplit=1)[0] == "Title"]
+    title_line = remove_comments([line for line in filelines if re.split("\s+", line, maxsplit=1)[0] == "Title"])
     
     # Check there is only one title line (title is a list of length 1)
     if len(title_line)>1:   
         sys.stdout.write("More than 1 Title line defined. Using first: %s\n" % title_line[0])
     
-    ## looking for range begining with "#SampleID" till first blank line:
-    # Index of blank lines :
+    pp(title_line)
+    # Read CSV data with csv package. Store in return_results
+    linedata = StringIO("\n".join(title_line)) #("\n".join([line[1] for line in title_line])))
+    reader = csv.reader(linedata, dialect='excel-tab')
+    return_results["Title"] = [row[1] for row in reader][0]  # Get first element, 2nd (index 1) column:
+
+    
+    # Looking for contiguous blocks beginning with #SampleID and #Type.
+    # First, getting index of blank lines:
     blank_ind = [ind for (ind,param_l) in list(enumerate(filelines)) if re.match("^\s+$", param_l)]
     blank_ind.append(len(filelines))
-
+    
+    # looking for range begining with "#SampleID" till first blank line:
     # Index of header line:
-    head_ind =  [ind for (ind,param_l) in list(enumerate(filelines)) if re.split("\s+", param_l, maxsplit=1)[0] == "#SampleID"]
-    # Range of lines to keep: from header index till first blank line
-    lines_range = range(head_ind[0],min([ind for ind in blank_ind if ind>head_ind[0]]))
+    head_ind =  [ind for (ind,param_l) in list(enumerate(filelines)) if re.split("\s+", param_l, maxsplit=1)[0].lower() == "#sampleid"]
+    if head_ind:  # A line beginning with '#SampleID' exists.
+
+        # Range of lines to keep: from header index till first blank line
+        lines_range = range(head_ind[0],min([ind for ind in blank_ind if ind>head_ind[0]]))
+
+        # Read CSV data with csv package. Store in return_results
+        linedata = StringIO("\n".join(remove_comments([filelines[i] for i in lines_range])))
+        reader = csv.reader(linedata, dialect='excel-tab')
+        return_results["Sample_data"] = [row for row in reader]
+
+    # looking for range begining with "#Type" till first blank line:
+    # Index of header line:
+    head_ind =  [ind for (ind,param_l) in list(enumerate(filelines)) if re.split("\s+", param_l, maxsplit=1)[0] == "#Type"]
+    
+    if head_ind:  # A line beginning with '#Type' exists.
+    
+        # Range of lines to keep: from header index till first blank line
+        lines_range = range(head_ind[0],min([ind for ind in blank_ind if ind>head_ind[0]]))
+
+        linedata = StringIO("\n".join(remove_comments([filelines[i] for i in lines_range])))
+        reader = csv.reader(linedata, dialect='excel-tab')
+        return_results["Project_data"] = [row for row in reader]
+
 
     # Extract Sample_Control lines:
     sample_control = [line for line in filelines if re.split("\s+", line, maxsplit=1)[0] == "Sample_Control"]
+    sample_control = remove_comments(sample_control)
 
-    # Keep title line and actual table:
-    filelines = title_line + [filelines[i] for i in lines_range] + sample_control
+    if sample_control and not "Sample_data" in return_results:
+        sys.exit("Sample-control info defined, but sample definition is absent!")
+    if sample_control:  # ChIP-seq data exists:
+        linedata = StringIO("\n".join(sample_control))
+        reader = csv.reader(linedata, dialect='excel-tab')
+        return_results["ChIP_data"] = [row[1] for row in reader]
 
-    filelines = remove_comments(filelines)
-
-    return filelines
+    return return_results
     
 def parse_tabular_sample_data(sample_lines):
     """
     """
-    # pp(sample_lines)
-    
     sample_x_dict = dict()
     
     for line in sample_lines:
-        line_data = re.split("\s+", line)
+        # line_data = re.split("\s+", line)
         
         # print line_data[1]
-        if line_data[1] in RECOGNIZED_FILE_TYPES:# ["Forward", "Reverse","Single", "Nucleotide", "Protein", "SAM", "BAM", "REFERENCE"]:   
-            if line_data[1] in sample_x_dict.keys():
-                if line_data[1] == "REFERENCE":
-                    sys.exit("Only one REFERENCE permitted per sample")
-                # If type exists, append path to list
-                sample_x_dict[line_data[1]].append(get_full_path(line_data[2]))
-                
-            else:
-                # If not, create list with path
-                sample_x_dict[line_data[1]] = [get_full_path(line_data[2])]
-                
-
+        if line[1] in sample_x_dict.keys():
+            # If type exists, append path to list
+            sample_x_dict[line[1]].append(get_full_path(line[2]))
+            
         else:
-            sys.exit("Unrecognised file type in line %s" % line)
-
-        # if line_data[1] in ["Forward", "Reverse","Single"]:   # fastq files
-            # # Initialize a "fastq" slot if does not exist
-            # if "fastq" not in sample_x_dict.keys():
-                # sample_x_dict["fastq"] = dict()
-            # if line_data[1] in sample_x_dict["fastq"]:
-                # # If type exists, append path to list
-                # sample_x_dict["fastq"][line_data[1]].append(line_data[2])
-            # else:
-                # # If not, create list with path
-                # sample_x_dict["fastq"][line_data[1]] = [line_data[2]]
-        
-        # elif line_data[1] in ["Nucleotide", "Protein"]:   # fasta files
-            # if "fasta" not in sample_x_dict.keys():
-                # sample_x_dict["fasta"] = dict()
-            # if line_data[1] in sample_x_dict["fasta"]:
-                # # If type exists, append path to list
-                # sample_x_dict["fasta"][line_data[1]].append(line_data[2])
-            # else:
-                # # If not, create list with path
-                # sample_x_dict["fasta"][line_data[1]] = [line_data[2]]
-        # # Experimental: Getting SAM or BAM files:
-        # elif line_data[1] in ["SAM", "BAM"]:   # fasta files
-            # if "fastq" not in sample_x_dict.keys():
-                # sample_x_dict["fastq"] = dict()
-            # if "mapping" not in sample_x_dict["fastq"].keys():
-                # sample_x_dict["fastq"]["mapping"] = dict()
-            # if line_data[1] in sample_x_dict["fastq"]["mapping"]:
-                # # If type exists, append path to list
-                # sample_x_dict["fastq"]["mapping"][line_data[1]].append(line_data[2])
-            # else:
-                # # If not, create list with path
-                # sample_x_dict["fastq"]["mapping"][line_data[1]] = [line_data[2]]
-        # else:
-            # sys.exit("Unrecognised file type in line %s" % line)
+            # If not, create list with path
+            sample_x_dict[line[1]] = [get_full_path(line[2])]
+            
+    # pp(sample_x_dict)
+    # sys.exit()
 
     return(sample_x_dict)
     
