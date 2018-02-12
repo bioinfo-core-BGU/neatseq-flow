@@ -46,8 +46,8 @@ from neatseq_flow.modules.parse_sample_data import remove_comments, check_newlin
 GLOBAL_PARAMS_LIST = ['Default_wait','Main','Qsub_opts','Qsub_q','Qsub_nodes','Qsub_path','slow_release','module_path','job_limit']
 # A list of words that identify global parameters that take multiple values (are stored as lists even when only one value exists)
 GLOBAL_PARAMS_MULTIPLE_V = ['Qsub_opts','Qsub_nodes','module_path']   
-STEP_PARAMS_MULTIPLE_V = ['base','setenv','export']   
-STEP_PARAMS_SINGLE_VALUE = ['script_path','module','redirects']
+STEP_PARAMS_MULTIPLE_V = ['script_path','base','setenv','export']   
+STEP_PARAMS_SINGLE_VALUE = ['module','redirects']
 
 def parse_param_file(filename):
     """Parses a file from filename

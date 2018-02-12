@@ -121,10 +121,12 @@ class nsfgm:
             # get the available log files created times
             file_sys["Created"]=map(lambda x: datetime.fromtimestamp(os.path.getctime(os.path.join(self.params["Dir"],x))).strftime('%d/%m/%Y %H:%M:%S')  ,file_sys["Name"])
             # get the available log files last modified times
-            file_sys["Last Modified"]=map(lambda x: datetime.fromtimestamp(os.path.getmtime(os.path.join(self.params["Dir"],x))).strftime('%d/%m/%Y %H:%M:%S')  ,file_sys["Name"])
+            file_sys["Last Modified"]=map(lambda x: os.path.getmtime(os.path.join(self.params["Dir"],x))  ,file_sys["Name"])
+            file_sys=file_sys.sort_values(by="Last Modified",ascending=False).reset_index(drop=True).copy()
+            file_sys["Last Modified"]=map(lambda x: datetime.fromtimestamp(x).strftime('%d/%m/%Y %H:%M:%S')  ,file_sys["Last Modified"])
             # get the available log files sizes
             file_sys["Size"]=map(lambda x: os.path.getsize(os.path.join(self.params["Dir"],x))  ,file_sys["Name"])
-            file_sys=file_sys.sort_values(by="Last Modified",ascending=False).reset_index(drop=True).copy()
+           
         except :
             file_sys=pd.DataFrame(columns=["Name","Created","Last Modified","Size"])
         return file_sys
@@ -145,7 +147,7 @@ class nsfgm:
         char_value=float(self.logpiv["Finished"].max().total_seconds())/Bar_len
         if char_value==0:
             char_value=1.0/Bar_len
-        return [char_value,map(lambda x,y: (int(x.total_seconds()/char_value)*Bar_Spacer + (int(-(-(y.total_seconds()-x.total_seconds())//char_value))*Bar_Marker)).ljust(Bar_len,Bar_Spacer)  ,self.logpiv["Started"],self.logpiv["Finished"])]
+        return [char_value,map(lambda x,y: (int(x.total_seconds()/char_value)*Bar_Spacer + ((int(-(-(y.total_seconds()-x.total_seconds())/char_value))+1)*Bar_Marker)).ljust(Bar_len,Bar_Spacer)  ,self.logpiv["Started"],self.logpiv["Finished"])]
     
     # main function for parsing log file
     def read_run_log(self,runlog_file,Bar_len,Bar_Marker,Bar_Spacer,q=None,Instance=True,read_from_disk=True):
@@ -164,18 +166,21 @@ class nsfgm:
             if "Status" in runlog_Data.columns:
                 runlog_Data['Status']=map(lambda x: 'OK' if 'OK' in x else 'ERROR' ,runlog_Data['Status'])
             # Format the Timestamp column
-            runlog_Data.Timestamp = map(lambda x: datetime.strptime(x, '%d/%m/%Y %H:%M:%S'),runlog_Data.Timestamp) 
+            runlog_Data.Timestamp = map(lambda x: datetime.strptime(x, '%d/%m/%Y %H:%M:%S'),runlog_Data.Timestamp)
+            runlog_Data['Timestamp2'] = map(lambda x: int(time.mktime(x.timetuple())),runlog_Data.Timestamp)
             # sort the Data-Frame according to the Timestamp column
-            runlog_Data.sort_values(by="Timestamp",inplace=True)
+            runlog_Data=runlog_Data.sort_values(by="Timestamp2",ascending=True).reset_index(drop=True).copy()
             # remove old runs [duplicated jobs names events]
             runlog_Data.drop_duplicates(keep="last",subset=["Job name","Event"],inplace=True)
             # if after the remove duplicated there are old finished jobs of new runs: remove the finished time of these jobs
             args_pivot=['Job name','Event','Timestamp']
             pre_logpiv = runlog_Data.pivot(index=args_pivot[0], columns=args_pivot[1], values=args_pivot[2])
+
             if "Finished" in pre_logpiv.columns:
                 pre_logpiv=pre_logpiv.loc[~pre_logpiv["Finished"].isnull(),]
-                log=map( lambda x,y: (x in pre_logpiv[pre_logpiv["Finished"]<pre_logpiv["Started"]].index)&(y=="Finished") , runlog_Data["Job name"],runlog_Data["Event"] )
-                runlog_Data.loc[log,"Finished"]=""
+                log=map( lambda x,y: (x in pre_logpiv[pre_logpiv["Finished"]<pre_logpiv["Started"]].index)&(y=="Finished")==False , runlog_Data["Job name"],runlog_Data["Event"] )
+                runlog_Data=runlog_Data[log].copy()
+
             # for the main window information:    
             if Instance==True:
                 args_pivot=['Instance','Event','Timestamp']
@@ -239,8 +244,19 @@ class nsfgm:
             N_Started=logpiv.applymap(lambda x:len(x))["Started"]
             # count how many jobs Finished
             N_Finished=logpiv.applymap(lambda x:len(x))["Finished"]
-            # set the Timestamps of instances with no Finished jobs to the current time [for calculating the progress bar]
-            logpiv.loc[logpiv["Finished"]=='',"Finished"]={datetime.strptime(str(datetime.now().strftime('%d/%m/%Y %H:%M:%S')), '%d/%m/%Y %H:%M:%S')}
+            
+            # get the running information from qstat and add the information to the Data-Frame
+            qstat=self.get_qstat()
+            if len(qstat)>0:
+                runlog_Data=runlog_Data.merge(qstat,how='left')
+                runlog_Data.loc[runlog_Data["State"].isnull(),"State"]=''
+            else:
+                runlog_Data["State"]=''
+            logpiv=logpiv.join(runlog_Data.groupby("Instance")["State"].apply(lambda x:list(x).count("running")),how="left", rsuffix='running')            
+
+            # set the Timestamps of instances with no Finished jobs and are still running to the current time [for calculating the progress bar]
+            logpiv["Finished"]=map(lambda x,y,z: {datetime.strptime(str(datetime.now().strftime('%d/%m/%Y %H:%M:%S')), '%d/%m/%Y %H:%M:%S')} if (x=='')&(y>0) else z if (x=='') else x ,logpiv["Finished"],logpiv["State"].values,logpiv["Started"] )
+            #logpiv.loc[logpiv["Finished"]=='',"Finished"]={datetime.strptime(str(datetime.now().strftime('%d/%m/%Y %H:%M:%S')), '%d/%m/%Y %H:%M:%S')}
             # find the earliest Timestamps of every instances
             Started=map(lambda x:min(x),logpiv["Started"])
             # find the latest Timestamps of every instances
@@ -260,19 +276,20 @@ class nsfgm:
             # generate the progress bar column
             [char_value,bar]=self.gen_bar(Bar_len,Bar_Marker,Bar_Spacer)
             Runs_str="Progress #=" + str(char_value)+"seconds"
-            # get the running information from qstat and add the information to the Data-Frame
-            qstat=self.get_qstat()
-            if len(qstat)>0:
-                runlog_Data=runlog_Data.merge(qstat,how='left')
-                runlog_Data.loc[runlog_Data["State"].isnull(),"State"]=''
-            else:
-                runlog_Data["State"]=''
-            logpiv=logpiv.join(runlog_Data.groupby("Instance")["State"].apply(lambda x:list(x).count("running")),how="left", rsuffix='running')            
+            # # get the running information from qstat and add the information to the Data-Frame
+            # qstat=self.get_qstat()
+            # if len(qstat)>0:
+                # runlog_Data=runlog_Data.merge(qstat,how='left')
+                # runlog_Data.loc[runlog_Data["State"].isnull(),"State"]=''
+            # else:
+                # runlog_Data["State"]=''
+            # logpiv=logpiv.join(runlog_Data.groupby("Instance")["State"].apply(lambda x:list(x).count("running")),how="left", rsuffix='running')            
 
             # generate the items Data-Frame to show in the window
             self.items =pd.DataFrame()
-            # Make sure the instances names are no longer then 20 chars
-            self.items["Steps"]=map(lambda x:x[:20],logpiv.index.values)
+            # # Make sure the instances names are no longer then 20 chars
+            # self.items["Steps"]=map(lambda x:x[:20],logpiv.index.values)
+            self.items["Steps"]=map(lambda x:x,logpiv.index.values)
             self.items[Runs_str]=bar
             self.items["Started"]=map(lambda x: str(x),logpiv["Started"])
             # Show the finished Timestamps for only instances with finished jobs
@@ -292,7 +309,7 @@ class nsfgm:
                 self.items["#ERRORs"]=logpiv["Status"].values
                 self.rowmode=map(lambda x,y: 2 if x>0 else y, self.items["#ERRORs"],self.rowmode)
             
-        except :
+        except : #ValueError:
             if Instance==True:
                 self.items=pd.DataFrame(columns=["Steps","Progress","Started","Finished","#Started","#Finished","#Running"])
             else:

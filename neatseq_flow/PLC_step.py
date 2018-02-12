@@ -1176,6 +1176,8 @@ source {activate_path} {environ}
         # New version
 
         # Add "script_path" line - it must exist
+        if not isinstance(self.params["script_path"],str):
+            raise AssertionExcept("'script_path' is not a string!")
         script_const += "%s \\\n\t" % self.params["script_path"]
 
         return script_const
