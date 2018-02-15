@@ -334,7 +334,7 @@ def get_tabular_sample_data_lines(filelines):
     if len(title_line)>1:   
         sys.stdout.write("More than 1 Title line defined. Using first: %s\n" % title_line[0])
     
-    pp(title_line)
+    # pp(title_line)
     # Read CSV data with csv package. Store in return_results
     linedata = StringIO("\n".join(title_line)) #("\n".join([line[1] for line in title_line])))
     reader = csv.reader(linedata, dialect='excel-tab')

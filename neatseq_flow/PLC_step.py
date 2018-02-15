@@ -1000,23 +1000,7 @@ else
 fi
 ####
 """ % log_cols_dict
-            
-            # # Only if shell is bash, adding trap and set pipefail to trap errors in script.
-            # if type == "Started":
-                # script += """
-# trap \"if [ ! -z "$JOB_ID" ]; then echo -e $(date '+%d/%m/%Y %H:%M:%S')'\\t{type}\\t{step}\\t{stepname}\\t{stepID}\\t{level}\\t'$HOSTNAME'\\t'$({qstat_path} -j $JOB_ID | grep maxvmem | cut -d = -f 6)'\\t{status}' >> {file}; else echo -e $(date '+%d/%m/%Y %H:%M:%S')'\\t{type}\\t{step}\\t{stepname}\\t{stepID}\\t{level}\\t'$HOSTNAME'\\t-\\t{status}' >> {file}; fi\" ERR
-
-# set -Eeuxo pipefail
-
-        # """.format(type       = "Finished",                                        \
-                   # step       = self.get_step_step(),                        \
-                   # stepname   = self.get_step_name(),                        \
-                   # stepID     = qsub_name,                                   \
-                   # qstat_path = self.pipe_data["qsub_params"]["qstat_path"], \
-                   # level      = level,                                       \
-                   # status     = "\033[0;31mERROR\033[m",                                      \
-                   # file       = self.pipe_data["log_file"])
-
+           
         else:
             script = ""
             self.write_warning("shell not recognized. Not creating log writing lines in scripts.\n", admonition = "WARNING")
