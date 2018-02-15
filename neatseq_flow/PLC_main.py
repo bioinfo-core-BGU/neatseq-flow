@@ -146,6 +146,9 @@ class neatseq_flow:
         # Create log file:
         self.create_log_file()
 
+        # Create file with functions for trapping error:
+        self.create_bash_helper_funcs()
+        
         # Create file md5sum registration file:
         self.create_registration_file()
         
@@ -598,7 +601,89 @@ qsub -N %(step_step)s_%(step_name)s_%(run_code)s \\
             for step in self.step_list:
                 if step.get_depend_list():      # The step has dependencies:
                     script_fh.write("qalter \\\n\t-hold_jid %s \\\n\t%s\n\n" % (",".join(step.get_dependency_jid_list()), step.get_qsub_name()))
-              
+
+                    
+    def create_bash_helper_funcs(self):
+        """ This function creates the 97.helper_funcs.sh script
+            In includes functions to be execute for trapping error and SIGUSR2 signals 
+        """
+        
+        self.pipe_data["helper_funcs"] = self.pipe_data["scripts_dir"] + "97.helper_funcs.sh"
+
+        with open(self.pipe_data["helper_funcs"], "w") as script_fh:
+            script_fh.write("#!/bin/bash\n\n")
+            
+            script = """
+trap_with_arg() {{
+    # $1: func
+    # $2: module
+    # $3: instance
+    # $4: instance_id
+    # $5: level
+    # $6: hostname
+    # $7: jobid
+
+    args="$1 $2 $3 $4 $5 $6 $7"
+    shift 7
+    for sig ; do
+        trap "$args $sig" "$sig"
+    done
+}}
+
+func_trap() {{
+    # $1: module
+    # $2: instance
+    # $3: instance_id
+    # $4: level
+    # $5: hostname
+    # $6: jobid
+    # $7: sig
+
+    if [ ! $6 == 'ND' ]; then
+        maxvmem=$({qstat_path} -j $7 | grep maxvmem | cut -d = -f 6);
+    else
+        maxvmem="NA";
+    fi
+    
+    if [ $7 == 'ERR' ]; then err_code='ERROR'; fi
+    if [ $7 == 'INT' ]; then err_code='TERMINATED'; fi
+    if [ $7 == 'TERM' ]; then err_code='TERMINATED'; fi
+    if [ $7 == 'SIGUSR2' ]; then err_code='TERMINATED'; fi
+
+
+    echo -e $(date '+%%d/%%m/%%Y %%H:%%M:%%S')'\\tFinished\\t'$1'\\t'$2'\\t'$3'\\t'$4'\\t'$5'\\t'$maxvmem'\\t[0;31m'$err_code'[m' >> {log_file}; 
+    
+    exit 1;
+}}         
+
+log_echo() {{
+    # $1: module
+    # $2: instance
+    # $3: instance_id
+    # $4: level
+    # $5: hostname
+    # $6: jobid
+    # $7: type (Started/Finished)
+    
+    if [ ! $6 == 'ND' ]; then
+        if [ $7 == 'Finished' ]; then
+            maxvmem=$({qstat_path} -j $7 | grep maxvmem | cut -d = -f 6);
+        else    
+            maxvmem="-"
+        fi
+    else
+        maxvmem="NA";
+    fi
+    
+
+    echo -e $(date '+%%d/%%m/%%Y %%H:%%M:%%S')'\\t'$7'\\t'$1'\\t'$2'\\t'$3'\\t'$4'\\t'$5'\\t'$maxvmem'\\t[0;32mOK[m' >> {log_file};
+    
+}}
+
+            """.format(log_file = self.pipe_data["log_file"],
+                        qstat_path = self.pipe_data["qsub_params"]["qstat_path"])
+            script_fh.write(script)
+            
     def create_log_file(self):
         """ Create a initialize the log file.
         """
@@ -610,14 +695,13 @@ qsub -N %(step_step)s_%(step_name)s_%(run_code)s \\
         if not os.path.exists(self.pipe_data["log_file"]):
             with open(self.pipe_data["log_file"],"w") as logf:
                 logf.write("""
-Pipeline %(run_code)s logfile:
+Pipeline {run_code} logfile:
 ----------------
 
-%(datetime)s:   Pipeline %(run_code)s created.
+{datetime}:   Pipeline %(run_code)s created.
 
-""" % \
-                {"datetime" : datetime.now().strftime("%d %b %Y, %H:%M"),\
-                 "run_code" : self.pipe_data["run_code"]})
+""".format(datetime = datetime.now().strftime("%d %b %Y, %H:%M"),
+           run_code = self.pipe_data["run_code"]))
             
                 if(self.pipe_data["message"] != None):
                     logf.write("Message: %s\n" % self.pipe_data["message"])

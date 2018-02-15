@@ -576,8 +576,8 @@ Dependencies: {depends}""".format(name = self.name,
         # self.script = qsub_header + self.script
         # With logging:
         self.script = "\n".join([qsub_header,                                                       \
-                                self.create_log_lines(self.spec_qsub_name,"Started", level="low"),  \
                                 self.create_trap_line(self.spec_qsub_name,level="low"),             \
+                                self.create_log_lines(self.spec_qsub_name,"Started", level="low"),  \
 #                                self.add_qdel_line(type="Start"),                                   \ Now added in high-level script before qsub. This will enable qdeling jobs in qw state...
                                 self.create_activate_lines(type = "activate"),                      \
                                 self.create_set_options_line(self.spec_qsub_name,level="low", type="set"),  \
@@ -990,17 +990,22 @@ endif
 """ % log_cols_dict
         
         elif self.shell == "bash":
+            # script = """
+# if [ ! -z "$JOB_ID" ]; then
+	# # Adding line to log file:  Date    Step    Host
+	# echo -e $(date '+%%d/%%m/%%Y %%H:%%M:%%S')'\\t%(type)s\\t%(step)s\\t%(stepname)s\\t%(stepID)s\\t%(level)s\\t'$HOSTNAME'\\t'$(%(qstat_path)s -j $JOB_ID | grep maxvmem | cut -d = -f 6)'\\t%(status)s' >> %(file)s
+# else
+	# # Adding line to log file:  Date    Step    Host
+	# echo -e $(date '+%%d/%%m/%%Y %%H:%%M:%%S')'\\t%(type)s\\t%(step)s\\t%(stepname)s\\t%(stepID)s\\t%(level)s\\t'$HOSTNAME'\\t-\\t%(status)s' >> %(file)s
+# fi
+# ####
+# """ % log_cols_dict
             script = """
-if [ ! -z "$JOB_ID" ]; then
-	# Adding line to log file:  Date    Step    Host
-	echo -e $(date '+%%d/%%m/%%Y %%H:%%M:%%S')'\\t%(type)s\\t%(step)s\\t%(stepname)s\\t%(stepID)s\\t%(level)s\\t'$HOSTNAME'\\t'$(%(qstat_path)s -j $JOB_ID | grep maxvmem | cut -d = -f 6)'\\t%(status)s' >> %(file)s
-else
-	# Adding line to log file:  Date    Step    Host
-	echo -e $(date '+%%d/%%m/%%Y %%H:%%M:%%S')'\\t%(type)s\\t%(step)s\\t%(stepname)s\\t%(stepID)s\\t%(level)s\\t'$HOSTNAME'\\t-\\t%(status)s' >> %(file)s
-fi
-####
-""" % log_cols_dict
-           
+# Adding line to log file
+log_echo {step} {stepname} {stepID} {level} $HOSTNAME $JOB_ID {type}
+
+""".format(**log_cols_dict)
+
         else:
             script = ""
             self.write_warning("shell not recognized. Not creating log writing lines in scripts.\n", admonition = "WARNING")
@@ -1018,15 +1023,25 @@ fi
             script = ""
             
         elif self.shell == "bash":
-            script = """trap \"if [ ! -z "$JOB_ID" ]; then echo -e $(date '+%d/%m/%Y %H:%M:%S')'\\t{type}\\t{step}\\t{stepname}\\t{stepID}\\t{level}\\t'$HOSTNAME'\\t'$({qstat_path} -j $JOB_ID | grep maxvmem | cut -d = -f 6)'\\t{status}' >> {file}; else echo -e $(date '+%d/%m/%Y %H:%M:%S')'\\t{type}\\t{step}\\t{stepname}\\t{stepID}\\t{level}\\t'$HOSTNAME'\\t-\\t{status}' >> {file}; fi\" ERR
-        """.format(type       = "Finished",                                        \
+            # script = """trap \"if [ ! -z "$JOB_ID" ]; then echo -e $(date '+%d/%m/%Y %H:%M:%S')'\\t{type}\\t{step}\\t{stepname}\\t{stepID}\\t{level}\\t'$HOSTNAME'\\t'$({qstat_path} -j $JOB_ID | grep maxvmem | cut -d = -f 6)'\\t{status}' >> {file}; else echo -e $(date '+%d/%m/%Y %H:%M:%S')'\\t{type}\\t{step}\\t{stepname}\\t{stepID}\\t{level}\\t'$HOSTNAME'\\t-\\t{status}' >> {file}; fi\" ERR
+            script = """
+# Import trap functions
+. {helper_funcs}
+
+# If not in SGE context, set JOB_ID to ND
+if [ -z "$JOB_ID" ]; then JOB_ID="ND"; fi
+
+# Trap various signals. SIGUSR2 is passed by qdel when -notify is passes
+trap_with_arg func_trap {step} {stepname} {stepID} {level} $HOSTNAME $JOB_ID SIGUSR2 ERR INT TERM
+            """.format(#type       = "Finished",                                        \
                    step       = self.get_step_step(),                        \
                    stepname   = self.get_step_name(),                        \
                    stepID     = qsub_name,                                   \
-                   qstat_path = self.pipe_data["qsub_params"]["qstat_path"], \
-                   level      = level,                                       \
-                   status     = "\033[0;31mERROR\033[m",                                      \
-                   file       = self.pipe_data["log_file"])
+                   # qstat_path = self.pipe_data["qsub_params"]["qstat_path"], \
+                   helper_funcs = self.pipe_data["helper_funcs"], \
+                   level      = level)#,                                       \
+                   # status     = "\033[0;31mERROR\033[m",                                      \
+                   # file       = self.pipe_data["log_file"])
 
         else:
             script = ""
