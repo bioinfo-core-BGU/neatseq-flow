@@ -651,7 +651,7 @@ func_trap() {{
     if [ $7 == 'SIGUSR2' ]; then err_code='TERMINATED'; fi
 
 
-    echo -e $(date '+%%d/%%m/%%Y %%H:%%M:%%S')'\\tFinished\\t'$1'\\t'$2'\\t'$3'\\t'$4'\\t'$5'\\t'$maxvmem'\\t[0;31m'$err_code'[m' >> {log_file}; 
+    echo -e $(date '+%d/%m/%Y %H:%M:%S')'\\tFinished\\t'$1'\\t'$2'\\t'$3'\\t'$4'\\t'$5'\\t'$maxvmem'\\t[0;31m'$err_code'[m' >> {log_file}; 
     
     exit 1;
 }}         
@@ -676,7 +676,7 @@ log_echo() {{
     fi
     
 
-    echo -e $(date '+%%d/%%m/%%Y %%H:%%M:%%S')'\\t'$7'\\t'$1'\\t'$2'\\t'$3'\\t'$4'\\t'$5'\\t'$maxvmem'\\t[0;32mOK[m' >> {log_file};
+    echo -e $(date '+%d/%m/%Y %H:%M:%S')'\\t'$7'\\t'$1'\\t'$2'\\t'$3'\\t'$4'\\t'$5'\\t'$maxvmem'\\t[0;32mOK[m' >> {log_file};
     
 }}
 
