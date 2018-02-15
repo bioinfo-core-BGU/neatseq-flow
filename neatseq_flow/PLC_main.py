@@ -667,7 +667,7 @@ log_echo() {{
     
     if [ ! $6 == 'ND' ]; then
         if [ $7 == 'Finished' ]; then
-            maxvmem=$({qstat_path} -j $7 | grep maxvmem | cut -d = -f 6);
+            maxvmem=$({qstat_path} -j $6 | grep maxvmem | cut -d = -f 6);
         else    
             maxvmem="-"
         fi

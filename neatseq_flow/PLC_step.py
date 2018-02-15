@@ -651,8 +651,8 @@ Dependencies: {depends}""".format(name = self.name,
         script = qsub_header
         
         script = "\n".join([qsub_header,                                                         \
-                            self.create_log_lines(self.spec_qsub_name,"Started", level="high"),  \
                             self.create_trap_line(self.spec_qsub_name, level="high"),  \
+                            self.create_log_lines(self.spec_qsub_name,"Started", level="high"),  \
                             self.create_set_options_line(self.spec_qsub_name, level="high", type="set"),  \
                             "# Calling low level scripts:\n\n"])
         
@@ -732,8 +732,8 @@ csh {scripts_dir}98.qalter_all.csh
         # self.script = qsub_header +  self.script
         # New, with host reporting and time logging:
         self.script = "\n".join([qsub_header,                                                   \
-                        self.create_log_lines(self.spec_qsub_name, "Started", level="prelim"),  \
                         self.create_trap_line(self.spec_qsub_name,level="prelim"),                 \
+                        self.create_log_lines(self.spec_qsub_name, "Started", level="prelim"),  \
                         self.create_activate_lines(type = "activate"),                          \
                         self.create_set_options_line(self.spec_qsub_name,level="prelim", type="set"),  \
                         self.script,                                                            \
@@ -805,8 +805,8 @@ csh {scripts_dir}98.qalter_all.csh
         # self.script = qsub_header +  self.script
         # New, with host reporting and time logging:
         self.script = "\n".join([qsub_header,                                                       \
-                        self.create_log_lines(self.spec_qsub_name, "Started", level="wrapping"),    \
                         self.create_trap_line(self.spec_qsub_name,level="wrapping"),             \
+                        self.create_log_lines(self.spec_qsub_name, "Started", level="wrapping"),    \
                         self.create_activate_lines(type = "activate"),                              \
                         self.create_set_options_line(self.spec_qsub_name,level="wrapping", type="set"),  \
                         self.script,                                                                \
@@ -1373,44 +1373,44 @@ source {activate_path} {environ}
                                        
                                        
                                        
-    def add_exit_status_check(self, success_status = 0, comment = ""):
-        """ This should be called during script building to add success status testing and exiting 
-        """
+    # def add_exit_status_check(self, success_status = 0, comment = ""):
+        # """ This should be called during script building to add success status testing and exiting 
+        # """
         
         
         
-        if self.shell == "csh":
-            return """
-# Testing exit status
-if ( $? != {success} ) then
-	echo "\033[31m Exiting with error: {comment}. Check stderr file.\033[m\\n"
-	{erro2log}
-	exit
-endif
+        # if self.shell == "csh":
+            # return """
+# # Testing exit status
+# if ( $? != {success} ) then
+	# echo "\033[31m Exiting with error: {comment}. Check stderr file.\033[m\\n"
+	# {erro2log}
+	# exit
+# endif
 
-""".format(success  = success_status, 
-           comment  = comment,
-           erro2log = self.create_log_lines(self.spec_qsub_name,"Finished", level="low", status = "\033[31mERROR\033[m"))
-           # erro2log = re.sub(pattern = "\n",
-                             # repl    = "\n\t",
-                             # string  = self.create_log_lines(self.spec_qsub_name,"ERROR", level="low")))       
+# """.format(success  = success_status, 
+           # comment  = comment,
+           # erro2log = self.create_log_lines(self.spec_qsub_name,"Finished", level="low", status = "\033[31mERROR\033[m"))
+           # # erro2log = re.sub(pattern = "\n",
+                             # # repl    = "\n\t",
+                             # # string  = self.create_log_lines(self.spec_qsub_name,"ERROR", level="low")))       
            
-        elif self.shell=="bash":
-            return """
-# Testing exit status
-if [[ $? != {success} ]]; then 
-	echo -e "\033[31m Exiting with error: {comment}. Check stderr file.\033[m\\n"
-	{erro2log}
-	exit
-fi
+        # elif self.shell=="bash":
+            # return """
+# # Testing exit status
+# if [[ $? != {success} ]]; then 
+	# echo -e "\033[31m Exiting with error: {comment}. Check stderr file.\033[m\\n"
+	# {erro2log}
+	# exit
+# fi
 
-""".format(success  = success_status, 
-           comment  = comment,
-           erro2log = self.create_log_lines(self.spec_qsub_name,"Finished", level="low", status = "\033[31mERROR\033[m"))
+# """.format(success  = success_status, 
+           # comment  = comment,
+           # erro2log = self.create_log_lines(self.spec_qsub_name,"Finished", level="low", status = "\033[31mERROR\033[m"))
 
-           # erro2log = re.sub(pattern = "\n",
-                             # repl    = "\n\t",
-                             # string  = self.create_log_lines(self.spec_qsub_name,"ERROR", level="low")))
+           # # erro2log = re.sub(pattern = "\n",
+                             # # repl    = "\n\t",
+                             # # string  = self.create_log_lines(self.spec_qsub_name,"ERROR", level="low")))
 
                              
                              
