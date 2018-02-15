@@ -990,16 +990,7 @@ endif
 """ % log_cols_dict
         
         elif self.shell == "bash":
-            # script = """
-# if [ ! -z "$JOB_ID" ]; then
-	# # Adding line to log file:  Date    Step    Host
-	# echo -e $(date '+%%d/%%m/%%Y %%H:%%M:%%S')'\\t%(type)s\\t%(step)s\\t%(stepname)s\\t%(stepID)s\\t%(level)s\\t'$HOSTNAME'\\t'$(%(qstat_path)s -j $JOB_ID | grep maxvmem | cut -d = -f 6)'\\t%(status)s' >> %(file)s
-# else
-	# # Adding line to log file:  Date    Step    Host
-	# echo -e $(date '+%%d/%%m/%%Y %%H:%%M:%%S')'\\t%(type)s\\t%(step)s\\t%(stepname)s\\t%(stepID)s\\t%(level)s\\t'$HOSTNAME'\\t-\\t%(status)s' >> %(file)s
-# fi
-# ####
-# """ % log_cols_dict
+
             script = """
 # Adding line to log file
 log_echo {step} {stepname} {stepID} {level} $HOSTNAME $JOB_ID {type}

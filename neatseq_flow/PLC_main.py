@@ -565,9 +565,9 @@ qsub -N %(step_step)s_%(step_name)s_%(run_code)s \\
         with open(self.qdel_script_name, "w") as script_fh:
             # Adding preliminary stuff:
             script_fh.write("#!/bin/csh\n\n")
-            script_fh.write("# Adding line to log file:\n")
-            script_fh.write("date '+%%d %%b %%Y, %%H:%%M' >> %s\n" % (self.pipe_data["log_file"]))
-            script_fh.write("echo '\\t\\tDeleting all jobs with 99.qdel_all.csh' >> %s\n\n\n" % (self.pipe_data["log_file"]))
+            # script_fh.write("# Adding line to log file:\n")
+            # script_fh.write("date '+%%d %%b %%Y, %%H:%%M' >> %s\n" % (self.pipe_data["log_file"]))
+            # script_fh.write("echo '\\t\\tDeleting all jobs with 99.qdel_all.csh' >> %s\n\n\n" % (self.pipe_data["log_file"]))
 
             script_fh.write("# Remove high level scripts:\n# entry_point\n\n\n")
             
@@ -586,9 +586,9 @@ qsub -N %(step_step)s_%(step_name)s_%(run_code)s \\
                 # Add call to step-specific qdel script to main qdel script:
                 script_fh.write("csh %s\n" % step_del_script_fn)
             # Add logging:
-            script_fh.write("\n\n# Adding line to log file:\n")
-            script_fh.write("date '+%%d %%b %%Y, %%H:%%M' >> %s\n" % (self.pipe_data["log_file"]))
-            script_fh.write("echo '\\t\\tCompleted deleting all jobs with 99.qdel_all.csh' >> %s\n\n\n" % (self.pipe_data["log_file"]))
+            # script_fh.write("\n\n# Adding line to log file:\n")
+            # script_fh.write("date '+%%d %%b %%Y, %%H:%%M' >> %s\n" % (self.pipe_data["log_file"]))
+            # script_fh.write("echo '\\t\\tCompleted deleting all jobs with 99.qdel_all.csh' >> %s\n\n\n" % (self.pipe_data["log_file"]))
               
     def create_qalter_script(self):
         """ This function creates the 98.qalter_all script
