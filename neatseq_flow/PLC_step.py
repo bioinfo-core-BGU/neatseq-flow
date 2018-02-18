@@ -230,7 +230,7 @@ Step:         {module}
 Base:         {base}
 Dependencies: {depends}""".format(name = self.name, 
                                 module = self.step, 
-                                base   = [step.get_step_name() for step in self.get_base_step_list()], 
+                                base   = [step.get_step_name() for step in self.get_base_step_list()] if self.get_base_step_list() else None, 
                                 depends = self.get_depend_list())
         
     def write_warning(self, warning = "Unknown problem", sample = None, admonition = "WARNING"):
@@ -375,7 +375,7 @@ Dependencies: {depends}""".format(name = self.name,
         
         
     def set_script_name(self):
-        """ Defines the name of the step script (level 2. Appears in qsub command in 00.pipe.commands.csh )
+        """ Defines the name of the step script (level 2. Appears in qsub command in 00.workflow.commands.csh )
         """
         self.script_name = "{!s}.{!s}_{!s}.{!s}".format(self.step_number,self.step,self.name,"csh" if self.shell=="csh" else "sh")
         return self.script_name
@@ -876,11 +876,11 @@ csh {scripts_dir}98.qalter_all.csh
         if "stop_and_show" in self.params:
             print "project slots:\n-------------"
             pp(self.sample_data.keys())
-            print "sample slots:\n-------------"
-            # all_sample_keys = list()
-            # all_sample_keys = all_sample_keys.append(map(lambda x: self.sample_data[x].keys(), self.sample_data["samples"]))
-            pp(self.sample_data[self.sample_data["samples"][0]].keys())
-            # print all_sample_keys
+            
+            if self.sample_data["samples"]:  # Sample list may be empty if only project data was passed!
+                print "sample slots:\n-------------"
+                pp(self.sample_data[self.sample_data["samples"][0]].keys())
+
             sys.exit("Showed. Now stopping. To continue, remove the 'stop_and_show' tage from %s" % self.get_step_name())
             
         
@@ -1252,10 +1252,10 @@ source {activate_path} {environ}
         ret_dict = dict()
         try:
             ret_dict["sample_data"] = self.get_sample_data()
-            ret_dict["base_sample_data"] = self.get_base_sample_data()
+            # ret_dict["base_sample_data"] = self.get_base_sample_data()
         except AttributeError:
             ret_dict["sample_data"] = None
-            ret_dict["base_sample_data"] = None
+            # ret_dict["base_sample_data"] = None
         ret_dict["param_data"]  = self.params
         
         

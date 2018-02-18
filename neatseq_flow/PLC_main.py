@@ -377,6 +377,7 @@ class neatseq_flow:
         # Is used to search the list of classes.
         self.step_list_index = [step_n.get_step_name() for step_n in self.step_list]
         
+
         # NOTE: Each step's base step is set in build_scripts(), because not all info exists at construction time...
         
         return self.step_list
@@ -401,10 +402,10 @@ class neatseq_flow:
         
 
     def make_main_pipeline_script(self):
-        """ Create the main pipline script stored in 00.pipe.commands.csh 
+        """ Create the main pipline script stored in 00.workflow.commands.csh 
         """
         
-        with open(self.pipe_data["scripts_dir"] + "00.pipe.commands.csh", "w") as pipe_fh:
+        with open(self.pipe_data["scripts_dir"] + "00.workflow.commands.csh", "w") as pipe_fh:
             # Writing header :)
             pipe_fh.write("""
 \n\n
@@ -752,7 +753,10 @@ Date\tStep\tName\tScript\tFile\tmd5sum\n
     def get_json_encoding(self):
         """ Convert pipeline data into JSON format
         """
-        return json.dumps(self.get_dict_encoding(), sort_keys = False, indent = 4, separators=(',', ': '))
+        return json.dumps(self.get_dict_encoding(), 
+                            sort_keys = False, 
+                            indent = 4, 
+                            separators=(',', ': '))
         
     def get_qsub_names_json_encoding(self):
         """ Convert qsub names dict into JSON format

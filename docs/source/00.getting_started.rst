@@ -1,5 +1,5 @@
 ===============================
-NeatSeq-Flow Getting Started 
+**NeatSeq-Flow** Installation 
 ===============================
 
 .. include:: links.rst
@@ -39,7 +39,7 @@ Download and Install
    * Module and workflow repository: https://github.com/bioinfo-core-BGU/neatseq-flow-modules/archive/master.zip
 
 Executing **NeatSeq-Flow**
------------------------------
+===============================
 
 Create a new directory anywhere, `cd` into it and execute the following commands (``$NSF_main`` is the directory where **NeatSeq-Flow** is installed)::
 

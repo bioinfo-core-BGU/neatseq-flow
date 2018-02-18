@@ -36,7 +36,7 @@ Basic usage does not require much.
 2. Adjust the script paths to the correct paths on your system (These are usually coded as *variables* in the ``Vars`` section at the top of the parameter file).
 3. Create a sample file following the directions in :ref:`Sample_file_definition`.
 4. Execute **NeatSeq-Flow** (see :ref:`executing NeatSeq-Flow <Execution_section>`) to create the workflow scripts.
-5. Execute the workflow scripts by executing the ``scripts/00.pipe.commands.csh`` script.
+5. Execute the workflow scripts by executing the ``scripts/00.workflow.commands.csh`` script.
 
 
 .. _workflow_contruction:
@@ -103,5 +103,9 @@ For standard file types, you should use the appropriate slots (check out similar
     As mentioned above, module instances can be based on more than one instance. *i.e.* ``i`` can be based on ``j,k``. It was stated that in this case, if ``j`` and ``k`` instances write to the same slot, ``i`` will have access only to the version created by ``j``.
     
     However, you can write modules such that ``i`` has access to the same slot both in ``k`` and in ``j``: Previous versions of the ``sample_data`` dict are stored in the ``base_sample_data`` slot within the ``sample_data`` dict. The ``base_sample_data`` dict is keyed by the base instance name. This can be used to access *overwridden* versions of files created by instances upstream to the present module.
+    
+    For example, if **base** contains the name of the base instance (*e.g.* **merge1**), you can access the base's sample data as follows::
+        
+        self.base_sample_data[base]
     
     

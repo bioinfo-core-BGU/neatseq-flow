@@ -73,15 +73,16 @@ Customers
 
 .. toctree::
    :maxdepth: 3
-   :caption: Installation
+   :caption: Getting started
 
    00.getting_started
-
-.. toctree::
-   :maxdepth: 3
-   :caption: Totorial
-
    Example_WF
+
+.. .. toctree::
+..    :maxdepth: 3
+..    :caption: Tutorial
+
+..   Example_WF
 
    
 .. toctree::

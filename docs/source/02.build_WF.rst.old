@@ -14,6 +14,23 @@ Building a workflow
    :backlinks: top
 
 
+.. Execution
+.. ---------
+.. 
+.. A typical execution of ``neatseq_flow`` is as follows::
+.. 
+..     python neatseq_flow.py                              \
+..         --sample_file YAML_pipelines/PE_tabular.nsfs    \
+..         --param_file  YAML_pipelines/mapping.yaml       \
+..         --message     "an informative message"          \
+..         --home_dir    /path/to/workflow/directory
+.. 
+.. You can leave out the ``--message`` and ``--home_dir`` parameters.
+.. See basic documentation by executing::
+..     
+..     python neatseq_flow.py -h
+.. 
+.. The sample file and parameter files passed with ``--sample_file`` and ``--param_file`` are described in more detail below.
 
 
 .. Typical usage of **NeatSeq-Flow**
@@ -21,19 +38,17 @@ Building a workflow
 
 A typical usage of **NeatSeq-Flow** involves the following steps:
 
-1. `Parameter file definition`_
-2. `Sample file definition`_
-3. `Executing NeatSeq-Flow`_
-4. `Executing the workflow`_
+1. Preparing a sample file.
+2. Preparing a parameter file.
+3. Executing **NeatSeq-Flow** to create the workflow scripts.
+4. Executing the workflow scripts on an SGE cluster.
 
-
+.. Tip:: **The parameter file is rarely created from scratch**. Take an existing parameter file defined for the analysis you require and modify it to suit your SGE cluster and specific requirements.
 
 .. _parameter_file_definition:
 
 Parameter file definition
 ====================================
-
-.. Tip:: **The parameter file is rarely created from scratch**. Take an existing parameter file defined for the analysis you require and modify it to suit your SGE cluster and specific requirements.
 
 The parameter file is a YAML file which must include two (unequal) sections:
 
@@ -238,7 +253,9 @@ Comments
 Sample file definition
 ====================================
 
-.. Attention:: As of version 1.3.0, **NeatSeq-Flow** no longer supports the List-format used in previous versions!
+You can code the sample file in two different ways: :ref:`table_format_definition` and :ref:`list_format_definition`.
+
+.. Attention:: As of version 1.3.0, **NeatSeq-Flow** no longer supports the `List-format`_. Please use the `Tabular-format`_, with a strict tab-separated format.
 
 .. Attention:: It is recommended to provide full paths to the files listed in the sample file. However, if relative paths are provided, **NeatSeq-Flow** will attempt to expand them to full paths, using the current directory as the base directory. 
 
@@ -247,35 +264,63 @@ Sample file definition
     * Good: ``ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR453/SRR453032/SRR453032_1.fastq.gz``
     * Bad:  ``ftp.sra.ebi.ac.uk/vol1/fastq/SRR453/SRR453032/SRR453032_1.fastq.gz``
 
-The sample file has, at the moment, 4 sections:
 
-Project title
-----------------
+.. _list_format_definition:
 
-The project title is supplied in a line with the following structure::
+List-format
+-------------------------
+
+Each sample file must include a single title line with the format::
+
+    Title    name_of_analysis
+
+The title name must be a single word - no spaces are allowed.
+
+Following the project title, add a block of lines for each sample. An example of a sample definition::
+
+    Sample     Sample1
+    Forward    /full/path/to/Sample1_L001_R1_001.fastq.gz
+    Reverse    /full/path/to/Sample1_L001_R2_001.fastq.gz
+    Forward    /full/path/to/Sample1_L001_R1_002.fastq.gz
+    Reverse    /full/path/to/Sample1_L001_R2_002.fastq.gz
+
+
+A new sample definition begins with ``Sample`` followed by a sample name (the sample name must **not** contain spaces!)
+
+Following this line come lines defining the source files for the sample (The files can be compressed. **You do not need to decompress the files before execution**, however, as of **NeatSeq-Flow** v1.1.0, all files must be either compressed or decompressed.):
+ 
+- ``Forward`` and ``Reverse`` pairs (``fastq`` files only).
+- ``Single`` (``fastq`` files only)
+- ``Nucleotide`` (``fasta`` files only)
+- ``Protein`` (``fasta`` files only)   
+- ``SAM`` (`SAM` files)
+- ``BAM`` (`BAM` files)
+- ``REFERENCE`` (When passing `SAM` or `BAM` files, you are required to pass the referenece genome against which the reads were aligned)
+
+.. Note:: 
+    1. A sample can have more than one file. Follow the ``Sample`` line with as many file lines as necessary.
+    2. Keep forward and reverse files in pairs. Each forward file should have it's reverse file in the following line.
+    3. Each sample can contain different combinations of the above but the user must be careful when doing unexpected things like that... 
+
+.. _table_format_definition:
+
+Tabular-format
+-------------------------
+
+In the tabular format also, the file must contain a single title line with the format::
 
     Title	name_of_analysis
 
-.. Attention:: The word ``Title`` and the title name must be separated by a single **TAB character**. This is the rule for all sections of the sample file.
-
 .. caution:: If more that one title line is included, one of them will be selected and a warning will be generated. 
 
-Sample files
---------------
 
-The samples themselves are coded in a TAB-separated table with a header, as follows::
+The samples themselves are coded in a table with a header, as follows::
 
     #SampleID	Type	Path
 
 The table **must be in consecutive lines** following the header line.
 
-* The first field is the sample name (no spaces!),
-* the 2nd field is the file type and 
-* the third field is the file path. 
-
-Additional columns are ignored.
-
-You may comment out lines in the table by prepending a ``#`` character.
+The first field is the sample name (no spaces!). The 2nd field is the file type (at the moment, one of: ``Forward``, ``Reverse``, ``Single``, ``Nucleotide``, ``Protein``, ``SAM``, ``BAM`` and ``REFERENCE``)
 
 An example of a sample table follows::
 
@@ -285,49 +330,14 @@ An example of a sample table follows::
     Sample2	Forward	/full/path/to/Sample2_R1_001.fastq.gz
     Sample2	Reverse	/full/path/to/Sample2_R2_001.fastq.gz
 
-The following file types are recognized by **NeatSeq-Flow** and will be automatically merged into the correct position in the file index (indicated in the second column):
 
-.. csv-table:: File types recognized by **NeatSeq-Flow**
-    :header: "Source", "Target"
-    :widths: 30, 70
+File types are as described above in section :ref:`list_format_definition`. 
 
-    "Forward","fastq.F"
-    "Reverse","fastq.R"
-    "Single","fastq.S"
-    "Nucleotide","fasta.nucl"
-    "Protein","fasta.prot"
-    "SAM","sam"
-    "BAM","bam"
-    "REFERENCE     ","reference     "
-    "VCF","vcf"
-    "G.VCF","g.vcf"           
-
-Other types can be included, as well. For how to merge them correctly into **NeatSeq-Flow**, see the documentation for ``merge`` module.
-    
 .. Note::
     1. Each line represents one file. For samples with multiple files, add lines with the same sample name.
     2. Keep forward and reverse files in pairs. Each forward file should have it's reverse file in the following line.
-    3. Each sample can contain different combinations of file types but the user must be careful when doing unexpected things like that... 
+    3. Each sample can contain different combinations of the above but the user must be careful when doing unexpected things like that... 
 
-Project files 
---------------
-
-As of **NeatSeq-Flow** version 1.3.0, you can pass project-wise files, such as reference files, through the sample file. This is done as above for the sample data, in a separate table with the following structure::
-
-    #Type	Path
-
-For example, a project file section could look like this::
-
-    #Type	Path
-    Nucleotide	/path/to/reference.fasta
-    Protein	/path/to/reference.faa
-    # This is a comment line
-
-The same file types that can be used in the `Sample files`_ section, can also be used in the project files section. 
-
-.. Warning:: Project files in the sample file is an experimental feature, and should be used with caution.
-    If you are importing only project files and no sample files, you have to specify ``scope=project`` in your  ``merge`` instance. If you have both project and sample files, the definition in ``merge`` is more complicated. See ``merge`` documentation.
-    
 .. Attention:: Up to **NeatSeq-Flow** version 1.2.0, the sample file can only contain **sample files**. No project files are permitted. 
 
     * If you have project files, create a single sample which will represent your project. 
