@@ -8,31 +8,32 @@
 :Affiliation: Bioinformatics core facility
 :Organization: National Institute of Biotechnology in the Negev, Ben Gurion University.
 
-.. image:: Neatseq_Flow_Monitor.png
-   :alt: Neatseq-Flow Monitor
 
 SHORT DESCRIPTION
 ~~~~~~~~~~~~~~~~~~~~~
-    Neatseq-Flow Monitor can be used to track the progress of running work-flows of a specific project in **real-time**. 
-    
-    Alternatively Neatseq-Flow Monitor can be used to compare between previous runs of a specific project. 
-    
-    Neatseq-Flow Monitor uses the information in the Neatseq-Flow log files and information gathered from the cluster scheduler
-    
-    **Neatseq-Flow Monitor provide the following information:**
-        * List of available log files for a specific work-flow [project]
-        * List of steps and samples as they distribute by the cluster scheduler
-        * Steps and samples Start and finished times
-        * Number of started and finished jobs
-        * Number and identity of the current ruining jobs
-        * Step progress bar
-        * Color indication for the status of steps and samples
+
+Neatseq-Flow Monitor can be used to track the progress of running work-flows of a specific project in **real-time**. 
+
+Alternatively Neatseq-Flow Monitor can be used to compare between previous runs of a specific project. 
+
+Neatseq-Flow Monitor uses the information in the Neatseq-Flow log files and information gathered from the cluster scheduler
+
+**Neatseq-Flow** monitor provides the following information:
+
+    * List of available log files for a specific work-flow [project]
+    * List of steps and samples as they distribute by the cluster scheduler
+    * Steps and samples Start and finished times
+    * Number of started and finished jobs
+    * Number and identity of the current ruining jobs
+    * Step progress bar
+    * Color indication for the status of steps and samples
         
 Requires
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-    Neatseq-Flow Monitor is written in python and requires the following packages that are not included in python 2.7 release:
-        * ``pandas``
+**Neatseq-Flow** Monitor is written in python and requires the following packages that are not included in python 2.7 release:
+
+    * ``pandas``
 
 Parameters that can be set
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -43,18 +44,19 @@ Parameters that can be set
 
     "-D",  "PATH", "Neatseq-flow project directory [default= current working directory ]"
     "-R","STR","Log file Regular Expression [in ./log/ ] [default=log_[0-9]+.txt$]"
-    "-- --Monitor_RF","FLOAT","Monitor Refresh rate [default=1]"
-    "-- --File_browser_RF","FLOAT","File Browser Refresh rate [default=1]"
-    "-- --Bar_Marker",  "CHAR", "Progress Bar Marker [default=#]"
-    "-- --Bar_Spacer","CHAR","Progress Bar Spacer [default=Space]"
-    "-- --Bar_len","INT","Progress Bar Total Length [in chars] [default=50]"
+    "--Monitor_RF","FLOAT","Monitor Refresh rate [default=1]"
+    "--File_browser_RF","FLOAT","File Browser Refresh rate [default=1]"
+    "--Bar_Marker",  "CHAR", "Progress Bar Marker [default=#]"
+    "--Bar_Spacer","CHAR","Progress Bar Spacer [default=Space]"
+    "--Bar_len","INT","Progress Bar Total Length [in chars] [default=50]"
 
 Comments
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    .. note:: Neatseq Flow Monitor can be run only after the Neatseq Flow script generator is finished successfully [a project is created]
-    
-    
-    .. tip:: Running ``Neatseq_Flow_Monitor.py`` from the project directory without arguments will use all the default parameters and will show the project available log files.
+
+.. note:: **Neatseq Flow** Monitor can be run only after the **Neatseq Flow** script generator is finished successfully [a project is created]
+
+
+.. tip:: Running ``neatseq_flow_monitor.py`` from the project directory without arguments will use all the default parameters and will show the project available log files.
 
 Help message:
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
