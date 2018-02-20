@@ -282,37 +282,40 @@ class Step_merge(Step):
                 for sample in self.sample_data["samples"]:
                     if src not in self.sample_data[sample]:
                         raise AssertionExcept("Type '{src}' does not exist for sample '{smp}'!".format(src=src,smp=sample))
-                    # Guessing script_path:
-                    # Get file extensions:
-                    if not script_path:  # Is none - try geussing
-                        src_exts = set([os.path.splitext(filename)[1] for filename in self.sample_data[sample][src]])
-
-                        if len(src_exts)>1:
-                            raise AssertionExcept("More than one file extension in source {src} for sample. Can't guess 'script_path'".format(src=src),sample)
-                        # Convert set to string:
-                        src_exts = list(src_exts)[0]
-                        if src_exts not in self.script_path_map.keys():
-                            raise AssertionExcept("Unidentified extension in source {src} for sample. Can't guess 'script_path'".format(src=src),sample)
-                        else:
-                            if isinstance(self.script_path_map[src_exts],list):
-                                self.params["script_path"][src_ind] = self.script_path_map[src_exts][0]
-                                self.params["pipe"][src_ind] = self.script_path_map[src_exts][1]
-                            else:
-                                self.params["script_path"][src_ind] = self.script_path_map[src_exts]
-                        
-            elif scope=="project":
-                if src not in self.sample_data["project_data"]:
-                    raise AssertionExcept("Type '{src}' does not exist in project data!".format(src=src))
                 # Guessing script_path:
                 # Get file extensions:
                 if not script_path:  # Is none - try geussing
-                    src_exts = set([os.path.splitext(filename)[1] for filename in self.sample_data["project_data"][src]])
+                    # src_exts is defined as follows: For each sample in samples list, get the list of file extensions. Creates a list of lists.
+                    src_exts = [[os.path.splitext(filename)[1] for filename in self.sample_data[sample][src]] for sample in self.sample_data["samples"]]
+                    # Flatten the list of lists, and uniqify:
+                    src_exts = list(set([item for sublist in src_exts for item in sublist]))
+    
                     if len(src_exts)>1:
-                        raise AssertionExcept("More than one file extension in source {src} for project. Can't guess 'script_path'".format(src=src))
+                        raise AssertionExcept("More than one file extension in source '{src}' ({ext}). Can't guess 'script_path'".format(src=src, ext=", ".join(src_exts)))
                     # Convert set to string:
-                    src_exts = list(src_exts)[0]
+                    src_exts = src_exts[0]
                     if src_exts not in self.script_path_map.keys():
-                        raise AssertionExcept("Unidentified extension in source {src} for project. Can't guess 'script_path'".format(src=src))
+                        raise AssertionExcept("Unidentified extension in source '{src}' ({ext}). Can't guess 'script_path'".format(src=src, ext=src_exts))
+                    else:
+                        if isinstance(self.script_path_map[src_exts],list):
+                            self.params["script_path"][src_ind] = self.script_path_map[src_exts][0]
+                            self.params["pipe"][src_ind] = self.script_path_map[src_exts][1]
+                        else:
+                            self.params["script_path"][src_ind] = self.script_path_map[src_exts]
+                        
+            elif scope=="project":
+                if src not in self.sample_data["project_data"]:
+                    raise AssertionExcept("Type '{src}' does not exist in project data!".format(src=src, ext=src_exts))
+                # Guessing script_path:
+                # Get file extensions:
+                if not script_path:  # Is none - try geussing
+                    src_exts = list(set([os.path.splitext(filename)[1] for filename in self.sample_data["project_data"][src]]))
+                    if len(src_exts)>1:
+                        raise AssertionExcept("More than one file extension in source '{src}' for project ({ext}). Can't guess 'script_path'".format(src=src, ext=", ".join(src_exts)))
+                    # Convert set to string:
+                    src_exts = src_exts[0]
+                    if src_exts not in self.script_path_map.keys():
+                        raise AssertionExcept("Unidentified extension in source '{src}' for project ({ext}). Can't guess 'script_path'".format(src=src, ext=src_exts))
                     else:
                         if isinstance(self.script_path_map[src_exts],list):
                             self.params["script_path"][src_ind] = self.script_path_map[src_exts][0]

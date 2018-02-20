@@ -2,10 +2,8 @@
 .fasta:  cat
 .faa:    cat
 .fna:    cat
-.txt:    cat
-.csv:    cat
-.fastq:  cat
 .fa:     cat
+.fastq:  cat
 .fq:     cat
 .gz:     gzip -cd 
 .zip:    [echo, 'xargs -d " " -I % sh -c "unzip -p %"']
@@ -29,5 +27,8 @@
 # .z
 # .Z
 # .infl
+# Might have headers!
+# .txt:    cat
+# .csv:    cat
 
 
