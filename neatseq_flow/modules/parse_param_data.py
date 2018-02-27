@@ -132,6 +132,11 @@ def get_param_data_YAML(filelines):
                     endparams[param_dict[yamlname]["module"]][yamlname].pop("redirects")
             else: # Add empty redir_params.
                 endparams[param_dict[yamlname]["module"]][yamlname]["redir_params"] = {}
+            # When redirects keys are numbers, such as '-1' in bowtie2 mapper, the keys are stored as numbers. This is bad for testing. Converting all numeric keys to character keys:
+            endparams[param_dict[yamlname]["module"]][yamlname]["redir_params"] = \
+                {str(key):value \
+                for (key,value) \
+                in endparams[param_dict[yamlname]["module"]][yamlname]["redir_params"].items()}
 
             # Converting base to list if it is not one already
             if "base" in endparams[param_dict[yamlname]["module"]][yamlname].keys() and not isinstance(endparams[param_dict[yamlname]["module"]][yamlname]["base"],list):

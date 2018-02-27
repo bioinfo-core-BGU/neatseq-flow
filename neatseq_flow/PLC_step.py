@@ -98,7 +98,7 @@ class Step:
                     # Adding module_path to search path
                     if module_path not in sys.path:
                         sys.path.append(os.path.abspath(module_path))
-
+                        
                     # For what this does, see below (# Build module name)...
 
                     # Backup module to backups dir:
@@ -209,6 +209,15 @@ class Step:
             print assertErr.get_error_str()
             raise assertErr 
 
+        # Check that auto_redirs do not exist in parameter redirects list:
+        try:
+            auto_redirs = list(set(self.params["redir_params"].keys()) & set(self.auto_redirs))
+            if auto_redirs:
+                raise AssertionExcept("Please do not pass the following redirected parameters. They are set automatically or module is not defined to use them. %s" % ", ".join(auto_redirs))
+        except AttributeError:  # Ignore if auto_redirs not defined for module. It is highly recommended to do so...
+            pass
+        except:
+            raise
         
         # Create a list for filenames to register with md5sum for each script:
         self.stamped_files = list()
@@ -462,10 +471,8 @@ Dependencies: {depends}""".format(name = self.name,
                 if set(self.params["sample_list"])-set(self.pipe_data["samples"]):
                     raise AssertionExcept("'sample_list' includes samples not defined in sample data!", step=self.get_step_name())
                 self.sample_data["samples"] = self.params["sample_list"]
-            # print(self.sample_data["samples"])
-            # sys.exit()
-            # self.sample_data[samples]
-            
+
+
         # Trying running step specific sample initiation script:
         try:
             if not self.skip_step_sample_initiation:
