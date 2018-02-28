@@ -43,6 +43,7 @@ Things to modify in the actual code
 4. ``make_sample_file_index()`` is a place to put code that produces an index file of the files produced by this step (BLAST uses this function, so you can check it out in ``blast.py``)
 5. In ``create_spec_preliminary_script()`` you create the code for a script that will be run before all other step scripts are executed. If not defined or returns nothing, it will be ignored (i.e. you can set it to ``pass``). This is useful if you need to prepare a database, for example, before the other scripts use it.
 6. In ``create_spec_wrapping_up_script()`` you create the code for a script that will be run after all other step scripts are executed. If not defined or returns nothing, it will be ignored (i.e. you can set it to "pass"). This is the place to call ``make_sample_file_index()`` to create an index of the files produced in this step; and to call a script that takes the index file and does some kind of data agglomeration.
+7. It is highly recommended to create an instance-scope list of the redirected parameters that the user should **not** pass because they are dealt with by your module. The list should be called ``auto_redirs`` and you should place it directly after the class definition line (*i.e.* the line beginning with ``class Step_...``). After instance creation, the list is checked by **NeatSeq-Flow** to make sure the user did not pass forbidden parameters.
 
 .. _build_scripts_help:
 

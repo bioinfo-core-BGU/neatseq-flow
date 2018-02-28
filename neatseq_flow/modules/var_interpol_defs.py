@@ -79,7 +79,7 @@ def walk(node, variables_bunch, callback):
         for i in range(0,len(node)):
             if isinstance(node[i], collections.Iterable):
                 node[i] = walk(node[i], variables_bunch, callback)
-            elif isinstance(item, str):
+            elif isinstance(node[i], str):
                 # node[i] = interpol_atom(node[i], variables_bunch)
                 node[i] = callback(node[i])
             else:

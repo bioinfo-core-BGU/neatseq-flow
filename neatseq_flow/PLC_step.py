@@ -29,6 +29,7 @@ class AssertionExcept(Exception):
     def set_step_name(self, step_name = None):
         if not step_name:
             sys.exit("You must specify step_name when calling set_step_name()")
+            
         self.step = step_name
         
     def get_error_str(self):
@@ -205,8 +206,8 @@ class Step:
             self.step_specific_init()
         except AssertionExcept as assertErr:
             print "step_specific_init"
-            assertErr.set_step_name(self.get_step_name)
-            print assertErr.get_error_str()
+            assertErr.set_step_name(self.get_step_name())
+            # print assertErr.get_error_str()
             raise assertErr 
 
         # Check that auto_redirs do not exist in parameter redirects list:

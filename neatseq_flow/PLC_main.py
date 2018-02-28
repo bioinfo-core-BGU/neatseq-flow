@@ -641,7 +641,7 @@ func_trap() {{
     # $7: sig
 
     if [ ! $6 == 'ND' ]; then
-        maxvmem=$({qstat_path} -j $7 | grep maxvmem | cut -d = -f 6);
+        maxvmem=$({qstat_path} -j $6 | grep maxvmem | cut -d = -f 6);
     else
         maxvmem="NA";
     fi
