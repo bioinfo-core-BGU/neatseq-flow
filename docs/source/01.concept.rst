@@ -18,9 +18,9 @@ Introduction
 
 **NeatSeq-Flow** can be operated at three levels, from easy to advanced:
 
-1. :ref:`Basic_usage`: A workflow is pre-coded in a parameter file downloaded from the `Workflows repository`_ or elsewhere. All the user has to do is modify the program paths in the parameter file and create a sample file describing the samples and their associated files. (See :ref:`Sample_file_definition`.)
-2. :ref:`workflow_contruction`: The user defines a sample file as above, but also defines a workflow parameter file based on existing modules (see `Modules and workflows repository`_). Of course, the user can take and existing workflow and modify and expand it according to the job at hand.
-3. :ref:`adding_modules`: Creating a workflow based on tools not yet included in **NeatSeq-Flow**. This requires the user to add modules for each program he expects to run. Alternatively, the user can use the `Generic module`_ to include programs without defining modules.
+#. :ref:`Basic_usage`: A workflow is pre-coded in a parameter file downloaded from the `Workflows repository`_ or elsewhere. All the user has to do is modify the program paths in the parameter file and create a sample file describing the samples and their associated files. (See :ref:`Sample_file_definition`.)
+#. :ref:`workflow_contruction`: The user defines a sample file as above, but also defines a workflow parameter file based on existing modules (see `Modules and workflows repository`_). Of course, the user can take and existing workflow and modify and expand it according to the job at hand.
+#. :ref:`adding_modules`: Creating a workflow based on tools not yet included in **NeatSeq-Flow**. This requires the user to add modules for each program he expects to run. Alternatively, the user can use the `Generic module`_ to include programs without defining modules.
 
 
 
@@ -32,11 +32,11 @@ Basic usage
 
 Basic usage does not require much. 
 
-1. Copy a ready-made parameter file (you can find some in the ``Workflows`` dir in the main **NeatSeq-Flow** directory and at the `Modules and workflows repository`_).
-2. Adjust the script paths to the correct paths on your system (These are usually coded as *variables* in the ``Vars`` section at the top of the parameter file).
-3. Create a sample file following the directions in :ref:`Sample_file_definition`.
-4. Execute **NeatSeq-Flow** (see :ref:`executing NeatSeq-Flow <Execution_section>`) to create the workflow scripts.
-5. Execute the workflow scripts by executing the ``scripts/00.workflow.commands.csh`` script.
+#. Copy a ready-made parameter file (you can find some in the ``Workflows`` dir in the main **NeatSeq-Flow** directory and at the `Modules and workflows repository`_).
+#. Adjust the script paths to the correct paths on your system (These are usually coded as *variables* in the ``Vars`` section at the top of the parameter file).
+#. Create a sample file following the directions in :ref:`Sample_file_definition`.
+#. Execute **NeatSeq-Flow** (see :ref:`Execution_section`) to create the workflow scripts.
+#. Execute the workflow scripts by executing the ``scripts/00.workflow.commands.csh`` script.
 
 
 .. _workflow_contruction:

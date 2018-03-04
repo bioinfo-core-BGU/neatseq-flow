@@ -16,5 +16,5 @@ NeatSeq-Flow Monitor
    
 .. automodule:: neatseq_flow_monitor
 
-.. image:: neatseq_flow_monitor.png
+.. image:: figs/neatseq_flow_monitor.png
    :alt: Neatseq-Flow Monitor

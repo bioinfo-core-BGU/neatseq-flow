@@ -23,27 +23,27 @@ Steps in writing **NeatSeq-Flow** modules
 Preparing the module file
 -----------------------------
 
-1. Choose a name for the module. *e.g.* ``bowtie2_mapper``
-2. Decide which level the module will work on: samples or project-wide?
+#. Choose a name for the module. *e.g.* ``bowtie2_mapper``
+#. Decide which level the module will work on: samples or project-wide?
 
     - Use the |sample_template| if it works on the sample level.
     - Use the |project_template| if it works on the project level.
 
-3. Change the name of the template file to to ``<module_name>.py``. 
-4. Make sure the file is within a directory which includes an empty ``__init__.py`` file. This directory is passed to **NeatSeq-Flow** through the ``module_path`` global parameter (see :ref:`parameter_file_definition`)
-5. Change the class name to ``Step_<module_name>`` in the line beginning with ``class Step_...``. Make sure ``<module_name>`` here is identical to the one you used in the filename above.
+#. Change the name of the template file to to ``<module_name>.py``. 
+#. Make sure the file is within a directory which includes an empty ``__init__.py`` file. This directory is passed to **NeatSeq-Flow** through the ``module_path`` global parameter (see :ref:`parameter_file_definition`)
+#. Change the class name to ``Step_<module_name>`` in the line beginning with ``class Step_...``. Make sure ``<module_name>`` here is identical to the one you used in the filename above.
 
 
 Things to modify in the actual code
 -------------------------------------
 
-1. In ``step_specific_init()``, set ``self.shell`` to `csh` or `bash`, depending on the shell language you want your scripts to be coded in (It is best to use ``bash`` because it will work with |conda|).
-2. In ``step_sample_initiation()`` method, you can do things on the ``sample_data`` structure before actual script preparing, such as assertion checking (:ref:`assert_and_warn`) to make sure the data the step requires exists in the ``sample_data`` structure.
-3. ``build_scripts()`` is the actual place to put the step script building code. See :ref:`build_scripts_help`.
-4. ``make_sample_file_index()`` is a place to put code that produces an index file of the files produced by this step (BLAST uses this function, so you can check it out in ``blast.py``)
-5. In ``create_spec_preliminary_script()`` you create the code for a script that will be run before all other step scripts are executed. If not defined or returns nothing, it will be ignored (i.e. you can set it to ``pass``). This is useful if you need to prepare a database, for example, before the other scripts use it.
-6. In ``create_spec_wrapping_up_script()`` you create the code for a script that will be run after all other step scripts are executed. If not defined or returns nothing, it will be ignored (i.e. you can set it to "pass"). This is the place to call ``make_sample_file_index()`` to create an index of the files produced in this step; and to call a script that takes the index file and does some kind of data agglomeration.
-7. It is highly recommended to create an instance-scope list of the redirected parameters that the user should **not** pass because they are dealt with by your module. The list should be called ``auto_redirs`` and you should place it directly after the class definition line (*i.e.* the line beginning with ``class Step_...``). After instance creation, the list is checked by **NeatSeq-Flow** to make sure the user did not pass forbidden parameters.
+#. In ``step_specific_init()``, set ``self.shell`` to `csh` or `bash`, depending on the shell language you want your scripts to be coded in (It is best to use ``bash`` because it will work with |conda|).
+#. In ``step_sample_initiation()`` method, you can do things on the ``sample_data`` structure before actual script preparing, such as assertion checking (:ref:`assert_and_warn`) to make sure the data the step requires exists in the ``sample_data`` structure.
+#. ``build_scripts()`` is the actual place to put the step script building code. See :ref:`build_scripts_help`.
+#. ``make_sample_file_index()`` is a place to put code that produces an index file of the files produced by this step (BLAST uses this function, so you can check it out in ``blast.py``)
+#. In ``create_spec_preliminary_script()`` you create the code for a script that will be run before all other step scripts are executed. If not defined or returns nothing, it will be ignored (i.e. you can set it to ``pass``). This is useful if you need to prepare a database, for example, before the other scripts use it.
+#. In ``create_spec_wrapping_up_script()`` you create the code for a script that will be run after all other step scripts are executed. If not defined or returns nothing, it will be ignored (i.e. you can set it to "pass"). This is the place to call ``make_sample_file_index()`` to create an index of the files produced in this step; and to call a script that takes the index file and does some kind of data agglomeration.
+#. It is highly recommended to create an instance-scope list of the redirected parameters that the user should **not** pass because they are dealt with by your module. The list should be called ``auto_redirs`` and you should place it directly after the class definition line (*i.e.* the line beginning with ``class Step_...``). After instance creation, the list is checked by **NeatSeq-Flow** to make sure the user did not pass forbidden parameters.
 
 .. _build_scripts_help:
 
@@ -115,8 +115,8 @@ This kind of condition is typically programmed in python using assertions.
 
 In **NeatSeq-Flow**, assertions are managed with the ``AssertionExcept`` exception class. For testing the parameters, create an ``if`` condition which raises an ``AssertionExcept``. The arguments to ``AssertionExcept`` are as follows:
 
-1. An error message to be displayed. ``AssertionExcept`` will automatically add the step name to the message.
-2. Optional: The sample name, in case the condition failed for a particular sample (e.g. a particular sample does not have a BAM file defined.)
+#. An error message to be displayed. ``AssertionExcept`` will automatically add the step name to the message.
+#. Optional: The sample name, in case the condition failed for a particular sample (e.g. a particular sample does not have a BAM file defined.)
 
 A typical condition testing code snippet::
 

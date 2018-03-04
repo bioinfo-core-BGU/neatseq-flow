@@ -110,97 +110,100 @@ For that you will need:
 * Conda installed on your system (see `miniconda  <https://conda.io/miniconda.html>`_) and **in your path**.
 * The **NeatSeq-Flow** |conda_tut_install|.
 
+.. Attention:: This tutorial assumes ``conda`` is installed and on the search path. If it is not, append the ``conda`` path to all ``conda``, ``activate`` and ``deactivate`` commands below.
 
 To install, perform the following steps:
 
-1. Create a **NeatSeq-Flow** project directory
+#. Create a **NeatSeq-Flow** project directory
 
-.. code-block:: csh
+    .. code-block:: csh
 
-    mkdir Example_WF
-    cd Example_WF
+        mkdir Example_WF
+        cd Example_WF
 
-2. Get the installation file 
+#. Get the installation file:
 
-You will need to copy the |conda_tut_install| file into the current directory, or download it directly with the following command:
+    You will need to copy the |conda_tut_install| file into the current directory, or download it directly with the following command:
 
-.. code-block:: csh
+    .. code-block:: csh
 
-    curl http://neatseq-flow.readthedocs.io/en/latest/_downloads/NeatSeq_Flow_Tutorial_Install.yaml > NeatSeq_Flow_Tutorial_Install.yaml
+        curl http://neatseq-flow.readthedocs.io/en/latest/_downloads/NeatSeq_Flow_Tutorial_Install.yaml > NeatSeq_Flow_Tutorial_Install.yaml
     
-3. Install the **NeatSeq-Flow** environment
 
-The following commands will install **NeatSeq-Flow** and all the required modules and programs. 
+#. Install the **NeatSeq-Flow** environment
 
-.. Attention:: This tutorial assumes `conda` is installed and on the search path. If it is not, append the `conda` path to all `conda`, `activate` and `deactivate` commands below.
+    The following commands will install **NeatSeq-Flow** and all the required modules and programs. 
 
-
-.. code-block:: csh
-
-    conda env create -f  NeatSeq_Flow_Tutorial_Install.yaml
-
-.. Note:: For some versions of conda, you might have to replace ``conda env`` with ``conda-env``. If the command above does not work, try the following command:
 
 
     .. code-block:: csh
 
-        conda-env create -f  NeatSeq_Flow_Tutorial_Install.yaml
+        conda env create -f  NeatSeq_Flow_Tutorial_Install.yaml
+
+    .. Note:: For some versions of conda, you might have to replace ``conda env`` with ``conda-env``. If the command above does not work, try the following command:
 
 
-.. Attention:: From the following step onwards, you should be in ``bash`` shell
+        .. code-block:: csh
+
+            conda-env create -f  NeatSeq_Flow_Tutorial_Install.yaml
+
+
+    .. Attention:: From the following step onwards, you should be in ``bash`` shell
+
+        .. code-block:: csh
+
+            bash
+
+#. Activate the **NeatSeq-Flow** environment
 
     .. code-block:: csh
 
-        bash
-
-3. Activate the **NeatSeq-Flow** environment
-
-.. code-block:: csh
-
-    source activate NeatSeq_Flow_Tutorial
+        source activate NeatSeq_Flow_Tutorial
 
 
 
 Run **NeatSeq-Flow**
 ~~~~~~~~~~~~~~~~~~~~~
 
-1. Edit the example Workflow parameter file to suit your cluster
+#. Edit the example Workflow parameter file to suit your cluster:
 
-The file will be located at this path::
+    The file will be located at this path::
 
-    $CONDA_PREFIX/TUTORIAL/Example_WF_conda_env.yaml
-    
-Edit the global params section, particularly the following two lines::
+        $CONDA_PREFIX/TUTORIAL/Example_WF_conda_env.yaml
+        
+    .. Attention:: After activating the virtual environment, ``$CONDA_PREFIX`` contains the path to the environment. Therefore, we use it below to reference the tutorial files.
 
-    Global_params:
-        Qsub_path:      /PATH_TO_YOUR_QSUB/
-        Qsub_q:         NAME_OF_YOUR_QUEUE.q
+    Edit the global params section, particularly the following two lines::
 
-The ``Qsub_path`` parameter can be determined by executing the following command and replacing ``/PATH_TO_YOUR_QSUB/`` with the result.
+        Global_params:
+            Qsub_path:      /PATH_TO_YOUR_QSUB/
+            Qsub_q:         NAME_OF_YOUR_QUEUE.q
 
-.. code-block:: csh
+    The ``Qsub_path`` parameter can be determined by executing the following command and replacing ``/PATH_TO_YOUR_QSUB/`` with the result.
 
-    dirname `which qsub`
+    .. code-block:: csh
 
-You can do the editting with any text editor of your liking.
+        dirname `which qsub`
+
+    You can do the editting with any text editor of your liking.
 
 
-.. .. warning::  Don't forget to save the file when you done!
+    .. .. warning::  Don't forget to save the file when you done!
 
-3. Execute the following command to tell **NeatSeq-Flow** where the base conda installation is located:
+#. Execute the following command to tell **NeatSeq-Flow** where the base conda installation is located:
 
-.. code-block:: csh
+    .. code-block:: csh
 
-    export CONDA_BASE=$(conda info --root)
+        export CONDA_BASE=$(conda info --root)
 
-4. Execute **NeatSeq-Flow** to create the workflow scripts:
+#. Execute **NeatSeq-Flow** to create the workflow scripts:
 
-.. code-block:: csh
+    .. code-block:: csh
 
-    neatseq_flow.py                                                             \
-        --sample_file $CONDA_PREFIX/TUTORIAL/Sample_sets/Samples_conda.nsfs     \
-        --param_file  $CONDA_PREFIX/TUTORIAL/Example_WF_conda_env.yaml          \
-        --message     "an informative message"
+        neatseq_flow.py                                                             \
+            --sample_file $CONDA_PREFIX/TUTORIAL/Sample_sets/Samples_conda.nsfs     \
+            --param_file  $CONDA_PREFIX/TUTORIAL/Example_WF_conda_env.yaml          \
+            --message     "an informative message"
 
 .. note::  If **NeatSeq-Flow** says :``Finished successfully....`` it is OK to move on.
 
@@ -260,82 +263,86 @@ If you have all the required programs installed on your system you can download 
 You will need:
 
 * Python 2.7 installed
-* The python dependencies: yaml and bunch (you can install them by using ``pip install yaml bunch`` in the command line).
+* The python dependencies: yaml and bunch (you can install them by using ``pip install pyyaml bunch`` in the command line).
 
 Download the **NeatSeq-Flow** repositories from github
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-First, create a directory for the tutorial:
+#. First, create a directory for the tutorial:
 
 .. code-block:: csh
 
     mkdir neatseq-flow-tutorial
     cd neatseq-flow-tutorial
    
-The following commands will download the repositories you will need for this tutorial:
+#. The following commands will download the repositories you will need for this tutorial:
 
-1. The main **NeatSeq-Flow** repository.
-2. The tutorial datasets and workflow repository.
+    #. The main **NeatSeq-Flow** repository.
+    #. The tutorial datasets and workflow repository.
 
-.. code-block:: csh
+    .. code-block:: csh
 
-  git clone https://github.com/bioinfo-core-BGU/neatseq-flow.git
-  git clone https://github.com/bioinfo-core-BGU/neatseq-flow-tutorial.git
+      git clone https://github.com/bioinfo-core-BGU/neatseq-flow.git
+      git clone https://github.com/bioinfo-core-BGU/neatseq-flow-tutorial.git
 
 
-Finally, create a directory for the **NeatSeq-Flow** project, and copy the tutorial parameter and sample files into it:
+#. Finally, create a directory for the **NeatSeq-Flow** project, and copy the tutorial parameter and sample files into it:
 
-.. _copying_files:
+    .. _copying_files:
 
-.. code-block:: csh
+    .. code-block:: csh
 
-    mkdir Example_WF
-    cd Example_WF
-    cp ../neatseq-flow-tutorial/Example_WF.yaml ../neatseq-flow-tutorial/Samples.nsfs ./
+        mkdir Example_WF
+        cd Example_WF
+        cp ../neatseq-flow-tutorial/Example_WF.yaml ../neatseq-flow-tutorial/Samples.nsfs ./
 
 
 Preparing the workflow parameter file
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Edit the example Workflow parameter file to suit your cluster.
+Edit the example Workflow parameter file to suit your cluster:
 
-.. code-block:: csh
+    .. code-block:: csh
 
-    nano  Example_WF.yaml
+        nano  Example_WF.yaml
 
-.. .. note::  **Don't forget to save the file when you done!**
+    .. .. note::  **Don't forget to save the file when you done!**
 
 
-1. Edit the global params section, particularly the following two lines::
+#. Global parameters section:
 
-    Global_params:
-        Qsub_path:      /PATH_TO_YOUR_QSUB/
-        Qsub_q:         NAME_OF_YOUR_QUEUE.q
+    Edit the ``Global_params`` section, particularly the following two lines::
 
-The ``Qsub_path`` parameter can be determined by executing the following command and replacing ``/PATH_TO_YOUR_QSUB/`` with the result.
+        Global_params:
+            Qsub_path:      /PATH_TO_YOUR_QSUB/
+            Qsub_q:         NAME_OF_YOUR_QUEUE.q
 
-.. code-block:: csh
+    The ``Qsub_path`` parameter can be determined by executing the following command and replacing ``/PATH_TO_YOUR_QSUB/`` with the result.
 
-    dirname `which qsub`
+        .. code-block:: csh
+
+            dirname `which qsub`
     
-2. Edit the definitions in the variables section (add the **FULL PATHs** for all required programs)::
+#. Variables section:
 
-    Vars:
-        Programs:
-            FastQC:             /FULL_PATH_TO/fastqc_Executable
-            Trimmomatic: 
-                Bin:            /FULL_PATH_TO/trimmomatic
-                Adapters:       /FULL_PATH_TO/TruSeq3-PE.fa
-            BWA:                /FULL_PATH_TO/bwa_Executable
-            bowtie2:            /FULL_PATH_TO/bowtie2_Executable
-            bowtie2_builder:    /FULL_PATH_TO/bowtie2-build_Executable
-            samtools:           /FULL_PATH_TO/samtools_Executable
-            multiqc:            /FULL_PATH_TO/multiqc_Executable
+    Edit the definitions in the variables section (add the **FULL PATHs** for all required programs)::
 
-.. Note:: Please notice that ``Trimmomatic`` takes two parameters. The location of the executable (``{Vars.Programs.Trimmomatic.Bin}``) and the location of the Adapters file (``{Vars.Programs.Trimmomatic.Adapters}``)
+        Vars:
+            Programs:
+                FastQC:             /FULL_PATH_TO/fastqc_Executable
+                Trimmomatic: 
+                    Bin:            /FULL_PATH_TO/trimmomatic
+                    Adapters:       /FULL_PATH_TO/TruSeq3-PE.fa
+                BWA:                /FULL_PATH_TO/bwa_Executable
+                bowtie2:            /FULL_PATH_TO/bowtie2_Executable
+                bowtie2_builder:    /FULL_PATH_TO/bowtie2-build_Executable
+                samtools:           /FULL_PATH_TO/samtools_Executable
+                multiqc:            /FULL_PATH_TO/multiqc_Executable
+
+    .. Note:: Please notice that ``Trimmomatic`` takes two parameters. The location of the executable (``{Vars.Programs.Trimmomatic.Bin}``) and the location of the Adapters file (``{Vars.Programs.Trimmomatic.Adapters}``)
 
 Run **NeatSeq-Flow**
-~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~
 
 In the command line type:
 

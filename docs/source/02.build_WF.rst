@@ -21,10 +21,10 @@ Building a workflow
 
 A typical usage of **NeatSeq-Flow** involves the following steps:
 
-1. `Parameter file definition`_
-2. `Sample file definition`_
-3. `Executing NeatSeq-Flow`_
-4. `Executing the workflow`_
+#. `Parameter file definition`_
+#. `Sample file definition`_
+#. `Executing NeatSeq-Flow`_
+#. `Executing the workflow`_
 
 
 
@@ -62,9 +62,12 @@ All global parameters are set within a ``Global_params`` block in YAML format.
 ``Qsub_path``
     The path to the ``qstat`` command. If not set, qstat will be used as-is with no path. Sometimes in remote nodes the ``qstat`` command is not in the path and if Qsub_path is not set, the step start and stop logging will fail.
 
-.. Tip:: The correct value for the ``Qsub_path`` parameter can be determined by executing the following command::
+.. Tip:: The correct value for the ``Qsub_path`` parameter can be determined by executing the following command:
 
-    dirname `which qsub`
+    .. code-block:: csh
+
+        dirname `which qsub`
+
 
 ``Default_wait``
     The time, in seconds, to wait for jobs to enter the queue before terminating the step-level script. Must be an integer. The default is 10, which is usually a good value to start with. If downstream jobs seem to be sent for execution before earlier jobs have terminated, increase this value.
@@ -138,9 +141,9 @@ Step parameters can be divided into the following groups:
 .. 1. :ref:`Required parameters for each step <required_parameters>`.
 .. 1. required_parameters_
 
-1. `Required parameters for each step`_
-2. `Additional parameters`_
-3. `Redirected parameters`_
+#. `Required parameters for each step`_
+#. `Additional parameters`_
+#. `Redirected parameters`_
 
 
 .. _required_parameters:
@@ -225,9 +228,9 @@ Redirected parameters are specified within a ``redirects:`` block (see example i
 Comments
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-1. The local directory passed to ``local`` must exist on all nodes in the queue.
-2. For a list of qsub parameters, see the `qsub man page`_ 
-3. The list of nodes passed to ``node`` within the ``qsub_params`` block will be appended to the queue name (global or step specific). Don't add the queue name to the node names.
+#. The local directory passed to ``local`` must exist on all nodes in the queue.
+#. For a list of qsub parameters, see the `qsub man page`_ 
+#. The list of nodes passed to ``node`` within the ``qsub_params`` block will be appended to the queue name (global or step specific). Don't add the queue name to the node names.
 
 
 .. ##############################################################
@@ -325,8 +328,7 @@ For example, a project file section could look like this::
 
 The same file types that can be used in the `Sample files`_ section, can also be used in the project files section. 
 
-.. Warning:: Project files in the sample file is an experimental feature, and should be used with caution.
-    If you are importing only project files and no sample files, you have to specify ``scope=project`` in your  ``merge`` instance. If you have both project and sample files, the definition in ``merge`` is more complicated. See ``merge`` documentation.
+.. Warning:: Project files in the sample file is an experimental feature, and should be used with caution. See ``merge`` documentation for details on how to import various types of sample files.
     
 .. Attention:: Up to **NeatSeq-Flow** version 1.2.0, the sample file can only contain **sample files**. No project files are permitted. 
 

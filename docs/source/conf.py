@@ -320,3 +320,5 @@ class Mock(object):
 
 for mod_name in ('curses','_curses','pandas','_pandas'):
     sys.modules[mod_name] = Mock()
+
+

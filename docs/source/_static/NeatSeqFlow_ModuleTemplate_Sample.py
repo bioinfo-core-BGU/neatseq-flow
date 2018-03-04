@@ -70,6 +70,8 @@ __author__ = "Author"
 
 class Step_MODULENAME(Step):
 
+    # A list of parameters the user should NOT redirect:
+    auto_redirs = "-i --in -o --out".split(" ")
     
     def step_specific_init(self):
         self.shell = "bash"      # Can be set to "csh" by inheriting instances.

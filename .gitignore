@@ -2,6 +2,7 @@
 *.ipynb*
 *.sh
 *.pyc
+*.bck
 git-gui*
 jupyter-notebook-Shortcut*
 pipe_dirs/**

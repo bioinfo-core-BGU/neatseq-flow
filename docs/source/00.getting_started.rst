@@ -21,29 +21,31 @@ Download and Install
 ===============================
 
 
-1. Clone the package from github:
+#. Clone the package from github::
 
-``git clone https://github.com/bioinfo-core-BGU/neatseq-flow.git``
+    git clone https://github.com/bioinfo-core-BGU/neatseq-flow.git``
 
-2. You may have to install two `python` dependencies: `yaml` and `bunch`. This can be done with:
+#. You may have to install two `python` dependencies: `yaml` and `bunch`. This can be done with::
 
-``pip install yaml bunch``
+    pip install pyyaml bunch
 
-3. Clone the package of modules from github:
+#. Clone the package of modules from github::
 
-``git clone https://github.com/bioinfo-core-BGU/neatseq-flow-modules.git``
+    git clone https://github.com/bioinfo-core-BGU/neatseq-flow-modules.git
 
 .. Note:: You can also download the repository code from the following links:
 
    * Main **NeatSeq-Flow** source code: https://github.com/bioinfo-core-BGU/neatseq-flow/archive/master.zip
    * Module and workflow repository: https://github.com/bioinfo-core-BGU/neatseq-flow-modules/archive/master.zip
 
+.. _Execution_section:
+
 Executing **NeatSeq-Flow**
 ===============================
 
 Create a new directory anywhere, `cd` into it and execute the following commands (``$NSF_main`` is the directory where **NeatSeq-Flow** is installed)::
 
-    python $NSF_main/neatseq_flow.py                         \
+    python $NSF_main/bin/neatseq_flow.py                         \
         --sample_file $NSF_main/Workflows/PE_tabular.nsfs    \
         --param_file  $NSF_main/Workflows/mapping.yaml       \
         --message     "an informative message"
@@ -53,31 +55,35 @@ Create a new directory anywhere, `cd` into it and execute the following commands
 Install and execute with **Conda**
 ====================================
 
-1. Install `Miniconda`_.
-2. Download the **NeatSeq-Flow** |conda_env|. 
-3. Create an environment::
+#. Install `Miniconda`_.
+#. Download the **NeatSeq-Flow** |conda_env|. 
+#. Create an environment::
 
     conda-env create -f NeatSeq_Flow_conda_env.yaml
 
-4. Activate the environment::
+#. Activate the environment::
 
     source activate NeatSeq_Flow
 
-5. Make a dir for your project and change into it::
+#. Execute the following command to tell **NeatSeq-Flow** where the base conda installation is located:
+
+    .. code-block:: csh
+
+        export CONDA_BASE=$(conda info --root)
+
+#. Make a dir for your project and change into it::
 
     mkdir first_neatseq_flow_proj; cd first_neatseq_flow_proj
 
-.. _Execution_section:
-    
-6. Execute **NeatSeq-Flow**::
+#. Execute **NeatSeq-Flow**::
 
-    neatseq_flow.py                                                          \
-        --sample_file $CONDA_PREFIX/NeatSeq-Flow-Workflows/PE_tabular.nsfs    \
-        --param_file  $CONDA_PREFIX/NeatSeq-Flow-Workflows/mapping.yaml                   \
-        --message     "an informative message"
+    neatseq_flow.py \
+        --sample_file $CONDA_PREFIX/NeatSeq-Flow-Workflows/PE_tabular.nsfs \
+        --param_file $CONDA_PREFIX/NeatSeq-Flow-Workflows/mapping.yaml \
+        --message "an informative message"
 
     
-7. When done, deactivate the environment::
+#. When done, deactivate the environment::
 
     source deactivate
 

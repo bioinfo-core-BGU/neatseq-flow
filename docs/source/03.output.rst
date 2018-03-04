@@ -76,11 +76,11 @@ The logs directory
 
 The logs directory contains various logging files:
 
-1. **version_list**. A list of all the versions of the workflow with equivalent comments 
-2. **file_registration**. A list of files produced, including md5 signatures, and the script and workflow version that produced them
-3. ``log_file_plotter.R``. An R script for producing a plot of the execution times. (Run with Rscript and receives a single argument – a log file to plot)
-4. ``log_<workflow_ID>.txt``. Log of the execution times of the script per workflow version ID.
-5. ``log_<workflow_ID>.txt.html``. Graphical representation of the progress of the WF execution, as produced by the ``log_file_plotter.R`` script (see figure below)
+#. **version_list**. A list of all the versions of the workflow with equivalent comments 
+#. **file_registration**. A list of files produced, including md5 signatures, and the script and workflow version that produced them
+#. ``log_file_plotter.R``. An R script for producing a plot of the execution times. (Run with Rscript and receives a single argument – a log file to plot)
+#. ``log_<workflow_ID>.txt``. Log of the execution times of the script per workflow version ID.
+#. ``log_<workflow_ID>.txt.html``. Graphical representation of the progress of the WF execution, as produced by the ``log_file_plotter.R`` script (see figure below)
  
  
 .. figure:: figs/image009.png
@@ -117,22 +117,22 @@ The objects directory contains various files describing the workflow:
    The objects directory created by **NeatSeq-Flow**
 
    
-1. ``pipeline_graph.html``: An SVG diagram of the workflow.
+#. ``pipeline_graph.html``: An SVG diagram of the workflow.
 
-.. figure:: figs/pipeline_graph_old.PNG
-   :scale: 100 %
-   :alt: log directory
-   :align: center
+    .. figure:: figs/pipeline_graph_old.PNG
+       :scale: 100 %
+       :alt: log directory
+       :align: center
 
-2. ``diagrammer.R``: an R script for producing a DiagrammeR diagram of the workflow. 
-3. ``pipedata.json``: A JSON file containing all the workflow data, for uploading to JSON compliant databases etc. 
-4. ``workflow_graph.html`` is the output from executing ``Rscript diagrammer.R``.
+#. ``diagrammer.R``: an R script for producing a DiagrammeR diagram of the workflow. 
+#. ``pipedata.json``: A JSON file containing all the workflow data, for uploading to JSON compliant databases etc. 
+#. ``workflow_graph.html`` is the output from executing ``Rscript diagrammer.R``.
 
-.. figure:: figs/workflow_graph.PNG
-   :scale: 100 %
-   :alt: log directory
-   :align: center
+    .. figure:: figs/workflow_graph.PNG
+       :scale: 100 %
+       :alt: log directory
+       :align: center
 
-.. note:: The ``diagrammer.R`` script requires installing the ``DiagrammeR`` and ``htmlwidgets`` R packages.
+    .. note:: The ``diagrammer.R`` script requires installing the ``DiagrammeR`` and ``htmlwidgets`` R packages.
 
 
