@@ -38,6 +38,12 @@
 
 # Installation & Execution
 
+## Installing with `conda`
+
+Check out the documentation on readthedocs for [quick and easy installation with `conda`](http://neatseq-flow.readthedocs.io/en/latest/00.getting_started.html#install-and-execute-with-conda). 
+
+There is also a [Tutorial](http://neatseq-flow.readthedocs.io/en/latest/Example_WF.html) which shows how to configure NeatSeq-Flow for your cluster.
+
 ## Installing NeatSeq-Flow
 
 The easiest way to install is by cloning the github repository:
@@ -50,22 +56,22 @@ NeatSeq-Flow requires the following non-standard python libraries: `yaml` and `b
 
 Installing them is performed with:
 
-	pip install yaml bunch
+	pip install pyyaml bunch
 
 If you are using your own installation of python, located at `/path/to/python-2.7/`, use the following:
 
 	/path/to/python-2.7/bin/pip install                \
        --install-option="--prefix=/path/to/python-2.7" \
-       yaml bunc
+       pyyaml bunch
  
 ## Executing NeatSeq-Flow
 
 Execution is then done as follows:
 
 	mkdir workflow_dirs
-	python neatseq_flow/bin/neatseq_flow.py \
-		-s Workflows/PE_tabular.nsfs \
-		-p Workflows/mapping.yaml \
+	python neatseq-flow/bin/neatseq_flow.py         \
+		-s neatseq-flow/Workflows/PE.nsfs           \
+		-p neatseq-flow/Workflows/mapping.yaml      \
 		-m "My first NeatSeq_Flow mapping workflow" \
 		-d workflow_dirs/
 
