@@ -87,10 +87,7 @@ Sample File for Example
 ::
 
     Title	Example_WF_From_the_manuscript
-    
-    #Type	Path
-    Nucleotide	Reference_genome.fasta
-    
+
     #SampleID	Type	Path
     Sample1	Forward	Sample1F.fastq.gz
     Sample1	Reverse	Sample1R.fastq.gz
@@ -111,10 +108,9 @@ The easiest way to run the WF is through `conda` virtual environment.
 For that you will need:
 
 * Conda installed on your system (see `miniconda  <https://conda.io/miniconda.html>`_) and **in your path**.
-* The :download:`NeatSeq-Flow CONDA installer <_static/NeatSeq_Flow_Tutorial_Install.yaml>`.
+* The **NeatSeq-Flow** |conda_tut_install|.
 
-.. Attention:: This tutorial assumes `conda` is installed and on the search path. If it is not, append the `conda` path to all `conda`, `activate` and `deactivate` commands below.
-
+.. Attention:: This tutorial assumes ``conda`` is installed and on the search path. If it is not, append the ``conda`` path to all ``conda``, ``activate`` and ``deactivate`` commands below.
 
 To install, perform the following steps:
 
@@ -125,14 +121,15 @@ To install, perform the following steps:
         mkdir Example_WF
         cd Example_WF
 
-#. Get the installation file 
+#. Get the installation file:
 
-    You will need to copy the :download:`NeatSeq-Flow CONDA installer <_static/NeatSeq_Flow_Tutorial_Install.yaml>` file into the current directory, or download it directly with the following command:
+    You will need to copy the |conda_tut_install| file into the current directory, or download it directly with the following command:
 
     .. code-block:: csh
 
-        wget http://neatseq-flow.readthedocs.io/en/latest/_downloads/NeatSeq_Flow_Tutorial_Install.yaml 
+        curl http://neatseq-flow.readthedocs.io/en/latest/_downloads/NeatSeq_Flow_Tutorial_Install.yaml > NeatSeq_Flow_Tutorial_Install.yaml
     
+
 #. Install the **NeatSeq-Flow** environment
 
     The following commands will install **NeatSeq-Flow** and all the required modules and programs. 
@@ -168,7 +165,7 @@ To install, perform the following steps:
 Run **NeatSeq-Flow**
 ~~~~~~~~~~~~~~~~~~~~~
 
-#. Edit the example Workflow parameter file to suit your cluster
+#. Edit the example Workflow parameter file to suit your cluster:
 
     The file will be located at this path::
 
@@ -201,12 +198,6 @@ Run **NeatSeq-Flow**
 
 #. Execute **NeatSeq-Flow** to create the workflow scripts:
 
-    .. note:: The three samples used in this Example Workflow are **SRR453031**, **SRR453032** and **SRR453033** form the Staphylococcus aureus Genome Sequencing BioProject **PRJNA157545**, and for the Staphylococcus aureus reference genome the **GCF_000284535.1** assembly is used.
-
-    To save run-time and space the raw samples files contains only the first 500,000 lines each.
-
-    In the command line type:
-
     .. code-block:: csh
 
         neatseq_flow.py                                                             \
@@ -214,16 +205,7 @@ Run **NeatSeq-Flow**
             --param_file  $CONDA_PREFIX/TUTORIAL/Example_WF_conda_env.yaml          \
             --message     "an informative message"
 
-    .. tip:: To use the full raw samples files directly through FTP link in the command line type:
-
-        .. code-block:: csh
-
-            neatseq_flow.py                                                             \
-                --sample_file $CONDA_PREFIX/TUTORIAL/Sample_sets/Samples_from_FTP.nsfs     \
-                --param_file  $CONDA_PREFIX/TUTORIAL/Example_WF_conda_from_ftp.yaml          \
-                --message     "an informative message"
-
-    .. note::  If **NeatSeq-Flow** says :``Finished successfully....`` it is OK to move on.
+.. note::  If **NeatSeq-Flow** says :``Finished successfully....`` it is OK to move on.
 
 
 Execute the Example Workflow
@@ -281,17 +263,17 @@ If you have all the required programs installed on your system you can download 
 You will need:
 
 * Python 2.7 installed
-* The python dependencies: pyyaml and bunch (you can install them by using ``pip install pyyaml bunch`` in the command line).
+* The python dependencies: yaml and bunch (you can install them by using ``pip install pyyaml bunch`` in the command line).
 
 Download the **NeatSeq-Flow** repositories from github
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 #. First, create a directory for the tutorial:
 
-    .. code-block:: csh
+.. code-block:: csh
 
-        mkdir neatseq-flow-tutorial
-        cd neatseq-flow-tutorial
+    mkdir neatseq-flow-tutorial
+    cd neatseq-flow-tutorial
    
 #. The following commands will download the repositories you will need for this tutorial:
 
@@ -318,7 +300,7 @@ Download the **NeatSeq-Flow** repositories from github
 Preparing the workflow parameter file
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Edit the example Workflow parameter file to suit your cluster.
+Edit the example Workflow parameter file to suit your cluster:
 
     .. code-block:: csh
 
@@ -328,8 +310,8 @@ Edit the example Workflow parameter file to suit your cluster.
 
 
 #. Global parameters section:
-    
-    Edit the global params section, particularly the following two lines::
+
+    Edit the ``Global_params`` section, particularly the following two lines::
 
         Global_params:
             Qsub_path:      /PATH_TO_YOUR_QSUB/
@@ -338,11 +320,11 @@ Edit the example Workflow parameter file to suit your cluster.
     The ``Qsub_path`` parameter can be determined by executing the following command and replacing ``/PATH_TO_YOUR_QSUB/`` with the result.
 
         .. code-block:: csh
-            
+
             dirname `which qsub`
     
 #. Variables section:
-    
+
     Edit the definitions in the variables section (add the **FULL PATHs** for all required programs)::
 
         Vars:
@@ -360,11 +342,7 @@ Edit the example Workflow parameter file to suit your cluster.
     .. Note:: Please notice that ``Trimmomatic`` takes two parameters. The location of the executable (``{Vars.Programs.Trimmomatic.Bin}``) and the location of the Adapters file (``{Vars.Programs.Trimmomatic.Adapters}``)
 
 Run **NeatSeq-Flow**
-~~~~~~~~~~~~~~~~~~~~~~
-
-.. note:: The three samples used in this Example Workflow are **SRR453031**, **SRR453032** and **SRR453033** form the Staphylococcus aureus Genome Sequencing BioProject **PRJNA157545**, and for the Staphylococcus aureus reference genome the **GCF_000284535.1** assembly is used.
-
-To save run-time and space the raw samples files contains only the first 500,000 lines each.
+~~~~~~~~~~~~~~~~~~~~~~~~
 
 In the command line type:
 
@@ -374,16 +352,6 @@ In the command line type:
         --sample_file   Samples.nsfs            \
         --param_file    Example_WF.yaml         \
         --message     "an informative message"
-
-.. tip:: To use the full raw samples files directly through FTP link, in the command line type:
-
-    .. code-block:: csh
-
-        cp ../neatseq-flow-tutorial/Example_WF_from_ftp.yaml ../neatseq-flow-tutorial/Samples_from_FTP.nsfs ./
-        neatseq_flow.py                                                             \
-            --sample_file Samples_from_FTP.nsfs     \
-            --param_file  Example_WF_from_ftp.yaml  \
-            --message     "an informative message"
 
 .. note::  If **NeatSeq-Flow** says : ``Finished successfully....`` it is OK to move on.
 
@@ -412,3 +380,23 @@ Checking the workflow output
 
 Browse the ``data/`` directory for the outputs from the programs executed by the workflow.
 
+
+
+Using remote data files
+---------------------------------------
+
+Follow the steps above, but use the following parameter and sample files instead of those specified when :ref:`copying files <copying_files>` above.
+
+.. code-block:: csh
+
+    cp ../neatseq-flow-tutorial/Example_WF_from_ftp.yaml ../neatseq-flow-tutorial/Samples_from_FTP.nsfs ./
+
+
+Edit the files as mentioned above and execute with:
+
+.. code-block:: csh
+
+    python ../neatseq-flow/bin/neatseq_flow.py     \
+        --sample_file   Samples_from_FTP.nsfs      \
+        --param_file    Example_WF_from_ftp.yaml   \
+        --message     "an informative message"
