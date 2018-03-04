@@ -201,9 +201,9 @@ Run **NeatSeq-Flow**
 
 #. Execute **NeatSeq-Flow** to create the workflow scripts:
 
-    .. note:: The three samples used in this Example Workflow are **SRR453031**, **SRR453032** and **SRR453033** form the Staphylococcus aureus Genome Sequencing BioProject **PRJNA157545**, and for the Staphylococcus aureus reference genome the **GCF_000284535.1** assembly is used.
+    .. note:: The three samples used in this example workflow are **SRR453031**, **SRR453032** and **SRR453033** from *Staphylococcus aureus* subsp. aureus Genome Sequencing project (BioProject **PRJNA157545**). The *Staphylococcus aureus* **GCF_000284535.1** genome assembly was used as reference genome.
 
-    To save run-time and space the raw samples files contains only the first 500,000 lines each.
+    To save run-time and space, the raw sample files contain only the first 500,000 lines each.
 
     In the command line type:
 
@@ -362,9 +362,9 @@ Edit the example Workflow parameter file to suit your cluster.
 Run **NeatSeq-Flow**
 ~~~~~~~~~~~~~~~~~~~~~~
 
-.. note:: The three samples used in this Example Workflow are **SRR453031**, **SRR453032** and **SRR453033** form the Staphylococcus aureus Genome Sequencing BioProject **PRJNA157545**, and for the Staphylococcus aureus reference genome the **GCF_000284535.1** assembly is used.
+.. note:: The three samples used in this example workflow are **SRR453031**, **SRR453032** and **SRR453033** from *Staphylococcus aureus* subsp. aureus Genome Sequencing project (BioProject **PRJNA157545**). The *Staphylococcus aureus* **GCF_000284535.1** genome assembly was used as reference genome.
 
-To save run-time and space the raw samples files contains only the first 500,000 lines each.
+To save run-time and space, the raw sample files contain only the first 500,000 lines each.
 
 In the command line type:
 
