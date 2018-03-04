@@ -63,9 +63,10 @@ If you are using your own installation of python, located at `/path/to/python-2.
 Execution is then done as follows:
 
 	mkdir workflow_dirs
-	python neatseq_flow/ -s parameter_sets/sample_sets/PE.nsfs \
-		-p parameter_sets/PL.Parameters_mapping.nsfp \
-		-m "my first neatseq_flow mapping workflow" \
+	python neatseq_flow/bin/neatseq_flow.py \
+		-s Workflows/PE_tabular.nsfs \
+		-p Workflows/mapping.yaml \
+		-m "My first NeatSeq_Flow mapping workflow" \
 		-d workflow_dirs/
 
 Check out `workflow_dirs` for the workflow directories and scripts.
