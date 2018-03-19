@@ -699,7 +699,7 @@ log_echo() {{
 Pipeline {run_code} logfile:
 ----------------
 
-{datetime}:   Pipeline %(run_code)s created.
+{datetime}:   Pipeline {run_code} created.
 
 """.format(datetime = datetime.now().strftime("%d %b %Y, %H:%M"),
            run_code = self.pipe_data["run_code"]))

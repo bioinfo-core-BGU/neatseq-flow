@@ -59,8 +59,8 @@ Authors
 ---------
 
 * Menachem Sklarz
-* Michal Gordon
 * Liron Levin
+* Michal Gordon
 * Vered Chalifa-Caspi
 
 Customers
