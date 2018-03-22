@@ -463,15 +463,23 @@ Dependencies: {depends}""".format(name = self.name,
                 self.base_sample_data[base_step.get_step_name()] = deepcopy(base_step.get_sample_data())
 
         # Limit operation to sample_list only
+        if "exclude_sample_list" in self.params:
+            if not isinstance(self.params["exclude_sample_list"] , list):
+                self.params["exclude_sample_list"] = re.split("[, ]+", self.params["exclude_sample_list"])
+            if set(self.params["exclude_sample_list"])-set(self.pipe_data["samples"]):
+                raise AssertionExcept("'sample_list' includes samples not defined in sample data!", step=self.get_step_name())
+            self.params["sample_list"] = list(set(self.pipe_data["samples"]) - set(self.params["exclude_sample_list"]))
+
         if "sample_list" in self.params:
             if self.params["sample_list"] == "all_samples":
                 self.sample_data["samples"] = self.pipe_data["samples"]
             else:
                 if not isinstance(self.params["sample_list"] , list):
-                    self.sample_data["sample_list"] = re.split("[, ]+", self.params["sample_list"])
+                    self.params["sample_list"] = re.split("[, ]+", self.params["sample_list"])
                 if set(self.params["sample_list"])-set(self.pipe_data["samples"]):
                     raise AssertionExcept("'sample_list' includes samples not defined in sample data!", step=self.get_step_name())
                 self.sample_data["samples"] = self.params["sample_list"]
+
 
 
         # Trying running step specific sample initiation script:
