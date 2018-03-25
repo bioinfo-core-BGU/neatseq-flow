@@ -21,7 +21,7 @@ class AssertionExcept(Exception):
     def __init__(self, comment = "Unknown problem", sample = None, step = None):
         """ initializize with error comment and sample, if exists)
             step is not required. Can be set later with set_step_name()
-        """
+            """
         self.sample = sample
         self.comment = comment
         self.step = step
@@ -1551,11 +1551,16 @@ Make sure you are in an active conda environment, and that you executed the foll
         
         step_params = []
         
+        # find all places in module file (stored in self.path) where a parameter is 
+        # referenced in self.params. These are 'modifiers' that the user can modify, 
+        # and that the module deals with specifically, beyond those passed with redir_params.
         with open(self.path,"r") as modfh:
             for line in modfh:
                 param = re.search('self.params\[\"(.*?)\"\]', line)
                 if param:
                     step_params.append(param.group(1))
                     
-        return list(set(step_params))
+        # Return the unique list of such params, after excluding the ones that are true for all modules: base, module, script_path, etc.
+        return list(set(step_params)-set(["redir_params","qsub_params","base", "module", "sample_list", "exclude_sample_list", "script_path"]))
                 
+        
