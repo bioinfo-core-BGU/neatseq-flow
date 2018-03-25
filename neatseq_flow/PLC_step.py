@@ -100,16 +100,18 @@ class Step:
                     if module_path not in sys.path:
                         sys.path.append(os.path.abspath(module_path))
                         
-                    # For what this does, see below (# Build module name)...
-
                     # Backup module to backups dir:
                     shutil.copyfile(level[0] + os.sep + mod_t + ".py", \
                         "{bck_dir}{runcode}{ossep}{filename}".format(bck_dir = pipe_data["backups_dir"], \
                                                                      runcode = pipe_data["run_code"], \
                                                                      ossep = os.sep, \
                                                                      filename = mod_t + ".py"))
+
+                    # For what this does, see below (# Build module name)...
                     retval = (level[0].split(module_path)[1].partition(os.sep)[2].replace(os.sep,".") + "." + mod_t).lstrip(".")
-                    return retval
+                    module_loc = level[0] + os.sep + mod_t + ".py"
+
+                    return (retval, module_loc)
 
 
         # If not found, do the same with self.Cwd:
@@ -140,9 +142,24 @@ class Step:
                                                                      ossep = os.sep, \
                                                                      filename = mod_t + ".py"))
         retval = level[0].split(self.Cwd)[1].partition(os.sep)[2].replace(os.sep,".") + "." + mod_t
-        return retval
-        # return level[0].split(self.Cwd)[1].partition(os.sep)[2].replace(os.sep,".") + "." + mod_t
+        module_loc = level[0] + os.sep + mod_t + ".py"
 
+        return (retval, module_loc)
+
+
+        
+                
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
         
     def __init__(self,name,step_type,params,pipe_data):
         """ should not be used. only specific step inits should be called. 
@@ -1526,3 +1543,19 @@ Make sure you are in an active conda environment, and that you executed the foll
                 
                 # Add bin at end of path
                 self.params["conda"]["path"] = os.path.join(self.params["conda"]["path"],"bin")    
+
+                
+    def get_step_modifiers(self):
+        """ A class method for finding the location of a module for a given step
+        """
+        
+        step_params = []
+        
+        with open(self.path,"r") as modfh:
+            for line in modfh:
+                param = re.search('self.params\[\"(.*?)\"\]', line)
+                if param:
+                    step_params.append(param.group(1))
+                    
+        return list(set(step_params))
+                

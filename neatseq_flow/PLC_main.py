@@ -468,7 +468,7 @@ qsub -N %(step_step)s_%(step_name)s_%(run_code)s \\
         step_params = self.get_step_param_data()[step_type][step_name]
         
         # Find the location of the step module in the file structure (see function find_step_module())
-        step_module_loc = Step.find_step_module(step_type, self.param_data, self.pipe_data)  # Passing param data because it contains the optional search path...
+        step_module_loc, step_module_path = Step.find_step_module(step_type, self.param_data, self.pipe_data)  # Passing param data because it contains the optional search path...
         try:
             # Import the module:
             exec "from %s import %s as StepClass" % (step_module_loc,'Step_' + step_type)
@@ -479,10 +479,12 @@ qsub -N %(step_step)s_%(step_name)s_%(run_code)s \\
 
         # Run constructor:
         try:
-            return StepClass(step_name,   \
-                             step_type,   \
-                             step_params, \
-                             self.pipe_data)
+            new_step = StepClass(step_name,   \
+                                 step_type,   \
+                                 step_params, \
+                                 self.pipe_data)
+            new_step.path = step_module_path
+            return new_step
         except AssertionExcept as assertErr:
             print assertErr.get_error_str()
             print("An error has occured in step initialization (type: %s). See comment above.\n" % step_type)
@@ -1047,4 +1049,46 @@ saveWidget(myviz,file = "%(out_file_name)s",selfcontained = F)
             diagrammer.write(Gviz_text)
                 
                 
+                
+                
+                
+                
+    def find_modules(self):
+        """ Searches all module repositories for a list of possible modules
+            Meant to be used by the GUI generator for supplying the user with a list of modules he can include
+        """
+        
+        if "module_path" in self.param_data["Global"]:
+            module_paths = self.param_data["Global"]["module_path"]
+            
+        module_paths.append(os.path.dirname(os.path.abspath(__file__)))
+
+        for module_path_raw in module_paths:#.split(" "):
+            # Remove trainling '/' from dir name. For some reason that botches things up!
+            module_path = module_path_raw.rstrip(os.sep)
+
+            # Expanding '~' and returning full path 
+            module_path = os.path.realpath(os.path.expanduser(module_path))
+
+            # Check the dir exists:
+            if not os.path.isdir(module_path):
+                sys.stderr.write("WARNING: Path %s from module_path does not exist. Skipping...\n" % module_path)
+                
+                continue
+
+            def walkerr(err):
+                """ Helper function for os.walk below. Catches errors during walking and reports on them.
+                """
+                print "WARNING: Error while searching for modules:"
+                print  err
+
+            module_list = []
+            dir_generator = os.walk(module_path, onerror = walkerr)       # Each .next call on this generator returns a level tuple as follows:
+            for level in dir_generator:     # Repeat while expected filename is NOT in current dir contents (=level[2]. see above)
+                for file in [file for file in level[2] if re.match(".*\.py$",file)]:
+                    with open(level[0] + os.sep + file,"r") as pyt_fh:
+                        if re.search("class Step_%s"%file.strip(".py"),pyt_fh.read()):
+                            module_list.append(file.strip(".py"))
+            return module_list
+                            
                 
