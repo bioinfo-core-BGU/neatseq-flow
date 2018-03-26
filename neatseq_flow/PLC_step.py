@@ -234,6 +234,12 @@ class Step:
                 raise AssertionExcept("Please do not pass the following redirected parameters. They are set automatically or module is not defined to use them. %s" % ", ".join(auto_redirs))
         except AttributeError:  # Ignore if auto_redirs not defined for module. It is highly recommended to do so...
             pass
+        except KeyError as keyerr:
+            if keyerr.args[0]=="redir_params":
+                self.write_warning("No 'redirects' defined.")
+                pass
+            else:
+                raise keyerr
         except:
             raise
         

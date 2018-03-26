@@ -16,7 +16,7 @@ from copy import *
 from pprint import pprint as pp
 from random import randint
 from datetime import datetime
-
+from collections import OrderedDict
 
 from modules.parse_sample_data import parse_sample_file
 from modules.parse_param_data import parse_param_file
@@ -28,7 +28,13 @@ class neatseq_flow:
     """Main pipeline class. Contains sample data and parameters
     """
     
-    def __init__(self, sample_file, param_file, home_dir = None, message = None, runid = None, verbose = False):
+    def __init__(self,                \
+                 sample_file,         \
+                 param_file,          \
+                 home_dir = None,     \
+                 message = None,      \
+                 runid = None,        \
+                 verbose = False):
         
         # Read and parse the sample and parameter files:
 
@@ -365,6 +371,8 @@ class neatseq_flow:
         self.step_list = [self.make_step_type_instance(step_n) for step_n in self.get_step_names()]
 
         self.sort_step_list()
+        
+       
         
         # Send number of step to the instances:
         # This is used for numbering the scripts in the scripts_dir
@@ -1092,3 +1100,85 @@ saveWidget(myviz,file = "%(out_file_name)s",selfcontained = F)
             return module_list
                             
                 
+                
+    def add_step(self, step_name, step_params):
+        """ Add a step to an existing main neatseq-flow class
+            To be used with the GUI
+        """
+        
+        assert isinstance(step_params, OrderedDict), "step_params must be of OrderedDict type"
+        assert all(map(lambda x: x in step_params, ["module","base","script_path"])), "The step params must include module, base and script_path"
+        assert isinstance(step_name, str), "step_name must be string"
+        # Making a step name index (dict of form {step_name:step_type})
+        # Storing in self.name_index
+        
+        if isinstance(step_params["base"],str):
+            step_params["base"] = [step_params["base"]]
+        step_module = step_params["module"]
+        if step_module not in self.param_data["Step"]:
+            self.param_data["Step"][step_module] = dict()
+        self.param_data["Step"][step_module][step_name] = step_params
+        self.make_names_index()
+        
+        # Expanding dependencies based on "base" parameter:
+        # Storing in self.depend_dict 
+        self.expand_depends()
+       
+        
+
+        
+        
+        # Create step instances:
+        sys.stdout.write("Making step instances...\n")
+        self.make_step_instances()
+
+        # Storing names index in pipe_data. Could be used by the step instances 
+        self.pipe_data["names_index"] = self.get_names_index()
+
+
+        # Make main script:
+        self.make_main_pipeline_script()
+
+        # Make the qdel script:
+        self.create_qdel_script()
+        
+        # Do the actual script building:
+        # Also, catching assetion exceptions raised by class build_scripts() and 
+        sys.stdout.write("Building scripts...\n")
+        try:
+            self.build_scripts()
+            
+        except AssertionExcept as assertErr:
+            print assertErr.get_error_str()
+            print "An error has occured. See comment above.\nPrinting current JSON and exiting\n"
+            with open(self.pipe_data["objects_dir"]+"WorkflowData.json","w") as json_fh:
+                json_fh.write(self.get_json_encoding())
+            # sys.exit() 
+            return
+            
+        # Make the qalter script:
+        self.create_qalter_script()
+
+        
+        # # Make js graphical representation (maybe add parameter to not include this feature?)
+        # sys.stdout.write("Making workflow plots...\n")
+        # self.create_js_graphic()
+        # self.create_diagrammer_graphic()
+        
+        # Writing JSON encoding ofg pipeline:
+        sys.stdout.write("Writing JSON files...\n")
+        with open(self.pipe_data["objects_dir"]+"WorkflowData.json","w") as json_fh:
+            json_fh.write(self.get_json_encoding())
+        # Writing JSON encoding of qsub names (can be used by remote progress monitor)
+        with open(self.pipe_data["objects_dir"]+"qsub_names.json","w") as json_fh:
+            json_fh.write(self.get_qsub_names_json_encoding())
+            
+        
+        
+        # self.create_log_plotter()
+        
+        sys.stderr.flush()
+        sys.stdout.write("Finished successfully....\n\n")
+        
+        
+        return self.step_list[self.step_list_index==step_name]
