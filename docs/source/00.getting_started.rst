@@ -46,7 +46,7 @@ Executing **NeatSeq-Flow**
 Create a new directory anywhere, `cd` into it and execute the following commands (``$NSF_main`` is the directory where **NeatSeq-Flow** is installed)::
 
     python $NSF_main/bin/neatseq_flow.py                         \
-        --sample_file $NSF_main/Workflows/PE_tabular.nsfs    \
+        --sample_file $NSF_main/Workflows/Sample_sets/PE_tabular.nsfs    \
         --param_file  $NSF_main/Workflows/mapping.yaml       \
         --message     "an informative message"
 
@@ -78,7 +78,7 @@ Install and execute with **Conda**
 #. Execute **NeatSeq-Flow**::
 
     neatseq_flow.py \
-        --sample_file $CONDA_PREFIX/NeatSeq-Flow-Workflows/PE_tabular.nsfs \
+        --sample_file $CONDA_PREFIX/NeatSeq-Flow-Workflows/Sample_sets/PE_tabular.nsfs \
         --param_file $CONDA_PREFIX/NeatSeq-Flow-Workflows/mapping.yaml \
         --message "an informative message"
 
