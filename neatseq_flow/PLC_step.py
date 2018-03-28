@@ -920,7 +920,7 @@ csh {scripts_dir}98.qalter_all.csh
                 print "sample slots:\n-------------"
                 pp(self.sample_data[self.sample_data["samples"][0]].keys())
 
-            sys.exit("Showed. Now stopping. To continue, remove the 'stop_and_show' tage from %s" % self.get_step_name())
+            sys.exit("Showed. Now stopping. To continue, remove the 'stop_and_show' tag from %s" % self.get_step_name())
             
         
     def make_qsub_header(self, jid_list, script_lev = "low"):

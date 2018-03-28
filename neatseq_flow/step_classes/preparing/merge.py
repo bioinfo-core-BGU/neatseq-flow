@@ -250,21 +250,16 @@ class Step_merge(Step):
                 src = src + project_src
                 scope = scope + project_scope
 
-        pp(self.params)
+        # pp(self.params)
 
-        # Getting unique pairs of src and scope:
-        uniq_src_scope = list(set(zip(src,scope)))
+        if src and scope:
+            # Getting unique pairs of src and scope:
+            uniq_src_scope = list(set(zip(src,scope)))
+            # Separating unique tuples and converting to lists
+            src, scope = map(lambda x: list(x),zip(*uniq_src_scope))
+            
         
-        # if scope is defined, uniq_src_scope will be empty, throwing a ValueError. 
-        # This is OK because they are defined...
-        try:
-            src, scope = zip(*uniq_src_scope)
-        except ValueError:
-            pass
-    
         
-        # src = sample_src + project_src
-        # scope = sample_scope + project_scope
         # If 'src' is NOT user-defined: (Basic mode)
         if "src" not in self.params or not self.params["src"]:
             self.params["src"] = src
