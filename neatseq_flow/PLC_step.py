@@ -21,7 +21,7 @@ class AssertionExcept(Exception):
     def __init__(self, comment = "Unknown problem", sample = None, step = None):
         """ initializize with error comment and sample, if exists)
             step is not required. Can be set later with set_step_name()
-        """
+            """
         self.sample = sample
         self.comment = comment
         self.step = step
@@ -100,16 +100,18 @@ class Step:
                     if module_path not in sys.path:
                         sys.path.append(os.path.abspath(module_path))
                         
-                    # For what this does, see below (# Build module name)...
-
                     # Backup module to backups dir:
                     shutil.copyfile(level[0] + os.sep + mod_t + ".py", \
                         "{bck_dir}{runcode}{ossep}{filename}".format(bck_dir = pipe_data["backups_dir"], \
                                                                      runcode = pipe_data["run_code"], \
                                                                      ossep = os.sep, \
                                                                      filename = mod_t + ".py"))
+
+                    # For what this does, see below (# Build module name)...
                     retval = (level[0].split(module_path)[1].partition(os.sep)[2].replace(os.sep,".") + "." + mod_t).lstrip(".")
-                    return retval
+                    module_loc = level[0] + os.sep + mod_t + ".py"
+
+                    return (retval, module_loc)
 
 
         # If not found, do the same with self.Cwd:
@@ -140,9 +142,24 @@ class Step:
                                                                      ossep = os.sep, \
                                                                      filename = mod_t + ".py"))
         retval = level[0].split(self.Cwd)[1].partition(os.sep)[2].replace(os.sep,".") + "." + mod_t
-        return retval
-        # return level[0].split(self.Cwd)[1].partition(os.sep)[2].replace(os.sep,".") + "." + mod_t
+        module_loc = level[0] + os.sep + mod_t + ".py"
 
+        return (retval, module_loc)
+
+
+        
+                
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
         
     def __init__(self,name,step_type,params,pipe_data):
         """ should not be used. only specific step inits should be called. 
@@ -217,6 +234,12 @@ class Step:
                 raise AssertionExcept("Please do not pass the following redirected parameters. They are set automatically or module is not defined to use them. %s" % ", ".join(auto_redirs))
         except AttributeError:  # Ignore if auto_redirs not defined for module. It is highly recommended to do so...
             pass
+        except KeyError as keyerr:
+            if keyerr.args[0]=="redir_params":
+                self.write_warning("No 'redirects' defined.")
+                pass
+            else:
+                raise keyerr
         except:
             raise
         
@@ -463,15 +486,23 @@ Dependencies: {depends}""".format(name = self.name,
                 self.base_sample_data[base_step.get_step_name()] = deepcopy(base_step.get_sample_data())
 
         # Limit operation to sample_list only
+        if "exclude_sample_list" in self.params:
+            if not isinstance(self.params["exclude_sample_list"] , list):
+                self.params["exclude_sample_list"] = re.split("[, ]+", self.params["exclude_sample_list"])
+            if set(self.params["exclude_sample_list"])-set(self.pipe_data["samples"]):
+                raise AssertionExcept("'sample_list' includes samples not defined in sample data!", step=self.get_step_name())
+            self.params["sample_list"] = list(set(self.pipe_data["samples"]) - set(self.params["exclude_sample_list"]))
+
         if "sample_list" in self.params:
             if self.params["sample_list"] == "all_samples":
                 self.sample_data["samples"] = self.pipe_data["samples"]
             else:
                 if not isinstance(self.params["sample_list"] , list):
-                    self.sample_data["sample_list"] = re.split("[, ]+", self.params["sample_list"])
+                    self.params["sample_list"] = re.split("[, ]+", self.params["sample_list"])
                 if set(self.params["sample_list"])-set(self.pipe_data["samples"]):
                     raise AssertionExcept("'sample_list' includes samples not defined in sample data!", step=self.get_step_name())
                 self.sample_data["samples"] = self.params["sample_list"]
+
 
 
         # Trying running step specific sample initiation script:
@@ -889,7 +920,7 @@ csh {scripts_dir}98.qalter_all.csh
                 print "sample slots:\n-------------"
                 pp(self.sample_data[self.sample_data["samples"][0]].keys())
 
-            sys.exit("Showed. Now stopping. To continue, remove the 'stop_and_show' tage from %s" % self.get_step_name())
+            sys.exit("Showed. Now stopping. To continue, remove the 'stop_and_show' tag from %s" % self.get_step_name())
             
         
     def make_qsub_header(self, jid_list, script_lev = "low"):
@@ -1518,3 +1549,24 @@ Make sure you are in an active conda environment, and that you executed the foll
                 
                 # Add bin at end of path
                 self.params["conda"]["path"] = os.path.join(self.params["conda"]["path"],"bin")    
+
+                
+    def get_step_modifiers(self):
+        """ A class method for finding the location of a module for a given step
+        """
+        
+        step_params = []
+        
+        # find all places in module file (stored in self.path) where a parameter is 
+        # referenced in self.params. These are 'modifiers' that the user can modify, 
+        # and that the module deals with specifically, beyond those passed with redir_params.
+        with open(self.path,"r") as modfh:
+            for line in modfh:
+                param = re.search('self.params\[\"(.*?)\"\]', line)
+                if param:
+                    step_params.append(param.group(1))
+                    
+        # Return the unique list of such params, after excluding the ones that are true for all modules: base, module, script_path, etc.
+        return list(set(step_params)-set(["redir_params","qsub_params","base", "module", "sample_list", "exclude_sample_list", "script_path"]))
+                
+        
