@@ -639,6 +639,22 @@ Dependencies: {depends}""".format(name = self.name,
         # Adding to qsub_names_dict:
         self.qsub_names_dict["low_qsubs"].append(self.spec_qsub_name)
         
+        
+        # Adding job name and path to script and run indices
+        self.add_job_script_run_indices()
+    
+    
+    
+    def add_job_script_run_indices(self):
+        """ Add current script to script_index and run_index files
+        """
+        with open(self.pipe_data["script_index"], "a") as script_fh:
+            script_fh.write("{qsub_name}\t{script_name}\n".format(qsub_name   = self.spec_qsub_name,
+                                                                  script_name = self.spec_script_name))
+        with open(self.pipe_data["run_index"], "a") as script_fh:
+            script_fh.write("# {qsub_name}\n".format(qsub_name   = self.spec_qsub_name))
+        
+        
     def create_scripts_dir(self):
         """ Create a dir for storing the step scripts.
         """
@@ -705,6 +721,14 @@ Dependencies: {depends}""".format(name = self.name,
         self.qsub_names_dict["step"] = self.get_step_step()
         self.qsub_names_dict["high_qsub"] = self.high_spec_qsub_name
         self.qsub_names_dict["low_qsubs"] = list()
+        
+        # Adding qsub_name and script path to script_index and run_index
+        with open(self.pipe_data["script_index"], "a") as script_fh:
+            script_fh.write("{qsub_name}\t{script_name}\n".format(qsub_name   = self.high_spec_qsub_name,
+                                                                  script_name = self.high_level_script_name))
+        with open(self.pipe_data["run_index"], "a") as script_fh:
+            script_fh.write("# {qsub_name}\n".format(qsub_name   = self.high_spec_qsub_name))
+        
         
             
     def close_high_level_script(self):
@@ -804,6 +828,9 @@ csh {scripts_dir}98.qalter_all.csh
         # Adding to qsub_names_dict:
         self.qsub_names_dict["low_qsubs"].append(self.spec_qsub_name)
 
+        # Adding job name and path to script and run indices
+        self.add_job_script_run_indices()
+
         
     def create_wrapping_up_script(self):
         """ Create a script that will run once all other low level scripts terminate
@@ -874,7 +901,9 @@ csh {scripts_dir}98.qalter_all.csh
 
         # Adding to qsub_names_dict:
         self.qsub_names_dict["low_qsubs"].append(self.spec_qsub_name)
-
+        
+        # Adding job name and path to script and run indices
+        self.add_job_script_run_indices()
 
             
     def create_all_scripts(self):

@@ -152,6 +152,11 @@ class neatseq_flow:
         # Create log file:
         self.create_log_file()
 
+        # Create script_index and run_index files
+        # These (will be)[are] used by the in-house NeatSeq-Flow job controller for non-qsub based clusters
+        self.create_job_index_files()
+        
+        
         # Create file with functions for trapping error:
         self.create_bash_helper_funcs()
         
@@ -639,7 +644,7 @@ trap_with_arg() {{
     for sig ; do
         trap "$args $sig" "$sig"
     done
-}}
+    }}
 
 func_trap() {{
     # $1: module
@@ -731,6 +736,20 @@ Timestamp\tEvent\tModule\tInstance\tJob name\tLevel\tHost\tMax mem\tStatus
             logf.write("%s\t%s\n" % (self.pipe_data["run_code"], self.pipe_data["message"]))
 
 
+    def create_job_index_files(self):
+        """ Create files for in-house NeatSeq-Flow job controller
+        """
+        # Set script_index filename in pipe_data
+        # Used for connecting qsub_names with script paths and more
+        self.pipe_data["script_index"] = "".join([self.pipe_data["scripts_dir"], "script_index_" ,  self.pipe_data["run_code"] , ".txt"])
+
+        # Set run_index filename in pipe_data
+        # Used for flagging active jobs.
+        self.pipe_data["run_index"] = "".join([self.pipe_data["scripts_dir"], "run_index" ,  self.pipe_data["run_code"] , ".txt"])
+
+   
+
+            
 
             
     def create_registration_file(self):
