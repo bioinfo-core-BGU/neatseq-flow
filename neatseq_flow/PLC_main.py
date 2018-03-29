@@ -155,7 +155,8 @@ class neatseq_flow:
         # Create script_index and run_index files
         # These (will be)[are] used by the in-house NeatSeq-Flow job controller for non-qsub based clusters
         self.create_job_index_files()
-        
+        # Create script execution script:
+        self.create_script_execution_script()
         
         # Create file with functions for trapping error:
         self.create_bash_helper_funcs()
@@ -745,7 +746,7 @@ Timestamp\tEvent\tModule\tInstance\tJob name\tLevel\tHost\tMax mem\tStatus
 
         # Set run_index filename in pipe_data
         # Used for flagging active jobs.
-        self.pipe_data["run_index"] = "".join([self.pipe_data["scripts_dir"], "run_index" ,  self.pipe_data["run_code"] , ".txt"])
+        self.pipe_data["run_index"] = "".join([self.pipe_data["scripts_dir"], "run_index_" ,  self.pipe_data["run_code"] , ".txt"])
 
    
 
@@ -1202,3 +1203,79 @@ saveWidget(myviz,file = "%(out_file_name)s",selfcontained = F)
         
         
         return self.step_list[self.step_list_index==step_name]
+        
+        
+    def create_script_execution_script(self):
+        """
+        """
+        
+        script_txt = """#!/bin/bash
+
+qsubname=$1
+script_index="{script_index}"
+run_index="{run_index}"
+# 1. Find script path
+
+echo $1
+
+script_path=$(grep $qsubname $script_index | cut -f 2 )
+
+echo $script_path
+
+# 2. Marking in run_index as running
+
+sed -i -e "s:# $1$:$1:" $run_index
+
+# 3. Getting script dependencies
+
+hold_jids=$(grep '#$ -hold_jid' $script_path | cut -f 3 -d " ")
+set -f                     # avoid globbing (expansion of *).
+# Convert into array:
+hold_jids=(${{hold_jids//,/ }})
+# echo ${{array[*]}}
+
+# 4. Waiting for dependencies to finish
+flag=0
+while [ $flag -eq 0 ]
+do
+    # Get running jobs
+    running=$(grep -v "^#" $run_index)
+    running=(${{running//\\n/ }})
+    
+    # Is there overlap between 'running' and 'hold_jids'?
+    overlap=0
+    result=""
+    for item1 in "${{hold_jids[@]}}"; do
+        for item2 in "${{running[@]}}"; do
+            if [[ $item1 = $item2 ]]; then
+                # result+=("$item1")
+                overlap=1
+            fi
+        done
+    done
+    # echo "Overlap: $overlap"
+    if (( $overlap == 0 )); then
+        flag=1
+    fi
+    echo -n "."
+    sleep 3
+done
+
+# 5. Execute script:
+
+qsub $script_path
+# sbatch $script_path
+# sh $script_path
+
+
+# sh nsf_exec.sh fastqc_html_fqc_merge1_GQT5N_20180329095235
+        
+            
+            """.format(script_index=self.pipe_data["script_index"],
+                        run_index=self.pipe_data["run_index"])
+                
+        self.pipe_data["exec_script"] = "".join([self.pipe_data["scripts_dir"], "NSF_exec.sh"])
+        with open(self.pipe_data["exec_script"],"w") as exec_script:
+            exec_script.write(script_txt)
+        
+
