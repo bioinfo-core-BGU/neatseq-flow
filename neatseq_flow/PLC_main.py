@@ -1209,6 +1209,22 @@ saveWidget(myviz,file = "%(out_file_name)s",selfcontained = F)
         """
         """
         
+        # Setting command used to execute the script by Executor
+        if self.param_data["Global"]["Executor"]=="SGE":
+            run_cmd = "qsub $script_path"
+        elif self.param_data["Global"]["Executor"]=="SLURM":
+            run_cmd = "sbatch $script_path"
+        elif self.param_data["Global"]["Executor"]=="Local":
+            run_cmd = """iscsh=$(grep "csh" <<< $script_path)
+if [ -z $iscsh ]; then
+    sh $script_path
+else
+    csh $script_path
+fi"""
+        else:
+            sys.exit("Unrecognized 'Executor' value")
+            
+            
         script_txt = """#!/bin/bash
 
 qsubname=$1
@@ -1263,19 +1279,19 @@ done
 
 # 5. Execute script:
 
-qsub $script_path
-# sbatch $script_path
-# sh $script_path
+{run_cmd}
 
 
-# sh nsf_exec.sh fastqc_html_fqc_merge1_GQT5N_20180329095235
-        
             
             """.format(script_index=self.pipe_data["script_index"],
-                        run_index=self.pipe_data["run_index"])
+                        run_index=self.pipe_data["run_index"],
+                        run_cmd=run_cmd)
                 
         self.pipe_data["exec_script"] = "".join([self.pipe_data["scripts_dir"], "NSF_exec.sh"])
         with open(self.pipe_data["exec_script"],"w") as exec_script:
             exec_script.write(script_txt)
         
 
+"""
+    self.param_data["Global"]["Executor"]:
+"""
