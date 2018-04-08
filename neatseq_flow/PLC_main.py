@@ -742,11 +742,11 @@ Timestamp\tEvent\tModule\tInstance\tJob name\tLevel\tHost\tMax mem\tStatus
         """
         # Set script_index filename in pipe_data
         # Used for connecting qsub_names with script paths and more
-        self.pipe_data["script_index"] = "".join([self.pipe_data["scripts_dir"], "script_index_" ,  self.pipe_data["run_code"] , ".txt"])
+        self.pipe_data["script_index"] = "".join([self.pipe_data["objects_dir"], "script_index_" ,  self.pipe_data["run_code"] , ".txt"])
 
         # Set run_index filename in pipe_data
         # Used for flagging active jobs.
-        self.pipe_data["run_index"] = "".join([self.pipe_data["scripts_dir"], "run_index_" ,  self.pipe_data["run_code"] , ".txt"])
+        self.pipe_data["run_index"] = "".join([self.pipe_data["objects_dir"], "run_index_" ,  self.pipe_data["run_code"] , ".txt"])
 
    
 
