@@ -137,10 +137,7 @@ class neatseq_flow:
         self.pipe_data["qsub_params"]["opts"] = self.param_data["Global"]["Qsub_opts"] if "Qsub_opts" in self.param_data["Global"].keys() else {}
         
         # Setting path to qstat
-        if "Qsub_path" in self.param_data["Global"].keys():
-            self.pipe_data["qsub_params"]["qstat_path"] = os.sep.join([self.param_data["Global"]["Qsub_path"].rstrip(os.sep),"qstat"])
-        else:
-            self.pipe_data["qsub_params"]["qstat_path"] = "qstat"
+        self.set_qstat_path()
 
         # --------------------------------
         
@@ -504,6 +501,22 @@ qsub -N %(step_step)s_%(step_name)s_%(run_code)s \\
         else:
             raise
 
+            
+    def set_qstat_path(self):
+        """ Set qstat path according to Executor used.
+        """
+        
+        qstat_cmd_dict = \
+            {"SGE" : "qstat",
+             "SLURM" : "squeue",
+             "Local" : ""}
+        qstat_cmd = qstat_cmd_dict[self.param_data["Global"]["Executor"]]
+        if "Qsub_path" in self.param_data["Global"].keys():
+            self.pipe_data["qsub_params"]["qstat_path"] = os.sep.join([self.param_data["Global"]["Qsub_path"].rstrip(os.sep),qstat_cmd])
+        else:
+            self.pipe_data["qsub_params"]["qstat_path"] = qstat_cmd
+
+        
     def define_conda_params(self):
         """ If conda params are required, define them:
         """
