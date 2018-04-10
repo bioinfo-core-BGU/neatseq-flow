@@ -70,10 +70,13 @@ class neatseq_flow:
         # Prepare dictionary for pipe data (in perl version: pipe_hash)
         self.pipe_data = dict()
 
-        self.pipe_data["step_order"] = self.param_data["step_order"]
-        #print(self.pipe_data["step_order"])
-        del(self.param_data["step_order"])
+        # Is not currently used. Saves order of steps in parameter file.
+        self.pipe_data["usr_step_order"] = self.param_data["usr_step_order"]
+        #print(self.pipe_data["usr_step_order"])
+        del(self.param_data["usr_step_order"])
 
+        # Saving Executor in pipe_data
+        self.pipe_data["Executor"] = self.param_data["Global"]["Executor"]
         # Determine type of sample: SE, PE or mixed:
         self.determine_sample_types()
 
@@ -294,13 +297,7 @@ class neatseq_flow:
             # Do the actual script building for step_n
             step_n.create_all_scripts()
                 
-            
-                
-                
-    def make_step_order(self):
-        pass
         
-    # def complete_depends(self):     # Complete the dependencies 
     
     def make_depends_dict(self):
         """ Creates and returns the basic depend_dict structure
