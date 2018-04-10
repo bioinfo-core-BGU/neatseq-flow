@@ -134,7 +134,7 @@ class neatseq_flow:
             self.pipe_data["qsub_params"]["node"] = None
 
         # If Qsub_opts is defined by user in global params, copy into pipe_data:
-        self.pipe_data["qsub_params"]["opts"] = self.param_data["Global"]["Qsub_opts"] if "Qsub_opts" in self.param_data["Global"].keys() else ""
+        self.pipe_data["qsub_params"]["opts"] = self.param_data["Global"]["Qsub_opts"] if "Qsub_opts" in self.param_data["Global"].keys() else {}
         
         # Setting path to qstat
         if "Qsub_path" in self.param_data["Global"].keys():

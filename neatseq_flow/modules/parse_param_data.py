@@ -51,6 +51,11 @@ from neatseq_flow.modules.parse_sample_data import remove_comments, check_newlin
 
 STEP_PARAMS_SINGLE_VALUE = ['module','redirects']
 SUPPORTED_EXECUTORS = ["Local","SGE","SLURM"]
+NOT_PASSABLE_EXECUTOR_PARAMS = \
+    {"SGE" : "-N -e -o -q -hold_jid".split(" "), \
+    "SLURM" : "-e -o -hold_jid --error --output -J --job-name -p --partition -w".split(" "), \
+    "Local" : ""}
+
 
 def parse_param_file(filename):
     """Parses a file from filename
@@ -127,56 +132,41 @@ def get_param_data_YAML(filelines):
                 raise Exception("In %s: 'module' must be a string, not a list or anything else...\n" % yamlname, "parameters")
             if param_dict[yamlname]["module"] not in endparams:
                 endparams[param_dict[yamlname]["module"]] = {}
-            endparams[param_dict[yamlname]["module"]][yamlname] = param_dict[yamlname]
+            # Create temporary dict for instance parameters. Store permanently at end of loop iteration
+            yamlname_params = param_dict[yamlname]
         
             # Converting "redirects" to "redir_params" for backwards compatibility...
-            if "redirects" in endparams[param_dict[yamlname]["module"]][yamlname].keys():
-                endparams[param_dict[yamlname]["module"]][yamlname]["redir_params"] = \
-                    endparams[param_dict[yamlname]["module"]][yamlname].pop("redirects")
+            if "redirects" in yamlname_params.keys():
+                yamlname_params["redir_params"] = \
+                    yamlname_params.pop("redirects")
             else: # Add empty redir_params.
-                endparams[param_dict[yamlname]["module"]][yamlname]["redir_params"] = {}
+                yamlname_params["redir_params"] = {}
             # When redirects keys are numbers, such as '-1' in bowtie2 mapper, the keys are stored as numbers. This is bad for testing. Converting all numeric keys to character keys:
-            endparams[param_dict[yamlname]["module"]][yamlname]["redir_params"] = \
+            yamlname_params["redir_params"] = \
                 {str(key):value \
                 for (key,value) \
-                in endparams[param_dict[yamlname]["module"]][yamlname]["redir_params"].items()}
+                in yamlname_params["redir_params"].items()}
 
             # Converting base to list if it is not one already
-            if "base" in endparams[param_dict[yamlname]["module"]][yamlname].keys() and not isinstance(endparams[param_dict[yamlname]["module"]][yamlname]["base"],list):
-                endparams[param_dict[yamlname]["module"]][yamlname]["base"] = [endparams[param_dict[yamlname]["module"]][yamlname]["base"]]
+            if "base" in yamlname_params.keys() and not isinstance(yamlname_params["base"],list):
+                yamlname_params["base"] = [yamlname_params["base"]]
 
-            if "qsub_params" in endparams[param_dict[yamlname]["module"]][yamlname]:
-                # 1. Dealing with 'queue' and '-q':
-                # Catching cases where both -q and 'queue' are defined:
-                if "queue" in endparams[param_dict[yamlname]["module"]][yamlname]["qsub_params"] and "-q" in endparams[param_dict[yamlname]["module"]][yamlname]["qsub_params"]:
-                    raise Exception("Both '-q' and 'queue' defined in %s!" % yamlname, "parameters")
-                # Check 'queue' is a string
-                if "queue" in endparams[param_dict[yamlname]["module"]][yamlname]["qsub_params"]:
-                    if not isinstance(endparams[param_dict[yamlname]["module"]][yamlname]["qsub_params"]["queue"], str):
-                        raise Exception("queue must be a string, not a list or other.", "parameters")
-                # Convert -q to 'queue' and check it's a string:
-                if "-q" in endparams[param_dict[yamlname]["module"]][yamlname]["qsub_params"]:
-                    if not isinstance(endparams[param_dict[yamlname]["module"]][yamlname]["qsub_params"]["-q"], str):
-                        raise Exception("queue must be a string, not a list or other.", "parameters")
-                    # Convert to 'queue'
-                    endparams[param_dict[yamlname]["module"]][yamlname]["qsub_params"]['queue'] = endparams[param_dict[yamlname]["module"]][yamlname]["qsub_params"]['-q']
-                    # Delete '-q'
-                    del endparams[param_dict[yamlname]["module"]][yamlname]["qsub_params"]['-q']
+            if "qsub_params" in yamlname_params:
+                # # 1. Dealing with 'queue' and '-q':
+                ## Has been moved to function param_data_testing_step_wise()
+
                 # 2. Dealing with 'node'
                 # Converting node to list if it is not one already
-                if "node" in endparams[param_dict[yamlname]["module"]][yamlname]["qsub_params"]:
-                    if isinstance(endparams[param_dict[yamlname]["module"]][yamlname]["qsub_params"]["node"],str):
-                        endparams[param_dict[yamlname]["module"]][yamlname]["qsub_params"]["node"] = [endparams[param_dict[yamlname]["module"]][yamlname]["qsub_params"]["node"]]
-                    elif isinstance(endparams[param_dict[yamlname]["module"]][yamlname]["qsub_params"]["node"],list):
-                        pass
-                    else:
-                        raise Exception("In %s: Node can be either string or list\n" % yamlname, "parameters")
+                if "node" in yamlname_params["qsub_params"]:
+                    if isinstance(yamlname_params["qsub_params"]["node"],str):
+                        yamlname_params["qsub_params"]["node"] = [yamlname_params["qsub_params"]["node"]]
+
                 # 3. Moving all params which are not 'node', '-q' or 'queue', to 'opts'
-                params2mv = list(set(endparams[param_dict[yamlname]["module"]][yamlname]["qsub_params"]) - set(["node","queue","-q"]))
-                endparams[param_dict[yamlname]["module"]][yamlname]["qsub_params"]["opts"] = {key:(val if val!=None else '') for key,val in endparams[param_dict[yamlname]["module"]][yamlname]["qsub_params"].iteritems() if key in params2mv}
+                params2mv = list(set(yamlname_params["qsub_params"]) - set(["node","queue","-q"]))
+                yamlname_params["qsub_params"]["opts"] = {key:(val if val!=None else '') for key,val in yamlname_params["qsub_params"].iteritems() if key in params2mv}
                 for param in params2mv:
-                    del endparams[param_dict[yamlname]["module"]][yamlname]["qsub_params"][param]
-                
+                    del yamlname_params["qsub_params"][param]
+            endparams[param_dict[yamlname]["module"]][yamlname] = yamlname_params    
         return endparams
  
     filelines = remove_comments(filelines)
@@ -451,7 +441,11 @@ def param_data_testing_global(param_data):
 
     if param_data["Executor"] not in SUPPORTED_EXECUTORS:
         issue_warning += "Executor %s not defined.\n" % param_data["Executor"]
-        
+    if "Qsub_opts" in param_data.keys():
+        # Checking no automatically set qsub parameters are defined by user
+        if any(map(lambda x: x in param_data["Qsub_opts"],NOT_PASSABLE_EXECUTOR_PARAMS_EXECUTOR)):
+            issue_warning += "Automatically set qsub parameters defined (one of %s)\n" % (", ".join(NOT_PASSABLE_EXECUTOR_PARAMS_EXECUTOR))
+
     if issue_warning=="":
         return True
     else:
@@ -481,6 +475,29 @@ def param_data_testing_step_wise(param_data):
                 if param in STEP_PARAMS_SINGLE_VALUE and isinstance(param_data[step][name][param],list):
                     issue_warning += "%s. Duplicate values for param %s in step %s (name %s)\n" % (issue_count,param,step,name)
                     issue_count += 1
+                if param == "qsub_params":
+                    # Check that 'queue' and '-q' are strings and are not both specified
+                    if all(map(lambda x: x in param_data[step][name][param],["queue","-q"])):
+                        issue_warning += "%s. Both '-q' and 'queue' defined in step %s (name %s)\n" % (issue_count,step,name)
+                    if "queue" in param_data[step][name][param]:
+                        if not isinstance(param_data[step][name][param]["queue"],str):
+                            issue_warning += "%s. 'queue' must be string in step %s (name %s)\n" % (issue_count,step,name)
+                    if "-q" in param_data[step][name][param]:
+                        if not isinstance(param_data[step][name][param]["-q"],str):
+                            issue_warning += "%s. '-q' must be string in step %s (name %s)\n" % (issue_count,step,name)
+                        # Moving '-q' to 'queue'
+                        param_data[step][name][param]['queue'] = param_data[step][name][param]['-q']
+                        # Delete '-q'
+                        del param_data[step][name][param]['-q']
+                        
+                    if "node" in param_data[step][name][param]:
+                        if not isinstance(param_data[step][name][param]["node"],list):
+                            issue_warning += "%s. 'node' must be a string or a list in step %s (name %s)\n" % (issue_count,step,name)
+                    # Checking no automatically set qsub parameters are defined by user
+                    if any(map(lambda x: x in param_data[step][name][param]["opts"],NOT_PASSABLE_EXECUTOR_PARAMS_EXECUTOR)):
+                        issue_warning += "%s. Automatically set qsub parameters defined (one of %s) in step %s (name %s)\n" % (issue_count,", ".join(NOT_PASSABLE_EXECUTOR_PARAMS_EXECUTOR),step,name)
+
+
             
             
     # Test that all steps have base steps and that the base steps are defined
@@ -513,13 +530,18 @@ def test_and_modify_global_params(global_params):
     if "Executor" not in global_params:
         global_params["Executor"] = "SGE"
         
+    # This should not be done this way, but couldn't think of a better way.
+    # Setting global NOT_PASSABLE_EXECUTOR_PARAMS according to value of Executor
+    global NOT_PASSABLE_EXECUTOR_PARAMS_EXECUTOR
+    NOT_PASSABLE_EXECUTOR_PARAMS_EXECUTOR = NOT_PASSABLE_EXECUTOR_PARAMS[global_params["Executor"]]
+    
     # Convert Qsub_opts into a list of options (split by ' -' with look-ahead...)
     if "Qsub_opts" in global_params:
         if isinstance(global_params["Qsub_opts"], str):
-            global_params["Qsub_opts"] = dict((re.split("\s+",elem,1)+["-"])[0:2] for elem in re.split("\s+(?=-)",global_params["Qsub_opts"]))
+            global_params["Qsub_opts"] = dict((re.split("\s+",elem,1)+[""])[0:2] for elem in re.split("\s+(?=-)",global_params["Qsub_opts"]))
             # global_params["Qsub_opts"] = re.split(" (?=-)",global_params["Qsub_opts"])
         elif isinstance(global_params["Qsub_opts"], list):
-            global_params["Qsub_opts"] = dict((re.split("\s+",elem,1)+["-"])[0:2] for elem in global_params["Qsub_opts"])
+            global_params["Qsub_opts"] = dict((re.split("\s+",elem,1)+[""])[0:2] for elem in global_params["Qsub_opts"])
         # If defined as a dict, change all 'None' values to empty strings
         elif isinstance(global_params["Qsub_opts"], dict):
             global_params["Qsub_opts"] = {key:(val if val!=None else "") for key,val in global_params["Qsub_opts"].iteritems()}

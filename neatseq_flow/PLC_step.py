@@ -966,13 +966,10 @@ csh {scripts_dir}98.qalter_all.csh
         """ Make the first few lines for the scripts
             Is called for high level, low level and wrapper scripts
         """
-        print self.get_step_name()
-        pp(self.params["qsub_params"])
-        # sys.exit()
         
         only_low_lev_params  = ["-pe"]
         compulsory_high_lev_params = {"-V":""}
-        special_opts = "-N -e -o -q".split(" ") + only_low_lev_params
+        # special_opts = "-N -e -o -q -hold_jid".split(" ") + only_low_lev_params
         
         qsub_shell = "#!/bin/%(shell)s\n#$ -S /bin/%(shell)s" % {"shell": "csh" if self.shell=="csh" else "bash"}
         # Make hold_jids line only if there are jids (i.e. self.get_dependency_jid_list() != [])
@@ -985,27 +982,24 @@ csh {scripts_dir}98.qalter_all.csh
         qsub_stdout =  "#$ -o %s" % self.pipe_data["stdout_dir"]
         qsub_queue =   "#$ -q %s" % self.params["qsub_params"]["queue"]
 
-        # If there are values in Qsub_opts, add them to the qsub parameter lines (These are the global opts, passed through 'Qsub_opts')
+        # Create lines containing the qsub opts.
         qsub_opts = ""
-        if self.params["qsub_params"]["opts"]:
-            for qsub_opt in self.params["qsub_params"]["opts"]:
-                qsub_opts += "#$ {key} {val}\n".format(key=qsub_opt, val=self.params["qsub_params"]["opts"][qsub_opt]) 
-        # Other opts can be passed in the step-wise 'qsub_params' section. These are added unless they exist in 'special_opts' or are managed by NeatSeq-Flow, such as 'qstat_path', etc.
-        for qsub_opt in (set(self.params["qsub_params"].keys()) - set(["qstat_path","node","queue","opts"]+special_opts)):       # For all qsub_params except node, queue and (global) opts which get special treatment:
-            qsub_opts += "#$ %s %s\n" % (qsub_opt,self.params["qsub_params"][qsub_opt] if self.params["qsub_params"][qsub_opt]!=None else "")
-
-
+        for qsub_opt in self.params["qsub_params"]["opts"]:
+            if qsub_opt in only_low_lev_params and script_lev=="high":
+                continue
+            qsub_opts += "#$ {key} {val}\n".format(key=qsub_opt, val=self.params["qsub_params"]["opts"][qsub_opt]) 
+            
+        
         # Adding 'compulsory_high_lev_params' to all high level scripts (This includes '-V'. Otherwise, if shell is bash, the SGE commands are not recognized)
         if script_lev == "high":
             for qsub_opt in compulsory_high_lev_params:
-                if qsub_opt not in self.params["qsub_params"].keys() and qsub_opt not in self.params["qsub_params"]["opts"]:
+                if qsub_opt not in self.params["qsub_params"]["opts"]:
                     qsub_opts += "#$ {key} {val}\n".format(key=qsub_opt, 
                                                     val=compulsory_high_lev_params[qsub_opt]) 
 
-                    # qsub_opts += "\n#$ " + qsub_opt
 
+        # Adding node limitation to header, but only for low-level scripts
         if script_lev == "low":
-            
             if self.params["qsub_params"]["node"]:     # If not defined then this will be "None"
                 # Perform two joins:
                 #   1. For each node, join it to the queue name with '@' (e.g. 'bio.q@sge100')
@@ -1013,14 +1007,7 @@ csh {scripts_dir}98.qalter_all.csh
                 qsub_queue = ",".join(["@".join([self.params["qsub_params"]["queue"],item]) for item in self.params["qsub_params"]["node"]])
                 # qsub_queue += "@%s" % self.params["qsub_params"]["node"]
                 qsub_queue = "#$ -q %s" % qsub_queue
-            for qsub_opt in only_low_lev_params:
-                if qsub_opt in self.params["qsub_params"].keys() or qsub_opt in self.params["qsub_params"]["opts"].keys():
-            # if "-pe" in self.params["qsub_params"].keys():     # If not defined then this will be "None"
-                # # Add newline if qsub_opts exists:
-                # if qsub_opts:
-                    # qsub_opts += "\n"
-                    qsub_opts += "#$ {key} {val}".format(key=qsub_opt, val=self.params["qsub_params"]["opts"][qsub_opt])
-            
+
         # Sometimes qsub_opts is empty and then there is an ugly empty line in the middle of the qsub definition. Removing the empty line with replace()
         return "\n".join([qsub_shell,
                             qsub_queue,
@@ -1035,55 +1022,76 @@ csh {scripts_dir}98.qalter_all.csh
             Is called for high level, low level and wrapper scripts
         """
         
+        only_low_lev_params  = "-n --ntasks -c --cpus-per-task".split(" ")
+        compulsory_high_lev_params = {"--export":"ALL"}
+        # special_opts = "-J --job-name -e -o -q -hold_jid".split(" ") + only_low_lev_params
         
-        qsub_shell = "#!/bin/%(shell)s\n#$ -S /bin/%(shell)s" % {"shell": "csh" if self.shell=="csh" else "bash"}
+        # qsub_shell = "#!/bin/%(shell)s\n#$ -S /bin/%(shell)s" % {"shell": "csh" if self.shell=="csh" else "bash"}
+        qsub_shell = "#!/bin/%(shell)s"  % {"shell": "csh" if self.shell=="csh" else "bash"}  # I haven't discovered how to change the default SBATCH shell...
+        
         # Make hold_jids line only if there are jids (i.e. self.get_dependency_jid_list() != [])
         if jid_list:
-            qsub_holdjids = "# holdjids %s " % jid_list
+            qsub_holdjids = "#$ -hold_jid %s " % jid_list
         else:
             qsub_holdjids = ""
         qsub_name =    "#SBATCH --job-name %s " % (self.spec_qsub_name)
-        qsub_stderr =  "#SBATCH -e {stderr_dir}{name}.e%%J".format(stderr_dir=self.pipe_data["stderr_dir"],name=self.spec_qsub_name)
-        qsub_stdout =  "#SBATCH -o {stdout_dir}{name}.o%%J".format(stdout_dir=self.pipe_data["stdout_dir"],name=self.spec_qsub_name) 
-        # qsub_opts = "#SBATCH " + " ".join(self.pipe_data["Qsub_opts"])
+        qsub_stderr =  "#SBATCH -e {stderr_dir}{name}.e%J".format(stderr_dir=self.pipe_data["stderr_dir"],name=self.spec_qsub_name)
+        qsub_stdout =  "#SBATCH -o {stdout_dir}{name}.o%J".format(stdout_dir=self.pipe_data["stdout_dir"],name=self.spec_qsub_name) 
         qsub_queue =   "#SBATCH --partition %s" % self.params["qsub_params"]["queue"]
-        # If there are values in Qsub_opts, add them to the qsub parameter lines:
-        qsub_opts = ""
-        
-        
-        if self.params["qsub_params"]["opts"]:
-            qsub_opts += "#SBATCH %s" % self.params["qsub_params"]["opts"]
-        for qsub_opt in (set(self.params["qsub_params"].keys()) - set(["qstat_path","node","queue","opts","-pe","-q"])):       # For all qsub_params except node, queue and (global) opts which get special treatment:
-            qsub_opts += "\n#SBATCH %s %s" % (qsub_opt,self.params["qsub_params"][qsub_opt] if self.params["qsub_params"][qsub_opt]!=None else "")
-        # Adding "-V" to all high level scripts (otherwise, if shell is bash, the SGE commands are not recognized)
-        if "-V" not in self.params["qsub_params"].keys() and script_lev == "high":
-            qsub_opts += "\n#SBATCH -V"
 
+        # Create lines containing the qsub opts.
+        qsub_opts = ""
+        for qsub_opt in self.params["qsub_params"]["opts"]:
+            if qsub_opt in only_low_lev_params and script_lev=="high":
+                continue
+            qsub_opts += "#SBATCH {key} {val}\n".format(key=qsub_opt, val=self.params["qsub_params"]["opts"][qsub_opt]) 
+            
+        
+        # Adding 'compulsory_high_lev_params' to all high level scripts (This includes '-V'. Otherwise, if shell is bash, the SGE commands are not recognized)
+        if script_lev == "high":
+            for qsub_opt in compulsory_high_lev_params:
+                if qsub_opt not in self.params["qsub_params"]["opts"]:
+                    qsub_opts += "#$ {key} {val}\n".format(key=qsub_opt, 
+                                                    val=compulsory_high_lev_params[qsub_opt]) 
+
+
+        # Adding node limitation to header, but only for low-level scripts
         if script_lev == "low":
-            
             if self.params["qsub_params"]["node"]:     # If not defined then this will be "None"
-                
-                
-                # Perform two joins:
-                #   1. For each node, join it to the queue name with '@' (e.g. 'bio.q@sge100')
-                #   2. Comma-join all nodes to one list (e.g. 'bio.q@sge100,bio.q@sge102')
-                qsub_queue = ",".join(["@".join([self.params["qsub_params"]["queue"],item]) for item in self.params["qsub_params"]["node"]])
-                
                 # qsub_queue += "@%s" % self.params["qsub_params"]["node"]
-                qsub_queue = "#SBATCH --partition %s" % qsub_queue
-            if "-pe" in self.params["qsub_params"].keys():     # If not defined then this will be "None"
-                # Add newline if qsub_opts exists:
-                if qsub_opts:
-                    qsub_opts += "\n"
-                qsub_opts += "#SBATCH -pe %s" % self.params["qsub_params"]["-pe"]
-            
-        # Sometimes qsub_opts is empty and then there is an ugly empty line in the middle of the qsub definition
-        # The following if-else is ugly, but solves the problem
-        if qsub_opts.strip():
-            return "\n".join([qsub_shell,qsub_queue,qsub_opts,qsub_name,qsub_stderr,qsub_stdout,qsub_holdjids]) + "\n\n"
+                qsub_queue = "#SBATCH --nodelist %s" % ",".join(self.params["qsub_params"]["node"])
+
+        # Sometimes qsub_opts is empty and then there is an ugly empty line in the middle of the qsub definition. Removing the empty line with replace()
+        return "\n".join([qsub_shell,
+                            qsub_queue,
+                            qsub_opts,
+                            qsub_name,
+                            qsub_stderr,
+                            qsub_stdout,
+                            qsub_holdjids]).replace("\n\n","\n") + "\n\n"
+        
+    def make_local_header(self, jid_list, script_lev = "low"):
+        """ Make the first few lines for the scripts
+            Is called for high level, low level and wrapper scripts
+        """
+        
+
+        qsub_shell = "#!/bin/%(shell)s"  % {"shell": "csh" if self.shell=="csh" else "bash"}  # I haven't discovered how to change the default SBATCH shell...
+        
+        # Make hold_jids line only if there are jids (i.e. self.get_dependency_jid_list() != [])
+        if jid_list:
+            qsub_holdjids = "#$ -hold_jid %s " % jid_list
         else:
-            return "\n".join([qsub_shell,qsub_queue,qsub_name,qsub_stderr,qsub_stdout,qsub_holdjids]) + "\n\n"
-            
+            qsub_holdjids = ""
+
+        
+        # Sometimes qsub_opts is empty and then there is an ugly empty line in the middle of the qsub definition. Removing the empty line with replace()
+        return "\n".join([qsub_shell,
+                            qsub_holdjids]).replace("\n\n","\n") + "\n\n"
+        
+        
+        
+        
     def set_qdel_files(self, qdel_filename, qdel_filename_main):
         """ Called by PLC_main to store the qdel filename for the step.
         """
@@ -1338,30 +1346,40 @@ source {activate_path} {environ}
             If both are passed, print a comment and use 'queue'
         """
         
-        print "=> ",self.get_step_name()
+        # print "=> ",self.get_step_name()
         try:
-            print "==> ", self.params["qsub_params"]
+            self.params["qsub_params"]
         except KeyError:
             self.params["qsub_params"] = self.pipe_data["qsub_params"]
         else:
-            # # 'queue' can be set with 'qsub_opts_queue' and with 'qsub_opts_-q'. Dealing with it here:
-            # if "-q" in self.params["qsub_params"].keys():
-                # if "queue" in self.params["qsub_params"].keys():
-                    # sys.stdout.write("In %s:\tGot both '-q' and 'queue' params for qsub. Using 'queue'\n" % self.get_step_name())
-                # else:
-                    # self.params["qsub_params"]["queue"] = self.params["qsub_params"]["-q"]
-                # del self.params["qsub_params"]["-q"]
                 
-            # For each opt in default AND NOT IN step-specific qsub params
-            print "===> ", self.params["qsub_params"].keys()
-            print "===> ", self.pipe_data["qsub_params"].keys()
-            for default_q_opt in [qsub_opt for qsub_opt in self.pipe_data["qsub_params"].keys() if not qsub_opt in self.params["qsub_params"].keys()]:
-                # print "---->"+default_q_opt
-                self.params["qsub_params"][default_q_opt] = self.pipe_data["qsub_params"][default_q_opt]
+            # # For each opt in default AND NOT IN step-specific qsub params
+            # # print "0===> "
+            # # pp(self.params["qsub_params"])
+            # # print "0===> "
+            # # pp(self.pipe_data["qsub_params"])
+            # Updating step 'qsub_params' with global 'qsub_params', but with step params taking precedence!
+            # 'opts' needs special attention. Needs to be 'updated' independently.
+            # 1. deepcopy global qsub params
+            # 2. Update with step qsub_params
+            # 3. Replace 'opts' with global opts updated with local opts.
+            qsub_params = deepcopy(self.pipe_data["qsub_params"])
+            qsub_params.update(self.params["qsub_params"])
+            qsub_opts = deepcopy(self.pipe_data["qsub_params"]["opts"])
+            qsub_opts.update(self.params["qsub_params"]["opts"])
+            self.params["qsub_params"] = qsub_params
+            self.params["qsub_params"]["opts"] = qsub_opts
+            # All steps will have an 'opts' dictionary, at least an empty one...
             
-            # Require a queue to be defined globally or locally:
-            assert "queue" in self.params["qsub_params"].keys(), "In %s:\tNo 'queue' defined for qsub\n" % self.get_step_name()
-        print "==> ", self.params["qsub_params"]
+            # print "0====> "
+            # pp(self.params["qsub_params"])
+            
+            # for default_q_opt in [qsub_opt for qsub_opt in self.pipe_data["qsub_params"].keys() if not qsub_opt in self.params["qsub_params"].keys()]:
+                # # print "---->"+default_q_opt
+                # self.params["qsub_params"][default_q_opt] = self.pipe_data["qsub_params"][default_q_opt]
+            
+
+        # print "==> ", self.params["qsub_params"]
 
 
     def local_start(self,base_dir):
