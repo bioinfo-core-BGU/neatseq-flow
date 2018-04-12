@@ -167,6 +167,9 @@ class neatseq_flow:
         # Backup parameter and sample files:
         self.backup_source_files(param_file, sample_file)
         
+        # Make the directory for the step-wise kill scripts (must be done before make_step_instances() because the steps need to know the directory): 
+        self.create_kill_scripts_dir()
+
         # Create step instances:
         sys.stdout.write("Making step instances...\n")
         self.make_step_instances()
@@ -182,11 +185,8 @@ class neatseq_flow:
             # # sys.exit()
             # return
 
-        # Make main script:
-        self.make_main_pipeline_script()
-
         # Make the qdel script:
-        self.create_qdel_script()
+        self.create_kill_scripts()
         
         # Do the actual script building:
         # Also, catching assetion exceptions raised by class build_scripts() and 
@@ -202,6 +202,8 @@ class neatseq_flow:
             # sys.exit() 
             return
             
+        # Make main script:
+        self.make_main_pipeline_script()
         
         
         # Make the qalter script:
@@ -221,6 +223,8 @@ class neatseq_flow:
             json_fh.write(self.get_qsub_names_json_encoding())
             
         
+        # Step cleanup
+        [step_n.cleanup() for step_n in self.step_list]
         
         self.create_log_plotter()
         
@@ -372,7 +376,8 @@ class neatseq_flow:
 
         self.sort_step_list()
         
-       
+
+        # import pdb; pdb.set_trace()
         
         # Send number of step to the instances:
         # This is used for numbering the scripts in the scripts_dir
@@ -386,6 +391,10 @@ class neatseq_flow:
         self.step_list_index = [step_n.get_step_name() for step_n in self.step_list]
         
 
+        # Perform step finalization steps before continuing:
+        [step_n.finalize_contruction() for step_n in self.step_list]
+        
+        
         # NOTE: Each step's base step is set in build_scripts(), because not all info exists at construction time...
         
         return self.step_list
@@ -426,45 +435,11 @@ class neatseq_flow:
             # For each step, write the qsub command created by get_qsub_command() method:
             for step_n in self.step_list:
                 if not step_n.skip_scripts:   # Add the line only for modules that produce scripts (see del_type and move_type for examples of modules that don't...)
-                    pipe_fh.write(self.get_qsub_command(step_n))
+                    # pipe_fh.write(self.get_qsub_command(step_n))
+                    pipe_fh.write(step_n.get_main_command())
 
+            
                 
-                
-    def get_qsub_command(self,step):
-        """ Get the qsub command for step to print in main pipeline script, 00....
-        """
-        qsub_line = ""
-        qsub_line += "echo running " + step.get_step_name() + " ':\\n------------------------------'\n"
-        
-        # slow_release_script_loc = os.sep.join([self.pipe_data["home_dir"],"utilities","qsub_scripts","run_jobs_slowly.pl"])
-
-        if "slow_release" in step.params.keys():
-            # Define the code for slow release 
-            # Define the slow_release command (common to both options of slow_release)
-            qsub_line += """ 
-qsub -N %(step_step)s_%(step_name)s_%(run_code)s \\
-    -q %(queue)s \\
-    -e %(stderr)s \\
-    -o %(stdout)s \\
-    %(slow_rel_params)s \\
-    -f %(scripts_dir)s%(script_name)s \n""" % \
-                        {"step_step"              : step.get_step_step(),
-                        "step_name"               : step.get_step_name(),
-                        "run_code"                : self.run_code,
-                        "stderr"                  : self.pipe_data["stderr_dir"],
-                        "stdout"                  : self.pipe_data["stdout_dir"],
-                        "queue"                   : self.pipe_data["qsub_params"]["queue"],
-                        "scripts_dir"             : self.pipe_data["scripts_dir"],
-                        "script_name"             : step.get_script_name(),
-                        "slow_rel_params"         : step.params["slow_release"]}
-
-        else:
-            qsub_line += "qsub %(scripts_dir)s%(script_name)s\n" % {"scripts_dir" : self.pipe_data["scripts_dir"], 
-                                                                    "script_name" : step.get_script_name()}
-
-        qsub_line += "\n\n"
-        return qsub_line
-
 
 
 
@@ -490,8 +465,9 @@ qsub -N %(step_step)s_%(step_name)s_%(run_code)s \\
             new_step = StepClass(step_name,   \
                                  step_type,   \
                                  step_params, \
-                                 self.pipe_data)
-            new_step.path = step_module_path
+                                 self.pipe_data, \
+                                 step_module_path)
+
             return new_step
         except AssertionExcept as assertErr:
             print assertErr.get_error_str()
@@ -570,64 +546,64 @@ qsub -N %(step_step)s_%(step_name)s_%(run_code)s \\
                 self.sample_data[sample]["type"].append("mapping")
             
                 
-    def create_qdel_script(self):
-        """ This function creates the 99.qdel_all script
-        """
-        
-        # Create name for qdel script:
-        self.qdel_script_name = self.pipe_data["scripts_dir"] + "99.qdel_all.csh"
-        
-        # Create directory for step-wise qdel 
-        stepWiseDir = "%s99.qdel_all%s" % (self.pipe_data["scripts_dir"],os.sep)
+    def create_kill_scripts_dir(self):
+    
+    # Create directory for step-wise qdel 
+        stepWiseDir = "%s99.kill_all%s" % (self.pipe_data["scripts_dir"],os.sep)
         if not os.path.isdir(stepWiseDir):
             if self.pipe_data["verbose"]:
-                sys.stderr.write("Making dir 99.qdel_all directory at %s\n" % stepWiseDir)
+                sys.stderr.write("Making dir 99.kill_all directory at %s\n" % stepWiseDir)
             os.makedirs(stepWiseDir) 
         else:
             if self.pipe_data["verbose"]:
                 sys.stderr.write("Dir %s exists. Will overwrite... \n" % stepWiseDir)
 
+
+    def create_kill_scripts(self):
+        """ This function creates the 99.kill_all script
+        """
+        
+        # Create name for qdel script:
+        self.pipe_data["kill_script_name"] = self.pipe_data["scripts_dir"] + "99.kill_all.csh"
         
         
-        with open(self.qdel_script_name, "w") as script_fh:
+        
+        with open(self.pipe_data["kill_script_name"], "w") as script_fh:
             # Adding preliminary stuff:
             script_fh.write("#!/bin/csh\n\n")
-            # script_fh.write("# Adding line to log file:\n")
-            # script_fh.write("date '+%%d %%b %%Y, %%H:%%M' >> %s\n" % (self.pipe_data["log_file"]))
-            # script_fh.write("echo '\\t\\tDeleting all jobs with 99.qdel_all.csh' >> %s\n\n\n" % (self.pipe_data["log_file"]))
 
             script_fh.write("# Remove high level scripts:\n# entry_point\n\n\n")
             
             # For every step, create separate qdel file with step jobs.
             # These files are populated and de-populated on the run:
             for step in self.step_list:
-                # Create step-specific del script:
-                step_del_script_fn = "%s99.qdel_all_%s.csh" % (stepWiseDir,step.name)
-                with open(step_del_script_fn, "w") as step_del_script:
-                    # Write header
-                    step_del_script.write("#!/bin/csh\n\n")
-                    step.set_qdel_files(step_del_script_fn, self.qdel_script_name)
-                    # # For every jid, add a qdel line:
-                    # for jid in step.get_jid_list():
-                        # step_del_script.write("qdel %s\n" % jid)
-                # Add call to step-specific qdel script to main qdel script:
-                script_fh.write("csh %s\n" % step_del_script_fn)
-            # Add logging:
-            # script_fh.write("\n\n# Adding line to log file:\n")
-            # script_fh.write("date '+%%d %%b %%Y, %%H:%%M' >> %s\n" % (self.pipe_data["log_file"]))
-            # script_fh.write("echo '\\t\\tCompleted deleting all jobs with 99.qdel_all.csh' >> %s\n\n\n" % (self.pipe_data["log_file"]))
-              
+                # # Create step-specific del script:
+                # step_del_script_fn = "%s99.kill_all_%s.csh" % (stepWiseDir,step.name)
+                # with open(step_del_script_fn, "w") as step_del_script:
+                    # # Write header
+                    # step_del_script.write("#!/bin/csh\n\n")
+                    # step.set_qdel_files(step_del_script_fn, self.pipe_data["kill_script_name"])
+                # # Add call to step-specific qdel script to main qdel script:
+                # script_fh.write("csh %s\n" % step_del_script_fn)
+                
+                # ## New method:
+                # # step_del_script_fn = step.create_kill_script()
+                # Write script execution command:
+                script_fh.write("csh %s\n" % step.get_kill_script_name())
+                step.set_kill_files(self.pipe_data["kill_script_name"])
+                
     def create_qalter_script(self):
         """ This function creates the 98.qalter_all script
         """
         
-        self.qalter_script_name = self.pipe_data["scripts_dir"] + "98.qalter_all.csh"
+        self.qalter_script_name = self.pipe_data["scripts_dir"] + "98.Ensure_high_depends.csh"
 
         with open(self.qalter_script_name, "w") as script_fh:
             script_fh.write("#!/bin/csh\n\n")
             for step in self.step_list:
                 if step.get_depend_list():      # The step has dependencies:
-                    script_fh.write("qalter \\\n\t-hold_jid %s \\\n\t%s\n\n" % (",".join(step.get_dependency_jid_list()), step.get_qsub_name()))
+                    # import pdb; pdb.set_trace()
+                    script_fh.write(step.get_high_depends_command())
 
                     
     def create_bash_helper_funcs(self):
@@ -1166,11 +1142,9 @@ saveWidget(myviz,file = "%(out_file_name)s",selfcontained = F)
         self.pipe_data["names_index"] = self.get_names_index()
 
 
-        # Make main script:
-        self.make_main_pipeline_script()
 
         # Make the qdel script:
-        self.create_qdel_script()
+        self.create_kill_scripts()
         
         # Do the actual script building:
         # Also, catching assetion exceptions raised by class build_scripts() and 
@@ -1186,6 +1160,8 @@ saveWidget(myviz,file = "%(out_file_name)s",selfcontained = F)
             # sys.exit() 
             return
             
+        # Make main script:
+        self.make_main_pipeline_script()
         
         # Make the qalter script:
         self.create_qalter_script()

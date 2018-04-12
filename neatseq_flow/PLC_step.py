@@ -6,6 +6,7 @@ import os, shutil, sys, re
 import traceback
 import datetime
 
+from script_constructors.ScriptConstructor import *
 
 from copy import *
 from pprint import pprint as pp
@@ -161,7 +162,7 @@ class Step:
         
         
         
-    def __init__(self,name,step_type,params,pipe_data):
+    def __init__(self,name,step_type,params,pipe_data,module_path):
         """ should not be used. only specific step inits should be called. 
             Maybe a default init can be defined as well. check.
         """
@@ -170,7 +171,7 @@ class Step:
         self.params = params
         self.pipe_data = pipe_data
         
-        
+        self.path = module_path
         
         ###### Place for testing parameters:
         try:
@@ -227,6 +228,12 @@ class Step:
             # print assertErr.get_error_str()
             raise assertErr 
 
+        # self.shell_ext contains the str to use as script extension for step scripts
+        if self.shell == "bash":
+            self.shell_ext = "sh"
+        else:
+            self.shell_ext = "csh"
+            
         # Check that auto_redirs do not exist in parameter redirects list:
         try:
             auto_redirs = list(set(self.params["redir_params"].keys()) & set(self.auto_redirs))
@@ -250,7 +257,6 @@ class Step:
         # Create a dictionary storing the step name and names of sub-scripts
         # Will then be queried by main to create a general dictionary which can be written to json and used for remote run monitor
         self.qsub_names_dict = dict()
-
 
                                     
     def __str__(self):
@@ -397,24 +403,53 @@ Dependencies: {depends}""".format(name = self.name,
         return NotImplemented 
         
         
+    def finalize_contruction(self):
+        """ Put all stuff that needs to be done after init, sorting and number setting.
+            Called for each step in main.
+        """
+        ## Create main script class
+        self.main_script_obj = HighScriptConstructor(step = self.get_step_step(), \
+                                                name = self.get_step_name(), \
+                                                number = self.step_number, \
+                                                shell = self.shell,
+                                                params = self.params,
+                                                pipe_data = self.pipe_data)
+
+        ## Create kill script class
+        self.kill_script_obj = KillScriptConstructor(step = self.get_step_step(), \
+                                                name = self.get_step_name(), \
+                                                number = self.step_number, \
+                                                shell = self.shell,
+                                                params = self.params,
+                                                pipe_data = self.pipe_data)
+        
+        
+    def cleanup(self):
+        """ Here go things to be done just before termination of NeatSeq-Flow 
+        """
+
+        self.main_script_obj.__del__()
+        self.kill_script_obj.__del__()
+        
+        # import pdb; pdb.set_trace()
+    def get_high_depends_command(self):
+        """ Get dependency command from high script object
+            This will be qalter in qsub
+        """
+        
+        dependency_list = ",".join(self.get_dependency_jid_list())
+        return self.main_script_obj.get_depends_command(dependency_list)
+        
     def set_step_number(self,step_number):
         """ Sets the number of the step in the step list. 
             Is used in naming the scripts, so that they can be sorted with 'll'
         """
         assert isinstance(step_number, int)
         self.step_number = "{:0>2}".format(step_number)
-        # If number is added/updated, the script name must be initialized/updated
-        self.set_script_name()
         
         
-    def set_script_name(self):
-        """ Defines the name of the step script (level 2. Appears in qsub command in 00.workflow.commands.csh )
-        """
-        self.script_name = "{!s}.{!s}_{!s}.{!s}".format(self.step_number,self.step,self.name,"csh" if self.shell=="csh" else "sh")
-        return self.script_name
-
     def get_script_name(self):
-        return self.script_name
+        return self.main_script_obj.script_name
         
 
     def get_sample_data(self):
@@ -516,14 +551,12 @@ Dependencies: {depends}""".format(name = self.name,
             raise assertErr
 
 
-
-            
-
-    def get_qsub_name(self):
-        """ Return the jid id of the current step
+    def get_main_command(self):
+        """ Return the command to put in the main workflow script to run the main step script.
         """
-        self.spec_qsub_name = "_".join([self.step,self.name,self.pipe_data["run_code"]])
-        return self.spec_qsub_name
+
+        return self.main_script_obj.get_command()
+
         
     def set_spec_script_name(self,sample=None):
         """ Sets the current spec_script_name to a regular name, i.e.:
@@ -546,11 +579,11 @@ Dependencies: {depends}""".format(name = self.name,
         
         
         
-    def add_jid_to_jid_list(self):
+    def add_jid_to_jid_list(self, script_id):
         """ Adds a jid for a sub process (e.g. a sample-specific script) to the jid list of the current step
         """
         
-        self.jid_list.append(self.spec_qsub_name)
+        self.jid_list.append(script_id)
         
         
     def get_jid_list(self):
@@ -579,17 +612,20 @@ Dependencies: {depends}""".format(name = self.name,
             The actual part of the script is produced by the particular step class.
             This function is responsible for the generic part: opening the file and writing the qsub parameters and the script
         """
-        # Name of specific qsub command:
-        self.spec_qsub_name = self.spec_script_name
-        # Adding path to spec_script_name: 
-        self.spec_script_name = os.path.join(self.step_scripts_dir, \
-                                             ".".join([self.step_number,self.spec_script_name,"csh" if self.shell=="csh" else "sh"])) 
-        # local spec_qsub_name will store the qsub_name without the run_code.
-        spec_qsub_name = self.spec_qsub_name
-        self.spec_qsub_name = "_".join([self.spec_qsub_name,self.pipe_data["run_code"]])
-
         
-        self.add_jid_to_jid_list()  # Adds spec_qsub_name to jid_list
+        # Create ScriptConstructor for low level script.
+        self.child_script_obj = \
+            LowScriptConstructor(step = self.get_step_step(), \
+                                name = self.get_step_name(), \
+                                number = self.step_number, \
+                                shell = self.shell,
+                                params = self.params,
+                                pipe_data = self.pipe_data,
+                                # This is set by the module build_scripts() function:
+                                id = self.spec_script_name)
+
+        # Adds script_id to jid_list
+        self.add_jid_to_jid_list(self.child_script_obj.script_id)  
         
         # Add qsub headers to the script:
             # Decide wether to use csh or bash
@@ -600,59 +636,45 @@ Dependencies: {depends}""".format(name = self.name,
         # DONE. Update list of jids for this step (maybe different function)
         # Add jid to list of jids in pipe_data for process deletion script. TO BE DONE IN PIPELINE, NOT HERE! USE get_jid_list() METHOD FOR THIS! 
         
-        # Print script to level 3 script file
-        
         # Get dependency jid list 
         dependency_jid_list = self.get_dependency_jid_list() 
         # Add prelimanry jids if exist (if not, is an empty list and will not affect the outcome)
         # Adding at the head of the list. That's why is done in two steps - just to make it clearer.
         dependency_jid_list = self.preliminary_jids + dependency_jid_list
         
-        # Create header with dependency_jid_list:
-        qsub_header = self.make_script_header(jid_list = ",".join(dependency_jid_list) if dependency_jid_list else None)
+        # Request low-level script construction from LowScriptConstructor:
+        self.child_script_obj.write_script(script = self.script, 
+                                            dependency_jid_list = dependency_jid_list,
+                                            stamped_files = self.stamped_files)
         
-        # Without logging:
-        # self.script = qsub_header + self.script
-        # With logging:
-        self.script = "\n".join([qsub_header,                                                       \
-                                self.create_trap_line(self.spec_qsub_name,level="low"),             \
-                                self.create_log_lines(self.spec_qsub_name,"Started", level="low"),  \
-#                                self.add_qdel_line(type="Start"),                                   \ Now added in high-level script before qsub. This will enable qdeling jobs in qw state...
-                                self.create_activate_lines(type = "activate"),                      \
-                                self.create_set_options_line(self.spec_qsub_name,level="low", type="set"),  \
-                                self.script,                                                        \
-                                self.register_files(self.spec_qsub_name),                           \
-                                self.create_set_options_line(self.spec_qsub_name,level="low", type="unset"),  \
-                                self.create_activate_lines(type = "deactivate"),                    \
-                                self.add_qdel_line(type="Stop"),                                    \
-                                self.create_log_lines(self.spec_qsub_name,"Finished", level="low")])
         
+        
+        # Clear stamped files list
+        self.stamped_files = list()
 
-
-        # sys.stdout.write(self.spec_script_name + "\n")
-        with open(self.spec_script_name, "w") as script_fh:
-            script_fh.write(self.script)
-            
-        # Adding qdel and qsub lines to high level
-        self.write_low_cmds_to_high_level_script(spec_qsub_name)
+        # Add child command execution lines to main script:
+        self.main_script_obj.write_child_command(qdel_line = self.child_script_obj.get_kill_command(),\
+                                                script_path = self.child_script_obj.script_path,\
+                                                script_id = self.child_script_obj.script_id)
 
         # Adding to qsub_names_dict:
-        self.qsub_names_dict["low_qsubs"].append(self.spec_qsub_name)
+        self.qsub_names_dict["low_qsubs"].append(self.child_script_obj.script_id)
         
         
         # Adding job name and path to script and run indices
-        self.add_job_script_run_indices()
+        self.add_job_script_run_indices(self.child_script_obj.script_id, self.child_script_obj.script_path)
+        
+        self.child_script_obj.__del__()
+
     
-    
-    
-    def add_job_script_run_indices(self):
+    def add_job_script_run_indices(self, script_id, script_path):
         """ Add current script to script_index and run_index files
         """
         with open(self.pipe_data["script_index"], "a") as script_fh:
-            script_fh.write("{qsub_name}\t{script_name}\n".format(qsub_name   = self.spec_qsub_name,
-                                                                  script_name = self.spec_script_name))
+            script_fh.write("{qsub_name}\t{script_name}\n".format(qsub_name   = script_id,
+                                                                  script_name = script_path))
         with open(self.pipe_data["run_index"], "a") as script_fh:
-            script_fh.write("# {qsub_name}\n".format(qsub_name   = self.spec_qsub_name))
+            script_fh.write("# {qsub_name}\n".format(qsub_name   = script_id))
         
         
     def create_scripts_dir(self):
@@ -672,95 +694,55 @@ Dependencies: {depends}""".format(name = self.name,
         """ Create the high (i.e. 2nd) level scripts, which are the scripts that run the 3rd level scripts for the step
         """
         
-        # Set script name for high level script:
-        self.high_level_script_name = self.pipe_data["scripts_dir"] + ".".join([self.step_number,"_".join([self.step,self.name]),"csh" if self.shell=="csh" else "sh"]) 
-        
 
+        # Set script name for high level script:
+        # Is done in HighScriptConstructor construction.
         
-        self.spec_qsub_name = self.get_qsub_name()   #"_".join([self.step,self.name,self.pipe_data["run_code"]])
-        # Storing name of high level script (only used for correct logging at "Finshed" step)
-        self.high_spec_qsub_name = self.spec_qsub_name
         # Adding high-level jid to jid_list
-        self.add_jid_to_jid_list()
+        self.add_jid_to_jid_list(self.main_script_obj.script_id)
         
+        # TODO: Send to be done in ScriptConstructors!
         # -------------------------------------
         # Add qdel command to main qdel script:
-        f = open(self.qdel_filename_main,'r')
-        qdel_file = f.read()
+        f = open(self.kill_script_filename_main,'r')
+        kill_file = f.read()
         f.close()
          
-        qdel_file = re.sub("# entry_point", "# entry_point\nqdel {qsubname}".format(qsubname=self.spec_qsub_name),qdel_file)
+        kill_file = re.sub("# entry_point", "# entry_point\n{kill_cmd}".format(kill_cmd=self.main_script_obj.get_kill_command()),kill_file)
          
-        f = open(self.qdel_filename_main,'w')
-        f.write(qdel_file)
+        f = open(self.kill_script_filename_main,'w')
+        f.write(kill_file)
         f.close()
         # -------------------------------------
         
-        # Get dependency jid list and add prelimanry jids if exist 
-            # (if not, is an empty list and will not affect the outcome)
+        
         dependency_jid_list = self.get_dependency_jid_list()# + self.preliminary_jids  
         
-        # Create header with dependency_jid_list:
-        qsub_header = self.make_script_header(jid_list   = ",".join(dependency_jid_list) if dependency_jid_list else None,\
-                                            script_lev = "high")
-        script = qsub_header
+        # Write main script preamble:
+        self.main_script_obj.write_script_preamble(dependency_jid_list)
         
-        script = "\n".join([qsub_header,                                                         \
-                            self.create_trap_line(self.spec_qsub_name, level="high"),  \
-                            self.create_log_lines(self.spec_qsub_name,"Started", level="high"),  \
-                            self.create_set_options_line(self.spec_qsub_name, level="high", type="set"),  \
-                            "# Calling low level scripts:\n\n"])
-        
-        # Write script to high-level script
-        with open(self.high_level_script_name, "w") as script_fh:
-            script_fh.write(script)        
         
         # The actual qsub commands must be written in the create_low_level_script() function because they are step_name dependent!
             
         # Adding to qsub_names_dict:
         self.qsub_names_dict["step"] = self.get_step_step()
-        self.qsub_names_dict["high_qsub"] = self.high_spec_qsub_name
+        self.qsub_names_dict["high_qsub"] = self.main_script_obj.script_id
         self.qsub_names_dict["low_qsubs"] = list()
         
         # Adding qsub_name and script path to script_index and run_index
         with open(self.pipe_data["script_index"], "a") as script_fh:
-            script_fh.write("{qsub_name}\t{script_name}\n".format(qsub_name   = self.high_spec_qsub_name,
-                                                                  script_name = self.high_level_script_name))
+            script_fh.write("{qsub_name}\t{script_name}\n".format(qsub_name   = self.main_script_obj.script_id,
+                                                                  script_name = self.main_script_obj.script_path))
         with open(self.pipe_data["run_index"], "a") as script_fh:
-            script_fh.write("# {qsub_name}\n".format(qsub_name   = self.high_spec_qsub_name))
+            script_fh.write("# {qsub_name}\n".format(qsub_name   = self.main_script_obj.script_id))
         
         
-            
-    def close_high_level_script(self):
-        """ Add lines at the end of the high level script:
-        """
-        
-        # Unsetting error trapping and flags before qalter, since qalter usually fails (because dependencies don't exist, etc.)
-        script = """
-sleep {sleep}
-
-trap '' ERR
-{unset_line}
-
-csh {scripts_dir}98.qalter_all.csh
-
-{log_line}
-""".format(sleep       = self.pipe_data["Default_wait"],
-           scripts_dir = self.pipe_data["scripts_dir"],
-           unset_line  = self.create_set_options_line(self.high_spec_qsub_name, level="high", type="unset"),
-           log_line    = self.create_log_lines(self.high_spec_qsub_name, "Finished", level="high"))
-
-        with open(self.high_level_script_name, "a") as script_fh:
-            script_fh.write(script)        
-
      
     def create_preliminary_script(self):
         """ Create a script that will run before all other low level scripts commence
 
         """
 
-        #----- Define actual script here
-        # Adding line to remove temporary folder:
 
         # Creating script. If 'create_spec_preliminary_script' is not defined or returns nothing, return from here without doing anything
         self.script = ""
@@ -772,70 +754,57 @@ csh {scripts_dir}98.qalter_all.csh
         if not self.script.strip():                 # If script is empty, do not create a wrapper function
             return 
         
-        # Create name without the run code:
-        self.spec_qsub_name = "_".join([self.step,self.name,"preliminary"])
-        # Storing local copy without runcode:
-        spec_qsub_name = self.spec_qsub_name
+        # self.spec_qsub_name = "_".join([self.step,self.name,"preliminary"])
 
-        self.spec_script_name = os.path.join(self.step_scripts_dir, \
-                                             ".".join([self.step_number,self.spec_qsub_name,"csh" if self.shell=="csh" else "sh"])) 
+        self.prelim_script_obj = \
+            LowScriptConstructor(step = self.get_step_step(), \
+                                name = self.get_step_name(), \
+                                number = self.step_number, \
+                                shell = self.shell,
+                                params = self.params,
+                                pipe_data = self.pipe_data,
+                                id = "_".join([self.step,self.name,"preliminary"]))
 
                                              
-        self.spec_qsub_name = "_".join([self.spec_qsub_name,self.pipe_data["run_code"]])
+        # self.spec_qsub_name = "_".join([self.spec_qsub_name,self.pipe_data["run_code"]])
         
             
         # Get dependency jid list and add preliminary jids if exist (if not, is an empty list and will not affect the outcome)
         #    Also, add all jids of current step, as this script is to run only after all previous steps have completed.
         dependency_jid_list = self.get_dependency_jid_list() #+ self.get_jid_list()
         
-        # Create header with dependency_jid_list:
-        qsub_header = self.make_script_header(jid_list = ",".join(dependency_jid_list) if dependency_jid_list else None)
-            
-        # Orignal line: 
-        # self.script = qsub_header +  self.script
-        # New, with host reporting and time logging:
-        self.script = "\n".join([qsub_header,                                                   \
-                        self.create_trap_line(self.spec_qsub_name,level="prelim"),                 \
-                        self.create_log_lines(self.spec_qsub_name, "Started", level="prelim"),  \
-                        self.create_activate_lines(type = "activate"),                          \
-                        self.create_set_options_line(self.spec_qsub_name,level="prelim", type="set"),  \
-                        self.script,                                                            \
-                        self.register_files(self.spec_qsub_name),                               \
-                        self.create_set_options_line(self.spec_qsub_name,level="prelim", type="unset"),  \
-                        self.create_activate_lines(type = "deactivate"),                        \
-                        self.add_qdel_line(type="Stop"),                                        \
-                        self.create_log_lines(self.spec_qsub_name, "Finished", level="prelim")])
+        
+        self.prelim_script_obj.write_script(script = self.script, 
+                                            dependency_jid_list = dependency_jid_list,
+                                            stamped_files = self.stamped_files)
+        # Clear stamped files list
+        self.stamped_files = list()
+                
+        self.main_script_obj.write_child_command(qdel_line = self.prelim_script_obj.get_kill_command(),\
+                                                script_path = self.prelim_script_obj.script_path,\
+                                                script_id = self.prelim_script_obj.script_id)
 
-
-        with open(self.spec_script_name, "w") as script_fh:
-            script_fh.write(self.script)
-            
-        # Adding qdel and qsub lines to high level
-        self.write_low_cmds_to_high_level_script(spec_qsub_name)
-
-        # # Append the qsub command to the 2nd level script:
-        # with open(self.high_level_script_name, "a") as script_fh:
-            # script_fh.write("qsub " + self.spec_script_name + "\n\n")        
-            
         # This is here because I want to use jid_list to make wrapping_up script dependent on this step's main low-level scripts
         # Explantion: get_jid_list() was used above (line 'qsub_header...') to make the wrapping_up script dependent on the other scripts created by the step
         #    Now that that is done, the following line adds this step to the jid_list, so that subsequent steps are dependent on the wrapping up script as well. (I hope this makes it clear...)
-        self.add_jid_to_jid_list()
+        self.add_jid_to_jid_list(self.prelim_script_obj.script_id)
 
         # Add the preliminary jid to the list of preliminary jids.  
-        self.preliminary_jids.append(self.spec_qsub_name)
+        self.preliminary_jids.append(self.prelim_script_obj.script_id)
 
         # Adding to qsub_names_dict:
-        self.qsub_names_dict["low_qsubs"].append(self.spec_qsub_name)
+        self.qsub_names_dict["low_qsubs"].append(self.prelim_script_obj.script_id)
 
         # Adding job name and path to script and run indices
-        self.add_job_script_run_indices()
+        self.add_job_script_run_indices(self.prelim_script_obj.script_id, self.prelim_script_obj.script_path)
 
+        self.prelim_script_obj.__del__()
         
     def create_wrapping_up_script(self):
         """ Create a script that will run once all other low level scripts terminate
             Ideal place for putting testing and agglomeration procedures.
         """
+        
         
         # Creating script. If 'create_spec_wrapping_up_script' is not defined or returns nothing, return from here without doing anything
         self.script = ""
@@ -849,61 +818,45 @@ csh {scripts_dir}98.qalter_all.csh
 
 
         self.spec_qsub_name = "_".join([self.step,self.name,"wrapping_up"])
-        spec_qsub_name = self.spec_qsub_name
-        
-        self.spec_script_name = os.path.join(self.step_scripts_dir, \
-                                             ".".join([self.step_number,self.spec_qsub_name,"csh" if self.shell=="csh" else "sh"])) 
 
-        self.spec_qsub_name = "_".join([self.spec_qsub_name,self.pipe_data["run_code"]])
         
-        #----- Define actual script here
-        # Adding line to remove temporary folder:
+        
+        self.wrap_script_obj = \
+            LowScriptConstructor(step = self.get_step_step(), \
+                name = self.get_step_name(), \
+                                number = self.step_number, \
+                                shell = self.shell,
+                                params = self.params,
+                                pipe_data = self.pipe_data,
+                                id = self.spec_qsub_name)
         
             
         # Get dependency jid list and add prelimanry jids if exist (if not, is an empty list and will not affect the outcome)
         #    Also, add all jids of current step, as this script is to run only after all previous steps have completed.
         dependency_jid_list = self.preliminary_jids + self.get_jid_list() + self.get_dependency_jid_list()
         
-        # Create header with dependency_jid_list:
-        qsub_header = self.make_script_header(jid_list = ",".join(dependency_jid_list) if dependency_jid_list else None)
-            
-        # Orignal line: 
-        # self.script = qsub_header +  self.script
-        # New, with host reporting and time logging:
-        self.script = "\n".join([qsub_header,                                                       \
-                        self.create_trap_line(self.spec_qsub_name,level="wrapping"),             \
-                        self.create_log_lines(self.spec_qsub_name, "Started", level="wrapping"),    \
-                        self.create_activate_lines(type = "activate"),                              \
-                        self.create_set_options_line(self.spec_qsub_name,level="wrapping", type="set"),  \
-                        self.script,                                                                \
-                        self.register_files(self.spec_qsub_name),                                   \
-                        self.create_set_options_line(self.spec_qsub_name,level="wrapping", type="unset"),  \
-                        self.create_activate_lines(type = "deactivate"),                            \
-                        self.add_qdel_line(type="Stop"),                                            \
-                        self.create_log_lines(self.spec_qsub_name, "Finished", level="wrapping")])
+        self.wrap_script_obj.write_script(script = self.script, 
+                                    dependency_jid_list = dependency_jid_list,
+                                    stamped_files = self.stamped_files)
+        # Clear stamped files list
+        self.stamped_files = list()
+        
+        self.main_script_obj.write_child_command(qdel_line = self.wrap_script_obj.get_kill_command(),\
+                                        script_path = self.wrap_script_obj.script_path,\
+                                        script_id = self.wrap_script_obj.script_id)
 
 
-        with open(self.spec_script_name, "w") as script_fh:
-            script_fh.write(self.script)
-            
-        # Adding qdel and qsub lines to high level
-        self.write_low_cmds_to_high_level_script(spec_qsub_name)
-
-        # # Append the qsub command to the 2nd level script:
-        # # script_name = self.pipe_data["scripts_dir"] + ".".join([self.step_number,"_".join([self.step,self.name]),self.shell]) 
-        # with open(self.high_level_script_name, "a") as script_fh:
-            # script_fh.write("qsub " + self.spec_script_name + "\n\n")        
-            
         # This is here because I want to use jid_list to make wrapping_up script dependent on this step's main low-level scripts
         # Explantion: get_jid_list() was used above (line 'qsub_header...') to make the wrapping_up script dependent on the other scripts created by the step
         #    Now that that is done, the following line adds this step to the jid_list, so that subsequent steps are dependent on the wrapping up script as well. (I hope this makes it clear...)
-        self.add_jid_to_jid_list()
+        self.add_jid_to_jid_list(self.wrap_script_obj.script_id)
 
         # Adding to qsub_names_dict:
         self.qsub_names_dict["low_qsubs"].append(self.spec_qsub_name)
         
         # Adding job name and path to script and run indices
-        self.add_job_script_run_indices()
+        self.add_job_script_run_indices(self.wrap_script_obj.script_id, self.wrap_script_obj.script_path)
+        self.wrap_script_obj.__del__()
 
             
     def create_all_scripts(self):
@@ -929,7 +882,7 @@ csh {scripts_dir}98.qalter_all.csh
                 self.create_wrapping_up_script()
                 
                 # Add closing lines to the high level script
-                self.close_high_level_script()
+                self.main_script_obj.write_script_postamble()
 
             except AssertionExcept as assertErr:
                 # print assertErr.get_error_str(self.get_step_name())
@@ -951,309 +904,312 @@ csh {scripts_dir}98.qalter_all.csh
 
             sys.exit("Showed. Now stopping. To continue, remove the 'stop_and_show' tag from %s" % self.get_step_name())
             
-    def make_script_header(self, jid_list, script_lev = "low"):
-        # Setting command used to execute the script by Executor
-        if self.pipe_data["Executor"] == "SGE":
-            return self.make_qsub_header(jid_list, script_lev)
-        elif self.pipe_data["Executor"] == "SLURM":
-            return self.make_sbatch_header(jid_list, script_lev)
-        elif self.pipe_data["Executor"] == "Local":
-            return self.make_local_header(jid_list, script_lev)
-        else:
-            sys.exit("Unrecognized 'Executor' value")
+    # def make_script_header(self, jid_list, script_lev = "low"):
+        # # Setting command used to execute the script by Executor
+        # if self.pipe_data["Executor"] == "SGE":
+            # return self.make_qsub_header(jid_list, script_lev)
+        # elif self.pipe_data["Executor"] == "SLURM":
+            # return self.make_sbatch_header(jid_list, script_lev)
+        # elif self.pipe_data["Executor"] == "Local":
+            # return self.make_local_header(jid_list, script_lev)
+        # else:
+            # sys.exit("Unrecognized 'Executor' value")
             
-    def make_qsub_header(self, jid_list, script_lev = "low"):
-        """ Make the first few lines for the scripts
-            Is called for high level, low level and wrapper scripts
-        """
+    # def make_qsub_header(self, jid_list, script_lev = "low"):
+        # """ Make the first few lines for the scripts
+            # Is called for high level, low level and wrapper scripts
+        # """
         
-        only_low_lev_params  = ["-pe"]
-        compulsory_high_lev_params = {"-V":""}
-        # special_opts = "-N -e -o -q -hold_jid".split(" ") + only_low_lev_params
+        # only_low_lev_params  = ["-pe"]
+        # compulsory_high_lev_params = {"-V":""}
+        # # special_opts = "-N -e -o -q -hold_jid".split(" ") + only_low_lev_params
         
-        qsub_shell = "#!/bin/%(shell)s\n#$ -S /bin/%(shell)s" % {"shell": "csh" if self.shell=="csh" else "bash"}
-        # Make hold_jids line only if there are jids (i.e. self.get_dependency_jid_list() != [])
-        if jid_list:
-            qsub_holdjids = "#$ -hold_jid %s " % jid_list
-        else:
-            qsub_holdjids = ""
-        qsub_name =    "#$ -N %s " % (self.spec_qsub_name)
-        qsub_stderr =  "#$ -e %s" % self.pipe_data["stderr_dir"]
-        qsub_stdout =  "#$ -o %s" % self.pipe_data["stdout_dir"]
-        qsub_queue =   "#$ -q %s" % self.params["qsub_params"]["queue"]
+        # qsub_shell = "#!/bin/%(shell)s\n#$ -S /bin/%(shell)s" % {"shell": self.shell}
+        # # Make hold_jids line only if there are jids (i.e. self.get_dependency_jid_list() != [])
+        # if jid_list:
+            # qsub_holdjids = "#$ -hold_jid %s " % jid_list
+        # else:
+            # qsub_holdjids = ""
+        # qsub_name =    "#$ -N %s " % (self.spec_qsub_name)
+        # qsub_stderr =  "#$ -e %s" % self.pipe_data["stderr_dir"]
+        # qsub_stdout =  "#$ -o %s" % self.pipe_data["stdout_dir"]
+        # qsub_queue =   "#$ -q %s" % self.params["qsub_params"]["queue"]
 
-        # Create lines containing the qsub opts.
-        qsub_opts = ""
-        for qsub_opt in self.params["qsub_params"]["opts"]:
-            if qsub_opt in only_low_lev_params and script_lev=="high":
-                continue
-            qsub_opts += "#$ {key} {val}\n".format(key=qsub_opt, val=self.params["qsub_params"]["opts"][qsub_opt]) 
-            
-        
-        # Adding 'compulsory_high_lev_params' to all high level scripts (This includes '-V'. Otherwise, if shell is bash, the SGE commands are not recognized)
-        if script_lev == "high":
-            for qsub_opt in compulsory_high_lev_params:
-                if qsub_opt not in self.params["qsub_params"]["opts"]:
-                    qsub_opts += "#$ {key} {val}\n".format(key=qsub_opt, 
-                                                    val=compulsory_high_lev_params[qsub_opt]) 
-
-
-        # Adding node limitation to header, but only for low-level scripts
-        if script_lev == "low":
-            if self.params["qsub_params"]["node"]:     # If not defined then this will be "None"
-                # Perform two joins:
-                #   1. For each node, join it to the queue name with '@' (e.g. 'bio.q@sge100')
-                #   2. Comma-join all nodes to one list (e.g. 'bio.q@sge100,bio.q@sge102')
-                qsub_queue = ",".join(["@".join([self.params["qsub_params"]["queue"],item]) for item in self.params["qsub_params"]["node"]])
-                # qsub_queue += "@%s" % self.params["qsub_params"]["node"]
-                qsub_queue = "#$ -q %s" % qsub_queue
-
-        # Sometimes qsub_opts is empty and then there is an ugly empty line in the middle of the qsub definition. Removing the empty line with replace()
-        return "\n".join([qsub_shell,
-                            qsub_queue,
-                            qsub_opts,
-                            qsub_name,
-                            qsub_stderr,
-                            qsub_stdout,
-                            qsub_holdjids]).replace("\n\n","\n") + "\n\n"
-
-    def make_sbatch_header(self, jid_list, script_lev = "low"):
-        """ Make the first few lines for the scripts
-            Is called for high level, low level and wrapper scripts
-        """
-        
-        only_low_lev_params  = "-n --ntasks -c --cpus-per-task".split(" ")
-        compulsory_high_lev_params = {"--export":"ALL"}
-        # special_opts = "-J --job-name -e -o -q -hold_jid".split(" ") + only_low_lev_params
-        
-        # qsub_shell = "#!/bin/%(shell)s\n#$ -S /bin/%(shell)s" % {"shell": "csh" if self.shell=="csh" else "bash"}
-        qsub_shell = "#!/bin/%(shell)s"  % {"shell": "csh" if self.shell=="csh" else "bash"}  # I haven't discovered how to change the default SBATCH shell...
-        
-        # Make hold_jids line only if there are jids (i.e. self.get_dependency_jid_list() != [])
-        if jid_list:
-            qsub_holdjids = "#$ -hold_jid %s " % jid_list
-        else:
-            qsub_holdjids = ""
-        qsub_name =    "#SBATCH --job-name %s " % (self.spec_qsub_name)
-        qsub_stderr =  "#SBATCH -e {stderr_dir}{name}.e%J".format(stderr_dir=self.pipe_data["stderr_dir"],name=self.spec_qsub_name)
-        qsub_stdout =  "#SBATCH -o {stdout_dir}{name}.o%J".format(stdout_dir=self.pipe_data["stdout_dir"],name=self.spec_qsub_name) 
-        qsub_queue =   "#SBATCH --partition %s" % self.params["qsub_params"]["queue"]
-
-        # Create lines containing the qsub opts.
-        qsub_opts = ""
-        for qsub_opt in self.params["qsub_params"]["opts"]:
-            if qsub_opt in only_low_lev_params and script_lev=="high":
-                continue
-            qsub_opts += "#SBATCH {key} {val}\n".format(key=qsub_opt, val=self.params["qsub_params"]["opts"][qsub_opt]) 
+        # # Create lines containing the qsub opts.
+        # qsub_opts = ""
+        # for qsub_opt in self.params["qsub_params"]["opts"]:
+            # if qsub_opt in only_low_lev_params and script_lev=="high":
+                # continue
+            # qsub_opts += "#$ {key} {val}\n".format(key=qsub_opt, val=self.params["qsub_params"]["opts"][qsub_opt]) 
             
         
-        # Adding 'compulsory_high_lev_params' to all high level scripts (This includes '-V'. Otherwise, if shell is bash, the SGE commands are not recognized)
-        if script_lev == "high":
-            for qsub_opt in compulsory_high_lev_params:
-                if qsub_opt not in self.params["qsub_params"]["opts"]:
-                    qsub_opts += "#$ {key} {val}\n".format(key=qsub_opt, 
-                                                    val=compulsory_high_lev_params[qsub_opt]) 
+        # # Adding 'compulsory_high_lev_params' to all high level scripts (This includes '-V'. Otherwise, if shell is bash, the SGE commands are not recognized)
+        # if script_lev == "high":
+            # for qsub_opt in compulsory_high_lev_params:
+                # if qsub_opt not in self.params["qsub_params"]["opts"]:
+                    # qsub_opts += "#$ {key} {val}\n".format(key=qsub_opt, 
+                                                    # val=compulsory_high_lev_params[qsub_opt]) 
 
 
-        # Adding node limitation to header, but only for low-level scripts
-        if script_lev == "low":
-            if self.params["qsub_params"]["node"]:     # If not defined then this will be "None"
-                # qsub_queue += "@%s" % self.params["qsub_params"]["node"]
-                qsub_queue = "#SBATCH --nodelist %s" % ",".join(self.params["qsub_params"]["node"])
+        # # Adding node limitation to header, but only for low-level scripts
+        # if script_lev == "low":
+            # if self.params["qsub_params"]["node"]:     # If not defined then this will be "None"
+                # # Perform two joins:
+                # #   1. For each node, join it to the queue name with '@' (e.g. 'bio.q@sge100')
+                # #   2. Comma-join all nodes to one list (e.g. 'bio.q@sge100,bio.q@sge102')
+                # qsub_queue = ",".join(["@".join([self.params["qsub_params"]["queue"],item]) for item in self.params["qsub_params"]["node"]])
+                # # qsub_queue += "@%s" % self.params["qsub_params"]["node"]
+                # qsub_queue = "#$ -q %s" % qsub_queue
 
-        # Sometimes qsub_opts is empty and then there is an ugly empty line in the middle of the qsub definition. Removing the empty line with replace()
-        return "\n".join([qsub_shell,
-                            qsub_queue,
-                            qsub_opts,
-                            qsub_name,
-                            qsub_stderr,
-                            qsub_stdout,
-                            qsub_holdjids]).replace("\n\n","\n") + "\n\n"
+        # # Sometimes qsub_opts is empty and then there is an ugly empty line in the middle of the qsub definition. Removing the empty line with replace()
+        # return "\n".join([qsub_shell,
+                            # qsub_queue,
+                            # qsub_opts,
+                            # qsub_name,
+                            # qsub_stderr,
+                            # qsub_stdout,
+                            # qsub_holdjids]).replace("\n\n","\n") + "\n\n"
+
+    # def make_sbatch_header(self, jid_list, script_lev = "low"):
+        # """ Make the first few lines for the scripts
+            # Is called for high level, low level and wrapper scripts
+        # """
         
-    def make_local_header(self, jid_list, script_lev = "low"):
-        """ Make the first few lines for the scripts
-            Is called for high level, low level and wrapper scripts
-        """
+        # only_low_lev_params  = "-n --ntasks -c --cpus-per-task".split(" ")
+        # compulsory_high_lev_params = {"--export":"ALL"}
+        # # special_opts = "-J --job-name -e -o -q -hold_jid".split(" ") + only_low_lev_params
+        
+        # # qsub_shell = "#!/bin/%(shell)s\n#$ -S /bin/%(shell)s" % {"shell": self.shell}
+        # qsub_shell = "#!/bin/%(shell)s"  % {"shell": self.shell}  # I haven't discovered how to change the default SBATCH shell...
+        
+        # # Make hold_jids line only if there are jids (i.e. self.get_dependency_jid_list() != [])
+        # if jid_list:
+            # qsub_holdjids = "#$ -hold_jid %s " % jid_list
+        # else:
+            # qsub_holdjids = ""
+        # qsub_name =    "#SBATCH --job-name %s " % (self.spec_qsub_name)
+        # qsub_stderr =  "#SBATCH -e {stderr_dir}{name}.e%J".format(stderr_dir=self.pipe_data["stderr_dir"],name=self.spec_qsub_name)
+        # qsub_stdout =  "#SBATCH -o {stdout_dir}{name}.o%J".format(stdout_dir=self.pipe_data["stdout_dir"],name=self.spec_qsub_name) 
+        # qsub_queue =   "#SBATCH --partition %s" % self.params["qsub_params"]["queue"]
+
+        # # Create lines containing the qsub opts.
+        # qsub_opts = ""
+        # for qsub_opt in self.params["qsub_params"]["opts"]:
+            # if qsub_opt in only_low_lev_params and script_lev=="high":
+                # continue
+            # qsub_opts += "#SBATCH {key} {val}\n".format(key=qsub_opt, val=self.params["qsub_params"]["opts"][qsub_opt]) 
+            
+        
+        # # Adding 'compulsory_high_lev_params' to all high level scripts (This includes '-V'. Otherwise, if shell is bash, the SGE commands are not recognized)
+        # if script_lev == "high":
+            # for qsub_opt in compulsory_high_lev_params:
+                # if qsub_opt not in self.params["qsub_params"]["opts"]:
+                    # qsub_opts += "#$ {key} {val}\n".format(key=qsub_opt, 
+                                                    # val=compulsory_high_lev_params[qsub_opt]) 
+
+
+        # # Adding node limitation to header, but only for low-level scripts
+        # if script_lev == "low":
+            # if self.params["qsub_params"]["node"]:     # If not defined then this will be "None"
+                # # qsub_queue += "@%s" % self.params["qsub_params"]["node"]
+                # qsub_queue = "#SBATCH --nodelist %s" % ",".join(self.params["qsub_params"]["node"])
+
+        # # Sometimes qsub_opts is empty and then there is an ugly empty line in the middle of the qsub definition. Removing the empty line with replace()
+        # return "\n".join([qsub_shell,
+                            # qsub_queue,
+                            # qsub_opts,
+                            # qsub_name,
+                            # qsub_stderr,
+                            # qsub_stdout,
+                            # qsub_holdjids]).replace("\n\n","\n") + "\n\n"
+        
+    # def make_local_header(self, jid_list, script_lev = "low"):
+        # """ Make the first few lines for the scripts
+            # Is called for high level, low level and wrapper scripts
+        # """
         
 
-        qsub_shell = "#!/bin/%(shell)s"  % {"shell": "csh" if self.shell=="csh" else "bash"}  # I haven't discovered how to change the default SBATCH shell...
+        # qsub_shell = "#!/bin/%(shell)s"  % {"shell": self.shell}  # I haven't discovered how to change the default SBATCH shell...
         
-        # Make hold_jids line only if there are jids (i.e. self.get_dependency_jid_list() != [])
-        if jid_list:
-            qsub_holdjids = "#$ -hold_jid %s " % jid_list
-        else:
-            qsub_holdjids = ""
+        # # Make hold_jids line only if there are jids (i.e. self.get_dependency_jid_list() != [])
+        # if jid_list:
+            # qsub_holdjids = "#$ -hold_jid %s " % jid_list
+        # else:
+            # qsub_holdjids = ""
 
         
-        # Sometimes qsub_opts is empty and then there is an ugly empty line in the middle of the qsub definition. Removing the empty line with replace()
-        return "\n".join([qsub_shell,
-                            qsub_holdjids]).replace("\n\n","\n") + "\n\n"
+        # # Sometimes qsub_opts is empty and then there is an ugly empty line in the middle of the qsub definition. Removing the empty line with replace()
+        # return "\n".join([qsub_shell,
+                            # qsub_holdjids]).replace("\n\n","\n") + "\n\n"
         
         
         
+    def get_kill_script_name(self):
+        """"""
         
-    def set_qdel_files(self, qdel_filename, qdel_filename_main):
+        return self.kill_script_obj.script_path
+    
+    def set_kill_files(self, kill_script_filename_main):
         """ Called by PLC_main to store the qdel filename for the step.
         """
         
-        self.qdel_filename = qdel_filename  # Step-specific qdel filename
-        self.qdel_filename_main = qdel_filename_main  # Project global qdel filename
+        self.kill_script_filename_main = kill_script_filename_main  # Project global qdel filename
         
         
-    def add_qdel_line(self, type = "Start"):
-        """ Add and remove qdel lines from qdel file.
-            type can be "Start" or "Stop"
-        """
+    # def add_qdel_line(self, type = "Start"):
+        # """ Add and remove qdel lines from qdel file.
+            # type can be "Start" or "Stop"
+        # """
         
 
-        qdel_cmd = "qdel {script_name}".format(script_name = self.spec_qsub_name)
+        # qdel_cmd = "qdel {script_name}".format(script_name = self.spec_qsub_name)
         
-        if type == "Start":
-            return "# Adding qdel command to qdel file.\necho '{qdel_cmd}' >> {qdel_file}\n".format(qdel_cmd = qdel_cmd, qdel_file = self.qdel_filename)
-        elif type == "Stop":
-            return "# Removing qdel command from qdel file.\nsed -i -e 's:^{qdel_cmd}$:#&:' {qdel_file}\n".format(qdel_cmd = re.escape(qdel_cmd), qdel_file = self.qdel_filename)
-        else:
-            raise AssertionExcept("Bad type value in add_qdel_lines()", step = self.get_step_name())
+        # if type == "Start":
+            # return "# Adding qdel command to qdel file.\necho '{qdel_cmd}' >> {qdel_file}\n".format(qdel_cmd = qdel_cmd, qdel_file = self.kill_script_obj.script_path)
+        # elif type == "Stop":
+            # return "# Removing qdel command from qdel file.\nsed -i -e 's:^{qdel_cmd}$:#&:' {qdel_file}\n".format(qdel_cmd = re.escape(qdel_cmd), qdel_file = self.kill_script_obj.script_path)
+        # else:
+            # raise AssertionExcept("Bad type value in add_qdel_lines()", step = self.get_step_name())
             
             
                                            
-    def create_log_lines(self, qsub_name, type = "Started", level = "high", status = "\033[0;32mOK\033[m"):
-        """ Create logging lines. Added before and after script to return start and end times
-            If bash, adding at beginning of script also lines for error trapping
-        """
+    # def create_log_lines(self, qsub_name, type = "Started", level = "high", status = "\033[0;32mOK\033[m"):
+        # """ Create logging lines. Added before and after script to return start and end times
+            # If bash, adding at beginning of script also lines for error trapping
+        # """
 
-        log_cols_dict = {"type"       : type,                                        \
-                         "step"       : self.get_step_step(),                        \
-                         "stepname"   : self.get_step_name(),                        \
-                         "stepID"     : qsub_name,                                   \
-                         "qstat_path" : self.pipe_data["qsub_params"]["qstat_path"], \
-                         "level"      : level,                                       \
-                         "status"     : status,                                      \
-                         "file"       : self.pipe_data["log_file"]}
+        # log_cols_dict = {"type"       : type,                                        \
+                         # "step"       : self.get_step_step(),                        \
+                         # "stepname"   : self.get_step_name(),                        \
+                         # "stepID"     : qsub_name,                                   \
+                         # "qstat_path" : self.pipe_data["qsub_params"]["qstat_path"], \
+                         # "level"      : level,                                       \
+                         # "status"     : status,                                      \
+                         # "file"       : self.pipe_data["log_file"]}
         
-        if self.shell=="csh":
+        # if self.shell=="csh":
         
-            script = """
-if ($?JOB_ID) then 
-	# Adding line to log file:  Date    Step    Host
-	echo `date '+%%d/%%m/%%Y %%H:%%M:%%S'`'\\t%(type)s\\t%(step)s\\t%(stepname)s\\t%(stepID)s\\t%(level)s\\t'$HOSTNAME'\\t'`%(qstat_path)s -j $JOB_ID | grep maxvmem | cut -d = -f 6`'\\t%(status)s' >> %(file)s
-else
-	echo `date '+%%d/%%m/%%Y %%H:%%M:%%S'`'\\t%(type)s\\t%(step)s\\t%(stepname)s\\t%(stepID)s\\t%(level)s\\t'$HOSTNAME'\\t-\\t%(status)s' >> %(file)s
-endif
-####
-""" % log_cols_dict
+            # script = """
+# if ($?JOB_ID) then 
+	# # Adding line to log file:  Date    Step    Host
+	# echo `date '+%%d/%%m/%%Y %%H:%%M:%%S'`'\\t%(type)s\\t%(step)s\\t%(stepname)s\\t%(stepID)s\\t%(level)s\\t'$HOSTNAME'\\t'`%(qstat_path)s -j $JOB_ID | grep maxvmem | cut -d = -f 6`'\\t%(status)s' >> %(file)s
+# else
+	# echo `date '+%%d/%%m/%%Y %%H:%%M:%%S'`'\\t%(type)s\\t%(step)s\\t%(stepname)s\\t%(stepID)s\\t%(level)s\\t'$HOSTNAME'\\t-\\t%(status)s' >> %(file)s
+# endif
+# ####
+# """ % log_cols_dict
         
-        elif self.shell == "bash":
+        # elif self.shell == "bash":
 
-            script = """
-# Adding line to log file
-log_echo {step} {stepname} {stepID} {level} $HOSTNAME $JOB_ID {type}
+            # script = """
+# # Adding line to log file
+# log_echo {step} {stepname} {stepID} {level} $HOSTNAME $JOB_ID {type}
 
-""".format(**log_cols_dict)
+# """.format(**log_cols_dict)
 
-        else:
-            script = ""
-            self.write_warning("shell not recognized. Not creating log writing lines in scripts.\n", admonition = "WARNING")
+        # else:
+            # script = ""
+            # self.write_warning("shell not recognized. Not creating log writing lines in scripts.\n", admonition = "WARNING")
         
-        return script
+        # return script
         
-    def create_trap_line(self, qsub_name, level = "high"):
-        """ Returns the lines for ERR trapping
-            bash only!
-        """
+    # def create_trap_line(self, qsub_name, level = "high"):
+        # """ Returns the lines for ERR trapping
+            # bash only!
+        # """
 
-        if self.shell=="csh":
-            self.write_warning("Error trapping not defined for csh scripts. Consider using bash instead.\n", admonition = "WARNING")
+        # if self.shell=="csh":
+            # self.write_warning("Error trapping not defined for csh scripts. Consider using bash instead.\n", admonition = "WARNING")
 
-            script = ""
+            # script = ""
             
-        elif self.shell == "bash":
-            # script = """trap \"if [ ! -z "$JOB_ID" ]; then echo -e $(date '+%d/%m/%Y %H:%M:%S')'\\t{type}\\t{step}\\t{stepname}\\t{stepID}\\t{level}\\t'$HOSTNAME'\\t'$({qstat_path} -j $JOB_ID | grep maxvmem | cut -d = -f 6)'\\t{status}' >> {file}; else echo -e $(date '+%d/%m/%Y %H:%M:%S')'\\t{type}\\t{step}\\t{stepname}\\t{stepID}\\t{level}\\t'$HOSTNAME'\\t-\\t{status}' >> {file}; fi\" ERR
-            script = """
-# Import trap functions
-. {helper_funcs}
+        # elif self.shell == "bash":
+            # # script = """trap \"if [ ! -z "$JOB_ID" ]; then echo -e $(date '+%d/%m/%Y %H:%M:%S')'\\t{type}\\t{step}\\t{stepname}\\t{stepID}\\t{level}\\t'$HOSTNAME'\\t'$({qstat_path} -j $JOB_ID | grep maxvmem | cut -d = -f 6)'\\t{status}' >> {file}; else echo -e $(date '+%d/%m/%Y %H:%M:%S')'\\t{type}\\t{step}\\t{stepname}\\t{stepID}\\t{level}\\t'$HOSTNAME'\\t-\\t{status}' >> {file}; fi\" ERR
+            # script = """
+# # Import trap functions
+# . {helper_funcs}
 
-# If not in SGE context, set JOB_ID to ND
-if [ -z "$JOB_ID" ]; then JOB_ID="ND"; fi
+# # If not in SGE context, set JOB_ID to ND
+# if [ -z "$JOB_ID" ]; then JOB_ID="ND"; fi
 
-# Trap various signals. SIGUSR2 is passed by qdel when -notify is passes
-trap_with_arg func_trap {step} {stepname} {stepID} {level} $HOSTNAME $JOB_ID SIGUSR2 ERR INT TERM
-            """.format(#type       = "Finished",                                        \
-                   step       = self.get_step_step(),                        \
-                   stepname   = self.get_step_name(),                        \
-                   stepID     = qsub_name,                                   \
-                   # qstat_path = self.pipe_data["qsub_params"]["qstat_path"], \
-                   helper_funcs = self.pipe_data["helper_funcs"], \
-                   level      = level)#,                                       \
-                   # status     = "\033[0;31mERROR\033[m",                                      \
-                   # file       = self.pipe_data["log_file"])
+# # Trap various signals. SIGUSR2 is passed by qdel when -notify is passes
+# trap_with_arg func_trap {step} {stepname} {stepID} {level} $HOSTNAME $JOB_ID SIGUSR2 ERR INT TERM
+            # """.format(#type       = "Finished",                                        \
+                   # step       = self.get_step_step(),                        \
+                   # stepname   = self.get_step_name(),                        \
+                   # stepID     = qsub_name,                                   \
+                   # # qstat_path = self.pipe_data["qsub_params"]["qstat_path"], \
+                   # helper_funcs = self.pipe_data["helper_funcs"], \
+                   # level      = level)#,                                       \
+                   # # status     = "\033[0;31mERROR\033[m",                                      \
+                   # # file       = self.pipe_data["log_file"])
 
-        else:
-            script = ""
-            self.write_warning("shell not recognized. Not creating error trapping lines.\n", admonition = "WARNING")
-        # set -Eeuxo pipefail        
-        return script
+        # else:
+            # script = ""
+            # self.write_warning("shell not recognized. Not creating error trapping lines.\n", admonition = "WARNING")
+        # # set -Eeuxo pipefail        
+        # return script
         
-    def create_set_options_line(self, qsub_name, level = "high", type = "set"):
-        """ Adds line for activating and deactivating certain bash options
-        """
+    # def create_set_options_line(self, qsub_name, level = "high", type = "set"):
+        # """ Adds line for activating and deactivating certain bash options
+        # """
         
-        if self.shell=="csh":
-            self.write_warning("Option setting is not defined for csh. Consider using bash for your modules.\n", admonition = "WARNING")
+        # if self.shell=="csh":
+            # self.write_warning("Option setting is not defined for csh. Consider using bash for your modules.\n", admonition = "WARNING")
 
-            script = ""
+            # script = ""
             
-        elif self.shell == "bash":
-            if type=="set":
-                script = """set -Eeuxo pipefail\n\n"""
-            else:
-                script = """set +Eeuxo pipefail\n\n"""
-        else:
-            script = ""
-            self.write_warning("shell not recognized.\n", admonition = "WARNING")
+        # elif self.shell == "bash":
+            # if type=="set":
+                # script = """set -Eeuxo pipefail\n\n"""
+            # else:
+                # script = """set +Eeuxo pipefail\n\n"""
+        # else:
+            # script = ""
+            # self.write_warning("shell not recognized.\n", admonition = "WARNING")
             
-        return script
+        # return script
             
-    def create_activate_lines(self, type):
-        """ Function for adding activate/deactivate lines to scripts so that virtual environments can be used 
-            A workflow that uses this option is the QIIME2 workflow.
-        """
+    # def create_activate_lines(self, type):
+        # """ Function for adding activate/deactivate lines to scripts so that virtual environments can be used 
+            # A workflow that uses this option is the QIIME2 workflow.
+        # """
         
-        if type not in ["activate","deactivate"]:
-            sys.exit("Wrong 'type' passed to create_activate_lines")
+        # if type not in ["activate","deactivate"]:
+            # sys.exit("Wrong 'type' passed to create_activate_lines")
             
-        if "conda" in self.params:
-            if not self.params["conda"]:  # Was provided with 'null' or empty - do not do activate overriding possible global conda defs
+        # if "conda" in self.params:
+            # if not self.params["conda"]:  # Was provided with 'null' or empty - do not do activate overriding possible global conda defs
                 
-                return ""
-            if "path" in self.params["conda"] and "env" in self.params["conda"]:
-                activate_path = os.path.join(self.params["conda"]["path"],type)
-                environ       = self.params["conda"]["env"]
-            else:
-                raise AssertionExcept("'conda' parameter must include 'path' and 'env'", step = self.get_step_name())
+                # return ""
+            # if "path" in self.params["conda"] and "env" in self.params["conda"]:
+                # activate_path = os.path.join(self.params["conda"]["path"],type)
+                # environ       = self.params["conda"]["env"]
+            # else:
+                # raise AssertionExcept("'conda' parameter must include 'path' and 'env'", step = self.get_step_name())
             
-        #=======================================================================
-        # elif "conda" in self.pipe_data:
-        #     activate_path  = os.path.join(self.pipe_data["conda"]["path"],type)
-        #     environ        = self.pipe_data["conda"]["env"]
-        #=======================================================================
-        else:
-            return ""
+        # #=======================================================================
+        # # elif "conda" in self.pipe_data:
+        # #     activate_path  = os.path.join(self.pipe_data["conda"]["path"],type)
+        # #     environ        = self.pipe_data["conda"]["env"]
+        # #=======================================================================
+        # else:
+            # return ""
             
             
 
 
-        if self.shell=="csh":
-            self.write_warning("Are you sure you want to use 'activate' with a 'csh' based script?")
+        # if self.shell=="csh":
+            # self.write_warning("Are you sure you want to use 'activate' with a 'csh' based script?")
         
-        script = """
-# Adding environment activation/deactivation command:
-source {activate_path} {environ}
+        # script = """
+# # Adding environment activation/deactivation command:
+# source {activate_path} {environ}
 
-""".format(activate_path = activate_path,
-             environ = environ if type == "activate" else "") 
+# """.format(activate_path = activate_path,
+             # environ = environ if type == "activate" else "") 
         
-        return script
+        # return script
         
     def make_folder_for_sample(self, sample):
         """ Creates a folder for sample in this step's results folder
@@ -1517,99 +1473,45 @@ source {activate_path} {environ}
     
     
     
-    #===========================================================================
-    # def create_sample_file(self):
-    #     """ Creates a sample file based on the current version of get_sample_data
-    #     """
-    #     
-    #     with open(self.base_dir+'sample_file.nsfs', 'w') as smp_f:
-    #         smp_f.write("Title\t{title}\n\n".format(title=self.sample_data["Title"]))
-    #         for sample in self.sample_data["samples"]:
-    #             for direction in self.params["sample_file"]:
-    #===========================================================================
-            
-                                       
-                                       
-                                       
-    # def add_exit_status_check(self, success_status = 0, comment = ""):
-        # """ This should be called during script building to add success status testing and exiting 
+                             
+                             
+    # def write_low_cmds_to_high_level_script(self, spec_qsub_name):
+        # """ Writing low level lines to high level script: job_limit loop, adding qdel line and qsub line
+            # spec_qsub_name is the qsub name without the run code (see caller)
         # """
         
+
+        # with open(self.high_level_script_name, "a") as script_fh:
         
-        
-        # if self.shell == "csh":
-            # return """
-# # Testing exit status
-# if ( $? != {success} ) then
-	# echo "\033[31m Exiting with error: {comment}. Check stderr file.\033[m\\n"
-	# {erro2log}
-	# exit
-# endif
-
-# """.format(success  = success_status, 
-           # comment  = comment,
-           # erro2log = self.create_log_lines(self.spec_qsub_name,"Finished", level="low", status = "\033[31mERROR\033[m"))
-           # # erro2log = re.sub(pattern = "\n",
-                             # # repl    = "\n\t",
-                             # # string  = self.create_log_lines(self.spec_qsub_name,"ERROR", level="low")))       
-           
-        # elif self.shell=="bash":
-            # return """
-# # Testing exit status
-# if [[ $? != {success} ]]; then 
-	# echo -e "\033[31m Exiting with error: {comment}. Check stderr file.\033[m\\n"
-	# {erro2log}
-	# exit
-# fi
-
-# """.format(success  = success_status, 
-           # comment  = comment,
-           # erro2log = self.create_log_lines(self.spec_qsub_name,"Finished", level="low", status = "\033[31mERROR\033[m"))
-
-           # # erro2log = re.sub(pattern = "\n",
-                             # # repl    = "\n\t",
-                             # # string  = self.create_log_lines(self.spec_qsub_name,"ERROR", level="low")))
-
-                             
-                             
-                             
-    def write_low_cmds_to_high_level_script(self, spec_qsub_name):
-        """ Writing low level lines to high level script: job_limit loop, adding qdel line and qsub line
-            spec_qsub_name is the qsub name without the run code (see caller)
-        """
-        
-
-        with open(self.high_level_script_name, "a") as script_fh:
-        
-            if "job_limit" in self.pipe_data.keys():
+            # if "job_limit" in self.pipe_data.keys():
                
-                job_limit = """
-    # Sleeping while jobs exceed limit
-    perl -e 'use Env qw(USER); open(my $fh, "<", "%(limit_file)s"); ($l,$s) = <$fh>=~/limit=(\d+) sleep=(\d+)/; close($fh); while (scalar split("\\n",qx(%(qstat)s -u $USER)) > $l) {sleep $s; open(my $fh, "<", "%(limit_file)s"); ($l,$s) = <$fh>=~/limit=(\d+) sleep=(\d+)/} print 0; exit 0'
+                # job_limit = """
+    # # Sleeping while jobs exceed limit
+    # perl -e 'use Env qw(USER); open(my $fh, "<", "%(limit_file)s"); ($l,$s) = <$fh>=~/limit=(\d+) sleep=(\d+)/; close($fh); while (scalar split("\\n",qx(%(qstat)s -u $USER)) > $l) {sleep $s; open(my $fh, "<", "%(limit_file)s"); ($l,$s) = <$fh>=~/limit=(\d+) sleep=(\d+)/} print 0; exit 0'
 
-    """ % {"limit_file" : self.pipe_data["job_limit"],\
-                "qstat" : self.pipe_data["qsub_params"]["qstat_path"]}
+    # """ % {"limit_file" : self.pipe_data["job_limit"],\
+                # "qstat" : self.pipe_data["qsub_params"]["qstat_path"]}
 
                 
-                # Append the qsub command to the 2nd level script:
-                script_fh.write(job_limit + "\n\n")        
+                # # Append the qsub command to the 2nd level script:
+                # script_fh.write(job_limit + "\n\n")        
 
-#######            
-            # Append the qsub command to the 2nd level script:
-            # script_name = self.pipe_data["scripts_dir"] + ".".join([self.step_number,"_".join([self.step,self.name]),self.shell]) 
-            script_fh.write("""
-# ---------------- Code for {spec_qsub} ------------------
-{qdel_line}
-# Adding qsub command:
-qsub {script_name}
+# #######            
+            # # Append the qsub command to the 2nd level script:
+            # # script_name = self.pipe_data["scripts_dir"] + ".".join([self.step_number,"_".join([self.step,self.name]),self.shell]) 
+            # script_fh.write("""
+# # ---------------- Code for {spec_qsub} ------------------
+# {qdel_line}
+# # Adding qsub command:
+# qsub {script_name}
 
-""".format(qdel_line = self.add_qdel_line(type="Start"),
-            script_name = self.spec_script_name,
-            spec_qsub = spec_qsub_name))
-            # script_fh.write("# ---------------- Code for %s ------------------\n" % spec_qsub_name)
-            # script_fh.write(self.add_qdel_line(type="Start"))
-            # script_fh.write("# Adding qsub command:\n")        
-            # script_fh.write("qsub " + self.spec_script_name + "\n\n")        
+# """.format(qdel_line = self.add_qdel_line(type="Start"),
+            # script_name = self.spec_script_name,
+            # spec_qsub = spec_qsub_name))
+            # # script_fh.write("# ---------------- Code for %s ------------------\n" % spec_qsub_name)
+            # # script_fh.write(self.add_qdel_line(type="Start"))
+            # # script_fh.write("# Adding qsub command:\n")        
+            # # script_fh.write("qsub " + self.spec_script_name + "\n\n")        
 
             
             
