@@ -79,10 +79,6 @@ qsub -N %(step_step)s_%(step_name)s_%(run_code)s \\
 
         
 #### Methods for adding lines:
-    def add_header(self):
-        """
-        """
-        pass
         
     def write_trap_line(self):
         """
@@ -215,35 +211,6 @@ source {activate_path} {environ}
         
         
 ###################################################
-        
-    def add_del_line(self):
-        """
-        """
-        pass
-        
-        
-    def add_activate_lines(self):
-        """
-        """
-        pass
-        
-        
-    def add_set_options_line(self):
-        """
-        """
-        pass
-        
-        
-    def add_script(self):
-        """
-        """
-        pass
-        
-        
-    def add_register_files(self):
-        """
-        """
-        pass
         
         
     def get_kill_command(self):
