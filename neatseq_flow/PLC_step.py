@@ -2,11 +2,11 @@
 """ A class defining a step in the pipeline.
 
 """
-import os, shutil, sys, re
+import os, shutil, sys, re, importlib
 import traceback
 import datetime
 
-from script_constructors.ScriptConstructor import *
+from script_constructors.ScriptConstructorSGE import HighScriptConstructorSGE, KillScriptConstructorSGE
 
 from copy import *
 from pprint import pprint as pp
@@ -408,7 +408,7 @@ Dependencies: {depends}""".format(name = self.name,
             Called for each step in main.
         """
         ## Create main script class
-        self.main_script_obj = HighScriptConstructor(step = self.get_step_step(), \
+        self.main_script_obj = HighScriptConstructorSGE(step = self.get_step_step(), \
                                                 name = self.get_step_name(), \
                                                 number = self.step_number, \
                                                 shell = self.shell,
@@ -416,7 +416,7 @@ Dependencies: {depends}""".format(name = self.name,
                                                 pipe_data = self.pipe_data)
 
         ## Create kill script class
-        self.kill_script_obj = KillScriptConstructor(step = self.get_step_step(), \
+        self.kill_script_obj = KillScriptConstructorSGE(step = self.get_step_step(), \
                                                 name = self.get_step_name(), \
                                                 number = self.step_number, \
                                                 shell = self.shell,
@@ -607,15 +607,24 @@ Dependencies: {depends}""".format(name = self.name,
         return depend_jid_list
         
         
+    def forname(self, modname, classname):
+        """Returns a class of "classname" from module "modname". 
+        """
+
+        return getattr(importlib.import_module(modname), classname)
+
+        
     def create_low_level_script(self):
         """ Create the low (i.e. 3rd) level scripts, which are the scripts that actually do the work
             The actual part of the script is produced by the particular step class.
             This function is responsible for the generic part: opening the file and writing the qsub parameters and the script
         """
-        
+        # mm = importlib.import_module("neatseq_flow.PLC_step")
+        # mc = getattr(mm, "Step")
+        getSGEchildClass = self.forname("neatseq_flow.script_constructors.ScriptConstructorSGE","LowScriptConstructorSGE")
         # Create ScriptConstructor for low level script.
         self.child_script_obj = \
-            LowScriptConstructor(step = self.get_step_step(), \
+            getSGEchildClass(step = self.get_step_step(), \
                                 name = self.get_step_name(), \
                                 number = self.step_number, \
                                 shell = self.shell,
