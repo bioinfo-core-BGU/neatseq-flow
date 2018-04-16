@@ -86,7 +86,7 @@ qsub -N %(step_step)s_%(step_name)s_%(run_code)s \\
                             qsub_name,
                             qsub_stderr,
                             qsub_stdout,
-                            qsub_holdjids]).replace("\n\n","\n") + "\n\n"
+                            qsub_holdjids]).replace("\n\n","\n") 
         
         
         
@@ -230,9 +230,9 @@ class LowScriptConstructorSGE(ScriptConstructorSGE,LowScriptConstructor):
             qsub_queue = "#$ -q %s" % qsub_queue
 
         # Sometimes qsub_opts is empty and then there is an ugly empty line in the middle of the qsub definition. Removing the empty line with replace()
-        self.filehandle.write("\n".join([general_header,
+        return "\n".join([general_header,
                             qsub_queue,
-                            qsub_opts]).replace("\n\n","\n") + "\n\n")
+                            qsub_opts]).replace("\n\n","\n") + "\n\n"
 
         
         

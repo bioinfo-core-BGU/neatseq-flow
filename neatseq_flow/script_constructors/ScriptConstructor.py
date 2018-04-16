@@ -355,7 +355,7 @@ class LowScriptConstructor(ScriptConstructor):
         if "level" not in kwargs:
             kwargs["level"] = "low"
 
-        # self.write_script_preamble(dependency_jid_list)
+        self.write_script_preamble(dependency_jid_list)
 
         self.write_trap_line()
         self.write_log_lines(state="Started")
