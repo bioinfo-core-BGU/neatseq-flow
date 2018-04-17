@@ -435,13 +435,14 @@ def param_data_testing_global(param_data):
     # The following 'Executors' do NOT require a queue to be passed:
     no_queue_required = "SLURM".split(" ")
     # No default queue is defined:
-    if param_data["Executor"] not in no_queue_required and "Qsub_q" not in param_data.keys():
-        issue_warning += "You must supply a default queue name with 'Qsub_q'\n"
+    if "Qsub_q" not in param_data.keys():
+        if param_data["Executor"] in no_queue_required:# and "Qsub_q" not in param_data.keys():
+            param_data["Qsub_q"] = ""
+        else:
+            issue_warning += "You must supply a default queue name with 'Qsub_q'\n"
     else:
-        param_data["Qsub_q"] = ""
-
-    if "Qsub_q" in param_data.keys() and isinstance(param_data["Qsub_q"],list):
-        issue_warning += "Duplicate values for 'Qsub_q'\n"
+        if isinstance(param_data["Qsub_q"],list):
+            issue_warning += "Duplicate values for 'Qsub_q'\n"
 
     if param_data["Executor"] not in SUPPORTED_EXECUTORS:
         issue_warning += "Executor %s not defined.\n" % param_data["Executor"]

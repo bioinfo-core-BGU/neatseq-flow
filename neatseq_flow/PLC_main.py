@@ -122,18 +122,8 @@ class neatseq_flow:
         
         
         # ------------------------------
-        # Define default qsub parameters
-        self.pipe_data["qsub_params"] = {}
         
-        self.pipe_data["qsub_params"]["queue"] = self.param_data["Global"]["Qsub_q"]    # This is required by assertion in parse_param_data()
-
-        if "Qsub_nodes" in self.param_data["Global"].keys():
-            self.pipe_data["qsub_params"]["node"] = list(set(self.param_data["Global"]["Qsub_nodes"]))
-        else:
-            self.pipe_data["qsub_params"]["node"] = None
-
-        # If Qsub_opts is defined by user in global params, copy into pipe_data:
-        self.pipe_data["qsub_params"]["opts"] = self.param_data["Global"]["Qsub_opts"] if "Qsub_opts" in self.param_data["Global"].keys() else {}
+        self.manage_qsub_params()
         
         # Setting path to qstat
         self.set_qstat_path()
@@ -231,6 +221,21 @@ class neatseq_flow:
         sys.stderr.flush()
         sys.stdout.write("Finished successfully....\n\n")
         
+    def manage_qsub_params(self):
+        """  Define default qsub parameters
+        """
+        self.pipe_data["qsub_params"] = {}
+        
+        self.pipe_data["qsub_params"]["queue"] = self.param_data["Global"]["Qsub_q"]    # This is required by assertion in parse_param_data()
+
+        if "Qsub_nodes" in self.param_data["Global"].keys():
+            self.pipe_data["qsub_params"]["node"] = list(set(self.param_data["Global"]["Qsub_nodes"]))
+        else:
+            self.pipe_data["qsub_params"]["node"] = None
+
+        # If Qsub_opts is defined by user in global params, copy into pipe_data:
+        self.pipe_data["qsub_params"]["opts"] = self.param_data["Global"]["Qsub_opts"] if "Qsub_opts" in self.param_data["Global"].keys() else {}
+
     # Handlers
     def get_param_data(self):
         """ Return parameter data
