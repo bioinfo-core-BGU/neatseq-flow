@@ -190,6 +190,7 @@ class HighScriptConstructor(ScriptConstructor):
     
     def __init__(self, **kwargs):
     
+
         super(HighScriptConstructor, self).__init__(**kwargs)
 
         self.script_name = "{step_number}.{step}_{name}.{shell_ext}".format(**vars(self))
@@ -258,7 +259,10 @@ class LowScriptConstructor(ScriptConstructor):
         
         super(LowScriptConstructor, self).__init__(**kwargs)
         
+
+        
         self.script_id = id #kwargs["id"]
+        
         self.scripts_dir = \
             "{scripts_dir}{number}.{step}_{name}{sep}".format(scripts_dir=self.pipe_data["scripts_dir"], \
                                                                 number = self.step_number, \
@@ -275,6 +279,9 @@ class LowScriptConstructor(ScriptConstructor):
         self.script_id = "_".join([self.script_id, self.pipe_data["run_code"]])
         self.level = "low"
         self.filehandle = open(self.script_path, "w")
+######################
+
+
 
         
     # def write_script_preamble(self, dependency_jid_list):
@@ -307,10 +314,17 @@ class LowScriptConstructor(ScriptConstructor):
 
         kill_cmd = self.get_kill_command() 
         
+        if not kill_cmd:
+            return
+            # kill_cmd = "## NO KILL COMMAND DEFINED ##"
         if state == "Start":
-            script = "# Adding kill command to kill commands file.\necho '{kill_cmd}' >> {qdel_file}\n".format(kill_cmd = kill_cmd, qdel_file = self.script_path)
+            script = """\
+# Adding kill command to kill commands file.
+echo '{kill_cmd}' >> {qdel_file}\n""".format(kill_cmd = kill_cmd, qdel_file = self.script_path)
         elif state == "Stop":
-            script = "# Removing kill command from kill commands file.\nsed -i -e 's:^{kill_cmd}$:#&:' {qdel_file}\n".format(kill_cmd = re.escape(kill_cmd), 
+            script = """\
+# Removing kill command from kill commands file.
+sed -i -e 's:^{kill_cmd}$:#&:' {qdel_file}\n""".format(kill_cmd = re.escape(kill_cmd), 
                                 qdel_file = self.script_path)
         else:
             raise AssertionExcept("Bad type value in add_qdel_lines()", step = self.name)

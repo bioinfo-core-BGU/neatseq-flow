@@ -10,7 +10,15 @@ __author__ = "Menachem Sklarz"
 __version__ = "1.2.0"
 
 
-from ScriptConstructor import *
+from scriptconstructor import *
+
+
+
+def get_script_exec_line():
+    """ Return script to add to script execution function """
+    
+    return "qsub $script_path"
+    
 
 class ScriptConstructorSGE(ScriptConstructor):
 
@@ -28,22 +36,22 @@ class ScriptConstructorSGE(ScriptConstructor):
         if "slow_release" in self.params.keys():
             # Define the code for slow release 
             # Define the slow_release command (common to both options of slow_release)
-            qsub_line += """ 
-qsub -N %(step_step)s_%(step_name)s_%(run_code)s \\
-    -q %(queue)s \\
-    -e %(stderr)s \\
-    -o %(stdout)s \\
-    %(slow_rel_params)s \\
-    -f %(scripts_dir)s%(script_name)s \n""" % \
-                        {"step_step"              : self.get_step_step(),
-                        "step_name"               : self.get_step_name(),
-                        "run_code"                : self.run_code,
-                        "stderr"                  : self.pipe_data["stderr_dir"],
-                        "stdout"                  : self.pipe_data["stdout_dir"],
-                        "queue"                   : self.pipe_data["qsub_params"]["queue"],
-                        "scripts_dir"             : self.pipe_data["scripts_dir"],
-                        "script_name"             : self.script_name,
-                        "slow_rel_params"         : self.params["slow_release"]}
+            
+            sys.exit("Slow release no longer supported. Use 'job_limit'")
+            # qsub_line += """ 
+# qsub -N %(script_id)s \\
+    # -q %(queue)s \\
+    # -e %(stderr)s \\
+    # -o %(stdout)s \\
+    # %(slow_rel_params)s \\
+    # -f %(scripts_dir)s%(script_name)s \n""" % \
+                        # {"script_id"              : self.script_id,
+                        # "stderr"                  : self.pipe_data["stderr_dir"],
+                        # "stdout"                  : self.pipe_data["stdout_dir"],
+                        # "queue"                   : self.pipe_data["qsub_params"]["queue"],
+                        # "scripts_dir"             : self.pipe_data["scripts_dir"],
+                        # "script_name"             : self.script_path,
+                        # "slow_rel_params"         : self.params["slow_release"]}
 
         else:
             qsub_line += "qsub %(scripts_dir)s%(script_name)s\n" % {"scripts_dir" : self.pipe_data["scripts_dir"], 
@@ -100,19 +108,6 @@ class HighScriptConstructorSGE(ScriptConstructorSGE,HighScriptConstructor):
     """
     """
     
-    def __init__(self, **kwargs):
-    
-        super(HighScriptConstructorSGE, self).__init__(**kwargs)
-
-        self.script_name = "{step_number}.{step}_{name}.{shell_ext}".format(**vars(self))
-        
-        self.script_path = self.pipe_data["scripts_dir"] + self.script_name
-        
-        self.script_id   = "_".join([self.step,self.name,self.pipe_data["run_code"]])
-        self.level = "high"
-        
-        self.filehandle = open(self.script_path, "w")
-        
 
     def get_depends_command(self, dependency_list):
         """
@@ -156,7 +151,7 @@ class HighScriptConstructorSGE(ScriptConstructorSGE,HighScriptConstructor):
                             qsub_opts]).replace("\n\n","\n") + "\n\n"
 
 
-    def write_child_command(self, script_path, script_id, qdel_line):
+    def write_child_command(self, script_obj):
         """ Writing low level lines to high level script: job_limit loop, adding qdel line and qsub line
             spec_qsub_name is the qsub name without the run code (see caller)
         """
@@ -179,14 +174,16 @@ perl -e 'use Env qw(USER); open(my $fh, "<", "%(limit_file)s"); ($l,$s) = <$fh>=
         # Append the qsub command to the 2nd level script:
         # script_name = self.pipe_data["scripts_dir"] + ".".join([self.step_number,"_".join([self.step,self.name]),self.shell]) 
         script += """
-# ---------------- Code for {spec_qsub} ------------------
-{qdel_line}
+# ---------------- Code for {script_id} ------------------
+
+echo '{qdel_line}' >> {step_kill_file}
 # Adding qsub command:
 qsub {script_name}
 
-""".format(qdel_line = qdel_line,
-        script_name = script_path,
-        spec_qsub = script_id)
+""".format(qdel_line = script_obj.get_kill_command(),
+        script_name = script_obj.script_path,
+        script_id = script_obj.script_id,
+        step_kill_file = self.params["kill_script_path"])
 
         
         self.filehandle.write(script)

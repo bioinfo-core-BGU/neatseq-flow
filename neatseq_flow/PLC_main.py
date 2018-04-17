@@ -9,7 +9,7 @@ __author__ = "Menachem Sklarz"
 __version__ = "1.2.0"
 
 
-import os, sys, json, shutil, time, yaml, re
+import os, sys, json, shutil, time, yaml, re, importlib
 
 
 from copy import *
@@ -17,6 +17,8 @@ from pprint import pprint as pp
 from random import randint
 from datetime import datetime
 from collections import OrderedDict
+
+
 
 from modules.parse_sample_data import parse_sample_file
 from modules.parse_param_data import parse_param_file
@@ -124,10 +126,7 @@ class neatseq_flow:
         self.pipe_data["qsub_params"] = {}
         
         self.pipe_data["qsub_params"]["queue"] = self.param_data["Global"]["Qsub_q"]    # This is required by assertion in parse_param_data()
-        # if "Qsub_nodes" in self.param_data["Global"].keys():
-            # self.pipe_data["qsub_params"]["node"] = ",".join(list(set(self.param_data["Global"]["Qsub_nodes"])))
-        # else:
-            # self.pipe_data["qsub_params"]["node"] = None
+
         if "Qsub_nodes" in self.param_data["Global"].keys():
             self.pipe_data["qsub_params"]["node"] = list(set(self.param_data["Global"]["Qsub_nodes"]))
         else:
@@ -155,6 +154,7 @@ class neatseq_flow:
         # Create script_index and run_index files
         # These (will be)[are] used by the in-house NeatSeq-Flow job controller for non-qsub based clusters
         self.create_job_index_files()
+
         # Create script execution script:
         self.create_script_execution_script()
         
@@ -1195,20 +1195,38 @@ saveWidget(myviz,file = "%(out_file_name)s",selfcontained = F)
         """
         """
         
-        # Setting command used to execute the script by Executor
-        if self.param_data["Global"]["Executor"]=="SGE":
-            run_cmd = "qsub $script_path"
-        elif self.param_data["Global"]["Executor"]=="SLURM":
-            run_cmd = "sbatch $script_path"
-        elif self.param_data["Global"]["Executor"]=="Local":
+        
+        modname = "neatseq_flow.script_constructors.scriptconstructor{executor}".format(executor=self.pipe_data["Executor"])
+        classname = "get_script_exec_line"
+        try:
+            get_script_exec_line = getattr(importlib.import_module(modname), classname)
+            run_cmd = get_script_exec_line()
+        except:
+            
             run_cmd = """iscsh=$(grep "csh" <<< $script_path)
 if [ -z $iscsh ]; then
     sh $script_path
 else
     csh $script_path
 fi"""
-        else:
-            sys.exit("Unrecognized 'Executor' value")
+
+        
+        
+        
+        # # Setting command used to execute the script by Executor
+        # if self.param_data["Global"]["Executor"]=="SGE":
+            # run_cmd = "qsub $script_path"
+        # elif self.param_data["Global"]["Executor"]=="SLURM":
+            # run_cmd = "sbatch $script_path"
+        # elif self.param_data["Global"]["Executor"]=="Local":
+            # run_cmd = """iscsh=$(grep "csh" <<< $script_path)
+# if [ -z $iscsh ]; then
+    # sh $script_path
+# else
+    # csh $script_path
+# fi"""
+        # else:
+            # sys.exit("Unrecognized 'Executor' value")
             
             
         script_txt = """#!/bin/bash

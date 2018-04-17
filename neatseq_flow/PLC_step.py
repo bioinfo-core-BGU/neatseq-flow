@@ -6,7 +6,7 @@ import os, shutil, sys, re, importlib
 import traceback
 import datetime
 
-from script_constructors.ScriptConstructorSGE import HighScriptConstructorSGE, KillScriptConstructorSGE
+# from script_constructors.ScriptConstructorSGE import HighScriptConstructorSGE, KillScriptConstructorSGE
 
 from copy import *
 from pprint import pprint as pp
@@ -407,22 +407,31 @@ Dependencies: {depends}""".format(name = self.name,
         """ Put all stuff that needs to be done after init, sorting and number setting.
             Called for each step in main.
         """
+        
+
+        ## Create kill script class
+        # Done before high level script so that high level knows about the 'kill_script_path' in params
+        getScriptConstructorClass = self.import_ScriptConstructor(level="kill")
+        self.kill_script_obj = getScriptConstructorClass(step = self.get_step_step(), \
+                                                name = self.get_step_name(), \
+                                                number = self.step_number, \
+                                                shell = self.shell,
+                                                params = self.params,
+                                                pipe_data = self.pipe_data)
+        # Store path to kill script in params:
+        self.params["kill_script_path"] = self.kill_script_obj.script_path
+        
+
+        getScriptConstructorClass = self.import_ScriptConstructor(level="high")
+
         ## Create main script class
-        self.main_script_obj = HighScriptConstructorSGE(step = self.get_step_step(), \
+        self.main_script_obj = getScriptConstructorClass(step = self.get_step_step(), \
                                                 name = self.get_step_name(), \
                                                 number = self.step_number, \
                                                 shell = self.shell,
                                                 params = self.params,
                                                 pipe_data = self.pipe_data)
 
-        ## Create kill script class
-        self.kill_script_obj = KillScriptConstructorSGE(step = self.get_step_step(), \
-                                                name = self.get_step_name(), \
-                                                number = self.step_number, \
-                                                shell = self.shell,
-                                                params = self.params,
-                                                pipe_data = self.pipe_data)
-        
         
     def cleanup(self):
         """ Here go things to be done just before termination of NeatSeq-Flow 
@@ -607,10 +616,13 @@ Dependencies: {depends}""".format(name = self.name,
         return depend_jid_list
         
         
-    def forname(self, modname, classname):
+    def import_ScriptConstructor(self, level): #modname, classname):
         """Returns a class of "classname" from module "modname". 
         """
 
+        level = level.lower().capitalize()
+        modname = "neatseq_flow.script_constructors.scriptconstructor{executor}".format(executor=self.pipe_data["Executor"])
+        classname = "{level}ScriptConstructor{executor}".format(level=level, executor=self.pipe_data["Executor"] )  #SGE"
         return getattr(importlib.import_module(modname), classname)
 
         
@@ -619,7 +631,7 @@ Dependencies: {depends}""".format(name = self.name,
             The actual part of the script is produced by the particular step class.
             This function is responsible for the generic part: opening the file and writing the qsub parameters and the script
         """
-        getSGEchildClass = self.forname("neatseq_flow.script_constructors.ScriptConstructorSGE","LowScriptConstructorSGE")
+        getSGEchildClass = self.import_ScriptConstructor(level="low")
         # Create ScriptConstructor for low level script.
         self.child_script_obj = \
             getSGEchildClass(step = self.get_step_step(), \
@@ -660,9 +672,10 @@ Dependencies: {depends}""".format(name = self.name,
         self.stamped_files = list()
 
         # Add child command execution lines to main script:
-        self.main_script_obj.write_child_command(qdel_line = self.child_script_obj.get_kill_command(),\
-                                                script_path = self.child_script_obj.script_path,\
-                                                script_id = self.child_script_obj.script_id)
+        self.main_script_obj.write_child_command(self.child_script_obj)
+        # qdel_line = self.child_script_obj.get_kill_command(),\
+                                                # script_path = self.child_script_obj.script_path,\
+                                                # script_id = self.child_script_obj.script_id)
 
         # Adding to qsub_names_dict:
         self.qsub_names_dict["low_qsubs"].append(self.child_script_obj.script_id)
@@ -762,7 +775,8 @@ Dependencies: {depends}""".format(name = self.name,
             return 
         
         # self.spec_qsub_name = "_".join([self.step,self.name,"preliminary"])
-        getSGEchildClass = self.forname("neatseq_flow.script_constructors.ScriptConstructorSGE","LowScriptConstructorSGE")
+        getSGEchildClass = self.import_ScriptConstructor(level="low")
+        # getSGEchildClass = self.forname("neatseq_flow.script_constructors.ScriptConstructorSGE","LowScriptConstructorSGE")
         # Create ScriptConstructor for low level script.
         self.prelim_script_obj = \
             getSGEchildClass(step = self.get_step_step(), \
@@ -788,9 +802,10 @@ Dependencies: {depends}""".format(name = self.name,
         # Clear stamped files list
         self.stamped_files = list()
                 
-        self.main_script_obj.write_child_command(qdel_line = self.prelim_script_obj.get_kill_command(),\
-                                                script_path = self.prelim_script_obj.script_path,\
-                                                script_id = self.prelim_script_obj.script_id)
+        self.main_script_obj.write_child_command(self.prelim_script_obj)
+                                                # qdel_line = self.prelim_script_obj.get_kill_command(),\
+                                                # script_path = self.prelim_script_obj.script_path,\
+                                                # script_id = self.prelim_script_obj.script_id)
 
         # This is here because I want to use jid_list to make wrapping_up script dependent on this step's main low-level scripts
         # Explantion: get_jid_list() was used above (line 'qsub_header...') to make the wrapping_up script dependent on the other scripts created by the step
@@ -827,8 +842,8 @@ Dependencies: {depends}""".format(name = self.name,
 
         self.spec_qsub_name = "_".join([self.step,self.name,"wrapping_up"])
 
-        
-        getSGEchildClass = self.forname("neatseq_flow.script_constructors.ScriptConstructorSGE","LowScriptConstructorSGE")
+        getSGEchildClass = self.import_ScriptConstructor(level="low")
+        # getSGEchildClass = self.forname("neatseq_flow.script_constructors.ScriptConstructorSGE","LowScriptConstructorSGE")
         # Create ScriptConstructor for low level script.
         self.wrap_script_obj = \
             getSGEchildClass(step = self.get_step_step(), \
@@ -850,9 +865,10 @@ Dependencies: {depends}""".format(name = self.name,
         # Clear stamped files list
         self.stamped_files = list()
         
-        self.main_script_obj.write_child_command(qdel_line = self.wrap_script_obj.get_kill_command(),\
-                                        script_path = self.wrap_script_obj.script_path,\
-                                        script_id = self.wrap_script_obj.script_id)
+        self.main_script_obj.write_child_command(self.wrap_script_obj)
+        # qdel_line = self.wrap_script_obj.get_kill_command(),\
+                                        # script_path = self.wrap_script_obj.script_path,\
+                                        # script_id = self.wrap_script_obj.script_id)
 
 
         # This is here because I want to use jid_list to make wrapping_up script dependent on this step's main low-level scripts
