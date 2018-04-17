@@ -189,7 +189,29 @@ qsub {script_name}
         self.filehandle.write(script)
                             
                             
+                   
+    def write_script_postamble(self):
                             
+                            
+        
+        # Unsetting error trapping and flags before qalter, since qalter usually fails (because dependencies don't exist, etc.)
+        script = """
+sleep {sleep}
+
+trap '' ERR
+""".format(sleep = self.pipe_data["Default_wait"])
+        self.filehandle.write(script)
+        self.write_set_options_line(type = "unset")
+
+        ## TODO: !!!!!!!!!!!
+        script = """
+csh {scripts_dir}98.qalter_all.csh
+""".format(scripts_dir = self.pipe_data["scripts_dir"])
+        
+        self.filehandle.write(script)
+        self.write_log_lines(state = "Finished")
+
+          
                             
                             
 ####----------------------------------------------------------------------------------

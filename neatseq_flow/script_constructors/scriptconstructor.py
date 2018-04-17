@@ -233,15 +233,14 @@ class HighScriptConstructor(ScriptConstructor):
 sleep {sleep}
 
 trap '' ERR
-"""
+""".format(sleep = self.pipe_data["Default_wait"])
         self.filehandle.write(script)
         self.write_set_options_line(type = "unset")
 
         ## TODO: !!!!!!!!!!!
-        script = """
-csh {scripts_dir}98.qalter_all.csh
-"""
-        self.filehandle.write(script)
+        # script = """
+# csh {scripts_dir}98.qalter_all.csh
+# """
         self.write_log_lines(state = "Finished")
 
                             
