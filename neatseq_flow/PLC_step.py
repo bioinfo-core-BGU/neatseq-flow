@@ -631,10 +631,10 @@ Dependencies: {depends}""".format(name = self.name,
             The actual part of the script is produced by the particular step class.
             This function is responsible for the generic part: opening the file and writing the qsub parameters and the script
         """
-        getSGEchildClass = self.import_ScriptConstructor(level="low")
+        getChildClass = self.import_ScriptConstructor(level="low")
         # Create ScriptConstructor for low level script.
         self.child_script_obj = \
-            getSGEchildClass(step = self.get_step_step(), \
+            getChildClass(step = self.get_step_step(), \
                                 name = self.get_step_name(), \
                                 number = self.step_number, \
                                 shell = self.shell,
@@ -781,11 +781,10 @@ Dependencies: {depends}""".format(name = self.name,
             return 
         
         # self.spec_qsub_name = "_".join([self.step,self.name,"preliminary"])
-        getSGEchildClass = self.import_ScriptConstructor(level="low")
-        # getSGEchildClass = self.forname("neatseq_flow.script_constructors.ScriptConstructorSGE","LowScriptConstructorSGE")
+        getChildClass = self.import_ScriptConstructor(level="low")
         # Create ScriptConstructor for low level script.
         self.prelim_script_obj = \
-            getSGEchildClass(step = self.get_step_step(), \
+            getChildClass(step = self.get_step_step(), \
                                 name = self.get_step_name(), \
                                 number = self.step_number, \
                                 shell = self.shell,
@@ -848,11 +847,11 @@ Dependencies: {depends}""".format(name = self.name,
 
         self.spec_qsub_name = "_".join([self.step,self.name,"wrapping_up"])
 
-        getSGEchildClass = self.import_ScriptConstructor(level="low")
-        # getSGEchildClass = self.forname("neatseq_flow.script_constructors.ScriptConstructorSGE","LowScriptConstructorSGE")
+        getChildClass = self.import_ScriptConstructor(level="low")
+        # getChildClass = self.forname("neatseq_flow.script_constructors.ScriptConstructorSGE","LowScriptConstructorSGE")
         # Create ScriptConstructor for low level script.
         self.wrap_script_obj = \
-            getSGEchildClass(step = self.get_step_step(), \
+            getChildClass(step = self.get_step_step(), \
                 name = self.get_step_name(), \
                                 number = self.step_number, \
                                 shell = self.shell,
