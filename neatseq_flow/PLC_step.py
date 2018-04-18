@@ -808,7 +808,7 @@ Dependencies: {depends}""".format(name = self.name,
         # Clear stamped files list
         self.stamped_files = list()
                 
-        self.main_script_obj.write_command(self.main_script_obj.write_child_command(self.prelim_script_obj))
+        self.main_script_obj.write_command(self.main_script_obj.get_child_command(self.prelim_script_obj))
                                                 # qdel_line = self.prelim_script_obj.get_kill_command(),\
                                                 # script_path = self.prelim_script_obj.script_path,\
                                                 # script_id = self.prelim_script_obj.script_id)
@@ -871,7 +871,7 @@ Dependencies: {depends}""".format(name = self.name,
         # Clear stamped files list
         self.stamped_files = list()
         
-        self.main_script_obj.write_command(self.main_script_obj.write_child_command(self.wrap_script_obj))
+        self.main_script_obj.write_command(self.main_script_obj.get_child_command(self.wrap_script_obj))
         # qdel_line = self.wrap_script_obj.get_kill_command(),\
                                         # script_path = self.wrap_script_obj.script_path,\
                                         # script_id = self.wrap_script_obj.script_id)
