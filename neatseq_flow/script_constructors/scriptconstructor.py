@@ -207,8 +207,6 @@ class HighScriptConstructor(ScriptConstructor):
         
         self.filehandle = open(self.script_path, "w")
         
-        print(self.script_id)
-        
 
 
     
@@ -219,9 +217,9 @@ class HighScriptConstructor(ScriptConstructor):
         
         
         script = "\n".join([self.get_script_header(),                                                         \
-                            # self.create_trap_line(self.spec_qsub_name, level="high"),  \
-                            # self.create_log_lines(self.spec_qsub_name,"Started", level="high"),  \
-                            # self.create_set_options_line(self.spec_qsub_name, level="high", type="set"),  \
+                            self.get_trap_line(), #create_trap_line(self.spec_qsub_name, level="high"),  \
+                            self.get_log_lines(state = "Started"), # self.create_log_lines(self.spec_qsub_name,"Started", level="high"),  \
+                            self.get_set_options_line(type = "set"),# self.create_set_options_line(self.spec_qsub_name, level="high", type="set"),  \
                             "# Calling low level scripts:\n\n"])
         
         # Write script to high-level script

@@ -30,8 +30,12 @@ class ScriptConstructorLocal(ScriptConstructor):
         else:
             script += """\
 sh {nsf_exec} \\
-    {script_id}\n\n""".format(script_id = self.script_id,
-                          nsf_exec = self.pipe_data["exec_script"])
+    {script_id} \\
+    1> {stdout} \\
+    2> {stderr} & \n\n""".format(script_id = self.script_id,
+                          nsf_exec = self.pipe_data["exec_script"],
+                          stderr = "{dir}{id}.e".format(dir=self.pipe_data["stderr_dir"], id=self.script_id),
+                          stdout = "{dir}{id}.o".format(dir=self.pipe_data["stdout_dir"], id=self.script_id))
 
 
         return script
