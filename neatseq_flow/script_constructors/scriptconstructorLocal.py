@@ -21,21 +21,20 @@ class ScriptConstructorLocal(ScriptConstructor):
         """ Returnn the command for executing the this script
         """
         
-        qsub_line = ""
-        qsub_line += "echo running " + self.name + " ':\\n------------------------------'\n"
-        
-        # slow_release_script_loc = os.sep.join([self.pipe_data["home_dir"],"utilities","qsub_scripts","run_jobs_slowly.pl"])
+        script = ""
+
 
         if "slow_release" in self.params.keys():
             sys.exit("Slow release no longer supported. Use 'job_limit'")
 
         else:
-            qsub_line += "sh {nsf_exec} {scripts_dir}{script_name}\n".format(scripts_dir = self.pipe_data["scripts_dir"], 
-                                                                        script_name = self.script_name,
-                                                                        nsf_exec = self.pipe_data["exec_script"])
+            script += """\
+sh {nsf_exec} \\
+    {script_id}\n\n""".format(script_id = self.script_id,
+                          nsf_exec = self.pipe_data["exec_script"])
 
-        qsub_line += "\n\n"
-        return qsub_line
+
+        return script
 
         
 #### Methods for adding lines:
@@ -53,7 +52,7 @@ class ScriptConstructorLocal(ScriptConstructor):
         # TODO: somehow this has to be the numeric run-0time job id!
         # return "# scancel JOB_ID \n" #{script_name}".format(script_name = self.script_id)
         
-    def make_script_header(self):
+    def get_script_header(self):
         """ Make the first few lines for the scripts
             Is called for high level, low level and wrapper scripts
         """
@@ -88,18 +87,44 @@ class HighScriptConstructorLocal(ScriptConstructorLocal,HighScriptConstructor):
 
 
         
-    def make_script_header(self, **kwargs):
+    def get_script_header(self, **kwargs):
         """ Make the first few lines for the scripts
             Is called for high level, low level and wrapper scripts
         """
 
-        general_header = super(HighScriptConstructorLocal, self).make_script_header(**kwargs)
+        general_header = super(HighScriptConstructorLocal, self).get_script_header(**kwargs)
 
 
         return general_header + "\n\n"
 
+    def get_command(self):
+        """ Writing low level lines to high level script: job_limit loop, adding qdel line and qsub line
+            spec_qsub_name is the qsub name without the run code (see caller)
+        """
+        
+        if "job_limit" in self.pipe_data.keys():
+            sys.exit("Job limit not supported yet for Local!")
 
-    def write_child_command(self, script_obj):
+
+        command = super(HighScriptConstructorLocal, self).get_command()
+
+        
+
+        # TODO: Add output from stdout and stderr
+
+        script = """
+# ---------------- Code for {script_id} ------------------
+echo running {script_id}
+{command}
+
+""".format(script_id = self.script_id,
+        command = command)
+        
+        
+        return script
+                            
+                     
+    def get_child_command(self, script_obj):
         """ Writing low level lines to high level script: job_limit loop, adding qdel line and qsub line
             spec_qsub_name is the qsub name without the run code (see caller)
         """
@@ -112,18 +137,39 @@ class HighScriptConstructorLocal(ScriptConstructorLocal,HighScriptConstructor):
             sys.exit("Job limit not supported yet for Local!")
 
         # TODO: Add output from stdout and stderr
+
         script += """
 # ---------------- Code for {script_id} ------------------
 
-sh {nsf_exec} {script_id}
+{child_cmd}
 
 """.format(script_id = script_obj.script_id,
-        nsf_exec = self.pipe_data["exec_script"])
+        child_cmd = script_obj.get_command())
         
         
-        self.filehandle.write(script)
+        return script
                             
                             
+                            
+                            
+    def get_script_postamble(self):
+        """ Local script postamble is same as general postamble with addition of sed command to mark as finished in run_index
+        """
+    
+        # Get general postamble
+        postamble = super(HighScriptConstructorLocal, self).get_script_postamble()
+
+        # Add sed command:
+        script = """\
+{postamble}
+
+# Setting script as done in run index:
+sed -i -e "s:^{script_id}$:# {script_id}:" {run_index}""".format(\
+    postamble = postamble, 
+    run_index = self.pipe_data["run_index"],
+    script_id = self.script_id)
+        
+        return script
                             
                             
 ####----------------------------------------------------------------------------------
@@ -132,19 +178,41 @@ class LowScriptConstructorLocal(ScriptConstructorLocal,LowScriptConstructor):
     """
     """
 
-    def make_script_header(self, **kwargs):
+    def get_script_header(self, **kwargs):
         """ Make the first few lines for the scripts
             Is called for high level, low level and wrapper scripts
         """
 
         
-        general_header = super(LowScriptConstructorLocal, self).make_script_header(**kwargs)
+        general_header = super(LowScriptConstructorLocal, self).get_script_header(**kwargs)
 
 
         # Sometimes qsub_opts is empty and then there is an ugly empty line in the middle of the qsub definition. Removing the empty line with replace()
         return general_header + "\n\n"
 
         
+
+
+    def write_script(self,
+                        script,
+                        dependency_jid_list,
+                        stamped_files, **kwargs):
+
+        if "level" not in kwargs:
+            kwargs["level"] = "low"
+
+        super(LowScriptConstructorLocal, self).write_script(script,
+                                                        dependency_jid_list,
+                                                        stamped_files,
+                                                        **kwargs)
+
+        
+        self.write_command("""\
+
+# Setting script as done in run index:
+sed -i -e "s:^{script_id}$:# {script_id}:" {run_index}""".format(\
+    run_index = self.pipe_data["run_index"],
+    script_id = self.script_id))
         
 ####----------------------------------------------------------------------------------
 

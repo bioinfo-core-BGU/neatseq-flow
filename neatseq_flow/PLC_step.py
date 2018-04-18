@@ -672,7 +672,7 @@ Dependencies: {depends}""".format(name = self.name,
         self.stamped_files = list()
 
         # Add child command execution lines to main script:
-        self.main_script_obj.write_child_command(self.child_script_obj)
+        self.main_script_obj.write_command(self.main_script_obj.get_child_command(self.child_script_obj))
         # qdel_line = self.child_script_obj.get_kill_command(),\
                                                 # script_path = self.child_script_obj.script_path,\
                                                 # script_id = self.child_script_obj.script_id)
@@ -739,7 +739,7 @@ Dependencies: {depends}""".format(name = self.name,
         dependency_jid_list = self.get_dependency_jid_list()# + self.preliminary_jids  
         
         # Write main script preamble:
-        self.main_script_obj.write_script_preamble(dependency_jid_list)
+        self.main_script_obj.write_command(self.main_script_obj.get_script_preamble(dependency_jid_list))
         
         
         # The actual qsub commands must be written in the create_low_level_script() function because they are step_name dependent!
@@ -757,7 +757,13 @@ Dependencies: {depends}""".format(name = self.name,
             script_fh.write("# {qsub_name}\n".format(qsub_name   = self.main_script_obj.script_id))
         
         
-     
+    def close_high_level_script(self):
+        """ Create the high (i.e. 2nd) level scripts, which are the scripts that run the 3rd level scripts for the step
+        """
+
+        self.main_script_obj.write_command(self.main_script_obj.get_script_postamble())
+
+
     def create_preliminary_script(self):
         """ Create a script that will run before all other low level scripts commence
 
@@ -802,7 +808,7 @@ Dependencies: {depends}""".format(name = self.name,
         # Clear stamped files list
         self.stamped_files = list()
                 
-        self.main_script_obj.write_child_command(self.prelim_script_obj)
+        self.main_script_obj.write_command(self.main_script_obj.write_child_command(self.prelim_script_obj))
                                                 # qdel_line = self.prelim_script_obj.get_kill_command(),\
                                                 # script_path = self.prelim_script_obj.script_path,\
                                                 # script_id = self.prelim_script_obj.script_id)
@@ -865,7 +871,7 @@ Dependencies: {depends}""".format(name = self.name,
         # Clear stamped files list
         self.stamped_files = list()
         
-        self.main_script_obj.write_child_command(self.wrap_script_obj)
+        self.main_script_obj.write_command(self.main_script_obj.write_child_command(self.wrap_script_obj))
         # qdel_line = self.wrap_script_obj.get_kill_command(),\
                                         # script_path = self.wrap_script_obj.script_path,\
                                         # script_id = self.wrap_script_obj.script_id)
@@ -907,7 +913,8 @@ Dependencies: {depends}""".format(name = self.name,
                 self.create_wrapping_up_script()
                 
                 # Add closing lines to the high level script
-                self.main_script_obj.write_script_postamble()
+                # self.main_script_obj.get_script_postamble()
+                self.close_high_level_script()
 
             except AssertionExcept as assertErr:
                 # print assertErr.get_error_str(self.get_step_name())

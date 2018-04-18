@@ -28,8 +28,8 @@ class ScriptConstructorSGE(ScriptConstructor):
         """ Returnn the command for executing the this script
         """
         
-        qsub_line = ""
-        qsub_line += "echo running " + self.name + " ':\\n------------------------------'\n"
+        script = ""
+        # qsub_line += "echo running " + self.name + " ':\\n------------------------------'\n"
         
         # slow_release_script_loc = os.sep.join([self.pipe_data["home_dir"],"utilities","qsub_scripts","run_jobs_slowly.pl"])
 
@@ -38,27 +38,14 @@ class ScriptConstructorSGE(ScriptConstructor):
             # Define the slow_release command (common to both options of slow_release)
             
             sys.exit("Slow release no longer supported. Use 'job_limit'")
-            # qsub_line += """ 
-# qsub -N %(script_id)s \\
-    # -q %(queue)s \\
-    # -e %(stderr)s \\
-    # -o %(stdout)s \\
-    # %(slow_rel_params)s \\
-    # -f %(scripts_dir)s%(script_name)s \n""" % \
-                        # {"script_id"              : self.script_id,
-                        # "stderr"                  : self.pipe_data["stderr_dir"],
-                        # "stdout"                  : self.pipe_data["stdout_dir"],
-                        # "queue"                   : self.pipe_data["qsub_params"]["queue"],
-                        # "scripts_dir"             : self.pipe_data["scripts_dir"],
-                        # "script_name"             : self.script_path,
-                        # "slow_rel_params"         : self.params["slow_release"]}
+
 
         else:
-            qsub_line += "qsub %(scripts_dir)s%(script_name)s\n" % {"scripts_dir" : self.pipe_data["scripts_dir"], 
-                                                                    "script_name" : self.script_name}
+            script = """\
+qsub {script_path}
+""".format(script_path = self.script_path)
 
-        qsub_line += "\n\n"
-        return qsub_line
+        return script
 
         
 #### Methods for adding lines:
@@ -73,7 +60,7 @@ class ScriptConstructorSGE(ScriptConstructor):
     
         return "qdel {script_name}".format(script_name = self.script_id)
         
-    def make_script_header(self):
+    def get_script_header(self):
         """ Make the first few lines for the scripts
             Is called for high level, low level and wrapper scripts
         """
@@ -117,12 +104,12 @@ class HighScriptConstructorSGE(ScriptConstructorSGE,HighScriptConstructor):
     # dependency_list
 
         
-    def make_script_header(self, **kwargs):
+    def get_script_header(self, **kwargs):
         """ Make the first few lines for the scripts
             Is called for high level, low level and wrapper scripts
         """
 
-        general_header = super(HighScriptConstructorSGE, self).make_script_header(**kwargs)
+        general_header = super(HighScriptConstructorSGE, self).get_script_header(**kwargs)
 
         only_low_lev_params  = ["-pe"]
         compulsory_high_lev_params = {"-V":""}
@@ -150,8 +137,37 @@ class HighScriptConstructorSGE(ScriptConstructorSGE,HighScriptConstructor):
                             qsub_queue,
                             qsub_opts]).replace("\n\n","\n") + "\n\n"
 
+                            
+    def get_command(self):
+        """ Writing low level lines to high level script: job_limit loop, adding qdel line and qsub line
+            spec_qsub_name is the qsub name without the run code (see caller)
+            """
+        
+        if "job_limit" in self.pipe_data.keys():
+            sys.exit("Job limit not supported yet for Local!")
 
-    def write_child_command(self, script_obj):
+
+        command = super(HighScriptConstructorSGE, self).get_command()
+
+        
+
+        # TODO: Add output from stdout and stderr
+
+        script = """
+# ---------------- Code for {script_id} ------------------
+echo running {script_id}
+{command}
+
+""".format(script_id = self.script_id,
+        command = command)
+        
+        
+        return script                            
+                            
+                            
+                            
+
+    def get_child_command(self, script_obj):
         """ Writing low level lines to high level script: job_limit loop, adding qdel line and qsub line
             spec_qsub_name is the qsub name without the run code (see caller)
         """
@@ -186,30 +202,43 @@ qsub {script_name}
         step_kill_file = self.params["kill_script_path"])
 
         
-        self.filehandle.write(script)
+        return script
                             
                             
                    
-    def write_script_postamble(self):
+    def get_script_postamble(self):
                             
                             
         
-        # Unsetting error trapping and flags before qalter, since qalter usually fails (because dependencies don't exist, etc.)
-        script = """
-sleep {sleep}
+    
+        # Get general postamble
+        postamble = super(HighScriptConstructorSGE, self).get_script_postamble()
 
-trap '' ERR
-""".format(sleep = self.pipe_data["Default_wait"])
-        self.filehandle.write(script)
-        self.write_set_options_line(type = "unset")
+        
+        
+        
+        # Add sed command:
+        script = """\
+{postamble}
 
-        ## TODO: !!!!!!!!!!!
-        script = """
 csh {scripts_dir}98.qalter_all.csh
-""".format(scripts_dir = self.pipe_data["scripts_dir"])
+
+""".format(\
+    postamble = postamble, 
+    run_index = self.pipe_data["run_index"],
+    scripts_dir = self.pipe_data["scripts_dir"])
         
-        self.filehandle.write(script)
-        self.write_log_lines(state = "Finished")
+        return script
+                     
+        
+        
+        # ## TODO: !!!!!!!!!!!
+        # script = """
+# csh {scripts_dir}98.qalter_all.csh
+# """.format(scripts_dir = self.pipe_data["scripts_dir"])
+        
+        # self.filehandle.write(script)
+        # self.write_log_lines(state = "Finished")
 
           
                             
@@ -220,12 +249,12 @@ class LowScriptConstructorSGE(ScriptConstructorSGE,LowScriptConstructor):
     """
     """
 
-    def make_script_header(self, **kwargs):
+    def get_script_header(self, **kwargs):
         """ Make the first few lines for the scripts
             Is called for high level, low level and wrapper scripts
         """
 
-        general_header = super(LowScriptConstructorSGE, self).make_script_header(**kwargs)
+        general_header = super(LowScriptConstructorSGE, self).get_script_header(**kwargs)
 
         only_low_lev_params  = ["-pe"]
         compulsory_high_lev_params = {"-V":""}

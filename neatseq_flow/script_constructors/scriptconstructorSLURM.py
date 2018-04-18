@@ -40,9 +40,10 @@ class ScriptConstructorSLURM(ScriptConstructor):
             sys.exit("Slow release no longer supported. Use 'job_limit'")
 
         else:
-            qsub_line += "sh {nsf_exec} {scripts_dir}{script_name}\n".format(scripts_dir = self.pipe_data["scripts_dir"], 
-                                                                        script_name = self.script_name,
-                                                                        nsf_exec = self.pipe_data["exec_script"])
+            qsub_line += """\
+sh {nsf_exec} \\
+    {script_id}""".format(script_id = self.script_id,
+                          nsf_exec = self.pipe_data["exec_script"])
 
         qsub_line += "\n\n"
         return qsub_line

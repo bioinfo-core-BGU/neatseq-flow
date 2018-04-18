@@ -11,7 +11,9 @@ __version__ = "1.2.0"
 
 
 class ScriptConstructor(object):
-
+    """ General class for script construction and management
+    """
+    
     def __init__(self, step, name, number, shell, params, pipe_data):
         """ Create a script constructor with name(i.e. 'qsub_name') and script path
         """
@@ -23,9 +25,6 @@ class ScriptConstructor(object):
         self.params = params
         self.pipe_data = pipe_data
         
-        # self.qsub_name = "_".join([self.step,self.name,self.pipe_data["run_code"]])
-
-        
         # self.shell_ext contains the str to use as script extension for step scripts
         if self.shell == "bash":
             self.shell_ext = "sh"
@@ -33,7 +32,8 @@ class ScriptConstructor(object):
             self.shell_ext = "csh"
 
     def __del__(self):
-    
+        """ Close filehandle when destructing class
+        """
         
         self.filehandle.close()
     
@@ -45,10 +45,10 @@ class ScriptConstructor(object):
         
 #### Methods for adding lines:
         
-    def write_trap_line(self):
+    def get_trap_line(self):
         """
         """
-        pass
+        
 
         if self.shell=="csh":
             self.write_warning("Error trapping not defined for csh scripts. Consider using bash instead.\n", admonition = "WARNING")
@@ -75,10 +75,10 @@ trap_with_arg func_trap {step} {stepname} {stepID} {level} $HOSTNAME $JOB_ID SIG
             script = ""
             self.write_warning("shell not recognized. Not creating error trapping lines.\n", admonition = "WARNING")
         # set -Eeuxo pipefail        
-        self.filehandle.write(script)
+        return script
                 
         
-    def write_log_lines(self, state = "Started", status = "\033[0;32mOK\033[m"):
+    def get_log_lines(self, state = "Started", status = "\033[0;32mOK\033[m"):
         """ Create logging lines. Added before and after script to return start and end times
             If bash, adding at beginning of script also lines for error trapping
         """
@@ -92,6 +92,7 @@ trap_with_arg func_trap {step} {stepname} {stepID} {level} $HOSTNAME $JOB_ID SIG
                          "status"     : status,                                      \
                          "file"       : self.pipe_data["log_file"]}
         
+        script = ""
         if self.shell=="csh":
         
             script = """
@@ -116,9 +117,11 @@ log_echo {step} {stepname} {stepID} {level} $HOSTNAME $JOB_ID {type}
             script = ""
             self.write_warning("shell not recognized. Not creating log writing lines in scripts.\n", admonition = "WARNING")
         
-        self.filehandle.write(script)
-#####################################################
-    def write_set_options_line(self, type = "set"):
+        return script
+        
+        
+
+    def get_set_options_line(self, type = "set"):
         """ Adds line for activating and deactivating certain bash options
         """
         
@@ -136,9 +139,9 @@ log_echo {step} {stepname} {stepID} {level} $HOSTNAME $JOB_ID {type}
             script = ""
             self.write_warning("shell not recognized.\n", admonition = "WARNING")
             
-        self.filehandle.write(script)
+        return script
             
-    def write_activate_lines(self, type):
+    def get_activate_lines(self, type):
         """ Function for adding activate/deactivate lines to scripts so that virtual environments can be used 
             A workflow that uses this option is the QIIME2 workflow.
         """
@@ -172,11 +175,13 @@ source {activate_path} {environ}
 """.format(activate_path = activate_path,
              environ = environ if type == "activate" else "") 
         
-        self.filehandle.write(script)
+        return script
         
         
-###################################################
-        
+    def write_command(self, command):
+    
+        self.filehandle.write(command)
+                
         
         
         
@@ -202,47 +207,50 @@ class HighScriptConstructor(ScriptConstructor):
         
         self.filehandle = open(self.script_path, "w")
         
+        print(self.script_id)
+        
 
 
     
-    def write_script_preamble(self, dependency_jid_list):
+    def get_script_preamble(self, dependency_jid_list):
     
         self.dependency_jid_list = ",".join(dependency_jid_list) if dependency_jid_list else None
         
         
         
-        script = "\n".join([self.make_script_header(),                                                         \
+        script = "\n".join([self.get_script_header(),                                                         \
                             # self.create_trap_line(self.spec_qsub_name, level="high"),  \
                             # self.create_log_lines(self.spec_qsub_name,"Started", level="high"),  \
                             # self.create_set_options_line(self.spec_qsub_name, level="high", type="set"),  \
                             "# Calling low level scripts:\n\n"])
         
         # Write script to high-level script
-        # with open(self.high_level_script_name, "w") as script_fh:
-        self.filehandle.write(script)
+        return script
         
         
         
                             
-    def write_script_postamble(self):
+    def get_script_postamble(self):
                             
-                            
-        
+                     
         # Unsetting error trapping and flags before qalter, since qalter usually fails (because dependencies don't exist, etc.)
         script = """
 sleep {sleep}
 
 trap '' ERR
-""".format(sleep = self.pipe_data["Default_wait"])
-        self.filehandle.write(script)
-        self.write_set_options_line(type = "unset")
 
-        ## TODO: !!!!!!!!!!!
-        # script = """
-# csh {scripts_dir}98.qalter_all.csh
-# """
-        self.write_log_lines(state = "Finished")
+{set_line}
 
+{log_line}
+""".format(sleep = self.pipe_data["Default_wait"],
+            set_line = self.get_set_options_line(type = "unset"),
+            log_line = self.get_log_lines(state = "Finished"))
+
+        
+        return script
+
+        
+        
                             
                             
                             
@@ -278,34 +286,11 @@ class LowScriptConstructor(ScriptConstructor):
         self.script_id = "_".join([self.script_id, self.pipe_data["run_code"]])
         self.level = "low"
         self.filehandle = open(self.script_path, "w")
-######################
-
-
 
         
-    # def write_script_preamble(self, dependency_jid_list):
-    
-        # self.dependency_jid_list = ",".join(dependency_jid_list) if dependency_jid_list else None
         
-        # # Create header with dependency_jid_list:
-        # qsub_header = self.make_script_header()
-        
-        # script = "\n".join([qsub_header,                                                         \
-                            # # self.create_trap_line(self.spec_qsub_name, level="high"),  \
-                            # # self.create_log_lines(self.spec_qsub_name,"Started", level="high"),  \
-                            # # self.create_set_options_line(self.spec_qsub_name, level="high", type="set"),  \
-                            # "# Low level script goes here:\n\n"])
-        
-        # # Write script to high-level script
-        
-        # self.filehandle.write(script)
-        
-        
-    def write_command(self, command):
-    
-        self.filehandle.write(command)
-        
-    def write_kill_line(self, state = "Start"):
+
+    def get_kill_line(self, state = "Start"):
         """ Add and remove qdel lines from qdel file.
             type can be "Start" or "Stop"
         """
@@ -314,7 +299,7 @@ class LowScriptConstructor(ScriptConstructor):
         kill_cmd = self.get_kill_command() 
         
         if not kill_cmd:
-            return
+            return ""
             # kill_cmd = "## NO KILL COMMAND DEFINED ##"
         if state == "Start":
             script = """\
@@ -328,12 +313,16 @@ sed -i -e 's:^{kill_cmd}$:#&:' {qdel_file}\n""".format(kill_cmd = re.escape(kill
         else:
             raise AssertionExcept("Bad type value in add_qdel_lines()", step = self.name)
             
-        self.filehandle.write(script)
+        return script
 
-    def write_stamped_file_register(self,stamped_files):
+    def get_stamped_file_register(self,stamped_files):
         """
         """
         
+        if not stamped_files:
+            return ""
+            
+            
         script = "######\n# Registering files with md5sum:\n"
 
         # Bash needs the -e flag to render \t as tabs.
@@ -356,7 +345,7 @@ sed -i -e 's:^{kill_cmd}$:#&:' {qdel_file}\n""".format(kill_cmd = re.escape(kill
         
         script += "#############\n\n"
             
-        self.filehandle.write(script)
+        return script
         
         
         
@@ -367,58 +356,59 @@ sed -i -e 's:^{kill_cmd}$:#&:' {qdel_file}\n""".format(kill_cmd = re.escape(kill
 
         if "level" not in kwargs:
             kwargs["level"] = "low"
+            
 
-        self.write_script_preamble(dependency_jid_list)
+        script = "\n".join([   \
+            self.get_script_preamble(dependency_jid_list),        \
+            self.get_trap_line(),                                 \
+            self.get_log_lines(state="Started"),                  \
+            self.get_activate_lines(type = "activate"),           \
+            self.get_set_options_line(type = "set"),              \
+            # THE SCRIPT!!!!
+            script,                                               \
+            self.get_stamped_file_register(stamped_files),        \
+            self.get_set_options_line(type = "unset"),            \
+            self.get_activate_lines(type = "deactivate"),         \
+            self.get_kill_line(state = "Stop"),                   \
+            self.get_log_lines(state = "Finished")])
 
-        self.write_trap_line()
-        self.write_log_lines(state="Started")
-        
-        self.write_activate_lines(type = "activate")
-        self.write_set_options_line(type = "set")
         
         self.write_command(script)
-        
-        
-        if stamped_files:
-            self.write_stamped_file_register(stamped_files)
-            
-        self.write_set_options_line(type = "unset")
-        self.write_activate_lines(type = "deactivate")
-        self.write_kill_line(state = "Stop")
-        self.write_log_lines(state = "Finished")
-        
 
 
-    def write_script_preamble(self, dependency_jid_list):
+    def get_script_preamble(self, dependency_jid_list):
     
         self.dependency_jid_list = ",".join(dependency_jid_list) if dependency_jid_list else None
         
         
         
-        script = "\n".join([self.make_script_header(),                                                         \
-                            "# Low level script goes here:\n\n"])
+        script = "\n".join([self.get_script_header()])
         
         
-        self.filehandle.write(script)
+        return script
         
         
         
                             
-    def write_script_postamble(self):
+    # def get_script_postamble(self):
                             
                             
         
-        # Unsetting error trapping and flags before qalter, since qalter usually fails (because dependencies don't exist, etc.)
-        script = """
+        # # Unsetting error trapping and flags before qalter, since qalter usually fails (because dependencies don't exist, etc.)
+        # script = """
 
-trap '' ERR
-"""
-        self.filehandle.write(script)
-        self.write_set_options_line(type = "unset")
+# trap '' ERR
+# """
+        # # self.filehandle.write(script)
+        # # self.write_set_options_line(type = "unset")
 
+        # script = "\n".join([script,
+                            # self.get_set_options_line(type = "unset"),
+                            # self.get_log_lines(state = "Finished")])
         
+        # return script
         
-        self.write_log_lines(state = "Finished")
+        # # self.write_log_lines(state = "Finished")
 
                                     
 ####----------------------------------------------------------------------------------
