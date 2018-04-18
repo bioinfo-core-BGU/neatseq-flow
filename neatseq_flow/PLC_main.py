@@ -1265,15 +1265,16 @@ while [ $flag -eq 0 ]
 do
     # Get running jobs
     running=$(grep -v "^#" $run_index)
-    running=(${{running//\\n/ }})
-    
+    # running=(${{running//\\n/ }})
+    running=($(echo ${{running}})) 
+
     # Is there overlap between 'running' and 'hold_jids'?
     overlap=0
     result=""
     for item1 in "${{hold_jids[@]}}"; do
         for item2 in "${{running[@]}}"; do
             if [[ $item1 = $item2 ]]; then
-                # result+=("$item1")
+                echo "Job $item1 is running. Waiting..."
                 overlap=1
             fi
         done
@@ -1282,7 +1283,7 @@ do
     if (( $overlap == 0 )); then
         flag=1
     fi
-    echo -n "."
+#    echo -n "."
     sleep 3
 done
 
