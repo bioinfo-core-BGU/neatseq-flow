@@ -19,9 +19,13 @@ def get_script_exec_line():
     return """\
 jobid=$(sbatch $script_path | cut -d " " -f 4)
 
-sed -i -e "s:$1$:$1\\t$jobid:" $run_index
+echo $qsubname " lock on sedlock" 
+sedlock={run_index}.sedlock
+exec 200>$sedlock
+flock -w 50 200 || exit 1
+echo $qsubname "sedlock released"
 
-
+sed -i -e "s:$1.*$:&\\t$jobid:" $run_index
 """
 
 
@@ -111,8 +115,8 @@ class HighScriptConstructorSLURM(ScriptConstructorSLURM,HighScriptConstructor):
         only_low_lev_params  = ["-pe"]
         compulsory_high_lev_params = {"-V":""}
 
-        if "queue" in self.params["qsub_params"]:
-            general_header +=   "#SBATCH --partition %s" % self.params["qsub_params"]["queue"]
+        # if "queue" in self.params["qsub_params"]:
+        #     general_header +=   "#SBATCH --partition %s" % self.params["qsub_params"]["queue"]
 
         # Create lines containing the qsub opts.
         for qsub_opt in self.params["qsub_params"]["opts"]:
@@ -195,10 +199,18 @@ echo running {script_id}
 
         # Add sed command:
         script = """\
+wait
 {postamble}
 
 # Setting script as done in run index:
-sed -i -e "s:^{script_id}$:# {script_id}:" {run_index}""".format(\
+
+echo "{script_id} lock on sedlock" 
+sedlock={run_index}.sedlock
+exec 200>$sedlock
+flock -w 50 200 || exit 1
+echo "{script_id} sedlock released"
+
+sed -i -e "s:^{script_id}.*:# &:" {run_index}\n\n""".format(\
     postamble = postamble, 
     run_index = self.pipe_data["run_index"],
     script_id = self.script_id)
@@ -228,8 +240,8 @@ class LowScriptConstructorSLURM(ScriptConstructorSLURM,LowScriptConstructor):
         for qsub_opt in self.params["qsub_params"]["opts"]:
             general_header += "#SBATCH {key} {val}\n".format(key=qsub_opt, val=self.params["qsub_params"]["opts"][qsub_opt]) 
             
-        if "queue" in self.params["qsub_params"]:
-            general_header += "#SBATCH --partition %s\n" % self.params["qsub_params"]["queue"]
+        # if "queue" in self.params["qsub_params"]:
+        #     general_header += "#SBATCH --partition %s\n" % self.params["qsub_params"]["queue"]
         # Adding node limitation to header, but only for low-level scripts
         if self.params["qsub_params"]["node"]:     # If not defined then this will be "None"
             # qsub_queue += "@%s" % self.params["qsub_params"]["node"]
@@ -256,7 +268,13 @@ class LowScriptConstructorSLURM(ScriptConstructorSLURM,LowScriptConstructor):
         self.write_command("""\
 
 # Setting script as done in run index:
-sed -i -e "s:^{script_id}$:# {script_id}:" {run_index}""".format(\
+echo "{script_id} lock on sedlock" 
+sedlock={run_index}.sedlock
+exec 200>$sedlock
+flock -w 50 200 || exit 1
+echo "{script_id} sedlock released"
+
+sed -i -e "s:^{script_id}.*:# &:" {run_index}\n\n""".format(\
     run_index = self.pipe_data["run_index"],
     script_id = self.script_id))
         
