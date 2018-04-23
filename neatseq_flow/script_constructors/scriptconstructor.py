@@ -83,13 +83,13 @@ trap_with_arg func_trap {step} {stepname} {stepID} {level} $HOSTNAME $JOB_ID SIG
             If bash, adding at beginning of script also lines for error trapping
         """
 
-        log_cols_dict = {"type"       : state,                                        \
-                         "step"       : self.step,                        \
-                         "stepname"   : self.name,                        \
-                         "stepID"     : self.script_id,                                   \
-                         "qstat_path" : self.pipe_data["qsub_params"]["qstat_path"], \
-                         "level"      : self.level,                                       \
-                         "status"     : status,                                      \
+        log_cols_dict = {"type"       : state,
+                         "step"       : self.step,
+                         "stepname"   : self.name,
+                         "stepID"     : self.script_id,
+                         "qstat_path" : self.pipe_data["qsub_params"]["qstat_path"],
+                         "level"      : self.level,
+                         "status"     : status,
                          "file"       : self.pipe_data["log_file"]}
         
         script = ""

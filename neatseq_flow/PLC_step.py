@@ -682,19 +682,21 @@ Dependencies: {depends}""".format(name = self.name,
         
         
         # Adding job name and path to script and run indices
-        self.add_job_script_run_indices(self.child_script_obj.script_id, self.child_script_obj.script_path)
+        self.add_job_script_run_indices(self.child_script_obj)
         
         self.child_script_obj.__del__()
 
     
-    def add_job_script_run_indices(self, script_id, script_path):
+    def add_job_script_run_indices(self, script_obj):
         """ Add current script to script_index and run_index files
         """
         with open(self.pipe_data["script_index"], "a") as script_fh:
-            script_fh.write("{qsub_name}\t{script_name}\n".format(qsub_name   = script_id,
-                                                                  script_name = script_path))
+            script_fh.write("{qsub_name}\t{script_name}\n".format(qsub_name   = script_obj.script_id,
+                                                                  script_name = script_obj.script_path))
         with open(self.pipe_data["run_index"], "a") as script_fh:
-            script_fh.write("# {qsub_name}\n".format(qsub_name   = script_id))
+            if script_obj.level == "high":
+                script_fh.write("\n----\n")
+            script_fh.write("# {qsub_name}\n".format(qsub_name   = script_obj.script_id))
         
         
     def create_scripts_dir(self):
@@ -748,28 +750,20 @@ Dependencies: {depends}""".format(name = self.name,
         self.qsub_names_dict["step"] = self.get_step_step()
         self.qsub_names_dict["high_qsub"] = self.main_script_obj.script_id
         self.qsub_names_dict["low_qsubs"] = list()
-        
+
         # Adding qsub_name and script path to script_index and run_index
-        with open(self.pipe_data["script_index"], "a") as script_fh:
-            script_fh.write("{qsub_name}\t{script_name}\n".format(qsub_name   = self.main_script_obj.script_id,
-                                                                  script_name = self.main_script_obj.script_path))
-        with open(self.pipe_data["run_index"], "a") as script_fh:
-            script_fh.write("# {qsub_name}\n".format(qsub_name   = self.main_script_obj.script_id))
-        
-        
+        self.add_job_script_run_indices(self.main_script_obj)
+
     def close_high_level_script(self):
         """ Create the high (i.e. 2nd) level scripts, which are the scripts that run the 3rd level scripts for the step
         """
 
         self.main_script_obj.write_command(self.main_script_obj.get_script_postamble())
 
-
     def create_preliminary_script(self):
         """ Create a script that will run before all other low level scripts commence
 
         """
-
-
         # Creating script. If 'create_spec_preliminary_script' is not defined or returns nothing, return from here without doing anything
         self.script = ""
         try:
@@ -792,29 +786,25 @@ Dependencies: {depends}""".format(name = self.name,
                                 pipe_data = self.pipe_data,
                                 id = "_".join([self.step,self.name,"preliminary"]))
 
-                                             
-        # self.spec_qsub_name = "_".join([self.spec_qsub_name,self.pipe_data["run_code"]])
-        
-            
-        # Get dependency jid list and add preliminary jids if exist (if not, is an empty list and will not affect the outcome)
+        # Get dependency jid list and add preliminary jids if exist
+        # (if not, is an empty list and will not affect the outcome)
         #    Also, add all jids of current step, as this script is to run only after all previous steps have completed.
-        dependency_jid_list = self.get_dependency_jid_list() #+ self.get_jid_list()
-        
-        
-        self.prelim_script_obj.write_script(script = self.script, 
+        dependency_jid_list = self.get_dependency_jid_list()
+
+        self.prelim_script_obj.write_script(script = self.script,
                                             dependency_jid_list = dependency_jid_list,
                                             stamped_files = self.stamped_files)
         # Clear stamped files list
         self.stamped_files = list()
                 
         self.main_script_obj.write_command(self.main_script_obj.get_child_command(self.prelim_script_obj))
-                                                # qdel_line = self.prelim_script_obj.get_kill_command(),\
-                                                # script_path = self.prelim_script_obj.script_path,\
-                                                # script_id = self.prelim_script_obj.script_id)
 
-        # This is here because I want to use jid_list to make wrapping_up script dependent on this step's main low-level scripts
-        # Explantion: get_jid_list() was used above (line 'qsub_header...') to make the wrapping_up script dependent on the other scripts created by the step
-        #    Now that that is done, the following line adds this step to the jid_list, so that subsequent steps are dependent on the wrapping up script as well. (I hope this makes it clear...)
+        # This is here because I want to use jid_list to make wrapping_up script dependent on this step's
+        # main low-level scripts
+        # Explantion: get_jid_list() was used above (line 'qsub_header...') to make the wrapping_up script dependent
+        # on the other scripts created by the step. Now that that is done, the following line adds this step to the
+        # jid_list, so that subsequent steps are dependent on the wrapping up script as well.
+        # (I hope this makes it clear...)
         self.add_jid_to_jid_list(self.prelim_script_obj.script_id)
 
         # Add the preliminary jid to the list of preliminary jids.  
@@ -824,7 +814,7 @@ Dependencies: {depends}""".format(name = self.name,
         self.qsub_names_dict["low_qsubs"].append(self.prelim_script_obj.script_id)
 
         # Adding job name and path to script and run indices
-        self.add_job_script_run_indices(self.prelim_script_obj.script_id, self.prelim_script_obj.script_path)
+        self.add_job_script_run_indices(self.prelim_script_obj)
 
         self.prelim_script_obj.__del__()
         
@@ -832,9 +822,9 @@ Dependencies: {depends}""".format(name = self.name,
         """ Create a script that will run once all other low level scripts terminate
             Ideal place for putting testing and agglomeration procedures.
         """
-        
-        
-        # Creating script. If 'create_spec_wrapping_up_script' is not defined or returns nothing, return from here without doing anything
+
+        # Creating script. If 'create_spec_wrapping_up_script' is not defined or returns nothing,
+        # return from here without doing anything
         self.script = ""
         try:
             self.create_spec_wrapping_up_script()
@@ -844,11 +834,10 @@ Dependencies: {depends}""".format(name = self.name,
         if not self.script.strip():                 # If script is empty, do not create a wrapper function
             return 
 
-
         self.spec_qsub_name = "_".join([self.step,self.name,"wrapping_up"])
 
         getChildClass = self.import_ScriptConstructor(level="low")
-        # getChildClass = self.forname("neatseq_flow.script_constructors.ScriptConstructorSGE","LowScriptConstructorSGE")
+
         # Create ScriptConstructor for low level script.
         self.wrap_script_obj = \
             getChildClass(step = self.get_step_step(), \
@@ -887,7 +876,7 @@ Dependencies: {depends}""".format(name = self.name,
         self.qsub_names_dict["low_qsubs"].append(self.spec_qsub_name)
         
         # Adding job name and path to script and run indices
-        self.add_job_script_run_indices(self.wrap_script_obj.script_id, self.wrap_script_obj.script_path)
+        self.add_job_script_run_indices(self.wrap_script_obj)
         self.wrap_script_obj.__del__()
 
             
@@ -1229,15 +1218,6 @@ Dependencies: {depends}""".format(name = self.name,
                         if "env" not in self.params["conda"] or not self.params["conda"]["env"]: ##==None:
                             raise AssertionExcept("'conda: path' is empty, taking from CONDA_BASE. Failed because no 'env' was passed. When using CONDA_BASE, you must supply an environment name with 'conda: env'",step=self.get_step_name())
 
-                    # elif "CONDA_PREFIX" in os.environ:
-                        # # CONDA_PREFIX is: conda_path/'envs'/env_name
-                        # # First split gets the env name
-                        # # Second split gets the conda_path and adds 'bin'
-                        # (t1,env) = os.path.split(os.environ["CONDA_PREFIX"])
-                        # self.params["conda"]["path"] = os.environ["CONDA_PREFIX"]
-                        # if "env" not in self.params["conda"] or not self.params["conda"]["env"]: ##==None:
-                            # self.params["conda"]["env"] = env
-        
                     else:
                         raise AssertionExcept("""'conda' 'path' is empty, but no CONDA_BASE is defined. 
 Make sure you are in an active conda environment, and that you executed the following command:
@@ -1282,5 +1262,4 @@ Make sure you are in an active conda environment, and that you executed the foll
                     
         # Return the unique list of such params, after excluding the ones that are true for all modules: base, module, script_path, etc.
         return list(set(step_params)-set(["redir_params","qsub_params","base", "module", "sample_list", "exclude_sample_list", "script_path"]))
-                
-        
+
