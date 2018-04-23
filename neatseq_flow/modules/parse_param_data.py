@@ -50,9 +50,10 @@ from neatseq_flow.modules.parse_sample_data import remove_comments, check_newlin
 
 
 STEP_PARAMS_SINGLE_VALUE = ['module','redirects']
-SUPPORTED_EXECUTORS = ["Local","SGE","SLURM"]
+SUPPORTED_EXECUTORS = ["Local","SGE","SLURM","QSUB"]
 NOT_PASSABLE_EXECUTOR_PARAMS = \
     {"SGE" : "-N -e -o -q -hold_jid".split(" "), \
+    "QSUB" : "-N -e -o -q -hold_jid".split(" "), \
     "SLURM" : "-e -o -hold_jid --error --output -J --job-name -p --partition -w".split(" "), \
     "Local" : ""}
 

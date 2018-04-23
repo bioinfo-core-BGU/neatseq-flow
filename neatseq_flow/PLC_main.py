@@ -489,6 +489,7 @@ class neatseq_flow:
         
         qstat_cmd_dict = \
             {"SGE" : "qstat",
+             "QSUB" : "qstat",
              "SLURM" : "squeue",
              "Local" : ""}
         qstat_cmd = qstat_cmd_dict[self.param_data["Global"]["Executor"]]
@@ -571,7 +572,7 @@ class neatseq_flow:
         # Create name for qdel script:
         self.pipe_data["kill_script_name"] = self.pipe_data["scripts_dir"] + "99.kill_all.csh"
         
-        
+        # Creation itself is done in ScriptConstrutor class
         
         with open(self.pipe_data["kill_script_name"], "w") as script_fh:
             # Adding preliminary stuff:
@@ -1263,6 +1264,15 @@ hold_jids=(${{hold_jids//,/ }})
 flag=0
 while [ $flag -eq 0 ]
 do
+    if [ -f ${run_index}.killall ]; then
+        echo -e $run_index ".killall file created. Stopping all waiting jobs. \\nMake sure you delete the file before re-running!"
+        exit 1;
+    fi
+    if [ ! -f ${run_index} ]; then
+        echo $run_index " file deleted. Stopping all waiting jobs"
+        exit 1;
+    fi
+
     # Get running jobs
     running=$(grep -v "^#" $run_index)
     # running=(${{running//\\n/ }})

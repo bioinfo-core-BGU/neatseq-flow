@@ -284,4 +284,29 @@ sed -i -e "s:^{script_id}.*:# &:" {run_index}\n\n""".format(\
 class KillScriptConstructorSLURM(ScriptConstructorSLURM,KillScriptConstructor):
 
 
-    pass
+    
+    def __init__(self, **kwargs):
+    
+        super(KillScriptConstructor, self).__init__(**kwargs)
+        
+        
+        self.script_path = \
+            "".join([self.pipe_data["scripts_dir"], \
+                     "99.kill_all", \
+                     os.sep, \
+                     "99.kill_all_{name}".format(name=self.name), \
+                     ".csh"])
+
+
+        self.filehandle = open(self.script_path, "w")
+
+        self.filehandle.write("""\
+#!/usr/csh
+
+touch {run_index}.killall
+
+sleep 100
+
+rm -rf {run_index}.killall""")
+        
+        

@@ -864,6 +864,8 @@ Dependencies: {depends}""".format(name = self.name,
         #    Also, add all jids of current step, as this script is to run only after all previous steps have completed.
         dependency_jid_list = self.preliminary_jids + self.get_jid_list() + self.get_dependency_jid_list()
         
+        # Removing parent name from wrapping_up dependencies
+        dependency_jid_list.remove(self.main_script_obj.script_id)
         self.wrap_script_obj.write_script(script = self.script, 
                                     dependency_jid_list = dependency_jid_list,
                                     stamped_files = self.stamped_files)

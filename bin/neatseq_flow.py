@@ -13,7 +13,7 @@ __version__ = "1.1.0"
 __affiliation__ = "Bioinformatics Core Unit, NIBN, Ben Gurion University"
 
 
-import os, sys
+import os, sys, shutil
 import argparse
 from pprint import pprint as pp
 
@@ -42,6 +42,8 @@ parser.add_argument("-d","--home_dir", help="Location of pipeline. Default is cu
 parser.add_argument("-m","--message", help="A message describing the pipeline", default="")
 parser.add_argument("-r","--runid", help="Don't create new run ID. Use this one.", default="")
 # parser.add_argument("-c","--convert2yaml", help="Convert parameter file to yaml format?", action='store_true')
+parser.add_argument("-l","--clean", help="Remove old workflow directories except for 'data'", action='store_true')
+parser.add_argument("--clean-all", help="Remove all old workflow directories", action='store_true')
 parser.add_argument("-V","--verbose", help="Print admonitions?", action='store_true')
 parser.add_argument("-v","--version", help="Print version and exit.", action='store_true')
 
@@ -59,6 +61,25 @@ if args.sample_file == None or args.param_file==None:
     parser.print_help()
     sys.exit()
 
+# print args.home_dir
+# sys.exit()
+
+
+if args.clean:
+    if args.home_dir != os.getcwd():
+        text = raw_input("Are you sure you want to delete the workflow in {home_dir}?".format(home_dir = args.home_dir))
+        if not text.lower() == "yes":
+            sys.exit()
+    if args.clean_all:
+        text = raw_input("Are you sure you want to delete '{data}'?".format(data=os.sep.join([args.home_dir, "data"])))  # Python 2
+        if os.path.isdir(os.sep.join([args.home_dir, "data"])):
+            if text.lower() == "yes":
+                shutil.rmtree(os.sep.join([args.home_dir, "data"]))
+    for dir in ["backups", "logs", "objects", "scripts", "stderr", "stdout"]:
+        if os.path.isdir(os.sep.join([args.home_dir, dir])):
+            shutil.rmtree(os.sep.join([args.home_dir, dir]))
+
+print "got here:"
 
 # Checking that sample_file and param_file were passed:
 if args.sample_file == None or args.param_file == None:

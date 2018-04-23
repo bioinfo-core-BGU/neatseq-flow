@@ -20,43 +20,40 @@ def get_script_exec_line():
     return """\
 jobid=$(qsub $script_path | cut -d " " -f 3)
 
-sed -i -e "s:$1.*$:$1\\t$jobid:" $run_index
+echo "lock on sedlock" 
+sedlock=${run_index}.sedlock
+exec 200>$sedlock
+flock -w 20 200 || exit 1
+echo "sedlock released"
+
+sed -i -e "s:$1.*$:&\\t$jobid:" $run_index
 
 
 """
     
 
-class ScriptConstructorSGE(ScriptConstructor):
+class ScriptConstructorQSUB(ScriptConstructor):
 
         
         
     def get_command(self):
-        """ Returnn the command for executing the this script
+        """ Return the command for executing the this script
         """
         
         script = ""
-        # qsub_line += "echo running " + self.name + " ':\\n------------------------------'\n"
-        
-        # slow_release_script_loc = os.sep.join([self.pipe_data["home_dir"],"utilities","qsub_scripts","run_jobs_slowly.pl"])
 
         if "slow_release" in self.params.keys():
-            # Define the code for slow release 
-            # Define the slow_release command (common to both options of slow_release)
-            
             sys.exit("Slow release no longer supported. Use 'job_limit'")
 
-
         else:
-            script = """\
-qsub {script_path}
-""".format(script_path = self.script_path)
+            script += """\
+sh {nsf_exec} \\
+    {script_id} &\n\n""".format(script_id = self.script_id,
+                          nsf_exec = self.pipe_data["exec_script"])
+
 
         return script
 
-        
-#### Methods for adding lines:
-        
-                
         
         
 ###################################################
@@ -97,7 +94,7 @@ qsub {script_path}
         
 ####----------------------------------------------------------------------------------
 
-class HighScriptConstructorSGE(ScriptConstructorSGE,HighScriptConstructor):
+class HighScriptConstructorQSUB(ScriptConstructorQSUB,HighScriptConstructor):
     """
     """
     
@@ -115,7 +112,7 @@ class HighScriptConstructorSGE(ScriptConstructorSGE,HighScriptConstructor):
             Is called for high level, low level and wrapper scripts
         """
 
-        general_header = super(HighScriptConstructorSGE, self).get_script_header(**kwargs)
+        general_header = super(HighScriptConstructorQSUB, self).get_script_header(**kwargs)
 
         only_low_lev_params  = ["-pe"]
         compulsory_high_lev_params = {"-V":""}
@@ -131,7 +128,7 @@ class HighScriptConstructorSGE(ScriptConstructorSGE,HighScriptConstructor):
             qsub_opts += "#$ {key} {val}\n".format(key=qsub_opt, val=self.params["qsub_params"]["opts"][qsub_opt]) 
 
 
-        # Adding 'compulsory_high_lev_params' to all high level scripts (This includes '-V'. Otherwise, if shell is bash, the SGE commands are not recognized)
+        # Adding 'compulsory_high_lev_params' to all high level scripts (This includes '-V'. Otherwise, if shell is bash, the QSUB commands are not recognized)
         for qsub_opt in compulsory_high_lev_params:
             if qsub_opt not in self.params["qsub_params"]["opts"]:
                 qsub_opts += "#$ {key} {val}\n".format(key=qsub_opt, 
@@ -153,7 +150,7 @@ class HighScriptConstructorSGE(ScriptConstructorSGE,HighScriptConstructor):
             sys.exit("Job limit not supported yet for Local!")
 
 
-        command = super(HighScriptConstructorSGE, self).get_command()
+        command = super(HighScriptConstructorQSUB, self).get_command()
 
         
 
@@ -164,7 +161,9 @@ class HighScriptConstructorSGE(ScriptConstructorSGE,HighScriptConstructor):
 echo running {script_id}
 {command}
 
+sleep {sleep_time}
 """.format(script_id = self.script_id,
+        sleep_time = self.pipe_data["Default_wait"],
         command = command)
         
         
@@ -200,11 +199,12 @@ perl -e 'use Env qw(USER); open(my $fh, "<", "%(limit_file)s"); ($l,$s) = <$fh>=
 
 echo '{qdel_line}' >> {step_kill_file}
 # Adding qsub command:
-qsub {script_name}
+{child_cmd}
 
 """.format(qdel_line = script_obj.get_kill_command(),
         script_name = script_obj.script_path,
         script_id = script_obj.script_id,
+        child_cmd = script_obj.get_command(),
         step_kill_file = self.params["kill_script_path"])
 
         
@@ -218,37 +218,36 @@ qsub {script_name}
         
     
         # Get general postamble
-        postamble = super(HighScriptConstructorSGE, self).get_script_postamble()
+        postamble = super(HighScriptConstructorQSUB, self).get_script_postamble()
 
         
         script = """\
+wait
 {postamble}
 
-csh {scripts_dir}98.qalter_all.csh
+# manage without!!!:  csh {scripts_dir}98.qalter_all.csh
 
-""".format(\
+# Setting script as done in run index:
+echo "lock on sedlock" 
+sedlock={run_index}.sedlock
+exec 200>$sedlock
+flock -w 20 200 || exit 1
+echo "sedlock released"
+
+sed -i -e "s:^{script_id}.*:# &:" {run_index}\n\n""".format(\
     postamble = postamble, 
+    script_id = self.script_id,
     run_index = self.pipe_data["run_index"],
     scripts_dir = self.pipe_data["scripts_dir"])
         
         return script
                      
         
-        
-        # ## TODO: !!!!!!!!!!!
-        # script = """
-# csh {scripts_dir}98.qalter_all.csh
-# """.format(scripts_dir = self.pipe_data["scripts_dir"])
-        
-        # self.filehandle.write(script)
-        # self.write_log_lines(state = "Finished")
-
-          
                             
                             
 ####----------------------------------------------------------------------------------
     
-class LowScriptConstructorSGE(ScriptConstructorSGE,LowScriptConstructor):
+class LowScriptConstructorQSUB(ScriptConstructorQSUB,LowScriptConstructor):
     """
     """
 
@@ -257,7 +256,7 @@ class LowScriptConstructorSGE(ScriptConstructorSGE,LowScriptConstructor):
             Is called for high level, low level and wrapper scripts
         """
 
-        general_header = super(LowScriptConstructorSGE, self).get_script_header(**kwargs)
+        general_header = super(LowScriptConstructorQSUB, self).get_script_header(**kwargs)
 
         only_low_lev_params  = ["-pe"]
         compulsory_high_lev_params = {"-V":""}
@@ -285,11 +284,37 @@ class LowScriptConstructorSGE(ScriptConstructorSGE,LowScriptConstructor):
                             qsub_queue,
                             qsub_opts]).replace("\n\n","\n") + "\n\n"
 
+    def write_script(self,
+                        script,
+                        dependency_jid_list,
+                        stamped_files, **kwargs):
+
+        if "level" not in kwargs:
+            kwargs["level"] = "low"
+
+        super(LowScriptConstructorQSUB, self).write_script(script,
+                                                        dependency_jid_list,
+                                                        stamped_files,
+                                                        **kwargs)
+
         
+        self.write_command("""\
+
+# Setting script as done in run index:
+echo "lock on sedlock" 
+sedlock={run_index}.sedlock
+exec 200>$sedlock
+flock -w 20 200 || exit 1
+echo "sedlock released"
+
+sed -i -e "s:^{script_id}.*:# &:" {run_index}\n\n""".format(\
+    run_index = self.pipe_data["run_index"],
+    script_id = self.script_id))
+                
         
 ####----------------------------------------------------------------------------------
 
-class KillScriptConstructorSGE(ScriptConstructorSGE,KillScriptConstructor):
+class KillScriptConstructorQSUB(ScriptConstructorQSUB,KillScriptConstructor):
 
 
     pass
