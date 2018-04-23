@@ -1208,13 +1208,14 @@ saveWidget(myviz,file = "%(out_file_name)s",selfcontained = F)
             get_script_exec_line = getattr(importlib.import_module(modname), classname)
             run_cmd = get_script_exec_line()
         except:
+            sys.exit("Make sure the script constrictor in use has defined 'get_script_exec_line'")
             
-            run_cmd = """iscsh=$(grep "csh" <<< $script_path)
-if [ -z $iscsh ]; then
-    sh $script_path
-else
-    csh $script_path
-fi"""
+#             run_cmd = """iscsh=$(grep "csh" <<< $script_path)
+# if [ -z $iscsh ]; then
+#     sh $script_path
+# else
+#     csh $script_path
+# fi"""
 
         
         
@@ -1264,11 +1265,11 @@ hold_jids=(${{hold_jids//,/ }})
 flag=0
 while [ $flag -eq 0 ]
 do
-    if [ -f ${run_index}.killall ]; then
+    if [ -f {run_index}.killall ]; then
         echo -e $run_index ".killall file created. Stopping all waiting jobs. \\nMake sure you delete the file before re-running!"
         exit 1;
     fi
-    if [ ! -f ${run_index} ]; then
+    if [ ! -f {run_index} ]; then
         echo $run_index " file deleted. Stopping all waiting jobs"
         exit 1;
     fi

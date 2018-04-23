@@ -24,11 +24,10 @@ echo "lock on sedlock"
 sedlock=${run_index}.sedlock
 exec 200>$sedlock
 flock -w 20 200 || exit 1
-echo "sedlock released"
 
 sed -i -e "s:$1.*$:&\\t$jobid:" $run_index
 
-
+echo $qsubname "sedlock released"
 """
     
 
@@ -48,7 +47,9 @@ class ScriptConstructorQSUB(ScriptConstructor):
         else:
             script += """\
 sh {nsf_exec} \\
-    {script_id} &\n\n""".format(script_id = self.script_id,
+    {script_id} \\ 
+    1>> {nsf_exec}.stdout \\
+    2>> {nsf_exec}.stderr &\n\n""".format(script_id = self.script_id,
                           nsf_exec = self.pipe_data["exec_script"])
 
 
@@ -222,8 +223,9 @@ echo '{qdel_line}' >> {step_kill_file}
 
         
         script = """\
-wait
 {postamble}
+
+wait
 
 # manage without!!!:  csh {scripts_dir}98.qalter_all.csh
 
@@ -232,9 +234,10 @@ echo "lock on sedlock"
 sedlock={run_index}.sedlock
 exec 200>$sedlock
 flock -w 20 200 || exit 1
-echo "sedlock released"
 
-sed -i -e "s:^{script_id}.*:# &:" {run_index}\n\n""".format(\
+sed -i -e "s:^{script_id}.*:# &:" {run_index}
+echo "{script_id} sedlock released"
+""".format(\
     postamble = postamble, 
     script_id = self.script_id,
     run_index = self.pipe_data["run_index"],
@@ -305,9 +308,11 @@ echo "lock on sedlock"
 sedlock={run_index}.sedlock
 exec 200>$sedlock
 flock -w 20 200 || exit 1
-echo "sedlock released"
 
-sed -i -e "s:^{script_id}.*:# &:" {run_index}\n\n""".format(\
+sed -i -e "s:^{script_id}.*:# &:" {run_index}
+echo "{script_id} sedlock released"
+
+""".format(\
     run_index = self.pipe_data["run_index"],
     script_id = self.script_id))
                 
@@ -317,4 +322,29 @@ sed -i -e "s:^{script_id}.*:# &:" {run_index}\n\n""".format(\
 class KillScriptConstructorQSUB(ScriptConstructorQSUB,KillScriptConstructor):
 
 
-    pass
+    
+    def __init__(self, **kwargs):
+    
+        super(KillScriptConstructor, self).__init__(**kwargs)
+        
+        
+        self.script_path = \
+            "".join([self.pipe_data["scripts_dir"], \
+                     "99.kill_all", \
+                     os.sep, \
+                     "99.kill_all_{name}".format(name=self.name), \
+                     ".csh"])
+
+
+        self.filehandle = open(self.script_path, "w")
+
+        self.filehandle.write("""\
+#!/usr/csh
+
+touch {run_index}.killall
+
+sleep 100
+
+rm -rf {run_index}.killall""")
+        
+        

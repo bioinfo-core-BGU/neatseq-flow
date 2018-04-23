@@ -13,6 +13,19 @@ __version__ = "1.2.0"
 from scriptconstructor import *
 
 
+def get_script_exec_line():
+    """ Return script to add to script execution function """
+
+    return """\
+iscsh=$(grep "csh" <<< $script_path)
+if [ -z $iscsh ]; then
+    sh $script_path
+else
+    csh $script_path
+fi
+"""
+
+
 class ScriptConstructorLocal(ScriptConstructor):
 
         
@@ -167,8 +180,17 @@ echo running {script_id}
         script = """\
 {postamble}
 
+wait 
+
 # Setting script as done in run index:
-sed -i -e "s:^{script_id}$:# {script_id}:" {run_index}""".format(\
+echo "lock on sedlock" 
+sedlock={run_index}.sedlock
+exec 200>$sedlock
+flock -w 20 200 || exit 1
+
+sed -i -e "s:^{script_id}.*:# &:" {run_index}
+echo "{script_id} sedlock released"
+""".format(\
     postamble = postamble, 
     run_index = self.pipe_data["run_index"],
     script_id = self.script_id)
@@ -214,7 +236,14 @@ class LowScriptConstructorLocal(ScriptConstructorLocal,LowScriptConstructor):
         self.write_command("""\
 
 # Setting script as done in run index:
-sed -i -e "s:^{script_id}$:# {script_id}:" {run_index}""".format(\
+echo "lock on sedlock" 
+sedlock={run_index}.sedlock
+exec 200>$sedlock
+flock -w 20 200 || exit 1
+
+sed -i -e "s:^{script_id}.*:# &:" {run_index}
+echo "{script_id} sedlock released"
+""".format(\
     run_index = self.pipe_data["run_index"],
     script_id = self.script_id))
         

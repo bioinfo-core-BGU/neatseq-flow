@@ -20,12 +20,14 @@ def get_script_exec_line():
 jobid=$(sbatch $script_path | cut -d " " -f 4)
 
 echo $qsubname " lock on sedlock" 
-sedlock={run_index}.sedlock
+sedlock=${run_index}.sedlock
 exec 200>$sedlock
 flock -w 50 200 || exit 1
-echo $qsubname "sedlock released"
 
 sed -i -e "s:$1.*$:&\\t$jobid:" $run_index
+
+echo $qsubname "sedlock released"
+
 """
 
 
@@ -72,13 +74,13 @@ sh {nsf_exec} \\
         qsub_header = """\
 #!/bin/{shell}
 #SBATCH --job-name {jobname}
-#SBATCH -e {stderr_dir}{jobname}.e%%J
-#SBATCH -o {stdout_dir}{jobname}.o%%J
+#SBATCH -e {stderr_dir}{jobname}.e%J
+#SBATCH -o {stdout_dir}{jobname}.o%J
 """.format(shell      = self.shell, \
            stderr_dir = self.pipe_data["stderr_dir"],
            stdout_dir = self.pipe_data["stdout_dir"],
            jobname    = self.script_id) 
-        if "queue" in self.params["qsub_params"]:
+        if  self.params["qsub_params"]["queue"]:
             qsub_header +=   "#SBATCH --partition %s\n" % self.params["qsub_params"]["queue"]
         if self.dependency_jid_list:
             qsub_header += "#$ -hold_jid %s \n" % self.dependency_jid_list
@@ -199,8 +201,9 @@ echo running {script_id}
 
         # Add sed command:
         script = """\
-wait
 {postamble}
+
+wait
 
 # Setting script as done in run index:
 
@@ -208,9 +211,11 @@ echo "{script_id} lock on sedlock"
 sedlock={run_index}.sedlock
 exec 200>$sedlock
 flock -w 50 200 || exit 1
-echo "{script_id} sedlock released"
 
-sed -i -e "s:^{script_id}.*:# &:" {run_index}\n\n""".format(\
+sed -i -e "s:^{script_id}.*:# &:" {run_index}
+
+echo "{script_id} sedlock released"
+""".format(\
     postamble = postamble, 
     run_index = self.pipe_data["run_index"],
     script_id = self.script_id)
@@ -272,9 +277,11 @@ echo "{script_id} lock on sedlock"
 sedlock={run_index}.sedlock
 exec 200>$sedlock
 flock -w 50 200 || exit 1
-echo "{script_id} sedlock released"
 
-sed -i -e "s:^{script_id}.*:# &:" {run_index}\n\n""".format(\
+sed -i -e "s:^{script_id}.*:# &:" {run_index}
+
+echo "{script_id} sedlock released"
+""".format(\
     run_index = self.pipe_data["run_index"],
     script_id = self.script_id))
         
