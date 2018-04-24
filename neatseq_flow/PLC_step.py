@@ -840,24 +840,24 @@ Dependencies: {depends}""".format(name = self.name,
 
         # Create ScriptConstructor for low level script.
         self.wrap_script_obj = \
-            getChildClass(step = self.get_step_step(), \
-                name = self.get_step_name(), \
-                                number = self.step_number, \
-                                shell = self.shell,
-                                params = self.params,
-                                pipe_data = self.pipe_data,
-                                id = self.spec_qsub_name)
-        
-            
-        # Get dependency jid list and add prelimanry jids if exist (if not, is an empty list and will not affect the outcome)
+            getChildClass(step = self.get_step_step(),
+                          name = self.get_step_name(),
+                          number = self.step_number,
+                          shell = self.shell,
+                          params = self.params,
+                          pipe_data = self.pipe_data,
+                          id = self.spec_qsub_name)
+
+        # Get dependency jid list and add preliminary jids if exist
+        # (if not, is an empty list and will not affect the outcome)
         #    Also, add all jids of current step, as this script is to run only after all previous steps have completed.
         dependency_jid_list = self.preliminary_jids + self.get_jid_list() + self.get_dependency_jid_list()
         
         # Removing parent name from wrapping_up dependencies
         dependency_jid_list.remove(self.main_script_obj.script_id)
         self.wrap_script_obj.write_script(script = self.script, 
-                                    dependency_jid_list = dependency_jid_list,
-                                    stamped_files = self.stamped_files)
+                                          dependency_jid_list = dependency_jid_list,
+                                          stamped_files = self.stamped_files)
         # Clear stamped files list
         self.stamped_files = list()
         

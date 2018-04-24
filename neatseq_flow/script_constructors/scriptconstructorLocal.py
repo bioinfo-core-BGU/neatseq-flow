@@ -16,14 +16,18 @@ from scriptconstructor import *
 def get_script_exec_line():
     """ Return script to add to script execution function """
 
-    return """\
+    script = """\
+locksed "s:\($1\).*$:\\1\\trunning:" $run_index
+
 iscsh=$(grep "csh" <<< $script_path)
 if [ -z $iscsh ]; then
     sh $script_path
 else
     csh $script_path
 fi
+
 """
+    return script
 
 
 class ScriptConstructorLocal(ScriptConstructor):
@@ -93,14 +97,28 @@ sh {nsf_exec} \\
 class HighScriptConstructorLocal(ScriptConstructorLocal,HighScriptConstructor):
     """
     """
-    
-        
+
+#     def get_script_preamble(self, dependency_jid_list):
+#
+#         script = super(HighScriptConstructorLocal, self).get_script_preamble(dependency_jid_list)
+#
+#         if "job_limit" in self.pipe_data.keys():
+#             script += """ \
+# # Extracting job_limit parameters from file.
+# numrun=$(egrep -c "^\w" {run_index}); maxrun=$(sed -ne "s/limit=\([0-9]*\).*/\\1/p" {limit_file}); sleeptime=$(sed -ne "s/.*sleep=\([0-9]*\).*/\\1/p" {limit_file})
+# """.format(limit_file=self.pipe_data["job_limit"],
+#            run_index=self.pipe_data["run_index"])
+#
+#         # Write script to high-level script
+#         return script
+
 
     def get_depends_command(self, dependency_list):
         """
         """
         
-        return ""  # scontrol bla bla bla... Find out how is done\n\n"#qalter \\\n\t-hold_jid %s \\\n\t%s\n\n" % (dependency_list, self.script_id)
+        return ""
+        # scontrol bla bla bla... Find out how is done\n\n"#qalter \\\n\t-hold_jid %s \\\n\t%s\n\n" % (dependency_list, self.script_id)
 
 
         
@@ -111,7 +129,6 @@ class HighScriptConstructorLocal(ScriptConstructorLocal,HighScriptConstructor):
 
         general_header = super(HighScriptConstructorLocal, self).get_script_header(**kwargs)
 
-
         return general_header + "\n\n"
 
     def get_command(self):
@@ -119,8 +136,8 @@ class HighScriptConstructorLocal(ScriptConstructorLocal,HighScriptConstructor):
             spec_qsub_name is the qsub name without the run code (see caller)
         """
         
-        if "job_limit" in self.pipe_data.keys():
-            sys.exit("Job limit not supported yet for Local!")
+        # if "job_limit" in self.pipe_data.keys():
+        #     sys.exit("Job limit not supported yet for Local!")
 
 
         command = super(HighScriptConstructorLocal, self).get_command()
@@ -134,41 +151,45 @@ class HighScriptConstructorLocal(ScriptConstructorLocal,HighScriptConstructor):
 echo running {script_id}
 {command}
 
-""".format(script_id = self.script_id,
-        command = command)
-        
-        
+sleep {sleep_time}
+
+""".format(script_id=self.script_id,
+           command=command,
+           sleep_time=self.pipe_data["Default_wait"])
+
         return script
-                            
-                     
+
     def get_child_command(self, script_obj):
         """ Writing low level lines to high level script: job_limit loop, adding qdel line and qsub line
             spec_qsub_name is the qsub name without the run code (see caller)
         """
-        
-        
-        script = ""
 
-        
+        job_limit = ""
+
         if "job_limit" in self.pipe_data.keys():
-            sys.exit("Job limit not supported yet for Local!")
+            # sys.exit("Job limit not supported yet for Local!")
 
-        # TODO: Add output from stdout and stderr
+            job_limit = """\
+# Sleeping while jobs exceed limit
+while : ; do numrun=$(egrep -c "^\w" {run_index}); maxrun=$(sed -ne "s/limit=\([0-9]*\).*/\\1/p" {limit_file}); sleeptime=$(sed -ne "s/.*sleep=\([0-9]*\).*/\\1/p" {limit_file}); [[ $numrun -ge $maxrun ]] || break; sleep $sleeptime; done
+""".format(limit_file=self.pipe_data["job_limit"],
+           run_index=self.pipe_data["run_index"])
 
-        script += """
+        script = """
 # ---------------- Code for {script_id} ------------------
+{job_limit}
 
 {child_cmd}
 
-""".format(script_id = script_obj.script_id,
-        child_cmd = script_obj.get_command())
-        
-        
+sleep {sleep_time}
+""".format(script_id=script_obj.script_id,
+           child_cmd=script_obj.get_command(),
+           sleep_time=self.pipe_data["Default_wait"],
+           job_limit=job_limit)
+
+
         return script
-                            
-                            
-                            
-                            
+
     def get_script_postamble(self):
         """ Local script postamble is same as general postamble with addition of sed command to mark as finished in run_index
         """
@@ -183,21 +204,16 @@ echo running {script_id}
 wait 
 
 # Setting script as done in run index:
-echo "lock on sedlock" 
-sedlock={run_index}.sedlock
-exec 200>$sedlock
-flock -w 20 200 || exit 1
+# Using locksed provided in helper functions
+locksed  "s:^\({script_id}\).*:# \\1\\tdone:" {run_index}
 
-sed -i -e "s:^{script_id}.*:# &:" {run_index}
-echo "{script_id} sedlock released"
 """.format(\
-    postamble = postamble, 
-    run_index = self.pipe_data["run_index"],
-    script_id = self.script_id)
+            postamble = postamble,
+            run_index = self.pipe_data["run_index"],
+            script_id = self.script_id)
         
         return script
-                            
-                            
+
 ####----------------------------------------------------------------------------------
     
 class LowScriptConstructorLocal(ScriptConstructorLocal,LowScriptConstructor):
@@ -212,12 +228,7 @@ class LowScriptConstructorLocal(ScriptConstructorLocal,LowScriptConstructor):
         
         general_header = super(LowScriptConstructorLocal, self).get_script_header(**kwargs)
 
-
-        # Sometimes qsub_opts is empty and then there is an ugly empty line in the middle of the qsub definition. Removing the empty line with replace()
         return general_header + "\n\n"
-
-        
-
 
     def write_script(self,
                         script,
@@ -228,24 +239,19 @@ class LowScriptConstructorLocal(ScriptConstructorLocal,LowScriptConstructor):
             kwargs["level"] = "low"
 
         super(LowScriptConstructorLocal, self).write_script(script,
-                                                        dependency_jid_list,
-                                                        stamped_files,
-                                                        **kwargs)
+                                                            dependency_jid_list,
+                                                            stamped_files,
+                                                            **kwargs)
 
-        
         self.write_command("""\
 
 # Setting script as done in run index:
-echo "lock on sedlock" 
-sedlock={run_index}.sedlock
-exec 200>$sedlock
-flock -w 20 200 || exit 1
+# Using locksed provided in helper functions 
+locksed  "s:^\({script_id}\).*:# \\1\\tdone:" {run_index}
 
-sed -i -e "s:^{script_id}.*:# &:" {run_index}
-echo "{script_id} sedlock released"
 """.format(\
-    run_index = self.pipe_data["run_index"],
-    script_id = self.script_id))
+            run_index = self.pipe_data["run_index"],
+            script_id = self.script_id))
         
 ####----------------------------------------------------------------------------------
 

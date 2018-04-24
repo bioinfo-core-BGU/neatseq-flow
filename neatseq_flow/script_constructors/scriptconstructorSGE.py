@@ -14,10 +14,10 @@ from scriptconstructor import *
 
 
 
-def get_script_exec_line():
-    """ Return script to add to script execution function """
-    
-    return "qsub $script_path"
+# def get_script_exec_line():
+#     """ Return script to add to script execution function """
+#
+#     return "qsub $script_path"
     
 
 class ScriptConstructorSGE(ScriptConstructor):
@@ -142,10 +142,15 @@ class HighScriptConstructorSGE(ScriptConstructorSGE,HighScriptConstructor):
         """ Writing low level lines to high level script: job_limit loop, adding qdel line and qsub line
             spec_qsub_name is the qsub name without the run code (see caller)
             """
-        
-        if "job_limit" in self.pipe_data.keys():
-            sys.exit("Job limit not supported yet for Local!")
 
+        job_limit = ""
+
+        if "job_limit" in self.pipe_data.keys():
+            job_limit = """
+# Sleeping while jobs exceed limit
+while : ; do numrun=$({qstat} -u $USER | wc -l ); maxrun=$(sed -ne "s/limit=\([0-9]*\).*/\\1/p" {limit_file}); sleeptime=$(sed -ne "s/.*sleep=\([0-9]*\).*/\\1/p" {limit_file}); [[ $numrun -ge $maxrun ]] || break; sleep $sleeptime; done
+""".format(limit_file=self.pipe_data["job_limit"],
+           qstat=self.pipe_data["qsub_params"]["qstat_path"])
 
         command = super(HighScriptConstructorSGE, self).get_command()
 
@@ -155,11 +160,13 @@ class HighScriptConstructorSGE(ScriptConstructorSGE,HighScriptConstructor):
 
         script = """
 # ---------------- Code for {script_id} ------------------
+{job_limit}
 echo running {script_id}
 {command}
 
 """.format(script_id = self.script_id,
-        command = command)
+           job_limit=job_limit,
+           command = command)
         
         
         return script                            
@@ -171,35 +178,28 @@ echo running {script_id}
         """ Writing low level lines to high level script: job_limit loop, adding qdel line and qsub line
             spec_qsub_name is the qsub name without the run code (see caller)
         """
-        
-        
-        script = ""
 
-        
+        job_limit = ""
+
         if "job_limit" in self.pipe_data.keys():
-           
-            script += """
+            job_limit = """
 # Sleeping while jobs exceed limit
-perl -e 'use Env qw(USER); open(my $fh, "<", "%(limit_file)s"); ($l,$s) = <$fh>=~/limit=(\d+) sleep=(\d+)/; close($fh); while (scalar split("\\n",qx(%(qstat)s -u $USER)) > $l) {sleep $s; open(my $fh, "<", "%(limit_file)s"); ($l,$s) = <$fh>=~/limit=(\d+) sleep=(\d+)/} print 0; exit 0'
+while : ; do numrun=$({qstat} -u $USER | wc -l ); maxrun=$(sed -ne "s/limit=\([0-9]*\).*/\\1/p" {limit_file}); sleeptime=$(sed -ne "s/.*sleep=\([0-9]*\).*/\\1/p" {limit_file}); [[ $numrun -ge $maxrun ]] || break; sleep $sleeptime; done
+""".format(limit_file=self.pipe_data["job_limit"],
+           qstat=self.pipe_data["qsub_params"]["qstat_path"])
 
-""" % {"limit_file" : self.pipe_data["job_limit"],\
-            "qstat" : self.pipe_data["qsub_params"]["qstat_path"]}
-
-            
-#######            
-        # Append the qsub command to the 2nd level script:
-        # script_name = self.pipe_data["scripts_dir"] + ".".join([self.step_number,"_".join([self.step,self.name]),self.shell]) 
-        script += """
+        script = """
 # ---------------- Code for {script_id} ------------------
-
+{job_limit}
 echo '{qdel_line}' >> {step_kill_file}
 # Adding qsub command:
 qsub {script_name}
 
 """.format(qdel_line = script_obj.get_kill_command(),
-        script_name = script_obj.script_path,
-        script_id = script_obj.script_id,
-        step_kill_file = self.params["kill_script_path"])
+           job_limit=job_limit,
+           script_name = script_obj.script_path,
+           script_id = script_obj.script_id,
+           step_kill_file = self.params["kill_script_path"])
 
         
         return script

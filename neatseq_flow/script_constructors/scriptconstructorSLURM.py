@@ -15,33 +15,21 @@ from scriptconstructor import *
 def get_script_exec_line():
     """ Return script to add to script execution function """
     
-
     return """\
 jobid=$(sbatch $script_path | cut -d " " -f 4)
 
-echo $qsubname " lock on sedlock" 
-sedlock=${run_index}.sedlock
-exec 200>$sedlock
-flock -w 50 200 || exit 1
-
-sed -i -e "s:$1.*$:&\\t$jobid:" $run_index
-
-echo $qsubname "sedlock released"
+locksed "s:$qsubname.*$:&\\t$jobid:" $run_index
 
 """
 
 
 class ScriptConstructorSLURM(ScriptConstructor):
 
-        
-        
     def get_command(self):
         """ Returnn the command for executing the this script
         """
         
         script = ""
-        
-        # slow_release_script_loc = os.sep.join([self.pipe_data["home_dir"],"utilities","qsub_scripts","run_jobs_slowly.pl"])
 
         if "slow_release" in self.params.keys():
             sys.exit("Slow release no longer supported. Use 'job_limit'")
@@ -50,15 +38,10 @@ class ScriptConstructorSLURM(ScriptConstructor):
             script += """\
 sh {nsf_exec} \\
     {script_id} &\n\n""".format(script_id = self.script_id,
-                          nsf_exec = self.pipe_data["exec_script"])
-
+                                nsf_exec = self.pipe_data["exec_script"])
 
         return script
 
-        
-#### Methods for adding lines:
-        
-        
         
     def get_kill_command(self):
     
@@ -117,9 +100,6 @@ class HighScriptConstructorSLURM(ScriptConstructorSLURM,HighScriptConstructor):
         only_low_lev_params  = ["-pe"]
         compulsory_high_lev_params = {"-V":""}
 
-        # if "queue" in self.params["qsub_params"]:
-        #     general_header +=   "#SBATCH --partition %s" % self.params["qsub_params"]["queue"]
-
         # Create lines containing the qsub opts.
         for qsub_opt in self.params["qsub_params"]["opts"]:
             if qsub_opt in only_low_lev_params:
@@ -142,8 +122,8 @@ class HighScriptConstructorSLURM(ScriptConstructorSLURM,HighScriptConstructor):
             spec_qsub_name is the qsub name without the run code (see caller)
         """
         
-        if "job_limit" in self.pipe_data.keys():
-            sys.exit("Job limit not supported yet for Local!")
+        # if "job_limit" in self.pipe_data.keys():
+        #     sys.exit("Job limit not supported yet for Local!")
 
 
         command = super(HighScriptConstructorSLURM, self).get_command()
@@ -157,41 +137,47 @@ class HighScriptConstructorSLURM(ScriptConstructorSLURM,HighScriptConstructor):
 echo running {script_id}
 {command}
 
+sleep {sleep_time}
+
 """.format(script_id = self.script_id,
-        command = command)
-        
-        
+           command = command,
+           sleep_time=self.pipe_data["Default_wait"])
+
         return script
-        
-        
+
     def get_child_command(self, script_obj):
         """ Writing low level lines to high level script: job_limit loop, adding qdel line and qsub line
             spec_qsub_name is the qsub name without the run code (see caller)
         """
-        
-        
-        script = ""
 
-        
+        job_limit = ""
+
         if "job_limit" in self.pipe_data.keys():
-            sys.exit("Job limit not supported yet for SLURM!")
+            # sys.exit("Job limit not supported yet for Local!")
 
-        script += """
+            job_limit = """\
+# Sleeping while jobs exceed limit
+while : ; do numrun=$(egrep -c "^\w" {run_index}); maxrun=$(sed -ne "s/limit=\([0-9]*\).*/\\1/p" {limit_file}); sleeptime=$(sed -ne "s/.*sleep=\([0-9]*\).*/\\1/p" {limit_file}); [[ $numrun -ge $maxrun ]] || break; sleep $sleeptime; done
+""".format(limit_file=self.pipe_data["job_limit"],
+           run_index=self.pipe_data["run_index"])
+
+        script = """
 # ---------------- Code for {script_id} ------------------
+{job_limit}
+
 {kill_line}
 
 {child_cmd}
 
+sleep {sleep_time}
 """.format(script_id = script_obj.script_id,
-        child_cmd = script_obj.get_command(),
-        kill_line = script_obj.get_kill_command())
+           child_cmd = script_obj.get_command(),
+           kill_line = script_obj.get_kill_command(),
+           sleep_time=self.pipe_data["Default_wait"],
+           job_limit=job_limit)
             
-            
-        
         return script
-                            
-                            
-            
+
     def get_script_postamble(self):
         """ Local script postamble is same as general postamble with addition of sed command to mark as finished in run_index
         """
@@ -206,20 +192,14 @@ echo running {script_id}
 wait
 
 # Setting script as done in run index:
+# Using locksed provided in helper functions
+locksed  "s:^{script_id}.*:# &\\tdone:" {run_index}
 
-echo "{script_id} lock on sedlock" 
-sedlock={run_index}.sedlock
-exec 200>$sedlock
-flock -w 50 200 || exit 1
+""".format( \
+            postamble = postamble,
+            run_index = self.pipe_data["run_index"],
+            script_id = self.script_id)
 
-sed -i -e "s:^{script_id}.*:# &:" {run_index}
-
-echo "{script_id} sedlock released"
-""".format(\
-    postamble = postamble, 
-    run_index = self.pipe_data["run_index"],
-    script_id = self.script_id)
-        
         return script
                                              
 ####----------------------------------------------------------------------------------
@@ -273,14 +253,9 @@ class LowScriptConstructorSLURM(ScriptConstructorSLURM,LowScriptConstructor):
         self.write_command("""\
 
 # Setting script as done in run index:
-echo "{script_id} lock on sedlock" 
-sedlock={run_index}.sedlock
-exec 200>$sedlock
-flock -w 50 200 || exit 1
+# Using locksed provided in helper functions 
+locksed "s:^{script_id}.*:# &\\tdone:" {run_index}
 
-sed -i -e "s:^{script_id}.*:# &:" {run_index}
-
-echo "{script_id} sedlock released"
 """.format(\
     run_index = self.pipe_data["run_index"],
     script_id = self.script_id))

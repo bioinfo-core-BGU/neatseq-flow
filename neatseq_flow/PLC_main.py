@@ -30,12 +30,12 @@ class neatseq_flow:
     """Main pipeline class. Contains sample data and parameters
     """
     
-    def __init__(self,                \
-                 sample_file,         \
-                 param_file,          \
-                 home_dir = None,     \
-                 message = None,      \
-                 runid = None,        \
+    def __init__(self,
+                 sample_file,
+                 param_file,
+                 home_dir = None,
+                 message = None,
+                 runid = None,
                  verbose = False):
         
         # Read and parse the sample and parameter files:
@@ -145,12 +145,12 @@ class neatseq_flow:
         # These (will be)[are] used by the in-house NeatSeq-Flow job controller for non-qsub based clusters
         self.create_job_index_files()
 
-        # Create script execution script:
-        self.create_script_execution_script()
-        
         # Create file with functions for trapping error:
         self.create_bash_helper_funcs()
-        
+
+        # Create script execution script:
+        self.create_script_execution_script()
+
         # Create file md5sum registration file:
         self.create_registration_file()
         
@@ -459,7 +459,8 @@ class neatseq_flow:
         step_module_loc, step_module_path = Step.find_step_module(step_type, self.param_data, self.pipe_data)  # Passing param data because it contains the optional search path...
         try:
             # Import the module:
-            exec "from %s import %s as StepClass" % (step_module_loc,'Step_' + step_type)
+            StepClass = getattr(importlib.import_module("neatseq_flow."+step_module_loc), 'Step_'+step_type)
+            # exec "from %s import %s as StepClass" % (step_module_loc,'Step_' + step_type)
         except ImportError:
             print "An error has occured loading module %s.\n" % step_module_loc
             print "CMD: from %s import %s as StepClass\n" % (step_module_loc,'Step_' + step_type)
@@ -467,20 +468,17 @@ class neatseq_flow:
 
         # Run constructor:
         try:
-            new_step = StepClass(step_name,   \
-                                 step_type,   \
-                                 step_params, \
-                                 self.pipe_data, \
+            new_step = StepClass(step_name,
+                                 step_type,
+                                 step_params,
+                                 self.pipe_data,
                                  step_module_path)
 
             return new_step
         except AssertionExcept as assertErr:
             print assertErr.get_error_str()
             print("An error has occured in step initialization (type: %s). See comment above.\n" % step_type)
-
             sys.exit()
-        else:
-            raise
 
             
     def set_qstat_path(self):
@@ -689,6 +687,22 @@ log_echo() {{
     
 }}
 
+locksed() {{
+    # $1: program
+    # $2: file
+    echo in here
+    # Setting script as done in run index:
+    sedlock=${{2}}.sedlock
+    exec 200>$sedlock
+    flock -w 4000 200 || exit 1
+
+    echo do sed 
+    sed -i -e "$1" $2
+    
+    echo unlock
+    flock -u 200
+}}
+
             """.format(log_file = self.pipe_data["log_file"],
                         qstat_path = self.pipe_data["qsub_params"]["qstat_path"])
             script_fh.write(script)
@@ -797,20 +811,20 @@ Date\tStep\tName\tScript\tFile\tmd5sum\n
         filenames = param_file.split(",")
         i = 0
         for filename in filenames:
-            shutil.copyfile(filename, "%s%s_params_%d.txt" % (self.pipe_data["backups_dir"], \
-                                                                self.pipe_data["run_code"], \
+            shutil.copyfile(filename, "%s%s_params_%d.txt" % (self.pipe_data["backups_dir"],
+                                                                self.pipe_data["run_code"],
                                                                 i))
             i += 1
 
         filenames = sample_file.split(",")
         i = 0
         for filename in filenames:
-            shutil.copyfile(filename, "%s%s_samples_%d.txt" % (self.pipe_data["backups_dir"], \
-                                                                self.pipe_data["run_code"], \
+            shutil.copyfile(filename, "%s%s_samples_%d.txt" % (self.pipe_data["backups_dir"],
+                                                                self.pipe_data["run_code"],
                                                                 i))
             i += 1
         
-        modules_bck_dir = "{bck_dir}{run_code}".format(bck_dir = self.pipe_data["backups_dir"], \
+        modules_bck_dir = "{bck_dir}{run_code}".format(bck_dir = self.pipe_data["backups_dir"],
                                                        run_code = self.pipe_data["run_code"]) 
         if not os.path.exists(modules_bck_dir):
             os.mkdir(modules_bck_dir)
@@ -830,11 +844,11 @@ Date\tStep\tName\tScript\tFile\tmd5sum\n
         for step in self.step_list:
             if step.get_base_step_name():
                 for base_step in step.get_base_step_list():
-                    links_part.append("{source: \"%s(%s)\", target: \"%s(%s)\", type: \"dependency\"}" % \
-                                    (base_step.get_step_name(),\
-                                    base_step.get_step_step(),\
-                                    step.get_step_name(),\
-                                    step.get_step_step()))
+                    links_part.append("{{source: \"{basename}({basestep})\", target: \"{stepname}({stepstep})\", type: \"dependency\"}}".format(\
+                                    basename = base_step.get_step_name(),
+                                    basestep = base_step.get_step_step(),
+                                    stepname = step.get_step_name(),
+                                    stepstep = step.get_step_step()))
         links_part = "\n,".join(links_part)
 
         
@@ -1028,11 +1042,11 @@ library(reshape2); library(googleVis); args <- commandArgs(trailingOnly =T);log_
         # sys.exit()
         links_part = "\n".join(links_part)
         nodes_part = "\n".join(["{node_num} [label = '@@{node_num}', fillcolor = {step_col} {skipped}]".format( \
-                                node_num = 1+counter,  \
+                                node_num = 1+counter,
                                 step_col = "gray" if "SKIP" in self.step_list[self.step_list_index.index(step)].params else step_colors_index[nodes_list_step[counter]], \
-                                skipped  = skipped_props if "SKIP" in self.step_list[self.step_list_index.index(step)].params else "") \
+                                skipped  = skipped_props if "SKIP" in self.step_list[self.step_list_index.index(step)].params else "")
                                     for counter,step in enumerate(nodes_list)])
-        footnote_part = "\n".join(["[%d]: '%s\\\\n(%s)'" % (1+counter, step, nodes_list_step[counter]) \
+        footnote_part = "\n".join(["[%d]: '%s\\\\n(%s)'" % (1+counter, step, nodes_list_step[counter])
                                     for counter,step in enumerate(nodes_list)])
        
         Gviz_text =  """
@@ -1204,44 +1218,24 @@ saveWidget(myviz,file = "%(out_file_name)s",selfcontained = F)
         
         modname = "neatseq_flow.script_constructors.scriptconstructor{executor}".format(executor=self.pipe_data["Executor"])
         classname = "get_script_exec_line"
+        print modname
+        print classname
         try:
             get_script_exec_line = getattr(importlib.import_module(modname), classname)
             run_cmd = get_script_exec_line()
         except:
-            sys.exit("Make sure the script constrictor in use has defined 'get_script_exec_line'")
-            
-#             run_cmd = """iscsh=$(grep "csh" <<< $script_path)
-# if [ -z $iscsh ]; then
-#     sh $script_path
-# else
-#     csh $script_path
-# fi"""
+            return
+            # sys.exit("Make sure the script constructor in use has defined 'get_script_exec_line'")
 
-        
-        
-        
-        # # Setting command used to execute the script by Executor
-        # if self.param_data["Global"]["Executor"]=="SGE":
-            # run_cmd = "qsub $script_path"
-        # elif self.param_data["Global"]["Executor"]=="SLURM":
-            # run_cmd = "sbatch $script_path"
-        # elif self.param_data["Global"]["Executor"]=="Local":
-            # run_cmd = """iscsh=$(grep "csh" <<< $script_path)
-# if [ -z $iscsh ]; then
-    # sh $script_path
-# else
-    # csh $script_path
-# fi"""
-        # else:
-            # sys.exit("Unrecognized 'Executor' value")
-            
-            
         script_txt = """#!/bin/bash
 
 qsubname=$1
 script_index="{script_index}"
 run_index="{run_index}"
 # 1. Find script path
+
+# Import helper functions
+. {helper_funcs}
 
 echo $1
 
@@ -1251,7 +1245,7 @@ echo $script_path
 
 # 2. Marking in run_index as running
 
-sed -i -e "s:# $1$:$1:" $run_index
+locksed "s:# \($qsubname\).*:\\1\\thold:" $run_index
 
 # 3. Getting script dependencies
 
@@ -1267,10 +1261,12 @@ while [ $flag -eq 0 ]
 do
     if [ -f {run_index}.killall ]; then
         echo -e $run_index ".killall file created. Stopping all waiting jobs. \\nMake sure you delete the file before re-running!"
+        locksed "s:\($qsubname\).*:# \\1\\tkilled:" $run_index
         exit 1;
     fi
     if [ ! -f {run_index} ]; then
         echo $run_index " file deleted. Stopping all waiting jobs"
+        locksed "s:\($qsubname\).*:# \\1\\tkilled:" $run_index
         exit 1;
     fi
 
@@ -1303,16 +1299,12 @@ done
 {run_cmd}
 
 
-            
             """.format(script_index=self.pipe_data["script_index"],
-                        run_index=self.pipe_data["run_index"],
-                        run_cmd=run_cmd)
+                       run_index=self.pipe_data["run_index"],
+                       run_cmd=run_cmd,
+                       helper_funcs=self.pipe_data["helper_funcs"])
                 
         self.pipe_data["exec_script"] = "".join([self.pipe_data["scripts_dir"], "NSF_exec.sh"])
         with open(self.pipe_data["exec_script"],"w") as exec_script:
             exec_script.write(script_txt)
         
-
-"""
-    self.param_data["Global"]["Executor"]:
-"""

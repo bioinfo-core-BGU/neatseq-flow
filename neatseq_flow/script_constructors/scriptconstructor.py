@@ -213,15 +213,14 @@ class HighScriptConstructor(ScriptConstructor):
     def get_script_preamble(self, dependency_jid_list):
     
         self.dependency_jid_list = ",".join(dependency_jid_list) if dependency_jid_list else None
-        
-        
-        
-        script = "\n".join([self.get_script_header(),                                                         \
-                            self.get_trap_line(), #create_trap_line(self.spec_qsub_name, level="high"),  \
-                            self.get_log_lines(state = "Started"), # self.create_log_lines(self.spec_qsub_name,"Started", level="high"),  \
-                            self.get_set_options_line(type = "set"),# self.create_set_options_line(self.spec_qsub_name, level="high", type="set"),  \
+
+        script = "\n".join([self.get_script_header(),
+                            self.get_trap_line(),
+                            self.get_log_lines(state = "Started"),
+                            self.get_set_options_line(type = "set"),
                             "# Calling low level scripts:\n\n"])
-        
+
+
         # Write script to high-level script
         return script
         
@@ -381,7 +380,7 @@ sed -i -e 's:^{kill_cmd}$:#&:' {qdel_file}\n""".format(kill_cmd = re.escape(kill
         
         
         script = "\n".join([self.get_script_header()])
-        
+
         
         return script
         
