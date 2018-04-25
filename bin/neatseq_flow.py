@@ -25,7 +25,6 @@ sys.path.append(os.path.realpath(os.path.expanduser(os.path.dirname(os.path.absp
 #sys.path.append(os.path.realpath(os.path.expanduser(os.path.dirname(os.path.abspath(__file__))+os.sep+".."+os.sep+"neatseq_flow")))
 
 from neatseq_flow.PLC_main import neatseq_flow
-from neatseq_flow.PLC_step import Step
 
 
 # Parse arguments:
@@ -79,7 +78,6 @@ if args.clean:
         if os.path.isdir(os.sep.join([args.home_dir, dir])):
             shutil.rmtree(os.sep.join([args.home_dir, dir]))
 
-print "got here:"
 
 # Checking that sample_file and param_file were passed:
 if args.sample_file == None or args.param_file == None:
@@ -89,11 +87,11 @@ if args.sample_file == None or args.param_file == None:
 args.param_file = ",".join(args.param_file)
 
 
-neatseq_flow(sample_file   = args.sample_file,   \
-             param_file    = args.param_file,    \
-             home_dir      = args.home_dir,      \
-             message       = args.message,       \
-             runid         = args.runid,         \
+neatseq_flow(sample_file   = args.sample_file,
+             param_file    = args.param_file,
+             home_dir      = args.home_dir,
+             message       = args.message,
+             runid         = args.runid,
              verbose       = args.verbose)
              
 

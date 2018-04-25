@@ -62,13 +62,11 @@ class Step:
             """ Helper function for os.walk below. Catches errors during walking and reports on them.
             """
             print "WARNING: Error while searching for modules:"
-            print  err
+            print err
 
-
-            
         # Searching module paths passed by user in parameter file:
         if "module_path" in param_data["Global"]:
-            for module_path_raw in param_data["Global"]["module_path"]:#.split(" "):
+            for module_path_raw in param_data["Global"]["module_path"]:
                 # Remove trainling '/' from dir name. For some reason that botches things up!
                 module_path = module_path_raw.rstrip(os.sep)
 
@@ -81,9 +79,6 @@ class Step:
                     sys.stderr.write("WARNING: Path %s from module_path does not exist. Skipping...\n" % module_path)
                     continue
 
-                
-
-                    
                 mod_t = step
                 dir_generator = os.walk(module_path, onerror = walkerr)       # Each .next call on this generator returns a level tuple as follows:
                 try:
@@ -94,12 +89,13 @@ class Step:
                     try:
                         level = dir_generator.next()    # Try getting another level    
                     except StopIteration:
-#                        print "Step %s not found in path %s." % (mod_t,module_path)
+                        # print "Step %s not found in path %s." % (mod_t,module_path)
                         break # Leave while without executing "else"
                 else:
                     # Adding module_path to search path
                     if module_path not in sys.path:
                         sys.path.append(os.path.abspath(module_path))
+                        # print ">>> ", sys.path
                         
                     # Backup module to backups dir:
                     shutil.copyfile(level[0] + os.sep + mod_t + ".py", \
@@ -112,7 +108,7 @@ class Step:
                     retval = (level[0].split(module_path)[1].partition(os.sep)[2].replace(os.sep,".") + "." + mod_t).lstrip(".")
                     module_loc = level[0] + os.sep + mod_t + ".py"
 
-                    return (retval, module_loc)
+                    return retval, module_loc
 
 
         # If not found, do the same with self.Cwd:
@@ -129,23 +125,25 @@ class Step:
             except StopIteration:
                 sys.exit("Step %s not found in regular path or user defined paths." % mod_t)
         
-        # Build module name:
-        # 1. take dir found in search
-        # 2. split it by CWD and take 2nd part,  i.e. remove cwd from dir name...
-        # 3. partition by os.sep to remove leading os.sep
-        # 4. replace remaining os.sep's by ".". 
-        # 5. Add .
-        
+
         # Backup module to backups dir:
         shutil.copyfile(level[0] + os.sep + mod_t + ".py", \
                         "{bck_dir}{runcode}{ossep}{filename}".format(bck_dir = pipe_data["backups_dir"], \
                                                                      runcode = pipe_data["run_code"], \
                                                                      ossep = os.sep, \
                                                                      filename = mod_t + ".py"))
-        retval = level[0].split(self.Cwd)[1].partition(os.sep)[2].replace(os.sep,".") + "." + mod_t
+
+        # Build module name:
+        # 1. take dir found in search
+        # 2. split it by CWD and take 2nd part,  i.e. remove cwd from dir name...
+        # 3. partition by os.sep to remove leading os.sep
+        # 4. replace remaining os.sep's by ".".
+        # 5. Add .
+        # Adding 'neatseq_flow' at begginning of module location.
+        retval = "neatseq_flow."+level[0].split(self.Cwd)[1].partition(os.sep)[2].replace(os.sep,".") + "." + mod_t
         module_loc = level[0] + os.sep + mod_t + ".py"
 
-        return (retval, module_loc)
+        return retval, module_loc
 
 
         

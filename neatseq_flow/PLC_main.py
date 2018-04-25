@@ -459,7 +459,7 @@ class neatseq_flow:
         step_module_loc, step_module_path = Step.find_step_module(step_type, self.param_data, self.pipe_data)  # Passing param data because it contains the optional search path...
         try:
             # Import the module:
-            StepClass = getattr(importlib.import_module("neatseq_flow."+step_module_loc), 'Step_'+step_type)
+            StepClass = getattr(importlib.import_module(step_module_loc), 'Step_'+step_type)
             # exec "from %s import %s as StepClass" % (step_module_loc,'Step_' + step_type)
         except ImportError:
             print "An error has occured loading module %s.\n" % step_module_loc
