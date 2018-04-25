@@ -12,29 +12,19 @@ __version__ = "1.2.0"
 
 from scriptconstructor import *
 
-
-
 def get_script_exec_line():
     """ Return script to add to script execution function """
     
     return """\
 jobid=$(qsub $script_path | cut -d " " -f 3)
 
-echo "lock on sedlock" 
-sedlock=${run_index}.sedlock
-exec 200>$sedlock
-flock -w 20 200 || exit 1
+locksed "s:$qsubname.*$:&\\t$jobid:" $run_index
 
-sed -i -e "s:$1.*$:&\\t$jobid:" $run_index
-
-echo $qsubname "sedlock released"
 """
-    
+
 
 class ScriptConstructorQSUB(ScriptConstructor):
 
-        
-        
     def get_command(self):
         """ Return the command for executing the this script
         """
@@ -168,10 +158,7 @@ sleep {sleep_time}
         command = command)
         
         
-        return script                            
-                            
-                            
-                            
+        return script
 
     def get_child_command(self, script_obj):
         """ Writing low level lines to high level script: job_limit loop, adding qdel line and qsub line
@@ -230,18 +217,14 @@ wait
 # manage without!!!:  csh {scripts_dir}98.qalter_all.csh
 
 # Setting script as done in run index:
-echo "lock on sedlock" 
-sedlock={run_index}.sedlock
-exec 200>$sedlock
-flock -w 20 200 || exit 1
+# Using locksed provided in helper functions
+locksed  "s:^{script_id}:# &\\tdone:" {run_index}
 
-sed -i -e "s:^{script_id}.*:# &:" {run_index}
-echo "{script_id} sedlock released"
 """.format(\
-    postamble = postamble, 
-    script_id = self.script_id,
-    run_index = self.pipe_data["run_index"],
-    scripts_dir = self.pipe_data["scripts_dir"])
+            postamble = postamble,
+            script_id = self.script_id,
+            run_index = self.pipe_data["run_index"],
+            scripts_dir = self.pipe_data["scripts_dir"])
         
         return script
                      
@@ -300,21 +283,15 @@ class LowScriptConstructorQSUB(ScriptConstructorQSUB,LowScriptConstructor):
                                                         stamped_files,
                                                         **kwargs)
 
-        
         self.write_command("""\
 
 # Setting script as done in run index:
-echo "lock on sedlock" 
-sedlock={run_index}.sedlock
-exec 200>$sedlock
-flock -w 20 200 || exit 1
-
-sed -i -e "s:^{script_id}.*:# &:" {run_index}
-echo "{script_id} sedlock released"
+# Using locksed provided in helper functions
+locksed  "s:^{script_id}:# &\\tdone:" {run_index}
 
 """.format(\
-    run_index = self.pipe_data["run_index"],
-    script_id = self.script_id))
+            run_index = self.pipe_data["run_index"],
+            script_id = self.script_id))
                 
         
 ####----------------------------------------------------------------------------------
