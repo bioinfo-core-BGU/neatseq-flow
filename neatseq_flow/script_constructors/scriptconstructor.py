@@ -2,7 +2,7 @@ import os
 import sys
 import re
 
-from PLC_step import AssertionExcept
+from ..PLC_step import AssertionExcept
 
 # from pprint import pprint as pp
 
@@ -13,18 +13,209 @@ __version__ = "1.2.0"
 class ScriptConstructor(object):
     """ General class for script construction and management
     """
-    
-    def __init__(self, step, name, number, shell, params, pipe_data):
+
+    @classmethod
+    def get_helper_script(cls, log_file, qstat_path):
+        """ Returns the code for the helper script
+        """
+
+
+        script = """\
+#!/bin/bash
+trap_with_arg() {{
+    # $1: func
+    # $2: module
+    # $3: instance
+    # $4: instance_id
+    # $5: level
+    # $6: hostname
+    # $7: jobid
+
+    args="$1 $2 $3 $4 $5 $6 $7"
+    shift 7
+    for sig ; do
+        trap "$args $sig" "$sig"
+    done
+    }}
+
+func_trap() {{
+    # $1: module
+    # $2: instance
+    # $3: instance_id
+    # $4: level
+    # $5: hostname
+    # $6: jobid
+    # $7: sig
+
+    if [ ! $6 == 'ND' ]; then
+        maxvmem=$({qstat_path} -j $6 | grep maxvmem | cut -d = -f 6);
+    else
+        maxvmem="NA";
+    fi
+
+    if [ $7 == 'ERR' ]; then err_code='ERROR'; fi
+    if [ $7 == 'INT' ]; then err_code='TERMINATED'; fi
+    if [ $7 == 'TERM' ]; then err_code='TERMINATED'; fi
+    if [ $7 == 'SIGUSR2' ]; then err_code='TERMINATED'; fi
+
+
+    echo -e $(date '+%d/%m/%Y %H:%M:%S')'\\tFinished\\t'$1'\\t'$2'\\t'$3'\\t'$4'\\t'$5'\\t'$maxvmem'\\t[0;31m'$err_code'[m' >> {log_file}; 
+
+    exit 1;
+}}         
+
+log_echo() {{
+    # $1: module
+    # $2: instance
+    # $3: instance_id
+    # $4: level
+    # $5: hostname
+    # $6: jobid
+    # $7: type (Started/Finished)
+
+    if [ ! $6 == 'ND' ]; then
+        if [ $7 == 'Finished' ]; then
+            maxvmem=$({qstat_path} -j $6 | grep maxvmem | cut -d = -f 6);
+        else    
+            maxvmem="-"
+        fi
+    else
+        maxvmem="NA";
+    fi
+
+
+    echo -e $(date '+%d/%m/%Y %H:%M:%S')'\\t'$7'\\t'$1'\\t'$2'\\t'$3'\\t'$4'\\t'$5'\\t'$maxvmem'\\t[0;32mOK[m' >> {log_file};
+
+}}
+
+locksed() {{
+    # $1: program
+    # $2: file
+    echo in here
+    # Setting script as done in run index:
+    sedlock=${{2}}.sedlock
+    exec 200>$sedlock
+    flock -w 4000 200 || exit 1
+
+    echo do sed 
+    sed -i -e "$1" $2
+
+    echo unlock
+    flock -u 200
+}}
+
+""".format(log_file=log_file,
+           qstat_path=qstat_path)
+        return script
+
+    @classmethod
+    def get_exec_script(cls, pipe_data):
+        """ Returns the code for the helper script
+        """
+
+        script = """\
+#!/bin/bash
+qsubname=$1
+script_index="{script_index}"
+run_index="{run_index}"
+# 1. Find script path
+
+# Import helper functions
+. {helper_funcs}
+
+echo $1
+
+script_path=$(grep $qsubname $script_index | cut -f 2 )
+
+echo $script_path
+
+# 2. Marking in run_index as running
+
+locksed "s:# \($qsubname\).*:\\1\\thold:" $run_index
+
+# 3. Getting script dependencies
+
+hold_jids=$(grep '#$ -hold_jid' $script_path | cut -f 3 -d " ")
+set -f                     # avoid globbing (expansion of *).
+# Convert into array:
+hold_jids=(${{hold_jids//,/ }})
+# echo ${{array[*]}}
+
+# 4. Waiting for dependencies to finish
+flag=0
+while [ $flag -eq 0 ]
+do
+    if [ -f {run_index}.killall ]; then
+        echo -e $run_index ".killall file created. Stopping all waiting jobs. \\nMake sure you delete the file before re-running!"
+        locksed "s:\($qsubname\).*:# \\1\\tkilled:" $run_index
+        exit 1;
+    fi
+    if [ ! -f {run_index} ]; then
+        echo $run_index " file deleted. Stopping all waiting jobs"
+        locksed "s:\($qsubname\).*:# \\1\\tkilled:" $run_index
+        exit 1;
+    fi
+
+    # Get running jobs
+    running=$(grep -v "^#" $run_index)
+    # running=(${{running//\\n/ }})
+    running=($(echo ${{running}})) 
+
+    # Is there overlap between 'running' and 'hold_jids'?
+    overlap=0
+    result=""
+    for item1 in "${{hold_jids[@]}}"; do
+        for item2 in "${{running[@]}}"; do
+            if [[ $item1 = $item2 ]]; then
+                echo "Job $item1 is running. Waiting..."
+                overlap=1
+            fi
+        done
+    done
+    # echo "Overlap: $overlap"
+    if (( $overlap == 0 )); then
+        flag=1
+    fi
+#    echo -n "."
+    sleep 3
+done
+
+# 5. Execute script:
+
+""".format(script_index=pipe_data["script_index"],
+           run_index=pipe_data["run_index"],
+           helper_funcs=pipe_data["helper_funcs"])
+
+        return script
+
+        # ----------------------------------------------------------------
+        # Instance methods
+        # ----------------------------------------------------------------
+
+    def __init__(self, **kwargs):#step, name, number, shell, params, pipe_data, kill_obj=None):
         """ Create a script constructor with name(i.e. 'qsub_name') and script path
         """
-        
-        self.step = step
-        self.name = name
-        self.step_number = number
-        self.shell = shell
-        self.params = params
-        self.pipe_data = pipe_data
-        
+
+
+
+        self.step = kwargs["step"]
+        self.name = kwargs["name"]
+        self.step_number = kwargs["number"]
+        self.shell = kwargs["shell"]
+        self.params = kwargs["params"]
+        self.pipe_data = kwargs["pipe_data"]
+        if "kill_obj" in kwargs:
+            self.kill_obj = kwargs["kill_obj"]
+            print "in here"
+
+        # self.step = step
+        # self.name = name
+        # self.step_number = number
+        # self.shell = shell
+        # self.params = params
+        # self.pipe_data = pipe_data
+        # self.kill_obj = kill_obj
+
         # self.shell_ext contains the str to use as script extension for step scripts
         if self.shell == "bash":
             self.shell_ext = "sh"
@@ -195,13 +386,23 @@ class HighScriptConstructor(ScriptConstructor):
         super(HighScriptConstructor, self).__init__(**kwargs)
 
         self.script_name = "{step_number}.{step}_{name}.{shell_ext}".format(**vars(self))
-        
+
         self.script_path = self.pipe_data["scripts_dir"] + self.script_name
         
         self.script_id = "_".join([self.step,self.name, self.pipe_data["run_code"]])
         self.level = "high"
         
         self.filehandle = open(self.script_path, "w")
+
+    def main_script_kill_commands(self, kill_script_filename_main):
+        """
+        Inserts main-script killing lines into main killing script.
+        Override to do something (see SGE)
+        :return:
+        """
+
+        pass
+
 
     def get_script_preamble(self, dependency_jid_list):
     
@@ -236,7 +437,6 @@ trap '' ERR
 
         return script
 
-
     def close_script(self):
         """ Adds the closing lines to the script
         """
@@ -260,10 +460,10 @@ class LowScriptConstructor(ScriptConstructor):
         
         self.scripts_dir = \
             "{scripts_dir}{number}.{step}_{name}{sep}".format(scripts_dir=self.pipe_data["scripts_dir"],
-                                                                number = self.step_number,
-                                                                step = self.step,
-                                                                name = self.name,
-                                                                sep = os.sep)
+                                                              number = self.step_number,
+                                                              step = self.step,
+                                                              name = self.name,
+                                                              sep = os.sep)
 
         self.script_path = \
             "{scripts_dir}{number}.{id}.{ext}".format(scripts_dir = self.scripts_dir,
@@ -391,5 +591,5 @@ class KillScriptConstructor(ScriptConstructor):
 
         self.filehandle = open(self.script_path, "w")
 
-        self.filehandle.write("#!/usr/csh\n\n")
-        
+        self.filehandle.write("#!/bin/bash\n\n")
+

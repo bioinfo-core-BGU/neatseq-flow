@@ -56,7 +56,7 @@ class Step:
     Cwd = os.path.dirname(os.path.abspath(__file__))
 
     @classmethod
-    def find_step_module(self,step,param_data, pipe_data):
+    def find_step_module(cls, step, param_data, pipe_data):
         """ A class method for finding the location of a module for a given step
         """
 
@@ -82,12 +82,17 @@ class Step:
                     continue
 
                 mod_t = step
-                dir_generator = os.walk(module_path, onerror = walkerr)       # Each .next call on this generator returns a level tuple as follows:
+                dir_generator = os.walk(module_path, onerror = walkerr)
+                # Each .next call on this generator
+                # returns a level tuple as follows:
                 try:
-                    level = dir_generator.next()           # level is a tuple with: (current dir. [list of dirs],[list of files])
+                    level = dir_generator.next()
+                    # level is a tuple with: (current dir. [list of dirs],[list of files])
                 except StopIteration:
-                    sys.stderr.write("WARNING: Module path %s seems to be empty! Possibly issue with permissions..." % module_path)
-                while(mod_t + ".py" not in level[2]):     # Repeat while expected filename is NOT in current dir contents (=level[2]. see above)
+                    sys.stderr.write("WARNING: Module path %s seems to be empty! Possibly issue with permissions..." % \
+                                     module_path)
+                while mod_t + ".py" not in level[2]:
+                    # Repeat while expected filename is NOT in current dir contents (=level[2]. see above)
                     try:
                         level = dir_generator.next()    # Try getting another level    
                     except StopIteration:
@@ -113,9 +118,9 @@ class Step:
                     return retval, module_loc
 
 
-        # If not found, do the same with self.Cwd:
+        # If not found, do the same with cls.Cwd:
         mod_t = step
-        dir_generator = os.walk(self.Cwd, onerror = walkerr)     # Each .next call on this generator returns a level tuple as follows:
+        dir_generator = os.walk(cls.Cwd, onerror = walkerr)     # Each .next call on this generator returns a level tuple as follows:
         try:
             level = dir_generator.next()           # level is a tuple with: (current dir. [list of dirs],[list of files])
         except StopIteration:
@@ -142,7 +147,7 @@ class Step:
         # 4. replace remaining os.sep's by ".".
         # 5. Add .
         # Adding 'neatseq_flow' at begginning of module location.
-        retval = "neatseq_flow."+level[0].split(self.Cwd)[1].partition(os.sep)[2].replace(os.sep,".") + "." + mod_t
+        retval = "neatseq_flow."+level[0].split(cls.Cwd)[1].partition(os.sep)[2].replace(os.sep,".") + "." + mod_t
         module_loc = level[0] + os.sep + mod_t + ".py"
 
         return retval, module_loc
@@ -425,19 +430,19 @@ Dependencies: {depends}""".format(name = self.name,
         getScriptConstructorClass = self.import_ScriptConstructor(level="high")
 
         ## Create main script class
-        self.main_script_obj = getScriptConstructorClass(step = self.get_step_step(), \
-                                                name = self.get_step_name(), \
-                                                number = self.step_number, \
-                                                shell = self.shell,
-                                                params = self.params,
-                                                pipe_data = self.pipe_data)
+        self.main_script_obj = getScriptConstructorClass(step = self.get_step_step(),
+                                                         name = self.get_step_name(),
+                                                         number = self.step_number,
+                                                         shell = self.shell,
+                                                         kill_obj=self.kill_script_obj,
+                                                         params = self.params,
+                                                         pipe_data = self.pipe_data)
 
         
     def cleanup(self):
         """ Here go things to be done just before termination of NeatSeq-Flow 
         """
 
-        print "in cleanup"
         self.main_script_obj.__del__()
         self.kill_script_obj.__del__()
         
@@ -636,13 +641,14 @@ Dependencies: {depends}""".format(name = self.name,
         # Create ScriptConstructor for low level script.
         self.child_script_obj = \
             getChildClass(step = self.get_step_step(),
-                                name = self.get_step_name(),
-                                number = self.step_number,
-                                shell = self.shell,
-                                params = self.params,
-                                pipe_data = self.pipe_data,
-                                # This is set by the module build_scripts() function:
-                                id = self.spec_script_name)
+                          name = self.get_step_name(),
+                          number = self.step_number,
+                          shell = self.shell,
+                          params = self.params,
+                          kill_obj=self.kill_script_obj,
+                          pipe_data = self.pipe_data,
+                          # This is set by the module build_scripts() function:
+                          id = self.spec_script_name)
 
         # Adds script_id to jid_list
         self.add_jid_to_jid_list(self.child_script_obj.script_id)  
@@ -727,15 +733,18 @@ Dependencies: {depends}""".format(name = self.name,
         # TODO: Send to be done in ScriptConstructors!
         # -------------------------------------
         # Add qdel command to main qdel script:
-        f = open(self.kill_script_filename_main,'r')
-        kill_file = f.read()
-        f.close()
-         
-        kill_file = re.sub("# entry_point", "# entry_point\n{kill_cmd}".format(kill_cmd=self.main_script_obj.get_kill_command()),kill_file)
-         
-        f = open(self.kill_script_filename_main,'w')
-        f.write(kill_file)
-        f.close()
+        self.main_script_obj.main_script_kill_commands(self.kill_script_filename_main)
+        # main_script_obj.main_script_kill_commands() should enter main script killing commands into main file
+        # at '# entry point'. This is done so so that steps are killed in reverse order.
+        # f = open(self.kill_script_filename_main,'r')
+        # kill_file = f.read()
+        # f.close()
+        #
+        # kill_file = re.sub("# entry_point", "# entry_point\n{kill_cmd}".format(kill_cmd=self.main_script_obj.get_kill_command()),kill_file)
+        #
+        # f = open(self.kill_script_filename_main,'w')
+        # f.write(kill_file)
+        # f.close()
         # -------------------------------------
         
         
@@ -780,13 +789,14 @@ Dependencies: {depends}""".format(name = self.name,
         getChildClass = self.import_ScriptConstructor(level="low")
         # Create ScriptConstructor for low level script.
         self.prelim_script_obj = \
-            getChildClass(step = self.get_step_step(), \
-                                name = self.get_step_name(), \
-                                number = self.step_number, \
-                                shell = self.shell,
-                                params = self.params,
-                                pipe_data = self.pipe_data,
-                                id = "_".join([self.step,self.name,"preliminary"]))
+            getChildClass(step = self.get_step_step(),
+                          name = self.get_step_name(),
+                          number = self.step_number,
+                          shell = self.shell,
+                          params = self.params,
+                          kill_obj=self.kill_script_obj,
+                          pipe_data = self.pipe_data,
+                          id = "_".join([self.step,self.name,"preliminary"]))
 
         # Get dependency jid list and add preliminary jids if exist
         # (if not, is an empty list and will not affect the outcome)
@@ -847,6 +857,7 @@ Dependencies: {depends}""".format(name = self.name,
                           number = self.step_number,
                           shell = self.shell,
                           params = self.params,
+                          kill_obj=self.kill_script_obj,
                           pipe_data = self.pipe_data,
                           id = self.spec_qsub_name)
 

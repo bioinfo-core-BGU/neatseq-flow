@@ -84,8 +84,8 @@ args.param_file = ",".join(args.param_file)
 
 
 NeatSeqFlow(sample_file   = args.sample_file,
-             param_file    = args.param_file,
-             home_dir      = args.home_dir,
-             message       = args.message,
-             runid         = args.runid,
-             verbose       = args.verbose)
+            param_file    = args.param_file,
+            home_dir      = args.home_dir,
+            message       = args.message,
+            runid         = args.runid,
+            verbose       = args.verbose)

@@ -12,18 +12,32 @@ __version__ = "1.2.0"
 
 from scriptconstructor import *
 
-def get_script_exec_line():
-    """ Return script to add to script execution function """
-    
-    return """\
-jobid=$(sbatch $script_path | cut -d " " -f 4)
-
-locksed "s:$qsubname.*$:&\\t$jobid:" $run_index
-
-"""
+# def get_script_exec_line():
+#     """ Return script to add to script execution function """
+#
+#     return """\
+# jobid=$(sbatch $script_path | cut -d " " -f 4)
+#
+# locksed "s:$qsubname.*$:&\\t$jobid:" $run_index
+#
+# """
 
 
 class ScriptConstructorSLURM(ScriptConstructor):
+
+    @classmethod
+    def get_exec_script(cls, pipe_data):
+        """ Not used for SGE. Returning None"""
+
+        script = super(ScriptConstructorSLURM, cls).get_exec_script(pipe_data)
+
+        script += """\
+jobid=$(sbatch $script_path | cut -d " " -f 4)
+ 
+locksed "s:$qsubname.*$:&\\t$jobid:" $run_index
+
+"""
+        return script
 
     def get_command(self):
         """ Returnn the command for executing the this script

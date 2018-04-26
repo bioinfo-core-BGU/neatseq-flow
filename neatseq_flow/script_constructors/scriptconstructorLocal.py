@@ -13,26 +13,31 @@ __version__ = "1.2.0"
 from scriptconstructor import *
 
 
-def get_script_exec_line():
-    """ Return script to add to script execution function """
+class ScriptConstructorLocal(ScriptConstructor):
 
-    script = """\
-locksed "s:\($1\).*$:\\1\\trunning:" $run_index
+    @classmethod
+    def get_exec_script(cls, pipe_data):
+        """ Not used for SGE. Returning None"""
+
+        script = super(ScriptConstructorLocal, cls).get_exec_script(pipe_data)
+
+        script += """\
+# locksed "s:\($1\).*$:\\1\\trunning:" $run_index
 
 iscsh=$(grep "csh" <<< $script_path)
 if [ -z $iscsh ]; then
-    sh $script_path
+    sh $script_path &
 else
-    csh $script_path
+    csh $script_path &
 fi
 
+gpid=$(ps -o pgid= $! | grep -o '[0-9]*')
+locksed "s:$qsubname.*$:&\t$gpid:" $run_index
+
+
 """
-    return script
+        return script
 
-
-class ScriptConstructorLocal(ScriptConstructor):
-
-        
         
     def get_command(self):
         """ Returnn the command for executing the this script
@@ -85,32 +90,15 @@ sh {nsf_exec} \\
             qsub_header += "#$ -hold_jid %s " % self.dependency_jid_list
             
         return qsub_header  
-        
-        
-        
 
-        
-        
-        
-####----------------------------------------------------------------------------------
+# ----------------------------------------------------------------------------------
+# HighScriptConstructorLocal defintion
+# ----------------------------------------------------------------------------------
+
 
 class HighScriptConstructorLocal(ScriptConstructorLocal,HighScriptConstructor):
     """
     """
-
-#     def get_script_preamble(self, dependency_jid_list):
-#
-#         script = super(HighScriptConstructorLocal, self).get_script_preamble(dependency_jid_list)
-#
-#         if "job_limit" in self.pipe_data.keys():
-#             script += """ \
-# # Extracting job_limit parameters from file.
-# numrun=$(egrep -c "^\w" {run_index}); maxrun=$(sed -ne "s/limit=\([0-9]*\).*/\\1/p" {limit_file}); sleeptime=$(sed -ne "s/.*sleep=\([0-9]*\).*/\\1/p" {limit_file})
-# """.format(limit_file=self.pipe_data["job_limit"],
-#            run_index=self.pipe_data["run_index"])
-#
-#         # Write script to high-level script
-#         return script
 
 
     def get_depends_command(self, dependency_list):
@@ -185,15 +173,20 @@ sleep {sleep_time}
 """.format(script_id=script_obj.script_id,
            child_cmd=script_obj.get_command(),
            sleep_time=self.pipe_data["Default_wait"],
+           # run_index=self.pipe_data["run_index"],
            job_limit=job_limit)
-
 
         return script
 
     def get_script_postamble(self):
         """ Local script postamble is same as general postamble with addition of sed command to mark as finished in run_index
         """
-    
+
+        # Write the kill command to the kill script
+        try:
+            self.kill_obj.write_kill_cmd(self.script_id)
+        except AttributeError:
+            pass
         # Get general postamble
         postamble = super(HighScriptConstructorLocal, self).get_script_postamble()
 
@@ -214,9 +207,12 @@ locksed  "s:^\({script_id}\).*:# \\1\\tdone:" {run_index}
         
         return script
 
-####----------------------------------------------------------------------------------
-    
-class LowScriptConstructorLocal(ScriptConstructorLocal,LowScriptConstructor):
+# ----------------------------------------------------------------------------------
+# LowScriptConstructorLocal defintion
+# ----------------------------------------------------------------------------------
+
+
+class LowScriptConstructorLocal(ScriptConstructorLocal, LowScriptConstructor):
     """
     """
 
@@ -231,31 +227,82 @@ class LowScriptConstructorLocal(ScriptConstructorLocal,LowScriptConstructor):
         return general_header + "\n\n"
 
     def write_script(self,
-                        script,
-                        dependency_jid_list,
-                        stamped_files, **kwargs):
+                     script,
+                     dependency_jid_list,
+                     stamped_files,
+                     **kwargs):
+        """ Assembles the scripts to writes to file
+        """
 
         if "level" not in kwargs:
             kwargs["level"] = "low"
 
-        super(LowScriptConstructorLocal, self).write_script(script,
-                                                            dependency_jid_list,
-                                                            stamped_files,
-                                                            **kwargs)
+        locksed_cmd = """\
+# Adding subprocess pid to run_index
+locksed  "s:^{script_id}.*:&\\t$!:" {run_index}
+""".format(run_index=self.pipe_data["run_index"],
+           script_id=self.script_id)
 
-        self.write_command("""\
+        final_locksed_cmd = """\
 
 # Setting script as done in run index:
 # Using locksed provided in helper functions 
 locksed  "s:^\({script_id}\).*:# \\1\\tdone:" {run_index}
 
-""".format(\
-            run_index = self.pipe_data["run_index"],
-            script_id = self.script_id))
-        
-####----------------------------------------------------------------------------------
+""".format(run_index = self.pipe_data["run_index"],
+           script_id = self.script_id)
+
+
+        script = "\n".join([
+            self.get_script_preamble(dependency_jid_list),
+            self.get_trap_line(),
+            self.get_log_lines(state="Started"),
+            self.get_activate_lines(type="activate"),
+            self.get_set_options_line(type="set"),
+            # THE SCRIPT!!!!
+            script,
+            locksed_cmd,
+            self.get_stamped_file_register(stamped_files),
+            self.get_set_options_line(type="unset"),
+            self.get_activate_lines(type="deactivate"),
+            self.get_kill_line(state="Stop"),
+            self.get_log_lines(state="Finished"),
+            final_locksed_cmd])
+
+        self.write_command(script)
+
+        # Write the kill command to the kill script
+        try:
+            self.kill_obj.write_kill_cmd(self.script_id)
+        except AttributeError:
+            pass
+
+# ----------------------------------------------------------------------------------
+# KillScriptConstructorLocal defintion
+# ----------------------------------------------------------------------------------
+
 
 class KillScriptConstructorLocal(ScriptConstructorLocal,KillScriptConstructor):
 
 
-    pass
+    def write_kill_cmd(self, script_id):
+        """
+
+        :return:
+        """
+
+        script = """\
+line2kill=$(grep '^{script_id}' {run_index} | cut -f 3-)
+line2kill=(${{line2kill//,/ }})
+for item1 in "${{line2kill[@]}}"; do 
+    echo $item1
+    kill -TERM $item
+done
+
+""".format(run_index = self.pipe_data["run_index"],
+           script_id=script_id)
+
+        self.filehandle.write(script)
+
+
+

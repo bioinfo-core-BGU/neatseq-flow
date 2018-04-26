@@ -16,7 +16,23 @@ from scriptconstructor import *
 class ScriptConstructorSGE(ScriptConstructor):
     """ Class for implementing ScriptConstructor class for SGE executor
     """
-        
+
+    @classmethod
+    def get_helper_script(cls, log_file, qstat_path):
+        """ Returns the code for the helper script
+        """
+
+
+        script = super(ScriptConstructorSGE, cls).get_helper_script(log_file,qstat_path)
+
+        return script
+
+    @classmethod
+    def get_exec_script(cls, pipe_data):
+        """ Not used for SGE. Returning None"""
+
+        return None
+
     def get_command(self):
         """ Return the command for executing this script
         """
@@ -197,6 +213,21 @@ csh {depends_script_name}
            depends_script_name = self.pipe_data["depends_script_name"])
 
         return script
+
+    def main_script_kill_commands(self, kill_script_filename_main):
+
+        f = open(kill_script_filename_main, 'r')
+        kill_file = f.read()
+        f.close()
+
+        kill_file = re.sub("# entry_point",
+                           "# entry_point\n{kill_cmd}".format(kill_cmd=self.get_kill_command()),
+                           kill_file)
+
+        f = open(kill_script_filename_main, 'w')
+        f.write(kill_file)
+        f.close()
+
 
 # ----------------------------------------------------------------------------------
 # LowScriptConstructorSGE definition
