@@ -9,24 +9,25 @@ __author__ = "Menachem Sklarz"
 __version__ = "1.2.0"
 
 
-import os, sys, json, shutil, time, yaml, re, importlib
-
-
+import os
+import sys
+import json
+import shutil
+import time
+import re
+import importlib
 from copy import *
 from pprint import pprint as pp
-from random import randint
 from datetime import datetime
 from collections import OrderedDict
-
-
 
 from modules.parse_sample_data import parse_sample_file
 from modules.parse_param_data import parse_param_file
 
-from PLC_step import Step,AssertionExcept
+from PLC_step import Step, AssertionExcept
 
 
-class neatseq_flow:
+class NeatSeqFlow:
     """Main pipeline class. Contains sample data and parameters
     """
     
@@ -74,7 +75,6 @@ class neatseq_flow:
 
         # Is not currently used. Saves order of steps in parameter file.
         self.pipe_data["usr_step_order"] = self.param_data["usr_step_order"]
-        #print(self.pipe_data["usr_step_order"])
         del(self.param_data["usr_step_order"])
 
         # Saving Executor in pipe_data
@@ -89,10 +89,12 @@ class neatseq_flow:
         self.pipe_data["home_dir"] = os.path.realpath(self.pipe_data["home_dir"])
 
         # Store message:
-        assert message==None or isinstance(message, basestring), "Message must be text or 'None'."
+        assert message is None or isinstance(message, basestring), "Message must be text or 'None'."
         self.pipe_data["message"] = message
 
-        # Store list of sample names in pipe_data (A patch. This is so that steps can have access to the full sample list after a user requests a step to operate on a subset of samples.)
+        # Store list of sample names in pipe_data
+        # (A patch. This is so that steps can have access to the full sample list after a user requests a step to
+        # operate on a subset of samples.)
         # See definition of PLC_step.set_sample_data()
         self.pipe_data["samples"] = self.sample_data["samples"]
         
@@ -106,10 +108,8 @@ class neatseq_flow:
         # Storing in self.depend_dict 
         self.expand_depends()
 
-        
         # Create run code to identify the scripts etc.
-        # Original: just random number: self.run_code = str(randint(0,1e6)) # Is always used as a string
-        # Current: Date+rand num (to preserve order of pipelines)
+        # Date+rand num (to preserve order of pipelines)
         if runid:
             self.run_code = runid
         else:
@@ -157,8 +157,12 @@ class neatseq_flow:
         # Backup parameter and sample files:
         self.backup_source_files(param_file, sample_file)
         
-        # Make the directory for the step-wise kill scripts (must be done before make_step_instances() because the steps need to know the directory): 
+        # Make the directory for the step-wise kill scripts (must be done before make_step_instances()
+        # because the steps need to know the directory):
         self.create_kill_scripts_dir()
+
+        # Save name for dependency ensuring script
+        self.pipe_data["depends_script_name"] = self.pipe_data["scripts_dir"] + "98.Ensure_high_depends.csh"
 
         # Create step instances:
         sys.stdout.write("Making step instances...\n")
@@ -166,7 +170,6 @@ class neatseq_flow:
         
         # Storing names index in pipe_data. Could be used by the step instances 
         self.pipe_data["names_index"] = self.get_names_index()
-
 
         # if convert2yaml:
             # # Convert to YAML
@@ -219,6 +222,8 @@ class neatseq_flow:
         self.create_log_plotter()
         
         sys.stderr.flush()
+        sys.stdout.flush()
+
         sys.stdout.write("Finished successfully....\n\n")
         
     def manage_qsub_params(self):
@@ -424,10 +429,10 @@ class neatseq_flow:
         
 
     def make_main_pipeline_script(self):
-        """ Create the main pipline script stored in 00.workflow.commands.csh 
+        """ Create the main pipline script stored in 00.workflow.commands.sh
         """
         
-        with open(self.pipe_data["scripts_dir"] + "00.workflow.commands.csh", "w") as pipe_fh:
+        with open(self.pipe_data["scripts_dir"] + "00.workflow.commands.sh", "w") as pipe_fh:
             # Writing header :)
             pipe_fh.write("""
 \n\n
@@ -439,14 +444,10 @@ class neatseq_flow:
             
             # For each step, write the qsub command created by get_qsub_command() method:
             for step_n in self.step_list:
-                if not step_n.skip_scripts:   # Add the line only for modules that produce scripts (see del_type and move_type for examples of modules that don't...)
-                    # pipe_fh.write(self.get_qsub_command(step_n))
+                # Add the line only for modules that produce scripts
+                # (see del_type and move_type for examples of modules that don't...)
+                if not step_n.skip_scripts:
                     pipe_fh.write(step_n.get_main_command())
-
-            
-                
-
-
 
     def make_step_type_instance(self,step_name):
         """ Create and return a class of the type defined in step_type
@@ -600,9 +601,9 @@ class neatseq_flow:
         """ This function creates the 98.qalter_all script
         """
         
-        self.qalter_script_name = self.pipe_data["scripts_dir"] + "98.Ensure_high_depends.csh"
+        # self.pipe_data["depends_script_name"] = self.pipe_data["scripts_dir"] + "98.Ensure_high_depends.csh"
 
-        with open(self.qalter_script_name, "w") as script_fh:
+        with open(self.pipe_data["depends_script_name"], "w") as script_fh:
             script_fh.write("#!/bin/csh\n\n")
             for step in self.step_list:
                 if step.get_depend_list():      # The step has dependencies:
@@ -1150,7 +1151,7 @@ saveWidget(myviz,file = "%(out_file_name)s",selfcontained = F)
         # Storing in self.depend_dict 
         self.expand_depends()
        
-        
+
 
         
         
@@ -1165,7 +1166,7 @@ saveWidget(myviz,file = "%(out_file_name)s",selfcontained = F)
 
         # Make the qdel script:
         self.create_kill_scripts()
-        
+
         # Do the actual script building:
         # Also, catching assetion exceptions raised by class build_scripts() and 
         sys.stdout.write("Building scripts...\n")
@@ -1180,13 +1181,13 @@ saveWidget(myviz,file = "%(out_file_name)s",selfcontained = F)
             # sys.exit() 
             return
             
-        # Make main script:
-        self.make_main_pipeline_script()
-        
         # Make the qalter script:
         self.create_qalter_script()
 
+        # Make main script:
+        self.make_main_pipeline_script()
         
+
         # # Make js graphical representation (maybe add parameter to not include this feature?)
         # sys.stdout.write("Making workflow plots...\n")
         # self.create_js_graphic()
@@ -1218,7 +1219,7 @@ saveWidget(myviz,file = "%(out_file_name)s",selfcontained = F)
         
         modname = "neatseq_flow.script_constructors.scriptconstructor{executor}".format(executor=self.pipe_data["Executor"])
         classname = "get_script_exec_line"
-        print modname
+
         print classname
         try:
             get_script_exec_line = getattr(importlib.import_module(modname), classname)

@@ -13,33 +13,17 @@ __version__ = "1.2.0"
 from scriptconstructor import *
 
 
-
-# def get_script_exec_line():
-#     """ Return script to add to script execution function """
-#
-#     return "qsub $script_path"
-    
-
 class ScriptConstructorSGE(ScriptConstructor):
-
-        
+    """ Class for implementing ScriptConstructor class for SGE executor
+    """
         
     def get_command(self):
-        """ Returnn the command for executing the this script
+        """ Return the command for executing this script
         """
-        
         script = ""
-        # qsub_line += "echo running " + self.name + " ':\\n------------------------------'\n"
-        
-        # slow_release_script_loc = os.sep.join([self.pipe_data["home_dir"],"utilities","qsub_scripts","run_jobs_slowly.pl"])
 
         if "slow_release" in self.params.keys():
-            # Define the code for slow release 
-            # Define the slow_release command (common to both options of slow_release)
-            
             sys.exit("Slow release no longer supported. Use 'job_limit'")
-
-
         else:
             script = """\
 qsub {script_path}
@@ -47,14 +31,6 @@ qsub {script_path}
 
         return script
 
-        
-#### Methods for adding lines:
-        
-                
-        
-        
-###################################################
-        
         
     def get_kill_command(self):
     
@@ -64,8 +40,7 @@ qsub {script_path}
         """ Make the first few lines for the scripts
             Is called for high level, low level and wrapper scripts
         """
-        
-        
+
         qsub_shell = "#!/bin/%(shell)s\n#$ -S /bin/%(shell)s" % {"shell": self.shell}
         # Make hold_jids line only if there are jids (i.e. self.get_dependency_jid_list() != [])
         if self.dependency_jid_list:
@@ -75,15 +50,14 @@ qsub {script_path}
         qsub_name =    "#$ -N %s " % (self.script_id)
         qsub_stderr =  "#$ -e %s" % self.pipe_data["stderr_dir"]
         qsub_stdout =  "#$ -o %s" % self.pipe_data["stdout_dir"]
-        qsub_queue =   "#$ -q %s" % self.params["qsub_params"]["queue"]
-        
+        # qsub_queue =   "#$ -q %s" % self.params["qsub_params"]["queue"]
+
         return "\n".join([qsub_shell,
-                            qsub_name,
-                            qsub_stderr,
-                            qsub_stdout,
-                            qsub_holdjids]).replace("\n\n","\n") 
-        
-        
+                          qsub_name,
+                          qsub_stderr,
+                          qsub_stdout,
+                          qsub_holdjids]).replace("\n\n","\n")
+
         
 
         
@@ -92,9 +66,8 @@ qsub {script_path}
 ####----------------------------------------------------------------------------------
 
 class HighScriptConstructorSGE(ScriptConstructorSGE,HighScriptConstructor):
+    """ A class for creating the high-level script for NeatSeq-Flow when Executor is SGE
     """
-    """
-    
 
     def get_depends_command(self, dependency_list):
         """
@@ -214,37 +187,22 @@ qsub {script_name}
         # Get general postamble
         postamble = super(HighScriptConstructorSGE, self).get_script_postamble()
 
-        
-        
-        
-        # Add sed command:
         script = """\
 {postamble}
 
-csh {scripts_dir}98.qalter_all.csh
+csh {depends_script_name}
 
-""".format(\
-    postamble = postamble, 
-    run_index = self.pipe_data["run_index"],
-    scripts_dir = self.pipe_data["scripts_dir"])
-        
+""".format(postamble = postamble,
+           run_index = self.pipe_data["run_index"],
+           depends_script_name = self.pipe_data["depends_script_name"])
+
         return script
-                     
-        
-        
-        # ## TODO: !!!!!!!!!!!
-        # script = """
-# csh {scripts_dir}98.qalter_all.csh
-# """.format(scripts_dir = self.pipe_data["scripts_dir"])
-        
-        # self.filehandle.write(script)
-        # self.write_log_lines(state = "Finished")
 
-          
-                            
-                            
-####----------------------------------------------------------------------------------
-    
+# ----------------------------------------------------------------------------------
+# LowScriptConstructorSGE definition
+# ----------------------------------------------------------------------------------
+
+
 class LowScriptConstructorSGE(ScriptConstructorSGE,LowScriptConstructor):
     """
     """
@@ -258,15 +216,12 @@ class LowScriptConstructorSGE(ScriptConstructorSGE,LowScriptConstructor):
 
         only_low_lev_params  = ["-pe"]
         compulsory_high_lev_params = {"-V":""}
-        # special_opts = "-N -e -o -q -hold_jid".split(" ") + only_low_lev_params
-
 
         # Create lines containing the qsub opts.
         qsub_opts = ""
         for qsub_opt in self.params["qsub_params"]["opts"]:
             qsub_opts += "#$ {key} {val}\n".format(key=qsub_opt, val=self.params["qsub_params"]["opts"][qsub_opt]) 
-            
-        
+
         qsub_queue =   "#$ -q %s" % self.params["qsub_params"]["queue"]
         # Adding node limitation to header, but only for low-level scripts
         if self.params["qsub_params"]["node"]:     # If not defined then this will be "None"
@@ -282,9 +237,10 @@ class LowScriptConstructorSGE(ScriptConstructorSGE,LowScriptConstructor):
                             qsub_queue,
                             qsub_opts]).replace("\n\n","\n") + "\n\n"
 
-        
-        
-####----------------------------------------------------------------------------------
+# ----------------------------------------------------------------------------------
+# KillScriptConstructorSGE definition
+# ----------------------------------------------------------------------------------
+
 
 class KillScriptConstructorSGE(ScriptConstructorSGE,KillScriptConstructor):
 

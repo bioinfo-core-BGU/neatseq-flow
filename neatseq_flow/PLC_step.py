@@ -46,7 +46,9 @@ class AssertionExcept(Exception):
             self.comment = error_str + ": " + self.comment if error_str else self.comment
         
         return self.comment
-        
+
+
+
 
 class Step:
     """ A class that defines a pipeline step name (=instance).
@@ -435,6 +437,7 @@ Dependencies: {depends}""".format(name = self.name,
         """ Here go things to be done just before termination of NeatSeq-Flow 
         """
 
+        print "in cleanup"
         self.main_script_obj.__del__()
         self.kill_script_obj.__del__()
         
@@ -632,9 +635,9 @@ Dependencies: {depends}""".format(name = self.name,
         getChildClass = self.import_ScriptConstructor(level="low")
         # Create ScriptConstructor for low level script.
         self.child_script_obj = \
-            getChildClass(step = self.get_step_step(), \
-                                name = self.get_step_name(), \
-                                number = self.step_number, \
+            getChildClass(step = self.get_step_step(),
+                                name = self.get_step_name(),
+                                number = self.step_number,
                                 shell = self.shell,
                                 params = self.params,
                                 pipe_data = self.pipe_data,
@@ -756,7 +759,8 @@ Dependencies: {depends}""".format(name = self.name,
         """ Create the high (i.e. 2nd) level scripts, which are the scripts that run the 3rd level scripts for the step
         """
 
-        self.main_script_obj.write_command(self.main_script_obj.get_script_postamble())
+        # self.main_script_obj.write_command(self.main_script_obj.get_script_postamble())
+        self.main_script_obj.close_script()
 
     def create_preliminary_script(self):
         """ Create a script that will run before all other low level scripts commence

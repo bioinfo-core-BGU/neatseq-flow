@@ -1,10 +1,10 @@
-import os, shutil, sys, re
-import traceback
-import datetime
+import os
+import sys
+import re
 
+from PLC_step import AssertionExcept
 
-from copy import *
-from pprint import pprint as pp
+# from pprint import pprint as pp
 
 __author__ = "Menachem Sklarz"
 __version__ = "1.2.0"
@@ -34,27 +34,23 @@ class ScriptConstructor(object):
     def __del__(self):
         """ Close filehandle when destructing class
         """
-        
         self.filehandle.close()
     
     def __str__(self):
         print "%s - %s - %s" % (self.step , self.name , self.shell)
-        
-        
 
-        
-#### Methods for adding lines:
-        
+
     def get_trap_line(self):
         """
         """
-        
 
         if self.shell=="csh":
-            self.write_warning("Error trapping not defined for csh scripts. Consider using bash instead.\n", admonition = "WARNING")
-
+            # Trap lines not defined for csh shell
+            # This will happen for new module creators. Not exiting nicely...
             script = ""
-            
+            if self.pipe_data["verbose"]:
+                sys.stderr.write("Error trapping not defined for csh scripts. Consider using bash instead.\n")
+
         elif self.shell == "bash":
             script = """
 # Import trap functions
@@ -65,19 +61,19 @@ if [ -z "$JOB_ID" ]; then JOB_ID="ND"; fi
 
 # Trap various signals. SIGUSR2 is passed by qdel when -notify is passes
 trap_with_arg func_trap {step} {stepname} {stepID} {level} $HOSTNAME $JOB_ID SIGUSR2 ERR INT TERM
-            """.format(step       = self.step,                        \
-                       stepname   = self.name,                        \
-                       stepID     = self.script_id,                                   \
-                       helper_funcs = self.pipe_data["helper_funcs"], \
+            """.format(step       = self.step,
+                       stepname   = self.name,
+                       stepID     = self.script_id,
+                       helper_funcs = self.pipe_data["helper_funcs"],
                        level      = self.level)
 
         else:
             script = ""
-            self.write_warning("shell not recognized. Not creating error trapping lines.\n", admonition = "WARNING")
-        # set -Eeuxo pipefail        
+            if self.pipe_data["verbose"]:
+                sys.stderr.write("shell not recognized. Not creating error trapping lines.\n")
+
         return script
-                
-        
+
     def get_log_lines(self, state = "Started", status = "\033[0;32mOK\033[m"):
         """ Create logging lines. Added before and after script to return start and end times
             If bash, adding at beginning of script also lines for error trapping
@@ -92,8 +88,7 @@ trap_with_arg func_trap {step} {stepname} {stepID} {level} $HOSTNAME $JOB_ID SIG
                          "status"     : status,
                          "file"       : self.pipe_data["log_file"]}
         
-        script = ""
-        if self.shell=="csh":
+        if self.shell == "csh":
         
             script = """
 if ($?JOB_ID) then 
@@ -104,7 +99,7 @@ else
 endif
 ####
 """ % log_cols_dict
-        
+
         elif self.shell == "bash":
 
             script = """
@@ -115,7 +110,9 @@ log_echo {step} {stepname} {stepID} {level} $HOSTNAME $JOB_ID {type}
 
         else:
             script = ""
-            self.write_warning("shell not recognized. Not creating log writing lines in scripts.\n", admonition = "WARNING")
+
+            if self.pipe_data["verbose"]:
+                sys.stderr.write("shell not recognized. Not creating log writing lines in scripts.\n")
         
         return script
         
@@ -126,7 +123,8 @@ log_echo {step} {stepname} {stepID} {level} $HOSTNAME $JOB_ID {type}
         """
         
         if self.shell=="csh":
-            self.write_warning("Option setting is not defined for csh. Consider using bash for your modules.\n", admonition = "WARNING")
+            if self.pipe_data["verbose"]:
+                sys.stderr.write("Option setting is not defined for csh. Consider using bash for your modules.\n")
 
             script = ""
             
@@ -137,7 +135,8 @@ log_echo {step} {stepname} {stepID} {level} $HOSTNAME $JOB_ID {type}
                 script = """set +Eeuxo pipefail\n\n"""
         else:
             script = ""
-            self.write_warning("shell not recognized.\n", admonition = "WARNING")
+            if self.pipe_data["verbose"]:
+                sys.stderr.write("shell not recognized.\n")
             
         return script
             
@@ -146,27 +145,26 @@ log_echo {step} {stepname} {stepID} {level} $HOSTNAME $JOB_ID {type}
             A workflow that uses this option is the QIIME2 workflow.
         """
         
-        if type not in ["activate","deactivate"]:
+        if type not in ["activate", "deactivate"]:
             sys.exit("Wrong 'type' passed to create_activate_lines")
             
         if "conda" in self.params:
-            if not self.params["conda"]:  # Was provided with 'null' or empty - do not do activate overriding possible global conda defs
+            # Was provided with 'null' or empty - do not do activate overriding possible global conda defs
+            if not self.params["conda"]:
                 
                 return ""
             if "path" in self.params["conda"] and "env" in self.params["conda"]:
                 activate_path = os.path.join(self.params["conda"]["path"],type)
                 environ       = self.params["conda"]["env"]
             else:
-                raise AssertionExcept("'conda' parameter must include 'path' and 'env'", step = self.get_step_name())
+                raise AssertionExcept("'conda' parameter must include 'path' and 'env'", step = self.name)
             
         else:
             return ""
-            
-            
-
 
         if self.shell=="csh":
-            self.write_warning("Are you sure you want to use 'activate' with a 'csh' based script?")
+            if self.pipe_data["verbose"]:
+                sys.stderr.write("Are you sure you want to use 'activate' with a 'csh' based script?.\n")
         
         script = """
 # Adding environment activation/deactivation command:
@@ -182,19 +180,17 @@ source {activate_path} {environ}
     
         self.filehandle.write(command)
                 
-        
-        
-        
-        
-        
-####----------------------------------------------------------------------------------
+
+# ----------------------------------------------------------------------------------
+# HighScriptConstructor defintion
+# ----------------------------------------------------------------------------------
+
 
 class HighScriptConstructor(ScriptConstructor):
     """
     """
     
     def __init__(self, **kwargs):
-    
 
         super(HighScriptConstructor, self).__init__(**kwargs)
 
@@ -202,14 +198,11 @@ class HighScriptConstructor(ScriptConstructor):
         
         self.script_path = self.pipe_data["scripts_dir"] + self.script_name
         
-        self.script_id   = "_".join([self.step,self.name,self.pipe_data["run_code"]])
+        self.script_id = "_".join([self.step,self.name, self.pipe_data["run_code"]])
         self.level = "high"
         
         self.filehandle = open(self.script_path, "w")
-        
 
-
-    
     def get_script_preamble(self, dependency_jid_list):
     
         self.dependency_jid_list = ",".join(dependency_jid_list) if dependency_jid_list else None
@@ -220,17 +213,15 @@ class HighScriptConstructor(ScriptConstructor):
                             self.get_set_options_line(type = "set"),
                             "# Calling low level scripts:\n\n"])
 
-
         # Write script to high-level script
         return script
-        
-        
-        
-                            
+
     def get_script_postamble(self):
-                            
-                     
-        # Unsetting error trapping and flags before qalter, since qalter usually fails (because dependencies don't exist, etc.)
+        """ Returns part of script following main part
+        """
+
+        # Unsetting error trapping and flags before qalter, since qalter usually fails
+        # (because dependencies don't exist, etc.)
         script = """
 sleep {sleep}
 
@@ -240,60 +231,56 @@ trap '' ERR
 
 {log_line}
 """.format(sleep = self.pipe_data["Default_wait"],
-            set_line = self.get_set_options_line(type = "unset"),
-            log_line = self.get_log_lines(state = "Finished"))
+           set_line = self.get_set_options_line(type = "unset"),
+           log_line = self.get_log_lines(state = "Finished"))
 
-        
         return script
 
-        
-        
-                            
-                            
-                            
-                            
-####----------------------------------------------------------------------------------
-    
+
+    def close_script(self):
+        """ Adds the closing lines to the script
+        """
+        self.write_command(self.get_script_postamble())
+
+
+# ----------------------------------------------------------------------------------
+# LowScriptConstructor defintion
+# ----------------------------------------------------------------------------------
+
+
 class LowScriptConstructor(ScriptConstructor):
     """
     """
     
     def __init__(self, id, **kwargs):
-    
-        
+
         super(LowScriptConstructor, self).__init__(**kwargs)
         
-
-        
-        self.script_id = id #kwargs["id"]
+        self.script_id = id
         
         self.scripts_dir = \
-            "{scripts_dir}{number}.{step}_{name}{sep}".format(scripts_dir=self.pipe_data["scripts_dir"], \
-                                                                number = self.step_number, \
-                                                                step = self.step, \
-                                                                name = self.name, \
+            "{scripts_dir}{number}.{step}_{name}{sep}".format(scripts_dir=self.pipe_data["scripts_dir"],
+                                                                number = self.step_number,
+                                                                step = self.step,
+                                                                name = self.name,
                                                                 sep = os.sep)
 
         self.script_path = \
-            "{scripts_dir}{number}.{id}.{ext}".format(scripts_dir = self.scripts_dir, \
-                                                    number = self.step_number, \
-                                                    id = self.script_id, \
+            "{scripts_dir}{number}.{id}.{ext}".format(scripts_dir = self.scripts_dir,
+                                                    number = self.step_number,
+                                                    id = self.script_id,
                                                     ext = self.shell_ext)
 
         self.script_id = "_".join([self.script_id, self.pipe_data["run_code"]])
         self.level = "low"
         self.filehandle = open(self.script_path, "w")
 
-        
-        
-
     def get_kill_line(self, state = "Start"):
         """ Add and remove qdel lines from qdel file.
             type can be "Start" or "Stop"
         """
-        
 
-        kill_cmd = self.get_kill_command() 
+        kill_cmd = self.get_kill_command()
         
         if not kill_cmd:
             return ""
@@ -318,8 +305,7 @@ sed -i -e 's:^{kill_cmd}$:#&:' {qdel_file}\n""".format(kill_cmd = re.escape(kill
         
         if not stamped_files:
             return ""
-            
-            
+
         script = "######\n# Registering files with md5sum:\n"
 
         # Bash needs the -e flag to render \t as tabs.
@@ -333,40 +319,40 @@ sed -i -e 's:^{kill_cmd}$:#&:' {qdel_file}\n""".format(kill_cmd = re.escape(kill
         for filename in stamped_files:
             script += """
 %(echo_cmd)s `date '+%%d/%%m/%%Y %%H:%%M:%%S'` '\\t%(step)s\\t%(stepname)s\\t%(stepID)s\\t' `md5sum %(filename)s` >> %(file)s
-""" %      {"echo_cmd" : echo_cmd,             \
-            "filename" : filename,             \
-            "step"     : self.step, \
-            "stepname" : self.name, \
-            "stepID"   : self.script_id,            \
+""" %      {"echo_cmd" : echo_cmd,
+            "filename" : filename,
+            "step"     : self.step,
+            "stepname" : self.name,
+            "stepID"   : self.script_id,
             "file"     : self.pipe_data["registration_file"]}
         
         script += "#############\n\n"
             
         return script
         
-        
-        
     def write_script(self,
-                        script,
-                        dependency_jid_list,
-                        stamped_files, **kwargs):
+                     script,
+                     dependency_jid_list,
+                     stamped_files,
+                     **kwargs):
+        """ Assembles the scripts to writes to file
+        """
 
         if "level" not in kwargs:
             kwargs["level"] = "low"
-            
 
-        script = "\n".join([   \
-            self.get_script_preamble(dependency_jid_list),        \
-            self.get_trap_line(),                                 \
-            self.get_log_lines(state="Started"),                  \
-            self.get_activate_lines(type = "activate"),           \
-            self.get_set_options_line(type = "set"),              \
+        script = "\n".join([
+            self.get_script_preamble(dependency_jid_list),
+            self.get_trap_line(),
+            self.get_log_lines(state="Started"),
+            self.get_activate_lines(type = "activate"),
+            self.get_set_options_line(type = "set"),
             # THE SCRIPT!!!!
-            script,                                               \
-            self.get_stamped_file_register(stamped_files),        \
-            self.get_set_options_line(type = "unset"),            \
-            self.get_activate_lines(type = "deactivate"),         \
-            self.get_kill_line(state = "Stop"),                   \
+            script,
+            self.get_stamped_file_register(stamped_files),
+            self.get_set_options_line(type = "unset"),
+            self.get_activate_lines(type = "deactivate"),
+            self.get_kill_line(state = "Stop"),
             self.get_log_lines(state = "Finished")])
 
         
@@ -376,39 +362,16 @@ sed -i -e 's:^{kill_cmd}$:#&:' {qdel_file}\n""".format(kill_cmd = re.escape(kill
     def get_script_preamble(self, dependency_jid_list):
     
         self.dependency_jid_list = ",".join(dependency_jid_list) if dependency_jid_list else None
-        
-        
-        
+
         script = "\n".join([self.get_script_header()])
 
-        
         return script
         
         
-        
-                            
-    # def get_script_postamble(self):
-                            
-                            
-        
-        # # Unsetting error trapping and flags before qalter, since qalter usually fails (because dependencies don't exist, etc.)
-        # script = """
+# ----------------------------------------------------------------------------------
+# KillScriptConstructor defintion
+# ----------------------------------------------------------------------------------
 
-# trap '' ERR
-# """
-        # # self.filehandle.write(script)
-        # # self.write_set_options_line(type = "unset")
-
-        # script = "\n".join([script,
-                            # self.get_set_options_line(type = "unset"),
-                            # self.get_log_lines(state = "Finished")])
-        
-        # return script
-        
-        # # self.write_log_lines(state = "Finished")
-
-                                    
-####----------------------------------------------------------------------------------
 
 class KillScriptConstructor(ScriptConstructor):
 
@@ -416,17 +379,17 @@ class KillScriptConstructor(ScriptConstructor):
     
         super(KillScriptConstructor, self).__init__(**kwargs)
         
-        
+        self.script_id = self.name + "_killscript"
+
         self.script_path = \
-            "".join([self.pipe_data["scripts_dir"], \
-                     "99.kill_all", \
-                     os.sep, \
-                     "99.kill_all_{name}".format(name=self.name), \
+            "".join([self.pipe_data["scripts_dir"],
+                     "99.kill_all",
+                     os.sep,
+                     "99.kill_all_{name}".format(name=self.name),
                      ".csh"])
 
 
         self.filehandle = open(self.script_path, "w")
 
         self.filehandle.write("#!/usr/csh\n\n")
-        
         
