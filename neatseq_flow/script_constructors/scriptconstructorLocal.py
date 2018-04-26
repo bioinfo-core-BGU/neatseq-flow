@@ -31,8 +31,8 @@ else
     csh $script_path &
 fi
 
-gpid=$(ps -o pgid= $! | grep -o '[0-9]*')
-locksed "s:$qsubname.*$:&\t$gpid:" $run_index
+# gpid=$(ps -o pgid= $! | grep -o '[0-9]*')
+locksed "s:$qsubname.*$:&\\t$!:" $run_index
 
 
 """
@@ -168,12 +168,14 @@ while : ; do numrun=$(egrep -c "^\w" {run_index}); maxrun=$(sed -ne "s/limit=\([
 {job_limit}
 
 {child_cmd}
+# Adding PID to run_index
+locksed  "s:^{script_id}.*:&\\t$!:" {run_index}
 
 sleep {sleep_time}
 """.format(script_id=script_obj.script_id,
            child_cmd=script_obj.get_command(),
            sleep_time=self.pipe_data["Default_wait"],
-           # run_index=self.pipe_data["run_index"],
+           run_index=self.pipe_data["run_index"],
            job_limit=job_limit)
 
         return script
@@ -240,6 +242,7 @@ class LowScriptConstructorLocal(ScriptConstructorLocal, LowScriptConstructor):
         locksed_cmd = """\
 # Adding subprocess pid to run_index
 locksed  "s:^{script_id}.*:&\\t$!:" {run_index}
+wait
 """.format(run_index=self.pipe_data["run_index"],
            script_id=self.script_id)
 

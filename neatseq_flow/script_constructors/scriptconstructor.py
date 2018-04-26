@@ -91,7 +91,6 @@ log_echo() {{
 locksed() {{
     # $1: program
     # $2: file
-    echo in here
     # Setting script as done in run index:
     sedlock=${{2}}.sedlock
     exec 200>$sedlock
@@ -206,7 +205,6 @@ done
         self.pipe_data = kwargs["pipe_data"]
         if "kill_obj" in kwargs:
             self.kill_obj = kwargs["kill_obj"]
-            print "in here"
 
         # self.step = step
         # self.name = name
