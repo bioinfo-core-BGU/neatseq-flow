@@ -12,16 +12,6 @@ __version__ = "1.2.0"
 
 from scriptconstructor import *
 
-# def get_script_exec_line():
-#     """ Return script to add to script execution function """
-#
-#     return """\
-# jobid=$(sbatch $script_path | cut -d " " -f 4)
-#
-# locksed "s:$qsubname.*$:&\\t$jobid:" $run_index
-#
-# """
-
 
 class ScriptConstructorSLURM(ScriptConstructor):
 
@@ -56,11 +46,15 @@ sh {nsf_exec} \\
 
         return script
 
-        
+    # -----------------------
+    # Instance methods
+
     def get_kill_command(self):
-    
+        """
+        """
+        pass
         # TODO: somehow this has to be the numeric run-0time job id!
-        return "# scancel JOB_ID \n" #{script_name}".format(script_name = self.script_id)
+        # return "# scancel JOB_ID \n" #{script_name}".format(script_name = self.script_id)
         
     def get_script_header(self):
         """ Make the first few lines for the scripts
@@ -83,27 +77,21 @@ sh {nsf_exec} \\
             qsub_header += "#$ -hold_jid %s \n" % self.dependency_jid_list
             
         return qsub_header  
-      
-
-        
-        
-        
-####----------------------------------------------------------------------------------
+# ----------------------------------------------------------------------------------
+# HighScriptConstructorSLURM defintion
+# ----------------------------------------------------------------------------------
 
 class HighScriptConstructorSLURM(ScriptConstructorSLURM,HighScriptConstructor):
     """
     """
-    
-        
 
     def get_depends_command(self, dependency_list):
         """
         """
-        
-        return "# scontrol bla bla bla... Find out how is done\n\n"#qalter \\\n\t-hold_jid %s \\\n\t%s\n\n" % (dependency_list, self.script_id)
+        pass
+        # This is acheived by making high level scripts 'wait' for low level scripts
+        #return "# scontrol bla bla bla... Find out how is done\n\n"#qalter \\\n\t-hold_jid %s \\\n\t%s\n\n" % (dependency_list, self.script_id)
 
-
-        
     def get_script_header(self, **kwargs):
         """ Make the first few lines for the scripts
             Is called for high level, low level and wrapper scripts
@@ -136,13 +124,7 @@ class HighScriptConstructorSLURM(ScriptConstructorSLURM,HighScriptConstructor):
             spec_qsub_name is the qsub name without the run code (see caller)
         """
         
-        # if "job_limit" in self.pipe_data.keys():
-        #     sys.exit("Job limit not supported yet for Local!")
-
-
         command = super(HighScriptConstructorSLURM, self).get_command()
-
-        
 
         # TODO: Add output from stdout and stderr
 
@@ -179,8 +161,6 @@ while : ; do numrun=$(egrep -c "^\w" {run_index}); maxrun=$(sed -ne "s/limit=\([
 # ---------------- Code for {script_id} ------------------
 {job_limit}
 
-{kill_line}
-
 {child_cmd}
 
 sleep {sleep_time}
@@ -216,8 +196,11 @@ locksed  "s:^{script_id}.*:# &\\tdone:" {run_index}
 
         return script
                                              
-####----------------------------------------------------------------------------------
-    
+# ----------------------------------------------------------------------------------
+# LowScriptConstructorSLURM definition
+# ----------------------------------------------------------------------------------
+
+
 class LowScriptConstructorSLURM(ScriptConstructorSLURM,LowScriptConstructor):
     """
     """
@@ -234,7 +217,6 @@ class LowScriptConstructorSLURM(ScriptConstructorSLURM,LowScriptConstructor):
         compulsory_high_lev_params = {"-V":""}
         # special_opts = "-N -e -o -q -hold_jid".split(" ") + only_low_lev_params
 
-
         # Create lines containing the qsub opts.
         for qsub_opt in self.params["qsub_params"]["opts"]:
             general_header += "#SBATCH {key} {val}\n".format(key=qsub_opt, val=self.params["qsub_params"]["opts"][qsub_opt]) 
@@ -246,14 +228,16 @@ class LowScriptConstructorSLURM(ScriptConstructorSLURM,LowScriptConstructor):
             # qsub_queue += "@%s" % self.params["qsub_params"]["node"]
             general_header += "#SBATCH --nodelist %s\n" % ",".join(self.params["qsub_params"]["node"])
 
-
         # Sometimes qsub_opts is empty and then there is an ugly empty line in the middle of the qsub definition. Removing the empty line with replace()
         return general_header + "\n\n"
 
     def write_script(self,
-                        script,
-                        dependency_jid_list,
-                        stamped_files, **kwargs):
+                     script,
+                     dependency_jid_list,
+                     stamped_files,
+                     **kwargs):
+        """ Assembles the scripts to writes to file
+        """
 
         if "level" not in kwargs:
             kwargs["level"] = "low"
@@ -270,17 +254,16 @@ class LowScriptConstructorSLURM(ScriptConstructorSLURM,LowScriptConstructor):
 # Using locksed provided in helper functions 
 locksed "s:^{script_id}.*:# &\\tdone:" {run_index}
 
-""".format(\
-    run_index = self.pipe_data["run_index"],
-    script_id = self.script_id))
-        
-        
-####----------------------------------------------------------------------------------
+""".format(run_index = self.pipe_data["run_index"],
+           script_id = self.script_id))
+
+# ----------------------------------------------------------------------------------
+# KillScriptConstructorSLURM defintion
+# ----------------------------------------------------------------------------------
+
 
 class KillScriptConstructorSLURM(ScriptConstructorSLURM,KillScriptConstructor):
 
-
-    
     def __init__(self, **kwargs):
     
         super(KillScriptConstructor, self).__init__(**kwargs)

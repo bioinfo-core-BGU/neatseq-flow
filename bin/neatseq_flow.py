@@ -67,10 +67,12 @@ if args.clean:
         if not text.lower() == "yes":
             sys.exit()
     if args.clean_all:
-        text = raw_input("Are you sure you want to delete '{data}'?".format(data=os.sep.join([args.home_dir, "data"])))
+        text = raw_input("Are you sure you want to delete '{data}'? ".format(data=os.sep.join([args.home_dir, "data"])))
         if os.path.isdir(os.sep.join([args.home_dir, "data"])):
             if text.lower() == "yes":
                 shutil.rmtree(os.sep.join([args.home_dir, "data"]))
+            else:
+                print "Not removing 'data'"
     for wfdir in ["backups", "logs", "objects", "scripts", "stderr", "stdout"]:
         if os.path.isdir(os.sep.join([args.home_dir, wfdir])):
             shutil.rmtree(os.sep.join([args.home_dir, wfdir]))

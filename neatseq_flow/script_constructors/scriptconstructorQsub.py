@@ -12,16 +12,6 @@ __version__ = "1.2.0"
 
 from scriptconstructor import *
 
-# def get_script_exec_line():
-#     """ Return script to add to script execution function """
-#
-#     return """\
-# jobid=$(qsub $script_path | cut -d " " -f 3)
-#
-# locksed "s:$qsubname.*$:&\\t$jobid:" $run_index
-#
-# """
-
 
 class ScriptConstructorQSUB(ScriptConstructor):
 
@@ -59,21 +49,20 @@ sh {nsf_exec} \\
 
         return script
 
-        
-        
-###################################################
-        
-        
+    # -----------------------
+    # Instance methods
+
     def get_kill_command(self):
-    
+
+        # TODO: Change this to work like SLURM: qdel on numbers in run_index
+        # Not implemented in SLURM, yet, either...
         return "qdel {script_name}".format(script_name = self.script_id)
         
     def get_script_header(self):
         """ Make the first few lines for the scripts
             Is called for high level, low level and wrapper scripts
         """
-        
-        
+
         qsub_shell = "#!/bin/%(shell)s\n#$ -S /bin/%(shell)s" % {"shell": self.shell}
         # Make hold_jids line only if there are jids (i.e. self.get_dependency_jid_list() != [])
         if self.dependency_jid_list:
@@ -89,20 +78,16 @@ sh {nsf_exec} \\
                             qsub_name,
                             qsub_stderr,
                             qsub_stdout,
-                            qsub_holdjids]).replace("\n\n","\n") 
-        
-        
-        
+                            qsub_holdjids]).replace("\n\n","\n")
 
-        
-        
-        
-####----------------------------------------------------------------------------------
+# ----------------------------------------------------------------------------------
+# HighScriptConstructorQSUB defintion
+# ----------------------------------------------------------------------------------
+
 
 class HighScriptConstructorQSUB(ScriptConstructorQSUB,HighScriptConstructor):
     """
     """
-    
 
     def get_depends_command(self, dependency_list):
         """
@@ -111,7 +96,6 @@ class HighScriptConstructorQSUB(ScriptConstructorQSUB,HighScriptConstructor):
         return "qalter \\\n\t-hold_jid %s \\\n\t%s\n\n" % (dependency_list, self.script_id)
     # dependency_list
 
-        
     def get_script_header(self, **kwargs):
         """ Make the first few lines for the scripts
             Is called for high level, low level and wrapper scripts
@@ -167,35 +151,26 @@ echo running {script_id}
 {command}
 
 sleep {sleep_time}
-""".format(script_id = self.script_id,
-        sleep_time = self.pipe_data["Default_wait"],
-        command = command)
-        
-        
+""".format(script_id=self.script_id,
+           sleep_time=self.pipe_data["Default_wait"],
+           command=command)
+
         return script
 
     def get_child_command(self, script_obj):
         """ Writing low level lines to high level script: job_limit loop, adding qdel line and qsub line
             spec_qsub_name is the qsub name without the run code (see caller)
         """
-        
-        
-        script = ""
 
-        
+        job_limit = ""
+
         if "job_limit" in self.pipe_data.keys():
-           
-            script += """
+            job_limit = """\
 # Sleeping while jobs exceed limit
-perl -e 'use Env qw(USER); open(my $fh, "<", "%(limit_file)s"); ($l,$s) = <$fh>=~/limit=(\d+) sleep=(\d+)/; close($fh); while (scalar split("\\n",qx(%(qstat)s -u $USER)) > $l) {sleep $s; open(my $fh, "<", "%(limit_file)s"); ($l,$s) = <$fh>=~/limit=(\d+) sleep=(\d+)/} print 0; exit 0'
+while : ; do numrun=$(egrep -c "^\w" {run_index}); maxrun=$(sed -ne "s/limit=\([0-9]*\).*/\\1/p" {limit_file}); sleeptime=$(sed -ne "s/.*sleep=\([0-9]*\).*/\\1/p" {limit_file}); [[ $numrun -ge $maxrun ]] || break; sleep $sleeptime; done
+""".format(limit_file=self.pipe_data["job_limit"],
+           run_index=self.pipe_data["run_index"])
 
-""" % {"limit_file" : self.pipe_data["job_limit"],\
-            "qstat" : self.pipe_data["qsub_params"]["qstat_path"]}
-
-            
-#######            
-        # Append the qsub command to the 2nd level script:
-        # script_name = self.pipe_data["scripts_dir"] + ".".join([self.step_number,"_".join([self.step,self.name]),self.shell]) 
         script += """
 # ---------------- Code for {script_id} ------------------
 
