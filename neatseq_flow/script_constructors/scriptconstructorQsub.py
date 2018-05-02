@@ -1,7 +1,9 @@
-import os, shutil, sys, re
+import os
+import shutil
+import sys
+import re
 import traceback
 import datetime
-
 
 from copy import *
 from pprint import pprint as pp
@@ -24,7 +26,7 @@ class ScriptConstructorQSUB(ScriptConstructor):
         script += """\
 jobid=$(qsub $script_path | cut -d " " -f 3)
 
-locksed "s:$qsubname.*$:&\\t$jobid:" $run_index
+locksed "s:\($qsubname\).*$:\\1\\trunning\\t$jobid:" $run_index
 
 """
         return script
@@ -46,7 +48,6 @@ sh {nsf_exec} \\
     2>> {nsf_exec}.stderr &\n\n""".format(script_id = self.script_id,
                           nsf_exec = self.pipe_data["exec_script"])
 
-
         return script
 
     # -----------------------
@@ -54,9 +55,10 @@ sh {nsf_exec} \\
 
     def get_kill_command(self):
 
+        pass
         # TODO: Change this to work like SLURM: qdel on numbers in run_index
         # Not implemented in SLURM, yet, either...
-        return "qdel {script_name}".format(script_name = self.script_id)
+        # return "qdel {script_name}".format(script_name = self.script_id)
         
     def get_script_header(self):
         """ Make the first few lines for the scripts
@@ -135,13 +137,10 @@ class HighScriptConstructorQSUB(ScriptConstructorQSUB,HighScriptConstructor):
             spec_qsub_name is the qsub name without the run code (see caller)
             """
         
-        if "job_limit" in self.pipe_data.keys():
-            sys.exit("Job limit not supported yet for Local!")
-
+        # if "job_limit" in self.pipe_data.keys():
+        #     sys.exit("Job limit not supported yet for Local!")
 
         command = super(HighScriptConstructorQSUB, self).get_command()
-
-        
 
         # TODO: Add output from stdout and stderr
 
@@ -171,57 +170,56 @@ while : ; do numrun=$(egrep -c "^\w" {run_index}); maxrun=$(sed -ne "s/limit=\([
 """.format(limit_file=self.pipe_data["job_limit"],
            run_index=self.pipe_data["run_index"])
 
-        script += """
+        script = """
 # ---------------- Code for {script_id} ------------------
-
-echo '{qdel_line}' >> {step_kill_file}
+{job_limit}
 # Adding qsub command:
 {child_cmd}
 
-""".format(qdel_line = script_obj.get_kill_command(),
-        script_name = script_obj.script_path,
-        script_id = script_obj.script_id,
-        child_cmd = script_obj.get_command(),
-        step_kill_file = self.params["kill_script_path"])
+sleep {sleep_time}
+""".format(script_id=script_obj.script_id,
+           child_cmd=script_obj.get_command(),
+           sleep_time=self.pipe_data["Default_wait"],
+           job_limit=job_limit)
 
-        
         return script
-                            
-                            
-                   
+
     def get_script_postamble(self):
-                            
-                            
-        
-    
+        """ Local script postamble is same as general postamble with addition of sed command to mark as finished in run_index
+        """
+
+        # Write the kill command to the kill script
+        try:
+            self.kill_obj.write_kill_cmd(self)
+        except AttributeError:
+            pass
+
         # Get general postamble
         postamble = super(HighScriptConstructorQSUB, self).get_script_postamble()
 
-        
         script = """\
 {postamble}
 
 wait
 
-# manage without!!!:  csh {scripts_dir}98.qalter_all.csh
+# manage without!!!:  csh {{scripts_dir}}98.qalter_all.csh
 
 # Setting script as done in run index:
 # Using locksed provided in helper functions
-locksed  "s:^{script_id}:# &\\tdone:" {run_index}
+locksed  "s:^\({script_id}\).*:# \\1\\tdone:" {run_index}
 
 """.format(\
-            postamble = postamble,
-            script_id = self.script_id,
-            run_index = self.pipe_data["run_index"],
-            scripts_dir = self.pipe_data["scripts_dir"])
+            postamble=postamble,
+            run_index=self.pipe_data["run_index"],
+            script_id=self.script_id)
         
         return script
-                     
-        
-                            
-                            
-####----------------------------------------------------------------------------------
-    
+
+# ----------------------------------------------------------------------------------
+# LowScriptConstructorQSUB defintion
+# ----------------------------------------------------------------------------------
+
+
 class LowScriptConstructorQSUB(ScriptConstructorQSUB,LowScriptConstructor):
     """
     """
@@ -260,9 +258,12 @@ class LowScriptConstructorQSUB(ScriptConstructorQSUB,LowScriptConstructor):
                             qsub_opts]).replace("\n\n","\n") + "\n\n"
 
     def write_script(self,
-                        script,
-                        dependency_jid_list,
-                        stamped_files, **kwargs):
+                     script,
+                     dependency_jid_list,
+                     stamped_files,
+                     **kwargs):
+        """ Assembles the scripts to writes to file
+        """
 
         if "level" not in kwargs:
             kwargs["level"] = "low"
@@ -276,41 +277,84 @@ class LowScriptConstructorQSUB(ScriptConstructorQSUB,LowScriptConstructor):
 
 # Setting script as done in run index:
 # Using locksed provided in helper functions
-locksed  "s:^{script_id}:# &\\tdone:" {run_index}
+locksed  "s:^\({script_id}\).*:# \\1\\tdone:" {run_index}
 
-""".format(\
-            run_index = self.pipe_data["run_index"],
-            script_id = self.script_id))
-                
-        
-####----------------------------------------------------------------------------------
+""".format(run_index = self.pipe_data["run_index"],
+           script_id = self.script_id))
+
+# ----------------------------------------------------------------------------------
+# KillScriptConstructorQSUB defintion
+# ----------------------------------------------------------------------------------
+
 
 class KillScriptConstructorQSUB(ScriptConstructorQSUB,KillScriptConstructor):
 
+    @classmethod
+    def get_main_preamble(cls):
+        """ Return main kill-script preamble"""
+        pass
+        return """\
+#!/bin/sh
 
-    
-    def __init__(self, **kwargs):
-    
-        super(KillScriptConstructor, self).__init__(**kwargs)
-        
-        
-        self.script_path = \
-            "".join([self.pipe_data["scripts_dir"], \
-                     "99.kill_all", \
-                     os.sep, \
-                     "99.kill_all_{name}".format(name=self.name), \
-                     ".csh"])
+# Kill held scripts:
+touch /gpfs0/bioinfo/users/sklarz/NSF_slurm/trialWF/objects/run_index_20180502102300.txt.killall
 
+"""
 
-        self.filehandle = open(self.script_path, "w")
+    @classmethod
+    def get_main_postamble(cls):
+        """ Return main kill-script postamble"""
 
-        self.filehandle.write("""\
-#!/usr/csh
+        return """\
+wait
 
-touch {run_index}.killall
+rm -rf /gpfs0/bioinfo/users/sklarz/NSF_slurm/trialWF/objects/run_index_20180502102300.txt.killall
+"""
 
-sleep 100
+    def write_kill_cmd(self, caller_script):
+        """
 
-rm -rf {run_index}.killall""")
-        
-        
+        :return:
+        """
+
+        # Create one killing routine for all instance jobs:
+        script = """\
+line2kill=$(grep '^{step}_{name}' {run_index} | awk '{{print $3}}')
+line2kill=(${{line2kill//,/ }})
+for item1 in "${{line2kill[@]}}"; do 
+    echo running "qdel $item1"
+    qdel $item1
+done
+
+""".format(run_index=self.pipe_data["run_index"],
+           step=caller_script.step,
+           name=caller_script.name)
+
+        self.filehandle.write(script)
+
+#
+#     def __init__(self, **kwargs):
+#
+#         super(KillScriptConstructor, self).__init__(**kwargs)
+#
+#
+#         self.script_path = \
+#             "".join([self.pipe_data["scripts_dir"], \
+#                      "99.kill_all", \
+#                      os.sep, \
+#                      "99.kill_all_{name}".format(name=self.name), \
+#                      ".csh"])
+#
+#
+#         self.filehandle = open(self.script_path, "w")
+#
+#         self.filehandle.write("""\
+# #!/usr/csh
+#
+# touch {run_index}.killall
+#
+# sleep 100
+#
+# rm -rf {run_index}.killall""")
+#
+#
