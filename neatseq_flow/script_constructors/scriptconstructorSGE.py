@@ -275,5 +275,22 @@ class LowScriptConstructorSGE(ScriptConstructorSGE,LowScriptConstructor):
 
 class KillScriptConstructorSGE(ScriptConstructorSGE,KillScriptConstructor):
 
+    @classmethod
+    def get_main_preamble(cls):
+        """ Return main kill-script preamble"""
+        pass
+        return """\
+#!/bin/sh
+
+# Remove high level scripts:
+# entry_point
+
+"""
+
+    @classmethod
+    def get_main_postamble(cls):
+        """ Return main kill-script postamble"""
+
+        return ""
 
     pass

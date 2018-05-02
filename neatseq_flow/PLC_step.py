@@ -425,7 +425,6 @@ Dependencies: {depends}""".format(name = self.name,
                                                 pipe_data = self.pipe_data)
         # Store path to kill script in params:
         self.params["kill_script_path"] = self.kill_script_obj.script_path
-        
 
         getScriptConstructorClass = self.import_ScriptConstructor(level="high")
 
@@ -1154,21 +1153,18 @@ Dependencies: {depends}""".format(name = self.name,
 
         for filename in self.stamped_files:
             script += """
-%(echo_cmd)s `date '+%%d/%%m/%%Y %%H:%%M:%%S'` '\\t%(step)s\\t%(stepname)s\\t%(stepID)s\\t' `md5sum %(filename)s` >> %(file)s
-""" %      {"echo_cmd" : echo_cmd,             \
-            "filename" : filename,             \
-            "step"     : self.get_step_step(), \
-            "stepname" : self.get_step_name(), \
-            "stepID"   : qsub_name,            \
-            "file"     : self.pipe_data["registration_file"]}
+{echo_cmd} `date '+%%d/%%m/%%Y %%H:%%M:%%S'` '\\t{step}\\t{stepname}\\t{stepID}\\t' `md5sum {filename}` >> {file}
+""".format(echo_cmd=echo_cmd,
+           filename=filename,
+           step= self.get_step_step(),
+           stepname=self.get_step_name(),
+           stepID=qsub_name,
+           file=self.pipe_data["registration_file"])
         
         script += "#############\n\n"
             
         return script
-        
-        
-        
-        
+
     def register_files(self, qsub_name):
         """
         """

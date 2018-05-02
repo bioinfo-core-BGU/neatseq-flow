@@ -553,7 +553,7 @@ class NeatSeqFlow:
                 
     def create_kill_scripts_dir(self):
     
-    # Create directory for step-wise qdel 
+        # Create directory for step-wise qdel
         stepWiseDir = "%s99.kill_all%s" % (self.pipe_data["scripts_dir"],os.sep)
         if not os.path.isdir(stepWiseDir):
             if self.pipe_data["verbose"]:
@@ -569,34 +569,30 @@ class NeatSeqFlow:
         """
         
         # Create name for qdel script:
-        self.pipe_data["kill_script_name"] = self.pipe_data["scripts_dir"] + "99.kill_all.csh"
+        self.pipe_data["kill_script_name"] = self.pipe_data["scripts_dir"] + "99.kill_all.sh"
         
         # Creation itself is done in ScriptConstrutor class
-        
+        modname = "neatseq_flow.script_constructors.scriptconstructor{executor}".format(executor=self.pipe_data["Executor"])
+        classname = "KillScriptConstructor{executor}".format(executor=self.pipe_data["Executor"])
+
+        scriptclass = getattr(importlib.import_module(modname), classname)
+        kill_script_preamble = scriptclass.get_main_preamble()
+        kill_script_postamble = scriptclass.get_main_postamble()
+
         with open(self.pipe_data["kill_script_name"], "w") as script_fh:
             # Adding preliminary stuff:
-            script_fh.write("#!/bin/csh\n\n")
+            script_fh.write(kill_script_preamble)
 
-            script_fh.write("# Remove high level scripts:\n# entry_point\n\n\n")
-            
             # For every step, create separate qdel file with step jobs.
             # These files are populated and de-populated on the run:
             for step in self.step_list:
-                # # Create step-specific del script:
-                # step_del_script_fn = "%s99.kill_all_%s.csh" % (stepWiseDir,step.name)
-                # with open(step_del_script_fn, "w") as step_del_script:
-                    # # Write header
-                    # step_del_script.write("#!/bin/csh\n\n")
-                    # step.set_qdel_files(step_del_script_fn, self.pipe_data["kill_script_name"])
-                # # Add call to step-specific qdel script to main qdel script:
-                # script_fh.write("csh %s\n" % step_del_script_fn)
-                
-                # ## New method:
-                # # step_del_script_fn = step.create_kill_script()
+                # New method:
                 # Write script execution command:
-                script_fh.write("csh %s\n" % step.get_kill_script_name())
+                script_fh.write("sh %s\n" % step.get_kill_script_name())
                 step.set_kill_files(self.pipe_data["kill_script_name"])
-                
+
+            script_fh.write(kill_script_postamble)
+
     def create_qalter_script(self):
         """ This function creates the 98.qalter_all script
         """
@@ -610,7 +606,6 @@ class NeatSeqFlow:
                     # import pdb; pdb.set_trace()
                     script_fh.write(step.get_high_depends_command())
 
-                    
     def create_bash_helper_funcs(self):
         """ This function creates the 97.helper_funcs.sh script
             In includes functions to be execute for trapping error and SIGUSR2 signals 
@@ -631,97 +626,6 @@ class NeatSeqFlow:
 
             print "Make sure the script constructor defines class method 'get_helper_script()'"
             raise
-
-
-
-#         with open(self.pipe_data["helper_funcs"], "w") as script_fh:
-#             script_fh.write("#!/bin/bash\n\n")
-#
-#             script = """
-# trap_with_arg() {{
-#     # $1: func
-#     # $2: module
-#     # $3: instance
-#     # $4: instance_id
-#     # $5: level
-#     # $6: hostname
-#     # $7: jobid
-#
-#     args="$1 $2 $3 $4 $5 $6 $7"
-#     shift 7
-#     for sig ; do
-#         trap "$args $sig" "$sig"
-#     done
-#     }}
-#
-# func_trap() {{
-#     # $1: module
-#     # $2: instance
-#     # $3: instance_id
-#     # $4: level
-#     # $5: hostname
-#     # $6: jobid
-#     # $7: sig
-#
-#     if [ ! $6 == 'ND' ]; then
-#         maxvmem=$({qstat_path} -j $6 | grep maxvmem | cut -d = -f 6);
-#     else
-#         maxvmem="NA";
-#     fi
-#
-#     if [ $7 == 'ERR' ]; then err_code='ERROR'; fi
-#     if [ $7 == 'INT' ]; then err_code='TERMINATED'; fi
-#     if [ $7 == 'TERM' ]; then err_code='TERMINATED'; fi
-#     if [ $7 == 'SIGUSR2' ]; then err_code='TERMINATED'; fi
-#
-#
-#     echo -e $(date '+%d/%m/%Y %H:%M:%S')'\\tFinished\\t'$1'\\t'$2'\\t'$3'\\t'$4'\\t'$5'\\t'$maxvmem'\\t[0;31m'$err_code'[m' >> {log_file};
-#
-#     exit 1;
-# }}
-#
-# log_echo() {{
-#     # $1: module
-#     # $2: instance
-#     # $3: instance_id
-#     # $4: level
-#     # $5: hostname
-#     # $6: jobid
-#     # $7: type (Started/Finished)
-#
-#     if [ ! $6 == 'ND' ]; then
-#         if [ $7 == 'Finished' ]; then
-#             maxvmem=$({qstat_path} -j $6 | grep maxvmem | cut -d = -f 6);
-#         else
-#             maxvmem="-"
-#         fi
-#     else
-#         maxvmem="NA";
-#     fi
-#
-#
-#     echo -e $(date '+%d/%m/%Y %H:%M:%S')'\\t'$7'\\t'$1'\\t'$2'\\t'$3'\\t'$4'\\t'$5'\\t'$maxvmem'\\t[0;32mOK[m' >> {log_file};
-#
-# }}
-#
-# locksed() {{
-#     # $1: program
-#     # $2: file
-#     echo in here
-#     # Setting script as done in run index:
-#     sedlock=${{2}}.sedlock
-#     exec 200>$sedlock
-#     flock -w 4000 200 || exit 1
-#
-#     echo do sed
-#     sed -i -e "$1" $2
-#
-#     echo unlock
-#     flock -u 200
-# }}
-#
-#             """.format(log_file = self.pipe_data["log_file"],
-#                         qstat_path = self.pipe_data["qsub_params"]["qstat_path"])
 
     def create_log_file(self):
         """ Create a initialize the log file.
@@ -751,13 +655,11 @@ Pipeline {run_code} logfile:
 Timestamp\tEvent\tModule\tInstance\tJob name\tLevel\tHost\tMax mem\tStatus
 """)
 
-                
         # Set file name for storing list of pipeline versions:
         self.pipe_data["version_list_file"] = "".join([self.pipe_data["logs_dir"], "version_list.txt"])
         # if not os.path.exists(self.pipe_data["version_list_file"]):
         with open(self.pipe_data["version_list_file"],"a") as logf:
             logf.write("%s\t%s\n" % (self.pipe_data["run_code"], self.pipe_data["message"]))
-
 
     def create_job_index_files(self):
         """ Create files for in-house NeatSeq-Flow job controller
@@ -770,11 +672,6 @@ Timestamp\tEvent\tModule\tInstance\tJob name\tLevel\tHost\tMax mem\tStatus
         # Used for flagging active jobs.
         self.pipe_data["run_index"] = "".join([self.pipe_data["objects_dir"], "run_index_" ,  self.pipe_data["run_code"] , ".txt"])
 
-   
-
-            
-
-            
     def create_registration_file(self):
         """
         """
@@ -787,8 +684,6 @@ Timestamp\tEvent\tModule\tInstance\tJob name\tLevel\tHost\tMax mem\tStatus
 Date\tStep\tName\tScript\tFile\tmd5sum\n
 """)
               
-              
-
     def get_dict_encoding(self):
         """ Returns a dict representation of the pipeline.
         """
@@ -800,8 +695,7 @@ Date\tStep\tName\tScript\tFile\tmd5sum\n
         ret_dict["step_data"] = {step.get_step_name():step.get_dict_encoding() for step in self.step_list}
         
         return ret_dict
-        
-        
+
     def get_json_encoding(self):
         """ Convert pipeline data into JSON format
         """
@@ -1252,92 +1146,3 @@ saveWidget(myviz,file = "%(out_file_name)s",selfcontained = F)
 
             print "Make sure the script constructor defines class method 'get_helper_script()'"
             raise
-
-        # try:
-        #     executor = getattr(importlib.import_module(modname), classname)
-        #     run_cmd = get_script_exec_line()
-        # except:
-        #     return
-        #     # sys.exit("Make sure the script constructor in use has defined 'get_script_exec_line'")
-
-#         script_txt = """#!/bin/bash
-#
-# qsubname=$1
-# script_index="{script_index}"
-# run_index="{run_index}"
-# # 1. Find script path
-#
-# # Import helper functions
-# . {helper_funcs}
-#
-# echo $1
-#
-# script_path=$(grep $qsubname $script_index | cut -f 2 )
-#
-# echo $script_path
-#
-# # 2. Marking in run_index as running
-#
-# locksed "s:# \($qsubname\).*:\\1\\thold:" $run_index
-#
-# # 3. Getting script dependencies
-#
-# hold_jids=$(grep '#$ -hold_jid' $script_path | cut -f 3 -d " ")
-# set -f                     # avoid globbing (expansion of *).
-# # Convert into array:
-# hold_jids=(${{hold_jids//,/ }})
-# # echo ${{array[*]}}
-#
-# # 4. Waiting for dependencies to finish
-# flag=0
-# while [ $flag -eq 0 ]
-# do
-#     if [ -f {run_index}.killall ]; then
-#         echo -e $run_index ".killall file created. Stopping all waiting jobs. \\nMake sure you delete the file before re-running!"
-#         locksed "s:\($qsubname\).*:# \\1\\tkilled:" $run_index
-#         exit 1;
-#     fi
-#     if [ ! -f {run_index} ]; then
-#         echo $run_index " file deleted. Stopping all waiting jobs"
-#         locksed "s:\($qsubname\).*:# \\1\\tkilled:" $run_index
-#         exit 1;
-#     fi
-#
-#     # Get running jobs
-#     running=$(grep -v "^#" $run_index)
-#     # running=(${{running//\\n/ }})
-#     running=($(echo ${{running}}))
-#
-#     # Is there overlap between 'running' and 'hold_jids'?
-#     overlap=0
-#     result=""
-#     for item1 in "${{hold_jids[@]}}"; do
-#         for item2 in "${{running[@]}}"; do
-#             if [[ $item1 = $item2 ]]; then
-#                 echo "Job $item1 is running. Waiting..."
-#                 overlap=1
-#             fi
-#         done
-#     done
-#     # echo "Overlap: $overlap"
-#     if (( $overlap == 0 )); then
-#         flag=1
-#     fi
-# #    echo -n "."
-#     sleep 3
-# done
-#
-# # 5. Execute script:
-#
-# {run_cmd}
-#
-#
-# """.format(script_index=self.pipe_data["script_index"],
-#                        run_index=self.pipe_data["run_index"],
-#                        run_cmd=run_cmd,
-#                        helper_funcs=self.pipe_data["helper_funcs"])
-#
-#         self.pipe_data["exec_script"] = "".join([self.pipe_data["scripts_dir"], "NSF_exec.sh"])
-#         with open(self.pipe_data["exec_script"],"w") as exec_script:
-#             exec_script.write(script_txt)
-#

@@ -5,7 +5,6 @@ import re
 import traceback
 import datetime
 
-
 from copy import *
 from pprint import pprint as pp
 
@@ -39,7 +38,6 @@ fi
 # gpid=$(ps -o pgid= $! | grep -o '[0-9]*')
 locksed "s:\($qsubname\).*$:\\1\\tPID\\t$!:" $run_index
 
-
 """
         return script
 
@@ -61,7 +59,6 @@ sh {nsf_exec} \\
                           nsf_exec = self.pipe_data["exec_script"],
                           stderr = "{dir}{id}.e".format(dir=self.pipe_data["stderr_dir"], id=self.script_id),
                           stdout = "{dir}{id}.o".format(dir=self.pipe_data["stdout_dir"], id=self.script_id))
-
 
         return script
 
@@ -170,10 +167,10 @@ sleep {sleep_time}
             self.kill_obj.write_kill_cmd(self)
         except AttributeError:
             pass
+
         # Get general postamble
         postamble = super(HighScriptConstructorLocal, self).get_script_postamble()
 
-        # Add sed command:
         script = """\
 {postamble}
 
@@ -184,9 +181,9 @@ wait
 locksed  "s:^\({script_id}\).*:# \\1\\tdone:" {run_index}
 
 """.format(\
-            postamble = postamble,
-            run_index = self.pipe_data["run_index"],
-            script_id = self.script_id)
+            postamble=postamble,
+            run_index=self.pipe_data["run_index"],
+            script_id=self.script_id)
         
         return script
 
@@ -220,33 +217,50 @@ class LowScriptConstructorLocal(ScriptConstructorLocal, LowScriptConstructor):
         if "level" not in kwargs:
             kwargs["level"] = "low"
 
-        final_locksed_cmd = """\
+        super(LowScriptConstructorLocal, self).write_script(script,
+                                                        dependency_jid_list,
+                                                        stamped_files,
+                                                        **kwargs)
+
+        self.write_command("""\
 
 # Setting script as done in run index:
-# Using locksed provided in helper functions 
+# Using locksed provided in helper functions
 locksed  "s:^\({script_id}\).*:# \\1\\tdone:" {run_index}
 
-""".format(run_index = self.pipe_data["run_index"],
-           script_id = self.script_id)
+""".format(run_index=self.pipe_data["run_index"],
+           script_id=self.script_id))
 
-#        script = script.rstrip()+" &"
 
-        script = "\n".join([
-            self.get_script_preamble(dependency_jid_list),
-            self.get_trap_line(),
-            self.get_log_lines(state="Started"),
-            self.get_activate_lines(type="activate"),
-            self.get_set_options_line(type="set"),
-            # THE SCRIPT!!!!
-            script,
-            self.get_stamped_file_register(stamped_files),
-            self.get_set_options_line(type="unset"),
-            self.get_activate_lines(type="deactivate"),
-            self.get_kill_line(state="Stop"),
-            self.get_log_lines(state="Finished"),
-            final_locksed_cmd])
-
-        self.write_command(script)
+#
+#
+#         final_locksed_cmd = """\
+#
+# # Setting script as done in run index:
+# # Using locksed provided in helper functions
+# locksed  "s:^\({script_id}\).*:# \\1\\tdone:" {run_index}
+#
+# """.format(run_index = self.pipe_data["run_index"],
+#            script_id = self.script_id)
+#
+# #        script = script.rstrip()+" &"
+#
+#         script = "\n".join([
+#             self.get_script_preamble(dependency_jid_list),
+#             self.get_trap_line(),
+#             self.get_log_lines(state="Started"),
+#             self.get_activate_lines(type="activate"),
+#             self.get_set_options_line(type="set"),
+#             # THE SCRIPT!!!!
+#             script,
+#             self.get_stamped_file_register(stamped_files),
+#             self.get_set_options_line(type="unset"),
+#             self.get_activate_lines(type="deactivate"),
+#             self.get_kill_line(state="Stop"),
+#             self.get_log_lines(state="Finished"),
+#             final_locksed_cmd])
+#
+#         self.write_command(script)
 
 
 # ----------------------------------------------------------------------------------
@@ -256,6 +270,27 @@ locksed  "s:^\({script_id}\).*:# \\1\\tdone:" {run_index}
 
 class KillScriptConstructorLocal(ScriptConstructorLocal,KillScriptConstructor):
 
+    @classmethod
+    def get_main_preamble(cls):
+        """ Return main kill-script preamble"""
+        pass
+        return """\
+#!/bin/sh
+
+# Kill held scripts:
+touch /gpfs0/bioinfo/users/sklarz/NSF_slurm/trialWF/objects/run_index_20180502102300.txt.killall
+            
+"""
+
+    @classmethod
+    def get_main_postamble(cls):
+        """ Return main kill-script postamble"""
+
+        return """\
+wait
+
+rm -rf /gpfs0/bioinfo/users/sklarz/NSF_slurm/trialWF/objects/run_index_20180502102300.txt.killall
+"""
 
     def write_kill_cmd(self, caller_script):
         """

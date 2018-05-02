@@ -1,4 +1,7 @@
-import os, shutil, sys, re
+import os
+import shutil
+import sys
+import re
 import traceback
 import datetime
 
@@ -88,7 +91,7 @@ class HighScriptConstructorSLURM(ScriptConstructorSLURM,HighScriptConstructor):
     def get_depends_command(self, dependency_list):
         """
         """
-        pass
+        return ""
         # This is acheived by making high level scripts 'wait' for low level scripts
         #return "# scontrol bla bla bla... Find out how is done\n\n"#qalter \\\n\t-hold_jid %s \\\n\t%s\n\n" % (dependency_list, self.script_id)
 
@@ -189,10 +192,15 @@ wait
 # Using locksed provided in helper functions
 locksed  "s:^{script_id}.*:# &\\tdone:" {run_index}
 
-""".format( \
-            postamble = postamble,
-            run_index = self.pipe_data["run_index"],
-            script_id = self.script_id)
+""".format(postamble=postamble,
+           run_index=self.pipe_data["run_index"],
+           script_id=self.script_id)
+
+        # Write the kill command to the kill script
+        try:
+            self.kill_obj.write_kill_cmd(self)
+        except AttributeError:
+            pass
 
         return script
                                              
@@ -264,28 +272,68 @@ locksed "s:^{script_id}.*:# &\\tdone:" {run_index}
 
 class KillScriptConstructorSLURM(ScriptConstructorSLURM,KillScriptConstructor):
 
-    def __init__(self, **kwargs):
-    
-        super(KillScriptConstructor, self).__init__(**kwargs)
-        
-        
-        self.script_path = \
-            "".join([self.pipe_data["scripts_dir"], \
-                     "99.kill_all", \
-                     os.sep, \
-                     "99.kill_all_{name}".format(name=self.name), \
-                     ".csh"])
+    @classmethod
+    def get_main_preamble(cls):
+        """ Return main kill-script preamble"""
+        pass
+        return """\
+#!/bin/sh
+
+# Kill held scripts:
+touch /gpfs0/bioinfo/users/sklarz/NSF_slurm/trialWF/objects/run_index_20180502102300.txt.killall
+
+"""
+
+    @classmethod
+    def get_main_postamble(cls):
+        """ Return main kill-script postamble"""
+
+        return """\
+wait
+
+rm -rf /gpfs0/bioinfo/users/sklarz/NSF_slurm/trialWF/objects/run_index_20180502102300.txt.killall
+"""
+
+    def write_kill_cmd(self, caller_script):
+        """
+
+        :return:
+        """
+
+        # Create one killing routine for all instance jobs:
+        script = """\
+line2kill=$(grep '^{step}_{name}' {run_index} | awk '{{print $3}}')
+line2kill=(${{line2kill//,/ }})
+for item1 in "${{line2kill[@]}}"; do 
+    echo running "scancel $item1"
+    scancel $item1 
+done
+
+""".format(run_index = self.pipe_data["run_index"],
+           step=caller_script.step,
+           name=caller_script.name)
+
+        self.filehandle.write(script)
 
 
-        self.filehandle = open(self.script_path, "w")
-
-        self.filehandle.write("""\
-#!/usr/csh
-
-touch {run_index}.killall
-
-sleep 100
-
-rm -rf {run_index}.killall""")
-        
-        
+#     def __init__(self, **kwargs):
+#
+#         super(KillScriptConstructor, self).__init__(**kwargs)
+#
+#         self.script_path = "".join([self.pipe_data["scripts_dir"],
+#                                     "99.kill_all",
+#                                     os.sep,
+#                                     "99.kill_all_{name}".format(name=self.name),
+#                                     ".sh"])
+#
+#         self.filehandle = open(self.script_path, "w")
+#
+#         self.filehandle.write("""\
+# #!/usr/csh
+#
+# touch {run_index}.killall
+#
+# sleep 100
+#
+# rm -rf {run_index}.killall""")
+#
