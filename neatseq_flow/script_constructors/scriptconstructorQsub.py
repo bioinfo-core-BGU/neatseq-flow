@@ -290,26 +290,26 @@ locksed  "s:^\({script_id}\).*:# \\1\\tdone:" {run_index}
 class KillScriptConstructorQSUB(ScriptConstructorQSUB,KillScriptConstructor):
 
     @classmethod
-    def get_main_preamble(cls):
+    def get_main_preamble(cls, run_index):
         """ Return main kill-script preamble"""
         pass
         return """\
 #!/bin/sh
 
 # Kill held scripts:
-touch /gpfs0/bioinfo/users/sklarz/NSF_slurm/trialWF/objects/run_index_20180502102300.txt.killall
+touch {run_index}.killall
 
-"""
+""".format(run_index=run_index)
 
     @classmethod
-    def get_main_postamble(cls):
+    def get_main_postamble(cls, run_index):
         """ Return main kill-script postamble"""
 
         return """\
 wait
 
-rm -rf /gpfs0/bioinfo/users/sklarz/NSF_slurm/trialWF/objects/run_index_20180502102300.txt.killall
-"""
+rm -rf {run_index}.killall
+""".format(run_index=run_index)
 
     def write_kill_cmd(self, caller_script):
         """
