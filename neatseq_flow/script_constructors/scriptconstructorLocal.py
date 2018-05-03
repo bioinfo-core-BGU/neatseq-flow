@@ -15,7 +15,17 @@ __version__ = "1.2.0"
 from scriptconstructor import *
 
 
+
 class ScriptConstructorLocal(ScriptConstructor):
+
+    @classmethod
+    def get_helper_script(cls, log_file, qstat_path):
+        """ Returns the code for the helper script
+        """
+        script = super(ScriptConstructorLocal, cls).get_helper_script(log_file,qstat_path)
+        script = re.sub("## locksed command entry point", r"""locksed  "s:^\\($3\\).*:# \\1\\t$err_code:" $5""", script)
+
+        return script
 
     @classmethod
     def get_exec_script(cls, pipe_data):

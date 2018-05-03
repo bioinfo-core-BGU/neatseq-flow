@@ -17,9 +17,10 @@ class ScriptConstructor(object):
     @classmethod
     def get_helper_script(cls, log_file, qstat_path):
         """ Returns the code for the helper script
+            Note. The line with '## locksed command entry point' should be dealt with in inheriting classes.
+            Either replace with nothing to remove (see scriptConstructorSGE) or replaced with a
+            locksed command, see scriptConstructorLocal.
         """
-
-
         script = """\
 #!/bin/bash
 trap_with_arg() {{
@@ -28,10 +29,11 @@ trap_with_arg() {{
     # $3: instance
     # $4: instance_id
     # $5: level
-    # $6: hostname
-    # $7: jobid
+    # $6: run_index file
+    # $7: hostname
+    # $8: jobid
 
-    args="$1 $2 $3 $4 $5 $6 $7"
+    args="$1 $2 $3 $4 $5 $6 $7 $8"
     shift 7
     for sig ; do
         trap "$args $sig" "$sig"
@@ -43,9 +45,10 @@ func_trap() {{
     # $2: instance
     # $3: instance_id
     # $4: level
-    # $5: hostname
-    # $6: jobid
-    # $7: sig
+    # $5: run_index file
+    # $6: hostname
+    # $7: jobid
+    # $8: sig
 
     if [ ! $6 == 'ND' ]; then
         maxvmem=$({qstat_path} -j $6 | grep maxvmem | cut -d = -f 6);
@@ -61,6 +64,7 @@ func_trap() {{
 
     echo -e $(date '+%d/%m/%Y %H:%M:%S')'\\tFinished\\t'$1'\\t'$2'\\t'$3'\\t'$4'\\t'$5'\\t'$maxvmem'\\t[0;31m'$err_code'[m' >> {log_file}; 
 
+    ## locksed command entry point
     exit 1;
 }}         
 
@@ -249,11 +253,12 @@ done
 if [ -z "$JOB_ID" ]; then JOB_ID="ND"; fi
 
 # Trap various signals. SIGUSR2 is passed by qdel when -notify is passes
-trap_with_arg func_trap {step} {stepname} {stepID} {level} $HOSTNAME $JOB_ID SIGUSR2 ERR INT TERM
+trap_with_arg func_trap {step} {stepname} {stepID} {level} {run_index} $HOSTNAME $JOB_ID SIGUSR2 ERR INT TERM
             """.format(step       = self.step,
                        stepname   = self.name,
                        stepID     = self.script_id,
                        helper_funcs = self.pipe_data["helper_funcs"],
+                       run_index  = self.pipe_data["run_index"],
                        level      = self.level)
 
         else:

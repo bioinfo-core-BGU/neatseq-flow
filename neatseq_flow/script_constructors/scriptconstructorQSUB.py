@@ -18,6 +18,15 @@ from scriptconstructor import *
 class ScriptConstructorQSUB(ScriptConstructor):
 
     @classmethod
+    def get_helper_script(cls, log_file, qstat_path):
+        """ Returns the code for the helper script
+        """
+        script = super(ScriptConstructorQSUB, cls).get_helper_script(log_file, qstat_path)
+        script = re.sub("## locksed command entry point", r"""locksed  "s:^\\($3\\).*:# \\1\\t$err_code:" $5""", script)
+
+        return script
+
+    @classmethod
     def get_exec_script(cls, pipe_data):
         """ Not used for SGE. Returning None"""
 
@@ -188,12 +197,6 @@ sleep {sleep_time}
         """ Local script postamble is same as general postamble with addition of sed command to mark as finished in run_index
         """
 
-        # Write the kill command to the kill script
-        try:
-            self.kill_obj.write_kill_cmd(self)
-        except AttributeError:
-            pass
-
         # Get general postamble
         postamble = super(HighScriptConstructorQSUB, self).get_script_postamble()
 
@@ -202,17 +205,20 @@ sleep {sleep_time}
 
 wait
 
-# manage without!!!:  csh {{scripts_dir}}98.qalter_all.csh
-
 # Setting script as done in run index:
 # Using locksed provided in helper functions
 locksed  "s:^\({script_id}\).*:# \\1\\tdone:" {run_index}
 
-""".format(\
-            postamble=postamble,
-            run_index=self.pipe_data["run_index"],
-            script_id=self.script_id)
-        
+""".format(postamble=postamble,
+           run_index=self.pipe_data["run_index"],
+           script_id=self.script_id)
+
+        # Write the kill command to the kill script
+        try:
+            self.kill_obj.write_kill_cmd(self)
+        except AttributeError:
+            pass
+
         return script
 
 # ----------------------------------------------------------------------------------
@@ -235,13 +241,11 @@ class LowScriptConstructorQSUB(ScriptConstructorQSUB,LowScriptConstructor):
         compulsory_high_lev_params = {"-V":""}
         # special_opts = "-N -e -o -q -hold_jid".split(" ") + only_low_lev_params
 
-
         # Create lines containing the qsub opts.
         qsub_opts = ""
         for qsub_opt in self.params["qsub_params"]["opts"]:
             qsub_opts += "#$ {key} {val}\n".format(key=qsub_opt, val=self.params["qsub_params"]["opts"][qsub_opt]) 
             
-        
         qsub_queue =   "#$ -q %s" % self.params["qsub_params"]["queue"]
         # Adding node limitation to header, but only for low-level scripts
         if self.params["qsub_params"]["node"]:     # If not defined then this will be "None"

@@ -19,6 +19,15 @@ from scriptconstructor import *
 class ScriptConstructorSLURM(ScriptConstructor):
 
     @classmethod
+    def get_helper_script(cls, log_file, qstat_path):
+        """ Returns the code for the helper script
+        """
+        script = super(ScriptConstructorQSUB, cls).get_helper_script(log_file, qstat_path)
+        script = re.sub("## locksed command entry point", r"""locksed  "s:^\\($3\\).*:# \\1\\t$err_code:" $5""", script)
+
+        return script
+
+    @classmethod
     def get_exec_script(cls, pipe_data):
         """ Not used for SGE. Returning None"""
 
@@ -26,8 +35,8 @@ class ScriptConstructorSLURM(ScriptConstructor):
 
         script += """\
 jobid=$(sbatch $script_path | cut -d " " -f 4)
- 
-locksed "s:$qsubname.*$:&\\t$jobid:" $run_index
+
+locksed "s:\($qsubname\).*$:\\1\\trunning\\t$jobid:" $run_index
 
 """
         return script
@@ -190,7 +199,7 @@ wait
 
 # Setting script as done in run index:
 # Using locksed provided in helper functions
-locksed  "s:^{script_id}.*:# &\\tdone:" {run_index}
+locksed  "s:^\({script_id}\).*:# \\1\\tdone:" {run_index}
 
 """.format(postamble=postamble,
            run_index=self.pipe_data["run_index"],
@@ -203,7 +212,7 @@ locksed  "s:^{script_id}.*:# &\\tdone:" {run_index}
             pass
 
         return script
-                                             
+
 # ----------------------------------------------------------------------------------
 # LowScriptConstructorSLURM definition
 # ----------------------------------------------------------------------------------
@@ -218,7 +227,6 @@ class LowScriptConstructorSLURM(ScriptConstructorSLURM,LowScriptConstructor):
             Is called for high level, low level and wrapper scripts
         """
 
-        
         general_header = super(LowScriptConstructorSLURM, self).get_script_header(**kwargs)
 
         only_low_lev_params  = ["-pe"]
