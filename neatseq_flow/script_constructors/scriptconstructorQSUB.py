@@ -18,11 +18,11 @@ from scriptconstructor import *
 class ScriptConstructorQSUB(ScriptConstructor):
 
     @classmethod
-    def get_helper_script(cls, log_file, qstat_path):
+    def get_helper_script(cls, *args):
         """ Returns the code for the helper script
         """
-        script = super(ScriptConstructorQSUB, cls).get_helper_script(log_file, qstat_path)
-        script = re.sub("## locksed command entry point", r"""locksed  "s:^\\($3\\).*:# \\1\\t$err_code:" $5""", script)
+        script = super(ScriptConstructorQSUB, cls).get_helper_script(*args)
+        script = re.sub("## locksed command entry point", r"""locksed  "s:^\\($3\\).*:# \\1\\t$err_code:" $run_index""", script)
 
         return script
 

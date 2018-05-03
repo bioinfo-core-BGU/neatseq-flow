@@ -18,11 +18,11 @@ class ScriptConstructorSGE(ScriptConstructor):
     """
 
     @classmethod
-    def get_helper_script(cls, log_file, qstat_path):
+    def get_helper_script(cls, *args):
         """ Returns the code for the helper script
         """
 
-        script = super(ScriptConstructorSGE, cls).get_helper_script(log_file,qstat_path)
+        script = super(ScriptConstructorSGE, cls).get_helper_script(*args)
 
         script = re.sub("## locksed command entry point", r"", script)
 

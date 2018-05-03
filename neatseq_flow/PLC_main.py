@@ -620,8 +620,7 @@ class NeatSeqFlow:
 
         try:
             scriptclass = getattr(importlib.import_module(modname), classname)
-            helper_script = scriptclass.get_helper_script(log_file = self.pipe_data["log_file"],
-                                                          qstat_path = self.pipe_data["qsub_params"]["qstat_path"])
+            helper_script = scriptclass.get_helper_script(self.pipe_data)
             with open(self.pipe_data["helper_funcs"], "w") as script_fh:
                 script_fh.write(helper_script)
         except:

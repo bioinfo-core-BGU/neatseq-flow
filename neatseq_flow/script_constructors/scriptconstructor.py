@@ -15,7 +15,7 @@ class ScriptConstructor(object):
     """
 
     @classmethod
-    def get_helper_script(cls, log_file, qstat_path):
+    def get_helper_script(cls, pipe_data):
         """ Returns the code for the helper script
             Note. The line with '## locksed command entry point' should be dealt with in inheriting classes.
             Either replace with nothing to remove (see scriptConstructorSGE) or replaced with a
@@ -23,17 +23,19 @@ class ScriptConstructor(object):
         """
         script = """\
 #!/bin/bash
+
+run_index={run_index}
+
 trap_with_arg() {{
     # $1: func
     # $2: module
     # $3: instance
     # $4: instance_id
     # $5: level
-    # $6: run_index file
-    # $7: hostname
-    # $8: jobid
+    # $6: hostname
+    # $7: jobid
 
-    args="$1 $2 $3 $4 $5 $6 $7 $8"
+    args="$1 $2 $3 $4 $5 $6 $7"
     shift 7
     for sig ; do
         trap "$args $sig" "$sig"
@@ -45,10 +47,9 @@ func_trap() {{
     # $2: instance
     # $3: instance_id
     # $4: level
-    # $5: run_index file
-    # $6: hostname
-    # $7: jobid
-    # $8: sig
+    # $5: hostname
+    # $6: jobid
+    # $7: sig
 
     if [ ! $6 == 'ND' ]; then
         maxvmem=$({qstat_path} -j $6 | grep maxvmem | cut -d = -f 6);
@@ -107,8 +108,9 @@ locksed() {{
     flock -u 200
 }}
 
-""".format(log_file=log_file,
-           qstat_path=qstat_path)
+""".format(log_file=pipe_data["log_file"],
+           qstat_path=pipe_data["qsub_params"]["qstat_path"],
+           run_index=pipe_data["run_index"])
         return script
 
     @classmethod
