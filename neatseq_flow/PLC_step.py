@@ -627,7 +627,7 @@ Dependencies: {depends}""".format(name = self.name,
 
         level = level.lower().capitalize()
         modname = "neatseq_flow.script_constructors.scriptconstructor{executor}".format(executor=self.pipe_data["Executor"])
-        classname = "{level}ScriptConstructor{executor}".format(level=level, executor=self.pipe_data["Executor"] )  #SGE"
+        classname = "{level}ScriptConstructor{executor}".format(level=level, executor=self.pipe_data["Executor"])  #SGE"
         return getattr(importlib.import_module(modname), classname)
 
         
@@ -1075,10 +1075,10 @@ Dependencies: {depends}""".format(name = self.name,
         # If "local" is set, will do all IO to local folder and then copy everything to self.base_dir
         if "local" in self.params.keys():
             assert self.params["local"], "In step %s: You must supply a local destination when requesting 'local' in parameters" % self.name
-            local_dir = "".join([os.sep,                                                        \
-                                self.params["local"].strip(os.sep),                             \
-                                os.sep,                                                         \
-                                "_".join([self.spec_script_name,self.pipe_data["run_code"]]),   \
+            local_dir = "".join([os.sep,
+                                self.params["local"].strip(os.sep),
+                                os.sep,
+                                "_".join([self.spec_script_name,self.pipe_data["run_code"]]),
                                 os.sep])
             self.script += "# Adding lines for local execution:\n" 
             self.script += "mkdir -p %s \n\n" % local_dir

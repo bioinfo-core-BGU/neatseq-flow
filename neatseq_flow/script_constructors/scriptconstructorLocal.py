@@ -231,44 +231,12 @@ locksed  "s:^\({script_id}\).*:# \\1\\tdone:" {run_index}
 """.format(run_index=self.pipe_data["run_index"],
            script_id=self.script_id))
 
-
-#
-#
-#         final_locksed_cmd = """\
-#
-# # Setting script as done in run index:
-# # Using locksed provided in helper functions
-# locksed  "s:^\({script_id}\).*:# \\1\\tdone:" {run_index}
-#
-# """.format(run_index = self.pipe_data["run_index"],
-#            script_id = self.script_id)
-#
-# #        script = script.rstrip()+" &"
-#
-#         script = "\n".join([
-#             self.get_script_preamble(dependency_jid_list),
-#             self.get_trap_line(),
-#             self.get_log_lines(state="Started"),
-#             self.get_activate_lines(type="activate"),
-#             self.get_set_options_line(type="set"),
-#             # THE SCRIPT!!!!
-#             script,
-#             self.get_stamped_file_register(stamped_files),
-#             self.get_set_options_line(type="unset"),
-#             self.get_activate_lines(type="deactivate"),
-#             self.get_kill_line(state="Stop"),
-#             self.get_log_lines(state="Finished"),
-#             final_locksed_cmd])
-#
-#         self.write_command(script)
-
-
 # ----------------------------------------------------------------------------------
 # KillScriptConstructorLocal defintion
 # ----------------------------------------------------------------------------------
 
 
-class KillScriptConstructorLocal(ScriptConstructorLocal,KillScriptConstructor):
+class KillScriptConstructorLocal(ScriptConstructorLocal, KillScriptConstructor):
 
     @classmethod
     def get_main_preamble(cls):

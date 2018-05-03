@@ -50,12 +50,13 @@ from neatseq_flow.modules.parse_sample_data import remove_comments, check_newlin
 
 
 STEP_PARAMS_SINGLE_VALUE = ['module','redirects']
-SUPPORTED_EXECUTORS = ["Local","SGE","SLURM","QSUB"]
-NOT_PASSABLE_EXECUTOR_PARAMS = \
-    {"SGE" : "-N -e -o -q -hold_jid".split(" "), \
-    "QSUB" : "-N -e -o -q -hold_jid".split(" "), \
-    "SLURM" : "-e -o -hold_jid --error --output -J --job-name -p --partition -w".split(" "), \
-    "Local" : ""}
+
+# The keys are the supported executors. The values - a str list of parameters that NeatSeq-Flow sets independently
+SUPPORTED_EXECUTORS = \
+    {"SGE": "-N -e -o -q -hold_jid".split(" "),
+     "QSUB": "-N -e -o -q -hold_jid".split(" "),
+     "SLURM": "-e -o -hold_jid --error --output -J --job-name -p --partition -w".split(" "),
+     "Local": ""}
 
 
 def parse_param_file(filename):
@@ -426,12 +427,12 @@ def param_data_testing(param_data):
     
 def param_data_testing_global(param_data):
 
-
     issue_warning = ""
     # # If one of parameter values is a list, create warning - multiple definitions of a param
     # for param in param_data.keys():
         # if isinstance(param_data[param],list):
             # issue_warning += "Duplicate values for param %s\n" % param
+
 
     # The following 'Executors' do NOT require a queue to be passed:
     no_queue_required = "SLURM".split(" ")
@@ -447,10 +448,11 @@ def param_data_testing_global(param_data):
 
     if param_data["Executor"] not in SUPPORTED_EXECUTORS:
         issue_warning += "Executor %s not defined.\n" % param_data["Executor"]
+
     if "Qsub_opts" in param_data.keys():
         # Checking no automatically set qsub parameters are defined by user
-        if any(map(lambda x: x in param_data["Qsub_opts"],NOT_PASSABLE_EXECUTOR_PARAMS_EXECUTOR)):
-            issue_warning += "Automatically set qsub parameters defined (one of %s)\n" % (", ".join(NOT_PASSABLE_EXECUTOR_PARAMS_EXECUTOR))
+        if any(map(lambda x: x in param_data["Qsub_opts"],NOT_PASSABLE_EXECUTOR_PARAMS)):
+            issue_warning += "Automatically set qsub parameters defined (one of %s)\n" % (", ".join(NOT_PASSABLE_EXECUTOR_PARAMS))
 
     if issue_warning=="":
         return True
@@ -464,6 +466,7 @@ def param_data_testing_step_wise(param_data):
     issue_warning = ""
     issue_count = 1
     # List of all step names:
+
     names = reduce(lambda x, y: x+y, [param_data[step].keys() for step in param_data.keys()])
 
     if len(set([nam for nam in names if names.count(nam) > 1])) > 0:
@@ -500,12 +503,12 @@ def param_data_testing_step_wise(param_data):
                         if not isinstance(param_data[step][name][param]["node"],list):
                             issue_warning += "%s. 'node' must be a string or a list in step %s (name %s)\n" % (issue_count,step,name)
                     # Checking no automatically set qsub parameters are defined by user
-                    if any(map(lambda x: x in param_data[step][name][param]["opts"],NOT_PASSABLE_EXECUTOR_PARAMS_EXECUTOR)):
-                        issue_warning += "%s. Automatically set qsub parameters defined (one of %s) in step %s (name %s)\n" % (issue_count,", ".join(NOT_PASSABLE_EXECUTOR_PARAMS_EXECUTOR),step,name)
+                    if any(map(lambda x: x in param_data[step][name][param]["opts"],NOT_PASSABLE_EXECUTOR_PARAMS)):
+                        issue_warning += "{issuenum}. Automatically set qsub parameters defined (one of {params}) " \
+                                         "in step {step} (name {name})\n".format(issuenum=issue_count,
+                                                                                 step=step,name=name,
+                                                                                 params=", ".join(NOT_PASSABLE_EXECUTOR_PARAMS))
 
-
-            
-            
     # Test that all steps have base steps and that the base steps are defined
     for step in param_data.keys():
         if step=="merge":
@@ -535,11 +538,17 @@ def test_and_modify_global_params(global_params):
     # Setting default Executor to SGE:
     if "Executor" not in global_params:
         global_params["Executor"] = "SGE"
-        
-    # This should not be done this way, but couldn't think of a better way.
-    # Setting global NOT_PASSABLE_EXECUTOR_PARAMS according to value of Executor
-    global NOT_PASSABLE_EXECUTOR_PARAMS_EXECUTOR
-    NOT_PASSABLE_EXECUTOR_PARAMS_EXECUTOR = NOT_PASSABLE_EXECUTOR_PARAMS[global_params["Executor"]]
+    # Testing executor is one of defined types:
+    if global_params["Executor"] not in SUPPORTED_EXECUTORS.keys():
+        print "Executor {executor} is not one of " \
+              "the defined executors: {executor_list}".format(executor=global_params["Executor"],
+                                                              executor_list=", ".join(SUPPORTED_EXECUTORS.keys()))
+        raise Exception("Issues in parameters", "parameters")
+
+    # # This should not be done this way, but couldn't think of a better way.
+    # # Setting global SUPPORTED_EXECUTORS according to value of Executor
+    global NOT_PASSABLE_EXECUTOR_PARAMS
+    NOT_PASSABLE_EXECUTOR_PARAMS = SUPPORTED_EXECUTORS[global_params["Executor"]]
     
     # Convert Qsub_opts into a list of options (split by ' -' with look-ahead...)
     if "Qsub_opts" in global_params:
@@ -567,7 +576,8 @@ def test_and_modify_global_params(global_params):
         bad_paths = filter(lambda x: not os.path.isdir(x) , global_params["module_path"])
         good_paths = filter(lambda x: os.path.isdir(x) , global_params["module_path"])
         if bad_paths:
-            sys.stderr.write("WARNING: The following module paths do not exist and will be removed from search path: {badpaths}\n".format(badpaths=", ".join(bad_paths)))
+            sys.stderr.write("WARNING: The following module paths do not exist and will be "
+                             "removed from search path: {badpaths}\n".format(badpaths=", ".join(bad_paths)))
             global_params["module_path"] = good_paths
         
     # Converting single Qsub_nodes into single element list
@@ -579,11 +589,13 @@ def test_and_modify_global_params(global_params):
         elif isinstance(global_params["Qsub_nodes"],list):
             pass # OK
         else:
-            raise Exception("Unrecognised 'Qsub_nodes' format. 'Qsub_nodes' in 'Global_params' must be a single path or a list. \n", "parameters")
+            raise Exception("Unrecognised 'Qsub_nodes' format. 'Qsub_nodes' in 'Global_params' "
+                            "must be a single path or a list. \n", "parameters")
     # Checking conda params are sensible:
     if "conda" in global_params:
         if "path" not in global_params["conda"]:# or "env" not in global_params["conda"]:
-            raise Exception("When using 'conda', you must supply a 'path' to the environment to use.\nLeave 'path:' empty if you want it to be taken from $CONDA_PREFIX\n","parameters")
+            raise Exception("When using 'conda', you must supply a 'path' to the environment to use.\n"
+                            "Leave 'path:' empty if you want it to be taken from $CONDA_PREFIX\n","parameters")
         if global_params["conda"]["path"] == None:  # Path is empty, take from $CONDA_PREFIX
             if "CONDA_PREFIX" in os.environ:
                 global_params["conda"]["path"] = os.environ["CONDA_PREFIX"]
@@ -597,10 +609,12 @@ def test_and_modify_global_params(global_params):
                 #     global_params["conda"]["env"] = env
 
             else:
-                raise Exception("'conda' 'path' is empty, but no CONDA_PREFIX is defined. Make sure you are in an active conda environment.")
+                raise Exception("'conda' 'path' is empty, but no CONDA_PREFIX is defined. "
+                                "Make sure you are in an active conda environment.")
                 
         if "env" not in global_params["conda"] or global_params["conda"]["env"] == None:
-            raise Exception("When using 'conda', you must supply an 'env' containing the name of the environment to use.\n","parameters")
+            raise Exception("When using 'conda', you must supply an 'env' containing the "
+                            "name of the environment to use.\n","parameters")
         
     return global_params
         

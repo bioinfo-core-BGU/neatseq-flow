@@ -46,8 +46,9 @@ class NeatSeqFlow:
         try:
             self.sample_data = parse_sample_file(sample_file)
         except Exception:
-            
             print("An exception has occured in sample file reading. Double check!")
+            if raisedex.args[0] == "Issues in samples":
+                sys.exit()
             raise
 
         try:
