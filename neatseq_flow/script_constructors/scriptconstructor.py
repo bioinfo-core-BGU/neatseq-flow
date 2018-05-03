@@ -574,25 +574,18 @@ sed -i -e 's:^{kill_cmd}$:#&:' {qdel_file}\n""".format(kill_cmd = re.escape(kill
 class KillScriptConstructor(ScriptConstructor):
 
     @classmethod
-    def get_main_preamble(cls):
+    def get_main_preamble(cls, *args):
         """ Return main kill-script preamble"""
-        pass
+
         return """\
-/bin/sh
-
-# Kill held scripts:
-touch /gpfs0/bioinfo/users/sklarz/NSF_slurm/trialWF/objects/run_index_20180502102300.txt.killall
-
+#!/bin/sh
 """
 
     @classmethod
-    def get_main_postamble(cls):
+    def get_main_postamble(cls, *args):
         """ Return main kill-script postamble"""
 
         return """\
-wait
-
-rm -rf /gpfs0/bioinfo/users/sklarz/NSF_slurm/trialWF/objects/run_index_20180502102300.txt.killall
 """
 
     def __init__(self, **kwargs):

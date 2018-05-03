@@ -576,9 +576,10 @@ class NeatSeqFlow:
         modname = "neatseq_flow.script_constructors.scriptconstructor{executor}".format(executor=self.pipe_data["Executor"])
         classname = "KillScriptConstructor{executor}".format(executor=self.pipe_data["Executor"])
 
+
         scriptclass = getattr(importlib.import_module(modname), classname)
-        kill_script_preamble = scriptclass.get_main_preamble()
-        kill_script_postamble = scriptclass.get_main_postamble()
+        kill_script_preamble = scriptclass.get_main_preamble(self.pipe_data["run_index"])
+        kill_script_postamble = scriptclass.get_main_postamble(self.pipe_data["run_index"])
 
         with open(self.pipe_data["kill_script_name"], "w") as script_fh:
             # Adding preliminary stuff:

@@ -276,9 +276,8 @@ class LowScriptConstructorSGE(ScriptConstructorSGE,LowScriptConstructor):
 class KillScriptConstructorSGE(ScriptConstructorSGE,KillScriptConstructor):
 
     @classmethod
-    def get_main_preamble(cls):
+    def get_main_preamble(cls, *args):
         """ Return main kill-script preamble"""
-        pass
         return """\
 #!/bin/sh
 
@@ -288,9 +287,8 @@ class KillScriptConstructorSGE(ScriptConstructorSGE,KillScriptConstructor):
 """
 
     @classmethod
-    def get_main_postamble(cls):
+    def get_main_postamble(cls, *args):
         """ Return main kill-script postamble"""
 
         return ""
 
-    pass
