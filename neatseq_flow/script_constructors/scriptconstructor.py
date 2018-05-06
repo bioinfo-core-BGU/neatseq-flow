@@ -255,12 +255,11 @@ done
 if [ -z "$JOB_ID" ]; then JOB_ID="ND"; fi
 
 # Trap various signals. SIGUSR2 is passed by qdel when -notify is passes
-trap_with_arg func_trap {step} {stepname} {stepID} {level} {run_index} $HOSTNAME $JOB_ID SIGUSR2 ERR INT TERM
+trap_with_arg func_trap {step} {stepname} {stepID} {level} $HOSTNAME $JOB_ID SIGUSR2 ERR INT TERM
             """.format(step       = self.step,
                        stepname   = self.name,
                        stepID     = self.script_id,
                        helper_funcs = self.pipe_data["helper_funcs"],
-                       run_index  = self.pipe_data["run_index"],
                        level      = self.level)
 
         else:

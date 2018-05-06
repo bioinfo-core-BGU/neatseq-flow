@@ -671,7 +671,8 @@ Timestamp\tEvent\tModule\tInstance\tJob name\tLevel\tHost\tMax mem\tStatus
 
         # Set run_index filename in pipe_data
         # Used for flagging active jobs.
-        self.pipe_data["run_index"] = "".join([self.pipe_data["objects_dir"], "run_index_" ,  self.pipe_data["run_code"] , ".txt"])
+        # self.pipe_data["run_index"] = "".join([self.pipe_data["objects_dir"], "run_index_" ,  self.pipe_data["run_code"] , ".txt"])
+        self.pipe_data["run_index"] = "".join([self.pipe_data["objects_dir"], "run_index" ,  ".txt"])
 
     def create_registration_file(self):
         """
