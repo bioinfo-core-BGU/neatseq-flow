@@ -19,11 +19,27 @@ from scriptconstructor import *
 class ScriptConstructorSLURM(ScriptConstructor):
 
     @classmethod
-    def get_helper_script(cls, *args):
+    def get_helper_script(cls, pipe_data):
         """ Returns the code for the helper script
         """
-        script = super(ScriptConstructorQSUB, cls).get_helper_script(*args)
+        script = super(ScriptConstructorSLURM, cls).get_helper_script(pipe_data)
         script = re.sub("## locksed command entry point", r"""locksed  "s:^\\($3\\).*:# \\1\\t$err_code:" $run_index""", script)
+
+        # Add job_limit function:
+        if "job_limit" in pipe_data:
+            script += """\
+job_limit={job_limit}
+
+wait_limit() {{
+    while : ; do
+        numrun=$(egrep -c "^\w" $run_index);
+        maxrun=$(sed -ne "s/limit=\([0-9]*\).*/\\1/p" $job_limit);
+        sleeptime=$(sed -ne "s/.*sleep=\([0-9]*\).*/\\1/p" $job_limit);
+        [[ $numrun -ge $maxrun ]] || break;
+        sleep $sleeptime;
+    done
+}}
+""".format(job_limit=pipe_data["job_limit"])
 
         return script
 
@@ -138,17 +154,26 @@ class HighScriptConstructorSLURM(ScriptConstructorSLURM,HighScriptConstructor):
         
         command = super(HighScriptConstructorSLURM, self).get_command()
 
+        job_limit = ""
+
+        if "job_limit" in self.pipe_data.keys():
+            job_limit = """\
+# Sleeping while jobs exceed limit
+wait_limit()
+        """
         # TODO: Add output from stdout and stderr
 
         script = """
 # ---------------- Code for {script_id} ------------------
 echo running {script_id}
+{job_limit}
 {command}
 
 sleep {sleep_time}
 
 """.format(script_id = self.script_id,
            command = command,
+           job_limit=job_limit,
            sleep_time=self.pipe_data["Default_wait"])
 
         return script
@@ -165,9 +190,9 @@ sleep {sleep_time}
 
             job_limit = """\
 # Sleeping while jobs exceed limit
-while : ; do numrun=$(egrep -c "^\w" {run_index}); maxrun=$(sed -ne "s/limit=\([0-9]*\).*/\\1/p" {limit_file}); sleeptime=$(sed -ne "s/.*sleep=\([0-9]*\).*/\\1/p" {limit_file}); [[ $numrun -ge $maxrun ]] || break; sleep $sleeptime; done
-""".format(limit_file=self.pipe_data["job_limit"],
-           run_index=self.pipe_data["run_index"])
+wait_limit()
+"""#.format(limit_file=self.pipe_data["job_limit"],
+    #       run_index=self.pipe_data["run_index"])
 
         script = """
 # ---------------- Code for {script_id} ------------------

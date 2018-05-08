@@ -41,7 +41,6 @@ wait_limit() {{
 }}
 """.format(job_limit=pipe_data["job_limit"])
 
-
         return script
 
     @classmethod
