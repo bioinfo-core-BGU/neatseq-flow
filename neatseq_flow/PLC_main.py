@@ -38,15 +38,18 @@ class NeatSeqFlow:
                  message = None,
                  runid = None,
                  verbose = False):
-        
+        """
+        Initialize and create all workflow scripts.
+        :returns: A workflow object
+        """
         # Read and parse the sample and parameter files:
 
         sys.stdout.write("Reading files...\n")
 
         try:
             self.sample_data = parse_sample_file(sample_file)
-        except Exception:
-            print("An exception has occured in sample file reading. Double check!")
+        except Exception as raisedex:
+            print("An exception has occurred in sample file reading. Double check!")
             if raisedex.args[0] == "Issues in samples":
                 sys.exit()
             raise
@@ -58,7 +61,7 @@ class NeatSeqFlow:
             if raisedex.args[0] == "Issues in parameters":
                 sys.exit()
             elif len(raisedex.args)>1:
-                if raisedex.args[1] in ["Variables","parameters"]:
+                if raisedex.args[1] in ["Variables", "parameters"]:
                     sys.exit(raisedex.args[0])
                     # raise
                 else:  # Unknown
@@ -66,7 +69,7 @@ class NeatSeqFlow:
                     raise
             else:
                 raise
-            # sys.stderr.write("An exception has occured in parameter file reading. Double check!")
+            # sys.stderr.write("An exception has occurred in parameter file reading. Double check!")
             # raise
         except:
             raise
@@ -114,24 +117,18 @@ class NeatSeqFlow:
         if runid:
             self.run_code = runid
         else:
-            self.run_code = datetime.now().strftime("%Y%m%d%H%M%S") # Is always used as a string
+            self.run_code = datetime.now().strftime("%Y%m%d%H%M%S")  # (Is always used as a string)
         self.pipe_data["run_code"] = self.run_code
         if "Default_wait" in self.param_data["Global"].keys():
             self.pipe_data["Default_wait"] = self.param_data["Global"]["Default_wait"]
         if "job_limit" in self.param_data["Global"].keys():
             self.pipe_data["job_limit"] = self.param_data["Global"]["job_limit"]
-        
-        
-        # ------------------------------
-        
+
         self.manage_qsub_params()
         
         # Setting path to qstat
         self.set_qstat_path()
 
-        # --------------------------------
-        
-        # --------------------------------
         # Define conda parameters
         self.define_conda_params()
         
@@ -172,13 +169,6 @@ class NeatSeqFlow:
         # Storing names index in pipe_data. Could be used by the step instances 
         self.pipe_data["names_index"] = self.get_names_index()
 
-        # if convert2yaml:
-            # # Convert to YAML
-            # self.convert_data_to_YAML()
-            # print "Exported sample and param data to YAML format.\nExitting...\n"
-            # # sys.exit()
-            # return
-
         # Make the qdel script:
         self.create_kill_scripts()
         
@@ -190,15 +180,14 @@ class NeatSeqFlow:
             
         except AssertionExcept as assertErr:
             print assertErr.get_error_str()
-            print "An error has occured. See comment above.\nPrinting current JSON and exiting\n"
-            with open(self.pipe_data["objects_dir"]+"WorkflowData.json","w") as json_fh:
+            print "An error has occurred. See comment above.\nPrinting current JSON and exiting\n"
+            with open(self.pipe_data["objects_dir"]+"WorkflowData.json", "w") as json_fh:
                 json_fh.write(self.get_json_encoding())
             # sys.exit() 
             return
             
         # Make main script:
         self.make_main_pipeline_script()
-        
         
         # Make the qalter script:
         self.create_qalter_script()
@@ -210,13 +199,12 @@ class NeatSeqFlow:
         
         # Writing JSON encoding ofg pipeline:
         sys.stdout.write("Writing JSON files...\n")
-        with open(self.pipe_data["objects_dir"]+"WorkflowData.json","w") as json_fh:
+        with open(self.pipe_data["objects_dir"]+"WorkflowData.json", "w") as json_fh:
             json_fh.write(self.get_json_encoding())
         # Writing JSON encoding of qsub names (can be used by remote progress monitor)
-        with open(self.pipe_data["objects_dir"]+"qsub_names.json","w") as json_fh:
+        with open(self.pipe_data["objects_dir"]+"qsub_names.json", "w") as json_fh:
             json_fh.write(self.get_qsub_names_json_encoding())
-            
-        
+
         # Step cleanup
         [step_n.cleanup() for step_n in self.step_list]
         
@@ -231,8 +219,9 @@ class NeatSeqFlow:
         """  Define default qsub parameters
         """
         self.pipe_data["qsub_params"] = {}
-        
-        self.pipe_data["qsub_params"]["queue"] = self.param_data["Global"]["Qsub_q"]    # This is required by assertion in parse_param_data()
+
+        # Store default queue. Not relevant for all Executors. seen to in parse_param_data()
+        self.pipe_data["qsub_params"]["queue"] = self.param_data["Global"]["Qsub_q"]
 
         if "Qsub_nodes" in self.param_data["Global"].keys():
             self.pipe_data["qsub_params"]["node"] = list(set(self.param_data["Global"]["Qsub_nodes"]))
@@ -252,26 +241,22 @@ class NeatSeqFlow:
         """ Return step-wise parameter data
         """
         return self.param_data["Step"]
-        
-        
+
     def get_steps(self):
         """ return a list of step types required 
         """
         
         return self.param_data["Step"].keys()
-        
-        
+
     def get_step_names(self):
         """ return a list of step names (=step instances)
         """
         return self.name_index.keys()
         pass
-        
-        
+
     def get_names_index(self):
         return self.name_index
-        
-        
+
     def make_names_index(self):
         """ Make a dict of the form name:steps
         """
@@ -289,41 +274,37 @@ class NeatSeqFlow:
         # For each step name (step_n), set sample_data based on the steps base(s) and then create scripts
         for step_n in self.step_list:
            
-            step_name = step_n.get_step_name()
-            step_step = step_n.get_step_step()
+            # step_name = step_n.get_step_name()
+            # step_step = step_n.get_step_step()
 
             # Find base step(s) for current step: (If does not exist return None)
             base_name_list = step_n.get_base_step_name()    
 
-            
             # For merge, 1st step, this will be true, passing the original sample_data to the step:
-            if base_name_list == None:
+            if base_name_list is None:
                 step_n.set_sample_data(self.sample_data)
                 step_n.set_base_step([])
-            # For the others, finds the instance(s) of the base step(s) and calls set_base_step() with the list of bases:
+            # For the others, finds the instance(s) of the base step(s) and
+            # calls set_base_step() with the list of bases:
             else:
-                # Note: set_base_step() takes a list of step objects, not names. Finding them is done by the .index() method.
+                # Note: set_base_step() takes a list of step objects, not names.
+                # Finding them is done by the .index() method.
                 step_n.set_base_step([self.step_list[self.step_list_index.index(base_name)] for base_name in base_name_list])
 
-                
             # Do the actual script building for step_n
             step_n.create_all_scripts()
-                
-        
-    
+
     def make_depends_dict(self):
         """ Creates and returns the basic depend_dict structure
             step names are keys, values are a list of the step names which are bases for the step
         """
         step_data = self.get_step_param_data()
         # Get the base list for each step.
-        # self.depend_dict = {name:[step_data[self.name_index[name]][name]["base"] if self.name_index[name] != "merge" else ""] for name in self.name_index.keys() }
-        self.depend_dict = {name:deepcopy(step_data[self.name_index[name]][name]["base"]) 
-                                if self.name_index[name] != "merge" 
-                                else [""] for name in self.name_index.keys() }
+        self.depend_dict = {name:deepcopy(step_data[self.name_index[name]][name]["base"])
+                                if self.name_index[name] != "merge"
+                                else [""] for name in self.name_index.keys()}
         return self.depend_dict
-        
-        
+
     def expand_depends(self):
         """ Extract base info for each step from parameters and expand the dependency info
             i.e. if base(samtools)=['Bowtie_mapper'], expand it to ['merge','Bowtie_mapper']
@@ -335,19 +316,20 @@ class NeatSeqFlow:
         # ### Helper recursive function
         def expand_depend_list(step_name,depend_list,depend_dict):
             """ helper function. takes a list and RECURSIVELY expands it based on the dependency dict
-            step_name is the name of the step on which it is executing. Used to hault the recursion on cases of loops in the DAG...
+            step_name is the name of the step on which it is executing.
+            Used to hault the recursion on cases of loops in the DAG...
             """
             
-            if depend_list==[]:
+            if not depend_list:  # i.e. depend_list==[]:
                 return depend_list
             ret_list = depend_list
             if step_name in depend_list:
                 sys.exit("There seems to be a cycle in the workflow design. Check dependencies of step %s" % step_name)
             for elem in depend_list:
-                if (elem==""):
+                if (elem == ""):
                     pass
                 else:
-                    ret_list += expand_depend_list(step_name, list(depend_dict[elem]),depend_dict)
+                    ret_list += expand_depend_list(step_name, list(depend_dict[elem]), depend_dict)
                     
             return list(set(ret_list))
         # ######
@@ -363,10 +345,8 @@ class NeatSeqFlow:
         for step in step_data:
             for name in self.param_data["Step"][step]:
                 self.param_data["Step"][step][name]["depend_list"] = self.depend_dict[name]
-            
-        
-        return self.depend_dict 
 
+        return self.depend_dict 
 
     def sort_step_list(self):
         """ This function sorts the step list
@@ -376,7 +356,6 @@ class NeatSeqFlow:
         
         self.step_list.sort()    # Sort by internal __lt__ and __gt__
         
-            
     def make_step_instances(self):
         """ Makes step instances and stores them in self.step_list.
             The steps are also sorted based on their dependencies. See __lt__ and __gt__ in "Step" class definition.
@@ -386,10 +365,7 @@ class NeatSeqFlow:
         self.step_list = [self.make_step_type_instance(step_n) for step_n in self.get_step_names()]
 
         self.sort_step_list()
-        
 
-        # import pdb; pdb.set_trace()
-        
         # Send number of step to the instances:
         # This is used for numbering the scripts in the scripts_dir
         counter = 1
@@ -397,32 +373,31 @@ class NeatSeqFlow:
             step_n.set_step_number(counter)
             counter+=1
             
-        # Create index of step names. Once their order is set, above, this new list will contain the step names in the same order
+        # Create index of step names. Once their order is set, above, this new list will contain
+        # the step names in the same order
         # Is used to search the list of classes.
         self.step_list_index = [step_n.get_step_name() for step_n in self.step_list]
-        
 
         # Perform step finalization steps before continuing:
         [step_n.finalize_contruction() for step_n in self.step_list]
-        
-        
+
         # NOTE: Each step's base step is set in build_scripts(), because not all info exists at construction time...
         
         return self.step_list
-        
 
-        
     def make_directory_structure(self):
         """ Creating the directory structure to hold the scripts, data etc.
         """
-        for directory in ["data_dir","scripts_dir","stderr_dir","stdout_dir","objects_dir","logs_dir","backups_dir"]:
+        for directory in ["data_dir", "scripts_dir", "stderr_dir", "stdout_dir",
+                          "objects_dir", "logs_dir", "backups_dir"]:
             # Get only the first part of 'directory' for directory name:
             dir_name = directory.split("_")[0]
             # Concatenate the directory name to the home path:
             self.pipe_data[directory] = self.pipe_data["home_dir"] + os.sep + dir_name + os.sep
-            if (os.path.isdir(self.pipe_data[directory])):
+            if os.path.isdir(self.pipe_data[directory]):
                 if self.pipe_data["verbose"]:
-                    sys.stderr.write("WARNING: {dirname} folder exists. Overwriting existing! (existing files will not be deleted)\n".format(dirname=dir_name))
+                    sys.stderr.write("WARNING: {dirname} folder exists. Overwriting existing! "
+                                     "(existing files will not be deleted)\n".format(dirname=dir_name))
             else:
                 if self.pipe_data["verbose"]:
                     sys.stderr.write("WARNING: Creating {dir_name} directory\n".format(dir_name=dir_name))
@@ -464,7 +439,7 @@ class NeatSeqFlow:
             StepClass = getattr(importlib.import_module(step_module_loc), 'Step_'+step_type)
             # exec "from %s import %s as StepClass" % (step_module_loc,'Step_' + step_type)
         except ImportError:
-            print "An error has occured loading module %s.\n" % step_module_loc
+            print "An error has occurred loading module %s.\n" % step_module_loc
             print "CMD: from %s import %s as StepClass\n" % (step_module_loc,'Step_' + step_type)
             raise
 
@@ -479,7 +454,7 @@ class NeatSeqFlow:
             return new_step
         except AssertionExcept as assertErr:
             print assertErr.get_error_str()
-            print("An error has occured in step initialization (type: %s). See comment above.\n" % step_type)
+            print("An error has occurred in step initialization (type: %s). See comment above.\n" % step_type)
             sys.exit()
 
             
@@ -673,6 +648,8 @@ Timestamp\tEvent\tModule\tInstance\tJob name\tLevel\tHost\tMax mem\tStatus
         # Used for flagging active jobs.
         # self.pipe_data["run_index"] = "".join([self.pipe_data["objects_dir"], "run_index_" ,  self.pipe_data["run_code"] , ".txt"])
         self.pipe_data["run_index"] = "".join([self.pipe_data["objects_dir"], "run_index" ,  ".txt"])
+        # Clearing file:
+        open(self.pipe_data["run_index"], "w").close()
 
     def create_registration_file(self):
         """
@@ -1086,8 +1063,8 @@ saveWidget(myviz,file = "%(out_file_name)s",selfcontained = F)
             
         except AssertionExcept as assertErr:
             print assertErr.get_error_str()
-            print "An error has occured. See comment above.\nPrinting current JSON and exiting\n"
-            with open(self.pipe_data["objects_dir"]+"WorkflowData.json","w") as json_fh:
+            print "An error has occurred. See comment above.\nPrinting current JSON and exiting\n"
+            with open(self.pipe_data["objects_dir"]+"WorkflowData.json", "w") as json_fh:
                 json_fh.write(self.get_json_encoding())
             # sys.exit() 
             return
@@ -1106,10 +1083,10 @@ saveWidget(myviz,file = "%(out_file_name)s",selfcontained = F)
         
         # Writing JSON encoding ofg pipeline:
         sys.stdout.write("Writing JSON files...\n")
-        with open(self.pipe_data["objects_dir"]+"WorkflowData.json","w") as json_fh:
+        with open(self.pipe_data["objects_dir"]+"WorkflowData.json", "w") as json_fh:
             json_fh.write(self.get_json_encoding())
         # Writing JSON encoding of qsub names (can be used by remote progress monitor)
-        with open(self.pipe_data["objects_dir"]+"qsub_names.json","w") as json_fh:
+        with open(self.pipe_data["objects_dir"]+"qsub_names.json", "w") as json_fh:
             json_fh.write(self.get_qsub_names_json_encoding())
             
         

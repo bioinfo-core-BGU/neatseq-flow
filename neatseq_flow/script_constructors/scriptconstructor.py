@@ -4,7 +4,7 @@ import re
 
 from ..PLC_step import AssertionExcept
 
-# from pprint import pprint as pp
+from pprint import pprint as pp
 
 __author__ = "Menachem Sklarz"
 __version__ = "1.2.0"
@@ -111,6 +111,21 @@ locksed() {{
 """.format(log_file=pipe_data["log_file"],
            qstat_path=pipe_data["qsub_params"]["qstat_path"],
            run_index=pipe_data["run_index"])
+
+        # if "job_limit" in pipe_data:
+        #     # This fix is for windows version. The backslahes in the path are interpreted as escape characters :(
+        #     if os.sep == "\\":
+        #         job_limit = "/".join(pipe_data["job_limit"].split('\\'))
+        #     else:
+        #         job_limit = pipe_data["job_limit"]
+        #     script = re.sub(r"# job_limit entry point",
+        #                     r"job_limit=%s" % job_limit,
+        #                     script)
+        # else:
+        #     script = re.sub("# job_limit entry point",
+        #                     "",
+        #                     script)
+
         return script
 
     @classmethod
