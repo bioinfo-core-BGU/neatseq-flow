@@ -23,6 +23,7 @@ class ScriptConstructorLocal(ScriptConstructor):
         """ Returns the code for the helper script
         """
         script = super(ScriptConstructorLocal, cls).get_helper_script(pipe_data)
+
         script = re.sub("## locksed command entry point", r"""locksed  "s:^\\($3\\).*:# \\1\\t$err_code:" $run_index""", script)
 
         # Add job_limit function:
@@ -75,7 +76,6 @@ locksed "s:\($qsubname\).*$:\\1\\tPID\\t$!:" $run_index
 
         if "slow_release" in self.params.keys():
             sys.exit("Slow release no longer supported. Use 'job_limit'")
-
         else:
             script += """\
 sh {nsf_exec} \\

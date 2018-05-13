@@ -485,24 +485,26 @@ Dependencies: {depends}""".format(name = self.name,
             # print "\n\n"
             if (k in sample_data):
                 if (isinstance(sample_data[k], dict) 
-                    and isinstance(other_sample_data[k], dict)):
+                        and isinstance(other_sample_data[k], dict)):
                     sample_data[k] = self.sample_data_merge(sample_data[k], other_sample_data[k], other_step_name)
                 else:
+                    # For list of active samples, merge the lists:
+                    if k == "samples":
+                        sample_data[k] = list(set(sample_data[k]) | set(other_sample_data[k]))
+
                     # Do nothing, but check not discarding values from other_sample_data
-                    if (sample_data[k] != other_sample_data[k]):
+                    if sample_data[k] != other_sample_data[k]:
                         self.write_warning("There is a difference from %s in key %s\n" % (other_step_name, k))
             else:
                 sample_data[k] = deepcopy(other_sample_data[k])
         
         return sample_data
-        
-    
+
     def set_sample_data(self, sample_data = None):
         """ Sets the sample_data. 
             This cannot be done in constructor because it depends on the output from previous steps.
             Uses self.base_step_list
         """
-
 
         # Preparing dict to store sample_data of bases:
         # This is not usually used but might be handy when you need more than one bam, for instance (see below)
@@ -544,15 +546,27 @@ Dependencies: {depends}""".format(name = self.name,
 
         if "sample_list" in self.params:
             if self.params["sample_list"] == "all_samples":
-                self.sample_data["samples"] = self.pipe_data["samples"]
+                # self.sample_data["samples"] = self.pipe_data["samples"]
+                try:
+                    self.sample_data["samples"] = self.sample_data["prev_sample_lists"].pop()
+                except KeyError:
+                    raise AssertionExcept("'sample_list' set to 'all_samples' before sample subset selected",
+                                          step=self.get_step_name())
+
             else:
                 if not isinstance(self.params["sample_list"] , list):
                     self.params["sample_list"] = re.split("[, ]+", self.params["sample_list"])
                 if set(self.params["sample_list"])-set(self.pipe_data["samples"]):
                     raise AssertionExcept("'sample_list' includes samples not defined in sample data!", step=self.get_step_name())
+
+                # Push previous sample list into prev_sample_lists
+                try:
+                    self.sample_data["prev_sample_lists"].append(self.sample_data["samples"])
+                except KeyError:
+                    self.sample_data["prev_sample_lists"] = list()
+                    self.sample_data["prev_sample_lists"].append(self.sample_data["samples"])
+
                 self.sample_data["samples"] = self.params["sample_list"]
-
-
 
         # Trying running step specific sample initiation script:
         try:
@@ -563,7 +577,6 @@ Dependencies: {depends}""".format(name = self.name,
         except AssertionExcept as assertErr: 
             assertErr.set_step_name(self.get_step_name())
             raise assertErr
-
 
     def get_main_command(self):
         """ Return the command to put in the main workflow script to run the main step script.

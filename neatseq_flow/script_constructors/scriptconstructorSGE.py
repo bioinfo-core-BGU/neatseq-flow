@@ -18,13 +18,29 @@ class ScriptConstructorSGE(ScriptConstructor):
     """
 
     @classmethod
-    def get_helper_script(cls, *args):
+    def get_helper_script(cls, pipe_data):
         """ Returns the code for the helper script
         """
-
-        script = super(ScriptConstructorSGE, cls).get_helper_script(*args)
+        script = super(ScriptConstructorSGE, cls).get_helper_script(pipe_data)
 
         script = re.sub("## locksed command entry point", r"", script)
+
+        # Add job_limit function:
+        if "job_limit" in pipe_data:
+            script += """\
+job_limit={job_limit}
+
+wait_limit() {{
+    while : ; do 
+        numrun=$({qstat} -u $USER | wc -l ); 
+        maxrun=$(sed -ne "s/limit=\([0-9]*\).*/\\1/p" $job_limit); 
+        sleeptime=$(sed -ne "s/.*sleep=\([0-9]*\).*/\\1/p" $job_limit); 
+        [[ $numrun -ge $maxrun ]] || break; 
+        sleep $sleeptime; 
+    done
+}}
+""".format(job_limit=pipe_data["job_limit"],
+           qstat=pipe_data["qsub_params"]["qstat_path"])
 
         return script
 
@@ -48,7 +64,7 @@ qsub {script_path}
 
         return script
 
-        
+
     def get_kill_command(self):
     
         return "qdel {script_name}".format(script_name = self.script_id)
@@ -75,12 +91,10 @@ qsub {script_path}
                           qsub_stdout,
                           qsub_holdjids]).replace("\n\n","\n")
 
-        
+# ----------------------------------------------------------------------------------
+# HighScriptConstructorSGE definition
+# ----------------------------------------------------------------------------------
 
-        
-        
-        
-####----------------------------------------------------------------------------------
 
 class HighScriptConstructorSGE(ScriptConstructorSGE,HighScriptConstructor):
     """ A class for creating the high-level script for NeatSeq-Flow when Executor is SGE
@@ -114,37 +128,34 @@ class HighScriptConstructorSGE(ScriptConstructorSGE,HighScriptConstructor):
                 continue
             qsub_opts += "#$ {key} {val}\n".format(key=qsub_opt, val=self.params["qsub_params"]["opts"][qsub_opt]) 
 
-
-        # Adding 'compulsory_high_lev_params' to all high level scripts (This includes '-V'. Otherwise, if shell is bash, the SGE commands are not recognized)
+        # Adding 'compulsory_high_lev_params' to all high level scripts (This includes '-V'. Otherwise,
+        # if shell is bash, the SGE commands are not recognized)
         for qsub_opt in compulsory_high_lev_params:
             if qsub_opt not in self.params["qsub_params"]["opts"]:
                 qsub_opts += "#$ {key} {val}\n".format(key=qsub_opt, 
                                                 val=compulsory_high_lev_params[qsub_opt]) 
 
-
-        # Sometimes qsub_opts is empty and then there is an ugly empty line in the middle of the qsub definition. Removing the empty line with replace()
+        # Sometimes qsub_opts is empty and then there is an ugly empty line in the middle of the qsub definition.
+        # Removing the empty line with replace()
         return "\n".join([general_header,
                             qsub_queue,
                             qsub_opts]).replace("\n\n","\n") + "\n\n"
 
-                            
     def get_command(self):
         """ Writing low level lines to high level script: job_limit loop, adding qdel line and qsub line
             spec_qsub_name is the qsub name without the run code (see caller)
-            """
+        """
+
+        command = super(HighScriptConstructorSGE, self).get_command()
 
         job_limit = ""
 
         if "job_limit" in self.pipe_data.keys():
             job_limit = """
 # Sleeping while jobs exceed limit
-while : ; do numrun=$({qstat} -u $USER | wc -l ); maxrun=$(sed -ne "s/limit=\([0-9]*\).*/\\1/p" {limit_file}); sleeptime=$(sed -ne "s/.*sleep=\([0-9]*\).*/\\1/p" {limit_file}); [[ $numrun -ge $maxrun ]] || break; sleep $sleeptime; done
-""".format(limit_file=self.pipe_data["job_limit"],
-           qstat=self.pipe_data["qsub_params"]["qstat_path"])
-
-        command = super(HighScriptConstructorSGE, self).get_command()
-
-        
+wait_limit
+"""#.format(limit_file=self.pipe_data["job_limit"],
+    #       qstat=self.pipe_data["qsub_params"]["qstat_path"])
 
         # TODO: Add output from stdout and stderr
 
@@ -154,15 +165,11 @@ while : ; do numrun=$({qstat} -u $USER | wc -l ); maxrun=$(sed -ne "s/limit=\([0
 echo running {script_id}
 {command}
 
-""".format(script_id = self.script_id,
+""".format(script_id=self.script_id,
            job_limit=job_limit,
-           command = command)
-        
-        
-        return script                            
-                            
-                            
-                            
+           command=command)
+
+        return script
 
     def get_child_command(self, script_obj):
         """ Writing low level lines to high level script: job_limit loop, adding qdel line and qsub line
@@ -174,9 +181,9 @@ echo running {script_id}
         if "job_limit" in self.pipe_data.keys():
             job_limit = """
 # Sleeping while jobs exceed limit
-while : ; do numrun=$({qstat} -u $USER | wc -l ); maxrun=$(sed -ne "s/limit=\([0-9]*\).*/\\1/p" {limit_file}); sleeptime=$(sed -ne "s/.*sleep=\([0-9]*\).*/\\1/p" {limit_file}); [[ $numrun -ge $maxrun ]] || break; sleep $sleeptime; done
-""".format(limit_file=self.pipe_data["job_limit"],
-           qstat=self.pipe_data["qsub_params"]["qstat_path"])
+wait_limit
+"""#.format(limit_file=self.pipe_data["job_limit"],
+    #       qstat=self.pipe_data["qsub_params"]["qstat_path"])
 
         script = """
 # ---------------- Code for {script_id} ------------------
@@ -191,16 +198,10 @@ qsub {script_name}
            script_id = script_obj.script_id,
            step_kill_file = self.params["kill_script_path"])
 
-        
         return script
                             
-                            
-                   
     def get_script_postamble(self):
                             
-                            
-        
-    
         # Get general postamble
         postamble = super(HighScriptConstructorSGE, self).get_script_postamble()
 

@@ -97,34 +97,20 @@ locksed() {{
     # $1: program
     # $2: file
     # Setting script as done in run index:
-    sedlock=${{2}}.sedlock
+    sedlock=${{2}}.lock
     exec 200>$sedlock
     flock -w 4000 200 || exit 1
 
-    echo do sed 
+    # echo do sed 
     sed -i -e "$1" $2
 
-    echo unlock
+    # echo unlock
     flock -u 200
 }}
 
 """.format(log_file=pipe_data["log_file"],
            qstat_path=pipe_data["qsub_params"]["qstat_path"],
            run_index=pipe_data["run_index"])
-
-        # if "job_limit" in pipe_data:
-        #     # This fix is for windows version. The backslahes in the path are interpreted as escape characters :(
-        #     if os.sep == "\\":
-        #         job_limit = "/".join(pipe_data["job_limit"].split('\\'))
-        #     else:
-        #         job_limit = pipe_data["job_limit"]
-        #     script = re.sub(r"# job_limit entry point",
-        #                     r"job_limit=%s" % job_limit,
-        #                     script)
-        # else:
-        #     script = re.sub("# job_limit entry point",
-        #                     "",
-        #                     script)
 
         return script
 
@@ -263,7 +249,7 @@ done
 
         elif self.shell == "bash":
             script = """
-# Import trap functions
+# Import helper functions
 . {helper_funcs}
 
 # If not in SGE context, set JOB_ID to ND

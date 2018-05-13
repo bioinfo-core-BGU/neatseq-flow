@@ -128,7 +128,7 @@ class HighScriptConstructorSLURM(ScriptConstructorSLURM,HighScriptConstructor):
         general_header = super(HighScriptConstructorSLURM, self).get_script_header(**kwargs)
 
         only_low_lev_params  = ["-pe"]
-        compulsory_high_lev_params = {"-V":""}
+        compulsory_high_lev_params = {}
 
         # Create lines containing the qsub opts.
         for qsub_opt in self.params["qsub_params"]["opts"]:
@@ -292,8 +292,8 @@ class LowScriptConstructorSLURM(ScriptConstructorSLURM,LowScriptConstructor):
         self.write_command("""\
 
 # Setting script as done in run index:
-# Using locksed provided in helper functions 
-locksed "s:^{script_id}.*:# &\\tdone:" {run_index}
+# Using locksed provided in helper functions
+locksed  "s:^\({script_id}\).*:# \\1\\tdone:" {run_index}
 
 """.format(run_index = self.pipe_data["run_index"],
            script_id = self.script_id))
@@ -338,8 +338,8 @@ rm -rf {run_index}.killall
 line2kill=$(grep '^{step}_{name}' {run_index} | awk '{{print $3}}')
 line2kill=(${{line2kill//,/ }})
 for item1 in "${{line2kill[@]}}"; do 
-    echo running "scancel $item1"
-    scancel $item1 
+    echo running "scancel --full --signal TERM $item1"
+    scancel --full --signal TERM $item1 
 done
 
 """.format(run_index = self.pipe_data["run_index"],
@@ -347,26 +347,3 @@ done
            name=caller_script.name)
 
         self.filehandle.write(script)
-
-
-#     def __init__(self, **kwargs):
-#
-#         super(KillScriptConstructor, self).__init__(**kwargs)
-#
-#         self.script_path = "".join([self.pipe_data["scripts_dir"],
-#                                     "99.kill_all",
-#                                     os.sep,
-#                                     "99.kill_all_{name}".format(name=self.name),
-#                                     ".sh"])
-#
-#         self.filehandle = open(self.script_path, "w")
-#
-#         self.filehandle.write("""\
-# #!/usr/csh
-#
-# touch {run_index}.killall
-#
-# sleep 100
-#
-# rm -rf {run_index}.killall""")
-#

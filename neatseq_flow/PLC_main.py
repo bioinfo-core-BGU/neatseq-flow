@@ -413,11 +413,16 @@ class NeatSeqFlow:
             pipe_fh.write("""
 \n\n
 # This is the main executable script of this pipeline
-# It was created on %(date)s by NeatSeq-Flow version %(version)s
+# It was created on {date} by NeatSeq-Flow version {version}
 # See http://neatseq-flow.readthedocs.io/en/latest/
 
-\n\n\n""" % {"date": time.strftime("%d/%m/%Y %H:%M:%S"), "version": __version__})
-            
+# Import helper functions
+. {helper_funcs}
+
+""".format(date=time.strftime("%d/%m/%Y %H:%M:%S"),
+           version=__version__,
+           helper_funcs=self.pipe_data["helper_funcs"]))
+
             # For each step, write the qsub command created by get_qsub_command() method:
             for step_n in self.step_list:
                 # Add the line only for modules that produce scripts
