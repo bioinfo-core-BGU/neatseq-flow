@@ -1,12 +1,12 @@
-import os
-import shutil
-import sys
-import re
-import traceback
-import datetime
-
-from copy import *
-from pprint import pprint as pp
+# import os
+# import shutil
+# import sys
+# import re
+# import traceback
+# import datetime
+#
+# from copy import *
+# from pprint import pprint as pp
 
 __author__ = "Menachem Sklarz"
 __version__ = "1.2.0"
@@ -76,15 +76,21 @@ sh {nsf_exec} \\
 
         qsub_shell = "#!/bin/%(shell)s\n#$ -S /bin/%(shell)s" % {"shell": self.shell}
         # Make hold_jids line only if there are jids (i.e. self.get_dependency_jid_list() != [])
-        if self.dependency_jid_list:
-            qsub_holdjids = "#$ -hold_jid %s " % self.dependency_jid_list
+        # Make hold_jids line only if there are jids (i.e. self.get_dependency_jid_list() != [])
+        if self.master.dependency_jid_list:
+            # Old style: Full list of jids:
+            # qsub_holdjids = "#$ -hold_jid %s " % ",".join(self.master.dependency_jid_list)
+            # New style: Using globs:
+            qsub_holdjids = "#$ -hold_jid {hold_jid_list}".format(
+                hold_jid_list=",".join(map(lambda x: '"%s"' % x, self.master.dependency_glob_jid_list)))
         else:
             qsub_holdjids = ""
+
         qsub_name =    "#$ -N %s " % (self.script_id)
         qsub_stderr =  "#$ -e %s" % self.pipe_data["stderr_dir"]
         qsub_stdout =  "#$ -o %s" % self.pipe_data["stdout_dir"]
-        qsub_queue =   "#$ -q %s" % self.params["qsub_params"]["queue"]
-        
+        # qsub_queue =   "#$ -q %s" % self.params["qsub_params"]["queue"]
+
         return "\n".join([qsub_shell,
                             qsub_name,
                             qsub_stderr,
@@ -100,12 +106,18 @@ class HighScriptConstructorQSUB(ScriptConstructorQSUB,HighScriptConstructor):
     """
     """
 
-    def get_depends_command(self, dependency_list):
+    def get_depends_command(self):
         """
         """
-        
-        return "qalter \\\n\t-hold_jid %s \\\n\t%s\n\n" % (dependency_list, self.script_id)
-    # dependency_list
+
+        # Old method:
+        # return "qalter \\\n\t-hold_jid %s \\\n\t%s\n\n" % (dependency_list, self.script_id)
+        # New methods wirh glob:
+
+        return "qalter \\\n\t-hold_jid {glob_jid_list} \\\n\t{script_id}\n\n".format(
+            # Comma separated list of double-quote enclosed glob jids:
+            glob_jid_list=",".join(map(lambda x: '"%s"' % x, self.master.dependency_glob_jid_list)),
+            script_id=self.script_id)
 
     def get_script_header(self, **kwargs):
         """ Make the first few lines for the scripts
@@ -127,20 +139,19 @@ class HighScriptConstructorQSUB(ScriptConstructorQSUB,HighScriptConstructor):
                 continue
             qsub_opts += "#$ {key} {val}\n".format(key=qsub_opt, val=self.params["qsub_params"]["opts"][qsub_opt]) 
 
-
-        # Adding 'compulsory_high_lev_params' to all high level scripts (This includes '-V'. Otherwise, if shell is bash, the QSUB commands are not recognized)
+        # Adding 'compulsory_high_lev_params' to all high level scripts
+        # (This includes '-V'. Otherwise, if shell is bash, the QSUB commands are not recognized)
         for qsub_opt in compulsory_high_lev_params:
             if qsub_opt not in self.params["qsub_params"]["opts"]:
                 qsub_opts += "#$ {key} {val}\n".format(key=qsub_opt, 
                                                 val=compulsory_high_lev_params[qsub_opt]) 
 
-
-        # Sometimes qsub_opts is empty and then there is an ugly empty line in the middle of the qsub definition. Removing the empty line with replace()
+        # Sometimes qsub_opts is empty and then there is an ugly empty line in the middle of the qsub definition.
+        # Removing the empty line with replace()
         return "\n".join([general_header,
                             qsub_queue,
                             qsub_opts]).replace("\n\n","\n") + "\n\n"
 
-                            
     def get_command(self):
         """ Writing low level lines to high level script: job_limit loop, adding qdel line and qsub line
             spec_qsub_name is the qsub name without the run code (see caller)
@@ -261,21 +272,23 @@ class LowScriptConstructorQSUB(ScriptConstructorQSUB,LowScriptConstructor):
                             qsub_queue,
                             qsub_opts]).replace("\n\n","\n") + "\n\n"
 
-    def write_script(self,
-                     script,
-                     dependency_jid_list,
-                     stamped_files,
-                     **kwargs):
+    def write_script(self):
+        # ,
+        #              script,
+        #              dependency_jid_list,
+        #              stamped_files,
+        #              **kwargs):
         """ Assembles the scripts to writes to file
         """
 
-        if "level" not in kwargs:
-            kwargs["level"] = "low"
+        # if "level" not in kwargs:
+        #     kwargs["level"] = "low"
 
-        super(LowScriptConstructorQSUB, self).write_script(script,
-                                                        dependency_jid_list,
-                                                        stamped_files,
-                                                        **kwargs)
+        super(LowScriptConstructorQSUB, self).write_script()
+        # script,
+        #                                                 dependency_jid_list,
+        #                                                 stamped_files,
+        #                                                 **kwargs)
 
         self.write_command("""\
 

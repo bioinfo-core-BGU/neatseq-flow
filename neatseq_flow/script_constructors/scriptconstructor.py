@@ -202,16 +202,22 @@ done
         """ Create a script constructor with name(i.e. 'qsub_name') and script path
         """
 
+        if "master" not in kwargs:
+            sys.exit("master must be passed in constructor")
+        self.master = kwargs["master"]
+            # print "Saving master"
+            # print self.master.get_glob_jid_list()
 
-
-        self.step = kwargs["step"]
-        self.name = kwargs["name"]
-        self.step_number = kwargs["number"]
-        self.shell = kwargs["shell"]
-        self.params = kwargs["params"]
-        self.pipe_data = kwargs["pipe_data"]
-        if "kill_obj" in kwargs:
-            self.kill_obj = kwargs["kill_obj"]
+        self.step = self.master.step
+        self.name = self.master.name
+        self.step_number = self.master.step_number
+        self.shell = self.master.shell
+        self.params = self.master.params
+        self.pipe_data = self.master.pipe_data
+        try:
+            self.kill_obj = self.master.kill_script_obj
+        except:
+            pass
 
         # self.step = step
         # self.name = name
@@ -408,10 +414,9 @@ class HighScriptConstructor(ScriptConstructor):
 
         pass
 
-
-    def get_script_preamble(self, dependency_jid_list):
+    def get_script_preamble(self):   #dependency_jid_list
     
-        self.dependency_jid_list = ",".join(dependency_jid_list) if dependency_jid_list else None
+        # self.dependency_jid_list = ",".join(dependency_jid_list) if dependency_jid_list else None
 
         script = "\n".join([self.get_script_header(),
                             self.get_trap_line(),
@@ -447,6 +452,12 @@ trap '' ERR
         """
         self.write_command(self.get_script_postamble())
 
+    def get_depends_command(self):
+        """
+        """
+
+        return ""
+
 
 # ----------------------------------------------------------------------------------
 # LowScriptConstructor defintion
@@ -457,12 +468,12 @@ class LowScriptConstructor(ScriptConstructor):
     """
     """
     
-    def __init__(self, id, **kwargs):
+    def __init__(self,  **kwargs):
 
         super(LowScriptConstructor, self).__init__(**kwargs)
         
-        self.script_id = id
-        
+        self.script_id = self.master.spec_script_name
+
         self.scripts_dir = \
             "{scripts_dir}{number}.{step}_{name}{sep}".format(scripts_dir=self.pipe_data["scripts_dir"],
                                                               number = self.step_number,
@@ -504,11 +515,11 @@ sed -i -e 's:^{kill_cmd}$:#&:' {qdel_file}\n""".format(kill_cmd = re.escape(kill
             
         return script
 
-    def get_stamped_file_register(self,stamped_files):
+    def get_stamped_file_register(self):
         """
         """
         
-        if not stamped_files:
+        if not self.master.stamped_files:
             return ""
 
         script = "######\n# Registering files with md5sum:\n"
@@ -521,7 +532,7 @@ sed -i -e 's:^{kill_cmd}$:#&:' {qdel_file}\n""".format(kill_cmd = re.escape(kill
         else:
             pass
 
-        for filename in stamped_files:
+        for filename in self.master.stamped_files:
             script += """
 %(echo_cmd)s `date '+%%d/%%m/%%Y %%H:%%M:%%S'` '\\t%(step)s\\t%(stepname)s\\t%(stepID)s\\t' `md5sum %(filename)s` >> %(file)s
 """ %      {"echo_cmd" : echo_cmd,
@@ -535,38 +546,40 @@ sed -i -e 's:^{kill_cmd}$:#&:' {qdel_file}\n""".format(kill_cmd = re.escape(kill
             
         return script
         
-    def write_script(self,
-                     script,
-                     dependency_jid_list,
-                     stamped_files,
-                     **kwargs):
+    def write_script(self):
+        # ,
+        #              script,
+        #              dependency_jid_list,
+        #              stamped_files,
+        #              **kwargs):
         """ Assembles the scripts to writes to file
         """
 
-        if "level" not in kwargs:
-            kwargs["level"] = "low"
+        # try:
+        #     print "get_dependency_glob_jid_list() output:"
+        #     print self.master.get_dependency_glob_jid_list()
+        # except:
+        #     print "not printing dependency_glob_jid_list"
 
         script = "\n".join([
-            self.get_script_preamble(dependency_jid_list),
+            self.get_script_preamble(),  #dependency_jid_list
             self.get_trap_line(),
             self.get_log_lines(state="Started"),
             self.get_activate_lines(type = "activate"),
             self.get_set_options_line(type = "set"),
             # THE SCRIPT!!!!
-            script,
-            self.get_stamped_file_register(stamped_files),
+            self.master.script,
+            self.get_stamped_file_register(),
             self.get_set_options_line(type = "unset"),
             self.get_activate_lines(type = "deactivate"),
             self.get_kill_line(state = "Stop"),
             self.get_log_lines(state = "Finished")])
 
-        
         self.write_command(script)
 
-
-    def get_script_preamble(self, dependency_jid_list):
+    def get_script_preamble(self):   #dependency_jid_list
     
-        self.dependency_jid_list = ",".join(dependency_jid_list) if dependency_jid_list else None
+        # self.dependency_jid_list = ",".join(dependency_jid_list) if dependency_jid_list else None
 
         script = "\n".join([self.get_script_header()])
 

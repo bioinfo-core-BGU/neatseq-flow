@@ -15,7 +15,6 @@ __version__ = "1.2.0"
 from scriptconstructor import *
 
 
-
 class ScriptConstructorLocal(ScriptConstructor):
 
     @classmethod
@@ -23,7 +22,6 @@ class ScriptConstructorLocal(ScriptConstructor):
         """ Returns the code for the helper script
         """
         script = super(ScriptConstructorLocal, cls).get_helper_script(pipe_data)
-
         script = re.sub("## locksed command entry point", r"""locksed  "s:^\\($3\\).*:# \\1\\t$err_code:" $run_index""", script)
 
         # Add job_limit function:
@@ -105,8 +103,9 @@ sh {nsf_exec} \\
 
         qsub_header = """#!/bin/{shell}\n""".format(shell      = self.shell)
         
-        if self.dependency_jid_list:
-            qsub_header += "#$ -hold_jid %s " % self.dependency_jid_list
+        if self.master.dependency_jid_list:
+            qsub_header += "#$ -hold_jid %s " % ",".join(self.master.dependency_jid_list)
+
             
         return qsub_header  
 
@@ -119,11 +118,6 @@ class HighScriptConstructorLocal(ScriptConstructorLocal,HighScriptConstructor):
     """
     """
 
-    def get_depends_command(self, dependency_list):
-        """
-        """
-        
-        return ""
 
     def get_script_header(self, **kwargs):
         """ Make the first few lines for the scripts
@@ -245,21 +239,23 @@ class LowScriptConstructorLocal(ScriptConstructorLocal, LowScriptConstructor):
 
         return general_header + "\n\n"
 
-    def write_script(self,
-                     script,
-                     dependency_jid_list,
-                     stamped_files,
-                     **kwargs):
+    def write_script(self):
+        # ,
+        #              script,
+        #              dependency_jid_list,
+        #              stamped_files,
+        #              **kwargs):
         """ Assembles the scripts to writes to file
         """
 
-        if "level" not in kwargs:
-            kwargs["level"] = "low"
+        # if "level" not in kwargs:
+        #     kwargs["level"] = "low"
 
-        super(LowScriptConstructorLocal, self).write_script(script,
-                                                        dependency_jid_list,
-                                                        stamped_files,
-                                                        **kwargs)
+        super(LowScriptConstructorLocal, self).write_script()
+        # script,
+        #                                                 dependency_jid_list,
+        #                                                 stamped_files,
+        #                                                 **kwargs)
 
         self.write_command("""\
 

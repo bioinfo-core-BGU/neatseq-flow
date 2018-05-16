@@ -1,7 +1,9 @@
-import os, shutil, sys, re
+import os
+import shutil
+import sys
+import re
 import traceback
 import datetime
-
 
 from copy import *
 from pprint import pprint as pp
@@ -76,10 +78,15 @@ qsub {script_path}
 
         qsub_shell = "#!/bin/%(shell)s\n#$ -S /bin/%(shell)s" % {"shell": self.shell}
         # Make hold_jids line only if there are jids (i.e. self.get_dependency_jid_list() != [])
-        if self.dependency_jid_list:
-            qsub_holdjids = "#$ -hold_jid %s " % self.dependency_jid_list
+        if self.master.dependency_jid_list:
+            # Old style: Full list of jids:
+            # qsub_holdjids = "#$ -hold_jid %s " % ",".join(self.master.dependency_jid_list)
+            # New style: Using globs:
+            qsub_holdjids = "#$ -hold_jid {hold_jid_list}".format(
+                hold_jid_list=",".join(map(lambda x: '"%s"' % x, self.master.dependency_glob_jid_list)))
         else:
             qsub_holdjids = ""
+
         qsub_name =    "#$ -N %s " % (self.script_id)
         qsub_stderr =  "#$ -e %s" % self.pipe_data["stderr_dir"]
         qsub_stdout =  "#$ -o %s" % self.pipe_data["stdout_dir"]
@@ -100,14 +107,19 @@ class HighScriptConstructorSGE(ScriptConstructorSGE,HighScriptConstructor):
     """ A class for creating the high-level script for NeatSeq-Flow when Executor is SGE
     """
 
-    def get_depends_command(self, dependency_list):
+    def get_depends_command(self):
         """
         """
-        
-        return "qalter \\\n\t-hold_jid %s \\\n\t%s\n\n" % (dependency_list, self.script_id)
-    # dependency_list
 
-        
+        # Old method:
+        # return "qalter \\\n\t-hold_jid %s \\\n\t%s\n\n" % (dependency_list, self.script_id)
+        # New methods wirh glob:
+
+        return "qalter \\\n\t-hold_jid {glob_jid_list} \\\n\t{script_id}\n\n".format(
+            # Comma separated list of double-quote enclosed glob jids:
+            glob_jid_list=",".join(map(lambda x: '"%s"' % x, self.master.dependency_glob_jid_list)),
+            script_id=self.script_id)
+
     def get_script_header(self, **kwargs):
         """ Make the first few lines for the scripts
             Is called for high level, low level and wrapper scripts
@@ -117,7 +129,6 @@ class HighScriptConstructorSGE(ScriptConstructorSGE,HighScriptConstructor):
 
         only_low_lev_params  = ["-pe"]
         compulsory_high_lev_params = {"-V":""}
-        # special_opts = "-N -e -o -q -hold_jid".split(" ") + only_low_lev_params
 
         qsub_queue =   "#$ -q %s" % self.params["qsub_params"]["queue"]
 
@@ -265,10 +276,11 @@ class LowScriptConstructorSGE(ScriptConstructorSGE,LowScriptConstructor):
             # qsub_queue += "@%s" % self.params["qsub_params"]["node"]
             qsub_queue = "#$ -q %s" % qsub_queue
 
-        # Sometimes qsub_opts is empty and then there is an ugly empty line in the middle of the qsub definition. Removing the empty line with replace()
+        # Sometimes qsub_opts is empty and then there is an ugly empty line in the middle of the qsub definition.
+        # Removing the empty line with replace()
         return "\n".join([general_header,
-                            qsub_queue,
-                            qsub_opts]).replace("\n\n","\n") + "\n\n"
+                          qsub_queue,
+                          qsub_opts]).replace("\n\n", "\n") + "\n\n"
 
 # ----------------------------------------------------------------------------------
 # KillScriptConstructorSGE definition

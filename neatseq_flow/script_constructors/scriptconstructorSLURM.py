@@ -5,7 +5,6 @@ import re
 import traceback
 import datetime
 
-
 from copy import *
 from pprint import pprint as pp
 
@@ -65,7 +64,6 @@ locksed "s:\($qsubname\).*$:\\1\\trunning\\t$jobid:" $run_index
 
         if "slow_release" in self.params.keys():
             sys.exit("Slow release no longer supported. Use 'job_limit'")
-
         else:
             script += """\
 sh {nsf_exec} \\
@@ -101,9 +99,9 @@ sh {nsf_exec} \\
            jobname    = self.script_id) 
         if  self.params["qsub_params"]["queue"]:
             qsub_header +=   "#SBATCH --partition %s\n" % self.params["qsub_params"]["queue"]
-        if self.dependency_jid_list:
-            qsub_header += "#$ -hold_jid %s \n" % self.dependency_jid_list
-            
+        if self.master.dependency_jid_list:
+            qsub_header += "#$ -hold_jid %s " % ",".join(self.master.dependency_jid_list)
+
         return qsub_header  
 # ----------------------------------------------------------------------------------
 # HighScriptConstructorSLURM defintion
@@ -112,13 +110,6 @@ sh {nsf_exec} \\
 class HighScriptConstructorSLURM(ScriptConstructorSLURM,HighScriptConstructor):
     """
     """
-
-    def get_depends_command(self, dependency_list):
-        """
-        """
-        return ""
-        # This is acheived by making high level scripts 'wait' for low level scripts
-        #return "# scontrol bla bla bla... Find out how is done\n\n"#qalter \\\n\t-hold_jid %s \\\n\t%s\n\n" % (dependency_list, self.script_id)
 
     def get_script_header(self, **kwargs):
         """ Make the first few lines for the scripts
@@ -272,21 +263,22 @@ class LowScriptConstructorSLURM(ScriptConstructorSLURM,LowScriptConstructor):
         # Sometimes qsub_opts is empty and then there is an ugly empty line in the middle of the qsub definition. Removing the empty line with replace()
         return general_header + "\n\n"
 
-    def write_script(self,
-                     script,
-                     dependency_jid_list,
-                     stamped_files,
-                     **kwargs):
+    def write_script(self):
+                     # script,
+                     # dependency_jid_list,
+                     # stamped_files,
+                     # **kwargs):
         """ Assembles the scripts to writes to file
         """
 
-        if "level" not in kwargs:
-            kwargs["level"] = "low"
+        # if "level" not in kwargs:
+        #     kwargs["level"] = "low"
 
-        super(LowScriptConstructorSLURM, self).write_script(script,
-                                                        dependency_jid_list,
-                                                        stamped_files,
-                                                        **kwargs)
+        super(LowScriptConstructorSLURM, self).write_script()
+    # script,
+    #                                                     dependency_jid_list,
+    #                                                     stamped_files,
+    #                                                     **kwargs)
 
         
         self.write_command("""\

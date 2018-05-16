@@ -55,6 +55,10 @@ class Step:
     """
     Cwd = os.path.dirname(os.path.abspath(__file__))
 
+# ----------------------------------------------------------------------------------
+# Step class methods
+# ----------------------------------------------------------------------------------
+
     @classmethod
     def find_step_module(cls, step, param_data, pipe_data):
         """ A class method for finding the location of a module for a given step
@@ -153,20 +157,10 @@ class Step:
         return retval, module_loc
 
 
-        
-                
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
+# ----------------------------------------------------------------------------------
+# Step instance methods
+# ----------------------------------------------------------------------------------
+
     def __init__(self,name,step_type,params,pipe_data,module_path):
         """ should not be used. only specific step inits should be called. 
             Maybe a default init can be defined as well. check.
@@ -201,25 +195,32 @@ class Step:
         # Setting qsub options in step parameters:
         self.manage_qsub_opts()
        
-        
-        self.jid_list = []      # Initialize a list to store the list of jids of the current step
-        
+        self.jid_list = []        # Initialize a list to store the list of jids of the current step
+        self.glob_jid_list = []   # An experimental feature to enable shorter depend lists
+
         # The following line defines A list of jids from current step that all other steps should depend on.
-        # Is used to add a prelimanry step, equivalent to the "wrapping up" step that is dependent on all previous scripts
-        self.preliminary_jids =[]  
+        # Is used to add a prelimanry step, equivalent to the "wrapping up" step that is dependent on all previous
+        # scripts
+        self.preliminary_jids = []
 
         # self.skip_scripts determines whether scripts will be created. 
         # Defaults to False, unless SKIP is defined in parameters.
         # This is supposed:
         # A. to enable steps to avoid script building by setting to True.
         #    See for example del_type, move_type (now generalized in manage_types)
-        #    In this case, set skip_scripts to True in step_specific_init(). skip_step_sample_initiation will be set to False by default.
-        # B. To enable skipping a step while leaving the flow scheme intact (i.e. a step is like a channel for types without actually doing anything. Same as commenting it out but saves resetting bases...)
-        #    In this case, both skip_scripts and skip_step_sample_initiation are set to True, because some of the modifications to sample_data are performed in self.step_sample_initiation(). 
-        #    In the step_specific_init() function no changes to sample_data are possible because it is not set yet at that stage!
+        #    In this case, set skip_scripts to True in step_specific_init(). skip_step_sample_initiation
+        #    will be set to False by default.
+        # B. To enable skipping a step while leaving the flow scheme intact (i.e. a step is like a channel for
+        #    types without actually doing anything. Same as commenting it out but saves resetting bases...)
+        #    In this case, both skip_scripts and skip_step_sample_initiation are set to True, because some of the
+        #    modifications to sample_data are performed in self.step_sample_initiation().
+        #    In the step_specific_init() function no changes to sample_data are possible because it is not set yet
+        #    at that stage!
         if "SKIP" in self.params:
             self.skip_scripts = True
-            self.skip_step_sample_initiation = True   # This is so that modifications to sample_data requested in step_sample_initiation() will not be performed if SKIP is set.
+            self.skip_step_sample_initiation = True
+            # This is so that modifications to sample_data requested in
+            # step_sample_initiation() will not be performed if SKIP is set.
         else:
             self.skip_scripts = False   
             self.skip_step_sample_initiation = False
@@ -417,25 +418,27 @@ Dependencies: {depends}""".format(name = self.name,
         ## Create kill script class
         # Done before high level script so that high level knows about the 'kill_script_path' in params
         getScriptConstructorClass = self.import_ScriptConstructor(level="kill")
-        self.kill_script_obj = getScriptConstructorClass(step = self.get_step_step(), \
-                                                name = self.get_step_name(), \
-                                                number = self.step_number, \
-                                                shell = self.shell,
-                                                params = self.params,
-                                                pipe_data = self.pipe_data)
+        self.kill_script_obj = getScriptConstructorClass(master = self)
+        # step = self.get_step_step(), \
+        #                                         name = self.get_step_name(), \
+        #                                         number = self.step_number, \
+        #                                         shell = self.shell,
+        #                                         params = self.params,
+        #                                         pipe_data = self.pipe_data)
         # Store path to kill script in params:
         self.params["kill_script_path"] = self.kill_script_obj.script_path
 
         getScriptConstructorClass = self.import_ScriptConstructor(level="high")
 
         ## Create main script class
-        self.main_script_obj = getScriptConstructorClass(step = self.get_step_step(),
-                                                         name = self.get_step_name(),
-                                                         number = self.step_number,
-                                                         shell = self.shell,
-                                                         kill_obj=self.kill_script_obj,
-                                                         params = self.params,
-                                                         pipe_data = self.pipe_data)
+        self.main_script_obj = getScriptConstructorClass(master=self)
+        # step = self.get_step_step(),
+        #                                                  name = self.get_step_name(),
+        #                                                  number = self.step_number,
+        #                                                  shell = self.shell,
+        #                                                  kill_obj=self.kill_script_obj,
+        #                                                  params = self.params,
+        #                                                  pipe_data = self.pipe_data)
 
         
     def cleanup(self):
@@ -450,10 +453,13 @@ Dependencies: {depends}""".format(name = self.name,
         """ Get dependency command from high script object
             This will be qalter in qsub
         """
-        
-        dependency_list = ",".join(self.get_dependency_jid_list())
-        return self.main_script_obj.get_depends_command(dependency_list)
-        
+
+        # dependency_list = ",".join(self.get_dependency_jid_list())
+        if self.skip_scripts:
+            return ""
+
+        return self.main_script_obj.get_depends_command()
+
     def set_step_number(self,step_number):
         """ Sets the number of the step in the step list. 
             Is used in naming the scripts, so that they can be sorted with 'll'
@@ -541,7 +547,8 @@ Dependencies: {depends}""".format(name = self.name,
             if not isinstance(self.params["exclude_sample_list"] , list):
                 self.params["exclude_sample_list"] = re.split("[, ]+", self.params["exclude_sample_list"])
             if set(self.params["exclude_sample_list"])-set(self.pipe_data["samples"]):
-                raise AssertionExcept("'sample_list' includes samples not defined in sample data!", step=self.get_step_name())
+                raise AssertionExcept("'exclude_sample_list' includes samples not defined in sample data!",
+                                      step=self.get_step_name())
             self.params["sample_list"] = list(set(self.pipe_data["samples"]) - set(self.params["exclude_sample_list"]))
 
         if "sample_list" in self.params:
@@ -554,10 +561,11 @@ Dependencies: {depends}""".format(name = self.name,
                                           step=self.get_step_name())
 
             else:
-                if not isinstance(self.params["sample_list"] , list):
+                if not isinstance(self.params["sample_list"], list):
                     self.params["sample_list"] = re.split("[, ]+", self.params["sample_list"])
                 if set(self.params["sample_list"])-set(self.pipe_data["samples"]):
-                    raise AssertionExcept("'sample_list' includes samples not defined in sample data!", step=self.get_step_name())
+                    raise AssertionExcept("'sample_list' includes samples not defined in sample data!",
+                                          step=self.get_step_name())
 
                 # Push previous sample list into prev_sample_lists
                 try:
@@ -584,7 +592,6 @@ Dependencies: {depends}""".format(name = self.name,
 
         return self.main_script_obj.get_command()
 
-        
     def set_spec_script_name(self,sample=None):
         """ Sets the current spec_script_name to a regular name, i.e.:
                 sample level: "_".join([self.step,self.name,sample])
@@ -603,9 +610,7 @@ Dependencies: {depends}""".format(name = self.name,
             self.spec_script_name = "_".join([self.step,self.name,self.sample_data["Title"]])
 
         return self.spec_script_name
-        
-        
-        
+
     def add_jid_to_jid_list(self, script_id):
         """ Adds a jid for a sub process (e.g. a sample-specific script) to the jid list of the current step
         """
@@ -632,8 +637,27 @@ Dependencies: {depends}""".format(name = self.name,
                 depend_jid_list += (base_step.get_jid_list() + base_step.get_dependency_jid_list())
 
         return depend_jid_list
-        
-        
+
+    def get_glob_jid_list(self):
+        """ Return list of jids
+            To be used by pipeline for creating the delete function (99.del...)
+        """
+
+        return self.glob_jid_list
+
+    def get_dependency_glob_jid_list(self):
+        """ Returns the list of jids of all base steps
+            Recursion. beware!
+        """
+
+        glob_depend_jid_list = []
+
+        if self.base_step_list:
+            for base_step in self.base_step_list:
+                glob_depend_jid_list += (base_step.get_glob_jid_list() + base_step.get_dependency_glob_jid_list())
+
+        return list(set(glob_depend_jid_list))
+
     def import_ScriptConstructor(self, level): #modname, classname):
         """Returns a class of "classname" from module "modname". 
         """
@@ -652,15 +676,7 @@ Dependencies: {depends}""".format(name = self.name,
         getChildClass = self.import_ScriptConstructor(level="low")
         # Create ScriptConstructor for low level script.
         self.child_script_obj = \
-            getChildClass(step = self.get_step_step(),
-                          name = self.get_step_name(),
-                          number = self.step_number,
-                          shell = self.shell,
-                          params = self.params,
-                          kill_obj=self.kill_script_obj,
-                          pipe_data = self.pipe_data,
-                          # This is set by the module build_scripts() function:
-                          id = self.spec_script_name)
+            getChildClass(master=self)
 
         # Adds script_id to jid_list
         self.add_jid_to_jid_list(self.child_script_obj.script_id)  
@@ -675,37 +691,29 @@ Dependencies: {depends}""".format(name = self.name,
         # Add jid to list of jids in pipe_data for process deletion script. TO BE DONE IN PIPELINE, NOT HERE! USE get_jid_list() METHOD FOR THIS! 
         
         # Get dependency jid list 
-        dependency_jid_list = self.get_dependency_jid_list() 
+        self.dependency_jid_list = self.get_dependency_jid_list()
         # Add prelimanry jids if exist (if not, is an empty list and will not affect the outcome)
         # Adding at the head of the list. That's why is done in two steps - just to make it clearer.
-        dependency_jid_list = self.preliminary_jids + dependency_jid_list
-        
+        self.dependency_jid_list = self.preliminary_jids + self.dependency_jid_list
+        self.dependency_glob_jid_list = self.preliminary_jids + self.get_dependency_glob_jid_list()
+
         # Request low-level script construction from LowScriptConstructor:
-        self.child_script_obj.write_script(script = self.script, 
-                                            dependency_jid_list = dependency_jid_list,
-                                            stamped_files = self.stamped_files)
-        
-        
-        
+        self.child_script_obj.write_script()
+
         # Clear stamped files list
         self.stamped_files = list()
 
         # Add child command execution lines to main script:
         self.main_script_obj.write_command(self.main_script_obj.get_child_command(self.child_script_obj))
-        # qdel_line = self.child_script_obj.get_kill_command(),\
-                                                # script_path = self.child_script_obj.script_path,\
-                                                # script_id = self.child_script_obj.script_id)
 
         # Adding to qsub_names_dict:
         self.qsub_names_dict["low_qsubs"].append(self.child_script_obj.script_id)
-        
-        
+
         # Adding job name and path to script and run indices
         self.add_job_script_run_indices(self.child_script_obj)
         
         self.child_script_obj.__del__()
 
-    
     def add_job_script_run_indices(self, script_obj):
         """ Add current script to script_index and run_index files
         """
@@ -741,32 +749,20 @@ Dependencies: {depends}""".format(name = self.name,
         
         # Adding high-level jid to jid_list
         self.add_jid_to_jid_list(self.main_script_obj.script_id)
-        
-        # TODO: Send to be done in ScriptConstructors!
-        # -------------------------------------
+        self.glob_jid_list.append("{step}_{name}*".format(step=self.get_step_step(),
+                                                          name=self.get_step_name()))
+
         # Add qdel command to main qdel script:
         self.main_script_obj.main_script_kill_commands(self.kill_script_filename_main)
-        # main_script_obj.main_script_kill_commands() should enter main script killing commands into main file
-        # at '# entry point'. This is done so so that steps are killed in reverse order.
-        # f = open(self.kill_script_filename_main,'r')
-        # kill_file = f.read()
-        # f.close()
-        #
-        # kill_file = re.sub("# entry_point", "# entry_point\n{kill_cmd}".format(kill_cmd=self.main_script_obj.get_kill_command()),kill_file)
-        #
-        # f = open(self.kill_script_filename_main,'w')
-        # f.write(kill_file)
-        # f.close()
-        # -------------------------------------
-        
-        
-        dependency_jid_list = self.get_dependency_jid_list()# + self.preliminary_jids  
-        
+
+        self.dependency_jid_list = self.get_dependency_jid_list()   # + self.preliminary_jids
+        self.dependency_glob_jid_list = self.get_dependency_glob_jid_list()
+
         # Write main script preamble:
-        self.main_script_obj.write_command(self.main_script_obj.get_script_preamble(dependency_jid_list))
-        
-        
-        # The actual qsub commands must be written in the create_low_level_script() function because they are step_name dependent!
+        self.main_script_obj.write_command(self.main_script_obj.get_script_preamble())
+
+        # The actual qsub commands must be written in the create_low_level_script() function because they are
+        # step_name dependent!
             
         # Adding to qsub_names_dict:
         self.qsub_names_dict["step"] = self.get_step_step()
@@ -787,7 +783,8 @@ Dependencies: {depends}""".format(name = self.name,
         """ Create a script that will run before all other low level scripts commence
 
         """
-        # Creating script. If 'create_spec_preliminary_script' is not defined or returns nothing, return from here without doing anything
+        # Creating script. If 'create_spec_preliminary_script' is not defined or returns nothing,
+        # return from here without doing anything
         self.script = ""
         try:
             self.create_spec_preliminary_script()
@@ -795,29 +792,22 @@ Dependencies: {depends}""".format(name = self.name,
             return 
 
         if not self.script.strip():                 # If script is empty, do not create a wrapper function
-            return 
-        
-        # self.spec_qsub_name = "_".join([self.step,self.name,"preliminary"])
+            return
+
+        self.spec_script_name = "_".join([self.step, self.name, "preliminary"])
+
         getChildClass = self.import_ScriptConstructor(level="low")
         # Create ScriptConstructor for low level script.
         self.prelim_script_obj = \
-            getChildClass(step = self.get_step_step(),
-                          name = self.get_step_name(),
-                          number = self.step_number,
-                          shell = self.shell,
-                          params = self.params,
-                          kill_obj=self.kill_script_obj,
-                          pipe_data = self.pipe_data,
-                          id = "_".join([self.step,self.name,"preliminary"]))
+            getChildClass(master=self)
 
         # Get dependency jid list and add preliminary jids if exist
         # (if not, is an empty list and will not affect the outcome)
-        #    Also, add all jids of current step, as this script is to run only after all previous steps have completed.
-        dependency_jid_list = self.get_dependency_jid_list()
+        self.dependency_jid_list = self.get_dependency_jid_list()
+        self.dependency_glob_jid_list = self.get_dependency_glob_jid_list()
 
-        self.prelim_script_obj.write_script(script = self.script,
-                                            dependency_jid_list = dependency_jid_list,
-                                            stamped_files = self.stamped_files)
+        self.prelim_script_obj.write_script()
+
         # Clear stamped files list
         self.stamped_files = list()
                 
@@ -858,53 +848,46 @@ Dependencies: {depends}""".format(name = self.name,
         if not self.script.strip():                 # If script is empty, do not create a wrapper function
             return 
 
-        self.spec_qsub_name = "_".join([self.step,self.name,"wrapping_up"])
+        self.spec_script_name = "_".join([self.step,self.name,"wrapping_up"])
 
         getChildClass = self.import_ScriptConstructor(level="low")
 
         # Create ScriptConstructor for low level script.
-        self.wrap_script_obj = \
-            getChildClass(step = self.get_step_step(),
-                          name = self.get_step_name(),
-                          number = self.step_number,
-                          shell = self.shell,
-                          params = self.params,
-                          kill_obj=self.kill_script_obj,
-                          pipe_data = self.pipe_data,
-                          id = self.spec_qsub_name)
+        self.wrap_script_obj = getChildClass(master=self)
 
         # Get dependency jid list and add preliminary jids if exist
         # (if not, is an empty list and will not affect the outcome)
         #    Also, add all jids of current step, as this script is to run only after all previous steps have completed.
-        dependency_jid_list = self.preliminary_jids + self.get_jid_list() + self.get_dependency_jid_list()
-        
+        self.dependency_jid_list = self.preliminary_jids + self.get_jid_list() + self.get_dependency_jid_list()
+        self.dependency_glob_jid_list = self.preliminary_jids + \
+                                        self.get_glob_jid_list() + \
+                                        self.get_dependency_glob_jid_list()
         # Removing parent name from wrapping_up dependencies
-        dependency_jid_list.remove(self.main_script_obj.script_id)
-        self.wrap_script_obj.write_script(script = self.script, 
-                                          dependency_jid_list = dependency_jid_list,
-                                          stamped_files = self.stamped_files)
+        self.dependency_jid_list.remove(self.main_script_obj.script_id)
+
+        # sys.exit(self.spec_qsub_name)
+        self.wrap_script_obj.write_script()
+
         # Clear stamped files list
         self.stamped_files = list()
         
         self.main_script_obj.write_command(self.main_script_obj.get_child_command(self.wrap_script_obj))
-        # qdel_line = self.wrap_script_obj.get_kill_command(),\
-                                        # script_path = self.wrap_script_obj.script_path,\
-                                        # script_id = self.wrap_script_obj.script_id)
 
-
-        # This is here because I want to use jid_list to make wrapping_up script dependent on this step's main low-level scripts
-        # Explantion: get_jid_list() was used above (line 'qsub_header...') to make the wrapping_up script dependent on the other scripts created by the step
-        #    Now that that is done, the following line adds this step to the jid_list, so that subsequent steps are dependent on the wrapping up script as well. (I hope this makes it clear...)
+        # This is here because I want to use jid_list to make wrapping_up script dependent on this step's
+        # main low-level scripts
+        # Explantion: get_jid_list() was used above (line 'qsub_header...') to make the wrapping_up script dependent
+        # on the other scripts created by the step. Now that that is done, the following line adds this step to the
+        # jid_list, so that subsequent steps are dependent on the wrapping up script as well.
+        # (I hope this makes it clear...)
         self.add_jid_to_jid_list(self.wrap_script_obj.script_id)
 
         # Adding to qsub_names_dict:
-        self.qsub_names_dict["low_qsubs"].append(self.spec_qsub_name)
-        
+        self.qsub_names_dict["low_qsubs"].append(self.wrap_script_obj.script_id)
+
         # Adding job name and path to script and run indices
         self.add_job_script_run_indices(self.wrap_script_obj)
         self.wrap_script_obj.__del__()
 
-            
     def create_all_scripts(self):
         """ Contains code to be done after build_scripts()
         """
