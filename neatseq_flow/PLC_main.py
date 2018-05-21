@@ -676,7 +676,9 @@ Date\tStep\tName\tScript\tFile\tmd5sum\n
         ret_dict["sample_data"] = self.sample_data
         ret_dict["pipe_data"] = self.pipe_data
         ret_dict["global_params"] = self.param_data["Global"]
-        ret_dict["step_data"] = {step.get_step_name():step.get_dict_encoding() for step in self.step_list}
+        ret_dict["step_data"] = {step.get_step_name(): step.get_dict_encoding()
+                                 for step
+                                 in self.step_list}
         
         return ret_dict
 
@@ -975,12 +977,7 @@ saveWidget(myviz,file = "%(out_file_name)s",selfcontained = F)
         
         with open(self.pipe_data["objects_dir"] + "diagrammer.R" , "w") as diagrammer:
             diagrammer.write(Gviz_text)
-                
-                
-                
-                
-                
-                
+
     def find_modules(self):
         """ Searches all module repositories for a list of possible modules
             Meant to be used by the GUI generator for supplying the user with a list of modules he can include
@@ -1018,9 +1015,7 @@ saveWidget(myviz,file = "%(out_file_name)s",selfcontained = F)
                         if re.search("class Step_%s"%file.strip(".py"),pyt_fh.read()):
                             module_list.append(file.strip(".py"))
             return module_list
-                            
-                
-                
+
     def add_step(self, step_name, step_params):
         """ Add a step to an existing main neatseq-flow class
             To be used with the GUI
@@ -1043,19 +1038,13 @@ saveWidget(myviz,file = "%(out_file_name)s",selfcontained = F)
         # Expanding dependencies based on "base" parameter:
         # Storing in self.depend_dict 
         self.expand_depends()
-       
 
-
-        
-        
         # Create step instances:
         sys.stdout.write("Making step instances...\n")
         self.make_step_instances()
 
         # Storing names index in pipe_data. Could be used by the step instances 
         self.pipe_data["names_index"] = self.get_names_index()
-
-
 
         # Make the qdel script:
         self.create_kill_scripts()
@@ -1080,7 +1069,6 @@ saveWidget(myviz,file = "%(out_file_name)s",selfcontained = F)
         # Make main script:
         self.make_main_pipeline_script()
         
-
         # # Make js graphical representation (maybe add parameter to not include this feature?)
         # sys.stdout.write("Making workflow plots...\n")
         # self.create_js_graphic()
@@ -1093,24 +1081,20 @@ saveWidget(myviz,file = "%(out_file_name)s",selfcontained = F)
         # Writing JSON encoding of qsub names (can be used by remote progress monitor)
         with open(self.pipe_data["objects_dir"]+"qsub_names.json", "w") as json_fh:
             json_fh.write(self.get_qsub_names_json_encoding())
-            
-        
-        
+
         # self.create_log_plotter()
         
         sys.stderr.flush()
         sys.stdout.write("Finished successfully....\n\n")
-        
-        
+
         return self.step_list[self.step_list_index==step_name]
-        
-        
+
     def create_script_execution_script(self):
         """
         """
-        
-        
-        modname = "neatseq_flow.script_constructors.scriptconstructor{executor}".format(executor=self.pipe_data["Executor"])
+
+        modname = "neatseq_flow.script_constructors.scriptconstructor{executor}".format(
+            executor=self.pipe_data["Executor"])
         # classname = "get_script_exec_line"
         classname = "ScriptConstructor{executor}".format(executor=self.pipe_data["Executor"])
 

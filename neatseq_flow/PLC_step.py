@@ -234,6 +234,14 @@ class Step:
             # print assertErr.get_error_str()
             raise assertErr 
 
+        # Create entry in sample_data for history of sample lists:
+        try:
+            print self.sample_data
+        except:
+            sys.exit("Does not exist")
+        else:
+            sys.exit("Does exist")
+
         # self.shell_ext contains the str to use as script extension for step scripts
         if self.shell == "bash":
             self.shell_ext = "sh"
@@ -253,15 +261,16 @@ class Step:
                 pass
             else:
                 raise keyerr
-        except:
-            raise
+        except Exception as expt:
+            raise expt
         
         # Create a list for filenames to register with md5sum for each script:
         self.stamped_files = list()
         # self.stamped_dirs = list()
 
         # Create a dictionary storing the step name and names of sub-scripts
-        # Will then be queried by main to create a general dictionary which can be written to json and used for remote run monitor
+        # Will then be queried by main to create a general dictionary which can be written to json and
+        # used for remote run monitor
         self.qsub_names_dict = dict()
 
                                     
@@ -316,15 +325,7 @@ Dependencies: {depends}""".format(name = self.name,
         """
         # Check the base step is a valid Step object:
         # assert isinstance(base_step,Step) or base_step==None
-        
-        # base list version: Check all bases in base list are valid Step objects:
-        # The map-reduce pair do the following:
-        #   map - check each element in base_step (now a list...) is a legitimate Step object (returns a list of booleans for each step)
-        #   all() = make sure all map comparisons are True.
-        # print "base step for %s (in Step):\n------------\n" % self.name
-        # print base_step_list
 
-        # assert base_step_list == [] or all(map(lambda x: isinstance(x,Step), base_step_list)), "For some reason, step %s has an invalid base list." % self.name
         if base_step_list != [] and not all(map(lambda x: isinstance(x,Step), base_step_list)):
             raise AssertionExcept("Invalid base list\n", step = self.get_step_name())
         
@@ -332,14 +333,14 @@ Dependencies: {depends}""".format(name = self.name,
             self.base_step_list
         except AttributeError:
             # Good. Does not exist
-            self.base_step_list = base_step_list if base_step_list else None  # Set merge base_step to None and all others to base_step
+            # Set merge base_step to None and all others to base_step
             # While at it, update sample_data according to new base_step
-            if self.base_step_list:  # Do the following only if base_step is not None (= there is a base step. all except merge)
+            self.base_step_list = base_step_list if base_step_list else None
+            # Do the following only if base_step is not None (= there is a base step. all except merge)
+            if self.base_step_list:
                 # sys.stderr.write("setting sample data for %s \n" % self.name)
                 # self.set_sample_data(self.base_step_list[0].get_sample_data())
                 self.set_sample_data()  # Uses self.base_step_list
-                
-                
         else:
             raise AssertionExcept("Somehow base_step is defined more than once", self.get_step_name())
         
@@ -466,11 +467,9 @@ Dependencies: {depends}""".format(name = self.name,
         """
         assert isinstance(step_number, int)
         self.step_number = "{:0>2}".format(step_number)
-        
-        
+
     def get_script_name(self):
         return self.main_script_obj.script_name
-        
 
     def get_sample_data(self):
         return self.sample_data
@@ -515,7 +514,7 @@ Dependencies: {depends}""".format(name = self.name,
         # Preparing dict to store sample_data of bases:
         # This is not usually used but might be handy when you need more than one bam, for instance (see below)
 
-        if sample_data != None:     # When passing sample_data (i.e. for merge)
+        if sample_data is None:     # When passing sample_data (i.e. for merge)
             # Copying sample_data. Just '=' would create a kind of reference
             self.sample_data = deepcopy(sample_data)
             self.base_sample_data = dict()  
@@ -528,7 +527,6 @@ Dependencies: {depends}""".format(name = self.name,
                 self.sample_data = self.sample_data_merge(self.get_sample_data(),
                                                           base_step.get_sample_data(),
                                                           base_step.get_step_name())
-
 
             # Storing sample_data from base_step in base_sample_data dict:
             # This might be used when more than one copy of sample_data is required, for instance
@@ -559,7 +557,6 @@ Dependencies: {depends}""".format(name = self.name,
                 except KeyError:
                     raise AssertionExcept("'sample_list' set to 'all_samples' before sample subset selected",
                                           step=self.get_step_name())
-
             else:
                 if not isinstance(self.params["sample_list"], list):
                     self.params["sample_list"] = re.split("[, ]+", self.params["sample_list"])
@@ -569,11 +566,21 @@ Dependencies: {depends}""".format(name = self.name,
 
                 # Push previous sample list into prev_sample_lists
                 try:
-                    self.sample_data["prev_sample_lists"].append(self.sample_data["samples"])
+                    self.sample_data["sample_data_history"]["prev_sample_lists"].append(self.sample_data["samples"])
                 except KeyError:
-                    self.sample_data["prev_sample_lists"] = list()
-                    self.sample_data["prev_sample_lists"].append(self.sample_data["samples"])
+                    # container for unused sample data:
+                    self.sample_data["sample_data_history"] = dict()
+                    # Container for magazine of sample lists:
+                    self.sample_data["sample_data_history"]["prev_sample_lists"] = list()
+                    self.sample_data["sample_data_history"]["prev_sample_lists"].append(self.sample_data["samples"])
+                    # Container for unused sample info:
+                    self.sample_data["sample_data_history"]["unused_sample_data"] = dict()
+                    self.sample_data["sample_data_history"]["prev_sample_lists"].append(self.sample_data["samples"])
+                    samples2remove = list(set(self.sample_data["samples"])-set(self.params["sample_list"]))
+                    for sample in samples2remove:
 
+                    for sample in self.params["sample_list"]:
+                # Create new sample list:
                 self.sample_data["samples"] = self.params["sample_list"]
 
         # Trying running step specific sample initiation script:
@@ -1091,11 +1098,9 @@ Dependencies: {depends}""".format(name = self.name,
             self.script += " ".join(["cp -prf ", use_dir + "*", base_dir,"\n\n"])
             self.script += "".join(["rm -rf ", use_dir,"\n\n"])
 
-            
-
     def get_dict_encoding(self):
         """ Returns a dict containing all the step information
-            Used for JSON serialization and storage in MongoDB
+            Used for JSON serialization
         """
         
         ret_dict = dict()
@@ -1105,13 +1110,14 @@ Dependencies: {depends}""".format(name = self.name,
         except AttributeError:
             ret_dict["sample_data"] = None
             # ret_dict["base_sample_data"] = None
-        ret_dict["param_data"]  = self.params
-        
-        
+        ret_dict["param_data"] = self.params
+
+        # keys_not_to_encode = ["prev_sample_lists"]
+        # for key in keys_not_to_encode:
+        #     ret_dict["sample_data"].pop(key)
+        #
         return ret_dict
-        
-        
-        
+
     def return_formatted_message(self, comment, sample=None):
         """ Returns a formatted comment 
         
@@ -1265,6 +1271,8 @@ Make sure you are in an active conda environment, and that you executed the foll
                 if param:
                     step_params.append(param.group(1))
                     
-        # Return the unique list of such params, after excluding the ones that are true for all modules: base, module, script_path, etc.
-        return list(set(step_params)-set(["redir_params","qsub_params","base", "module", "sample_list", "exclude_sample_list", "script_path"]))
+        # Return the unique list of such params, after excluding the ones that are true for all modules:
+        # base, module, script_path, etc.
+        return list(set(step_params)-set(["redir_params","qsub_params","base", "module",
+                                          "sample_list", "exclude_sample_list", "script_path"]))
 
