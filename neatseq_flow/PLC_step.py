@@ -975,7 +975,15 @@ Dependencies: {depends}""".format(name = self.name,
     def get_redir_parameters_script(self):
         """ Returns a piece of script containing the redirect parameters
         """
-        
+        # This is so that keys can be separated from values by '=', e.g.
+        # See PICARD
+        # Can be set: 1. in module init. 2. in params. 3. defaults to ' '
+        if not hasattr(self,"arg_separator"):
+            self.arg_separator = " "
+        # print self.params
+        if "arg_separator" in self.params:
+            self.arg_separator = self.params["arg_separator"]
+
         redir_param_script = ""
         if "redir_params" in self.params:
             for key in self.params["redir_params"].keys():
@@ -983,9 +991,21 @@ Dependencies: {depends}""".format(name = self.name,
                 if isinstance(self.params["redir_params"][key],list):
                     self.write_warning("Passed %s twice as redirected parameter!" % key)
                     for keyval in self.params["redir_params"][key]:
-                        redir_param_script += "%s %s \\\n\t" % (key,keyval if self.params["redir_params"][key]!=None else "")
+                        redir_param_script += "{key}{sep}{val} \\\n\t".\
+                            format(key=key,
+                                   val=keyval if keyval is not None else "",
+                                   sep=self.arg_separator)
                 else:
-                    redir_param_script += "%s %s \\\n\t" % (key,self.params["redir_params"][key] if self.params["redir_params"][key]!=None else "")
+                    redir_param_script += "{key}{sep}{val} \\\n\t".\
+                            format(key=key,
+                                   val=self.params["redir_params"][key]
+                                       if self.params["redir_params"][key] is not None
+                                       else "",
+                                   sep=self.arg_separator)
+
+                                          # % (key,self.params["redir_params"][key]
+                                          #                   if self.params["redir_params"][key] is not None
+                                          #                   else "")
 
         return redir_param_script
 
