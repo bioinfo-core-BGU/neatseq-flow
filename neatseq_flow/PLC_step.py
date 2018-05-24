@@ -234,13 +234,13 @@ class Step:
             # print assertErr.get_error_str()
             raise assertErr 
 
-        # Create entry in sample_data for history of sample lists:
-        try:
-            print self.sample_data
-        except:
-            sys.exit("Does not exist")
-        else:
-            sys.exit("Does exist")
+        # # Create entry in sample_data for history of sample lists:
+        # try:
+        #     print self.sample_data
+        # except:
+        #     sys.exit("Does not exist")
+        # else:
+        #     sys.exit("Does exist")
 
         # self.shell_ext contains the str to use as script extension for step scripts
         if self.shell == "bash":
@@ -514,7 +514,7 @@ Dependencies: {depends}""".format(name = self.name,
         # Preparing dict to store sample_data of bases:
         # This is not usually used but might be handy when you need more than one bam, for instance (see below)
 
-        if sample_data is None:     # When passing sample_data (i.e. for merge)
+        if sample_data is not None:     # When passing sample_data (i.e. for merge)
             # Copying sample_data. Just '=' would create a kind of reference
             self.sample_data = deepcopy(sample_data)
             self.base_sample_data = dict()  
@@ -577,9 +577,9 @@ Dependencies: {depends}""".format(name = self.name,
                     self.sample_data["sample_data_history"]["unused_sample_data"] = dict()
                     self.sample_data["sample_data_history"]["prev_sample_lists"].append(self.sample_data["samples"])
                     samples2remove = list(set(self.sample_data["samples"])-set(self.params["sample_list"]))
-                    for sample in samples2remove:
-
-                    for sample in self.params["sample_list"]:
+                    # for sample in samples2remove:
+                    #
+                    # for sample in self.params["sample_list"]:
                 # Create new sample list:
                 self.sample_data["samples"] = self.params["sample_list"]
 
