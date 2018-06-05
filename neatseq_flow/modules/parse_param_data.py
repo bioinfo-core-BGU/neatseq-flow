@@ -227,7 +227,7 @@ def param_data_testing_global(param_data):
             # issue_warning += "Duplicate values for param %s\n" % param
 
     # The following 'Executors' do NOT require a queue to be passed:
-    no_queue_required = "SLURM".split(" ")
+    no_queue_required = "SLURM Local".split(" ")
     # No default queue is defined:
     if "Qsub_q" not in param_data.keys():
         if param_data["Executor"] in no_queue_required:# and "Qsub_q" not in param_data.keys():
