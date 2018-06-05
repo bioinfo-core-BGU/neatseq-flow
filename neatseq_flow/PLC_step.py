@@ -2,10 +2,11 @@
 """ A class defining a step in the pipeline.
 
 """
-import os, shutil, sys, re
+import os, shutil, sys, re, importlib
 import traceback
 import datetime
 
+# from script_constructors.ScriptConstructorSGE import HighScriptConstructorSGE, KillScriptConstructorSGE
 
 from copy import *
 from pprint import pprint as pp
@@ -45,15 +46,21 @@ class AssertionExcept(Exception):
             self.comment = error_str + ": " + self.comment if error_str else self.comment
         
         return self.comment
-        
+
+
+
 
 class Step:
     """ A class that defines a pipeline step name (=instance).
     """
     Cwd = os.path.dirname(os.path.abspath(__file__))
 
+# ----------------------------------------------------------------------------------
+# Step class methods
+# ----------------------------------------------------------------------------------
+
     @classmethod
-    def find_step_module(self,step,param_data, pipe_data):
+    def find_step_module(cls, step, param_data, pipe_data):
         """ A class method for finding the location of a module for a given step
         """
 
@@ -61,13 +68,11 @@ class Step:
             """ Helper function for os.walk below. Catches errors during walking and reports on them.
             """
             print "WARNING: Error while searching for modules:"
-            print  err
+            print err
 
-
-            
         # Searching module paths passed by user in parameter file:
         if "module_path" in param_data["Global"]:
-            for module_path_raw in param_data["Global"]["module_path"]:#.split(" "):
+            for module_path_raw in param_data["Global"]["module_path"]:
                 # Remove trainling '/' from dir name. For some reason that botches things up!
                 module_path = module_path_raw.rstrip(os.sep)
 
@@ -80,25 +85,28 @@ class Step:
                     sys.stderr.write("WARNING: Path %s from module_path does not exist. Skipping...\n" % module_path)
                     continue
 
-                
-
-                    
                 mod_t = step
-                dir_generator = os.walk(module_path, onerror = walkerr)       # Each .next call on this generator returns a level tuple as follows:
+                dir_generator = os.walk(module_path, onerror = walkerr)
+                # Each .next call on this generator
+                # returns a level tuple as follows:
                 try:
-                    level = dir_generator.next()           # level is a tuple with: (current dir. [list of dirs],[list of files])
+                    level = dir_generator.next()
+                    # level is a tuple with: (current dir. [list of dirs],[list of files])
                 except StopIteration:
-                    sys.stderr.write("WARNING: Module path %s seems to be empty! Possibly issue with permissions..." % module_path)
-                while(mod_t + ".py" not in level[2]):     # Repeat while expected filename is NOT in current dir contents (=level[2]. see above)
+                    sys.stderr.write("WARNING: Module path %s seems to be empty! Possibly issue with permissions..." % \
+                                     module_path)
+                while mod_t + ".py" not in level[2]:
+                    # Repeat while expected filename is NOT in current dir contents (=level[2]. see above)
                     try:
                         level = dir_generator.next()    # Try getting another level    
                     except StopIteration:
-#                        print "Step %s not found in path %s." % (mod_t,module_path)
+                        # print "Step %s not found in path %s." % (mod_t,module_path)
                         break # Leave while without executing "else"
                 else:
                     # Adding module_path to search path
                     if module_path not in sys.path:
                         sys.path.append(os.path.abspath(module_path))
+                        # print ">>> ", sys.path
                         
                     # Backup module to backups dir:
                     shutil.copyfile(level[0] + os.sep + mod_t + ".py", \
@@ -111,12 +119,12 @@ class Step:
                     retval = (level[0].split(module_path)[1].partition(os.sep)[2].replace(os.sep,".") + "." + mod_t).lstrip(".")
                     module_loc = level[0] + os.sep + mod_t + ".py"
 
-                    return (retval, module_loc)
+                    return retval, module_loc
 
 
-        # If not found, do the same with self.Cwd:
+        # If not found, do the same with cls.Cwd:
         mod_t = step
-        dir_generator = os.walk(self.Cwd, onerror = walkerr)     # Each .next call on this generator returns a level tuple as follows:
+        dir_generator = os.walk(cls.Cwd, onerror = walkerr)     # Each .next call on this generator returns a level tuple as follows:
         try:
             level = dir_generator.next()           # level is a tuple with: (current dir. [list of dirs],[list of files])
         except StopIteration:
@@ -128,40 +136,32 @@ class Step:
             except StopIteration:
                 sys.exit("Step %s not found in regular path or user defined paths." % mod_t)
         
-        # Build module name:
-        # 1. take dir found in search
-        # 2. split it by CWD and take 2nd part,  i.e. remove cwd from dir name...
-        # 3. partition by os.sep to remove leading os.sep
-        # 4. replace remaining os.sep's by ".". 
-        # 5. Add .
-        
+
         # Backup module to backups dir:
         shutil.copyfile(level[0] + os.sep + mod_t + ".py", \
                         "{bck_dir}{runcode}{ossep}{filename}".format(bck_dir = pipe_data["backups_dir"], \
                                                                      runcode = pipe_data["run_code"], \
                                                                      ossep = os.sep, \
                                                                      filename = mod_t + ".py"))
-        retval = level[0].split(self.Cwd)[1].partition(os.sep)[2].replace(os.sep,".") + "." + mod_t
+
+        # Build module name:
+        # 1. take dir found in search
+        # 2. split it by CWD and take 2nd part,  i.e. remove cwd from dir name...
+        # 3. partition by os.sep to remove leading os.sep
+        # 4. replace remaining os.sep's by ".".
+        # 5. Add .
+        # Adding 'neatseq_flow' at begginning of module location.
+        retval = "neatseq_flow."+level[0].split(cls.Cwd)[1].partition(os.sep)[2].replace(os.sep,".") + "." + mod_t
         module_loc = level[0] + os.sep + mod_t + ".py"
 
-        return (retval, module_loc)
+        return retval, module_loc
 
 
-        
-                
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-    def __init__(self,name,step_type,params,pipe_data):
+# ----------------------------------------------------------------------------------
+# Step instance methods
+# ----------------------------------------------------------------------------------
+
+    def __init__(self,name,step_type,params,pipe_data,module_path):
         """ should not be used. only specific step inits should be called. 
             Maybe a default init can be defined as well. check.
         """
@@ -170,7 +170,7 @@ class Step:
         self.params = params
         self.pipe_data = pipe_data
         
-        
+        self.path = module_path
         
         ###### Place for testing parameters:
         try:
@@ -178,7 +178,7 @@ class Step:
         except KeyError:
             sys.exit("You must supply a script_path parameter in %s\n" % self.name)
 
-        self.base_dir = self.pipe_data["data_dir"] + self.step + os.sep + self.name + os.sep
+        self.base_dir = os.sep.join([self.pipe_data["data_dir"], self.step, self.name, ''])
         # Move to general init function:
         # Make dir for $qsub_name results
         if not os.path.isdir(self.base_dir):
@@ -195,25 +195,32 @@ class Step:
         # Setting qsub options in step parameters:
         self.manage_qsub_opts()
        
-        
-        self.jid_list = []      # Initialize a list to store the list of jids of the current step
-        
+        self.jid_list = []        # Initialize a list to store the list of jids of the current step
+        self.glob_jid_list = []   # An experimental feature to enable shorter depend lists
+
         # The following line defines A list of jids from current step that all other steps should depend on.
-        # Is used to add a prelimanry step, equivalent to the "wrapping up" step that is dependent on all previous scripts
-        self.preliminary_jids =[]  
+        # Is used to add a prelimanry step, equivalent to the "wrapping up" step that is dependent on all previous
+        # scripts
+        self.preliminary_jids = []
 
         # self.skip_scripts determines whether scripts will be created. 
         # Defaults to False, unless SKIP is defined in parameters.
         # This is supposed:
         # A. to enable steps to avoid script building by setting to True.
         #    See for example del_type, move_type (now generalized in manage_types)
-        #    In this case, set skip_scripts to True in step_specific_init(). skip_step_sample_initiation will be set to False by default.
-        # B. To enable skipping a step while leaving the flow scheme intact (i.e. a step is like a channel for types without actually doing anything. Same as commenting it out but saves resetting bases...)
-        #    In this case, both skip_scripts and skip_step_sample_initiation are set to True, because some of the modifications to sample_data are performed in self.step_sample_initiation(). 
-        #    In the step_specific_init() function no changes to sample_data are possible because it is not set yet at that stage!
+        #    In this case, set skip_scripts to True in step_specific_init(). skip_step_sample_initiation
+        #    will be set to False by default.
+        # B. To enable skipping a step while leaving the flow scheme intact (i.e. a step is like a channel for
+        #    types without actually doing anything. Same as commenting it out but saves resetting bases...)
+        #    In this case, both skip_scripts and skip_step_sample_initiation are set to True, because some of the
+        #    modifications to sample_data are performed in self.step_sample_initiation().
+        #    In the step_specific_init() function no changes to sample_data are possible because it is not set yet
+        #    at that stage!
         if "SKIP" in self.params:
             self.skip_scripts = True
-            self.skip_step_sample_initiation = True   # This is so that modifications to sample_data requested in step_sample_initiation() will not be performed if SKIP is set.
+            self.skip_step_sample_initiation = True
+            # This is so that modifications to sample_data requested in
+            # step_sample_initiation() will not be performed if SKIP is set.
         else:
             self.skip_scripts = False   
             self.skip_step_sample_initiation = False
@@ -227,6 +234,20 @@ class Step:
             # print assertErr.get_error_str()
             raise assertErr 
 
+        # # Create entry in sample_data for history of sample lists:
+        # try:
+        #     print self.sample_data
+        # except:
+        #     sys.exit("Does not exist")
+        # else:
+        #     sys.exit("Does exist")
+
+        # self.shell_ext contains the str to use as script extension for step scripts
+        if self.shell == "bash":
+            self.shell_ext = "sh"
+        else:
+            self.shell_ext = "csh"
+            
         # Check that auto_redirs do not exist in parameter redirects list:
         try:
             auto_redirs = list(set(self.params["redir_params"].keys()) & set(self.auto_redirs))
@@ -240,17 +261,17 @@ class Step:
                 pass
             else:
                 raise keyerr
-        except:
-            raise
+        except Exception as expt:
+            raise expt
         
         # Create a list for filenames to register with md5sum for each script:
         self.stamped_files = list()
         # self.stamped_dirs = list()
 
         # Create a dictionary storing the step name and names of sub-scripts
-        # Will then be queried by main to create a general dictionary which can be written to json and used for remote run monitor
+        # Will then be queried by main to create a general dictionary which can be written to json and
+        # used for remote run monitor
         self.qsub_names_dict = dict()
-
 
                                     
     def __str__(self):
@@ -304,15 +325,7 @@ Dependencies: {depends}""".format(name = self.name,
         """
         # Check the base step is a valid Step object:
         # assert isinstance(base_step,Step) or base_step==None
-        
-        # base list version: Check all bases in base list are valid Step objects:
-        # The map-reduce pair do the following:
-        #   map - check each element in base_step (now a list...) is a legitimate Step object (returns a list of booleans for each step)
-        #   all() = make sure all map comparisons are True.
-        # print "base step for %s (in Step):\n------------\n" % self.name
-        # print base_step_list
 
-        # assert base_step_list == [] or all(map(lambda x: isinstance(x,Step), base_step_list)), "For some reason, step %s has an invalid base list." % self.name
         if base_step_list != [] and not all(map(lambda x: isinstance(x,Step), base_step_list)):
             raise AssertionExcept("Invalid base list\n", step = self.get_step_name())
         
@@ -320,14 +333,14 @@ Dependencies: {depends}""".format(name = self.name,
             self.base_step_list
         except AttributeError:
             # Good. Does not exist
-            self.base_step_list = base_step_list if base_step_list else None  # Set merge base_step to None and all others to base_step
+            # Set merge base_step to None and all others to base_step
             # While at it, update sample_data according to new base_step
-            if self.base_step_list:  # Do the following only if base_step is not None (= there is a base step. all except merge)
+            self.base_step_list = base_step_list if base_step_list else None
+            # Do the following only if base_step is not None (= there is a base step. all except merge)
+            if self.base_step_list:
                 # sys.stderr.write("setting sample data for %s \n" % self.name)
                 # self.set_sample_data(self.base_step_list[0].get_sample_data())
                 self.set_sample_data()  # Uses self.base_step_list
-                
-                
         else:
             raise AssertionExcept("Somehow base_step is defined more than once", self.get_step_name())
         
@@ -397,25 +410,66 @@ Dependencies: {depends}""".format(name = self.name,
         return NotImplemented 
         
         
+    def finalize_contruction(self):
+        """ Put all stuff that needs to be done after init, sorting and number setting.
+            Called for each step in main.
+        """
+        
+
+        ## Create kill script class
+        # Done before high level script so that high level knows about the 'kill_script_path' in params
+        getScriptConstructorClass = self.import_ScriptConstructor(level="kill")
+        self.kill_script_obj = getScriptConstructorClass(master = self)
+        # step = self.get_step_step(), \
+        #                                         name = self.get_step_name(), \
+        #                                         number = self.step_number, \
+        #                                         shell = self.shell,
+        #                                         params = self.params,
+        #                                         pipe_data = self.pipe_data)
+        # Store path to kill script in params:
+        self.params["kill_script_path"] = self.kill_script_obj.script_path
+
+        getScriptConstructorClass = self.import_ScriptConstructor(level="high")
+
+        ## Create main script class
+        self.main_script_obj = getScriptConstructorClass(master=self)
+        # step = self.get_step_step(),
+        #                                                  name = self.get_step_name(),
+        #                                                  number = self.step_number,
+        #                                                  shell = self.shell,
+        #                                                  kill_obj=self.kill_script_obj,
+        #                                                  params = self.params,
+        #                                                  pipe_data = self.pipe_data)
+
+        
+    def cleanup(self):
+        """ Here go things to be done just before termination of NeatSeq-Flow 
+        """
+
+        self.main_script_obj.__del__()
+        self.kill_script_obj.__del__()
+        
+        # import pdb; pdb.set_trace()
+    def get_high_depends_command(self):
+        """ Get dependency command from high script object
+            This will be qalter in qsub
+        """
+
+        # dependency_list = ",".join(self.get_dependency_jid_list())
+        if self.skip_scripts:
+            return ""
+
+        return self.main_script_obj.get_depends_command()
+
     def set_step_number(self,step_number):
         """ Sets the number of the step in the step list. 
             Is used in naming the scripts, so that they can be sorted with 'll'
         """
         assert isinstance(step_number, int)
         self.step_number = "{:0>2}".format(step_number)
-        # If number is added/updated, the script name must be initialized/updated
-        self.set_script_name()
-        
-        
-    def set_script_name(self):
-        """ Defines the name of the step script (level 2. Appears in qsub command in 00.workflow.commands.csh )
-        """
-        self.script_name = "{!s}.{!s}_{!s}.{!s}".format(self.step_number,self.step,self.name,"csh" if self.shell=="csh" else "sh")
-        return self.script_name
 
     def get_script_name(self):
-        return self.script_name
-        
+        return self.main_script_obj.script_name
 
     def get_sample_data(self):
         return self.sample_data
@@ -436,29 +490,31 @@ Dependencies: {depends}""".format(name = self.name,
             # print "\n\n"
             if (k in sample_data):
                 if (isinstance(sample_data[k], dict) 
-                    and isinstance(other_sample_data[k], dict)):
+                        and isinstance(other_sample_data[k], dict)):
                     sample_data[k] = self.sample_data_merge(sample_data[k], other_sample_data[k], other_step_name)
                 else:
+                    # For list of active samples, merge the lists:
+                    if k == "samples":
+                        sample_data[k] = list(set(sample_data[k]) | set(other_sample_data[k]))
+
                     # Do nothing, but check not discarding values from other_sample_data
-                    if (sample_data[k] != other_sample_data[k]):
+                    if sample_data[k] != other_sample_data[k]:
                         self.write_warning("There is a difference from %s in key %s\n" % (other_step_name, k))
             else:
                 sample_data[k] = deepcopy(other_sample_data[k])
         
         return sample_data
-        
-    
+
     def set_sample_data(self, sample_data = None):
         """ Sets the sample_data. 
             This cannot be done in constructor because it depends on the output from previous steps.
             Uses self.base_step_list
         """
 
-
         # Preparing dict to store sample_data of bases:
         # This is not usually used but might be handy when you need more than one bam, for instance (see below)
 
-        if sample_data != None:     # When passing sample_data (i.e. for merge)
+        if sample_data is not None:     # When passing sample_data (i.e. for merge)
             # Copying sample_data. Just '=' would create a kind of reference
             self.sample_data = deepcopy(sample_data)
             self.base_sample_data = dict()  
@@ -471,7 +527,6 @@ Dependencies: {depends}""".format(name = self.name,
                 self.sample_data = self.sample_data_merge(self.get_sample_data(),
                                                           base_step.get_sample_data(),
                                                           base_step.get_step_name())
-
 
             # Storing sample_data from base_step in base_sample_data dict:
             # This might be used when more than one copy of sample_data is required, for instance
@@ -490,20 +545,43 @@ Dependencies: {depends}""".format(name = self.name,
             if not isinstance(self.params["exclude_sample_list"] , list):
                 self.params["exclude_sample_list"] = re.split("[, ]+", self.params["exclude_sample_list"])
             if set(self.params["exclude_sample_list"])-set(self.pipe_data["samples"]):
-                raise AssertionExcept("'sample_list' includes samples not defined in sample data!", step=self.get_step_name())
+                raise AssertionExcept("'exclude_sample_list' includes samples not defined in sample data!",
+                                      step=self.get_step_name())
             self.params["sample_list"] = list(set(self.pipe_data["samples"]) - set(self.params["exclude_sample_list"]))
 
         if "sample_list" in self.params:
             if self.params["sample_list"] == "all_samples":
-                self.sample_data["samples"] = self.pipe_data["samples"]
+                # self.sample_data["samples"] = self.pipe_data["samples"]
+                try:
+                    self.sample_data["samples"] = self.sample_data["prev_sample_lists"].pop()
+                except KeyError:
+                    raise AssertionExcept("'sample_list' set to 'all_samples' before sample subset selected",
+                                          step=self.get_step_name())
             else:
-                if not isinstance(self.params["sample_list"] , list):
+                if not isinstance(self.params["sample_list"], list):
                     self.params["sample_list"] = re.split("[, ]+", self.params["sample_list"])
                 if set(self.params["sample_list"])-set(self.pipe_data["samples"]):
-                    raise AssertionExcept("'sample_list' includes samples not defined in sample data!", step=self.get_step_name())
+                    raise AssertionExcept("'sample_list' includes samples not defined in sample data!",
+                                          step=self.get_step_name())
+
+                # Push previous sample list into prev_sample_lists
+                try:
+                    self.sample_data["sample_data_history"]["prev_sample_lists"].append(self.sample_data["samples"])
+                except KeyError:
+                    # container for unused sample data:
+                    self.sample_data["sample_data_history"] = dict()
+                    # Container for magazine of sample lists:
+                    self.sample_data["sample_data_history"]["prev_sample_lists"] = list()
+                    self.sample_data["sample_data_history"]["prev_sample_lists"].append(self.sample_data["samples"])
+                    # Container for unused sample info:
+                    self.sample_data["sample_data_history"]["unused_sample_data"] = dict()
+                    self.sample_data["sample_data_history"]["prev_sample_lists"].append(self.sample_data["samples"])
+                    samples2remove = list(set(self.sample_data["samples"])-set(self.params["sample_list"]))
+                    # for sample in samples2remove:
+                    #
+                    # for sample in self.params["sample_list"]:
+                # Create new sample list:
                 self.sample_data["samples"] = self.params["sample_list"]
-
-
 
         # Trying running step specific sample initiation script:
         try:
@@ -515,16 +593,12 @@ Dependencies: {depends}""".format(name = self.name,
             assertErr.set_step_name(self.get_step_name())
             raise assertErr
 
-
-
-            
-
-    def get_qsub_name(self):
-        """ Return the jid id of the current step
+    def get_main_command(self):
+        """ Return the command to put in the main workflow script to run the main step script.
         """
-        self.spec_qsub_name = "_".join([self.step,self.name,self.pipe_data["run_code"]])
-        return self.spec_qsub_name
-        
+
+        return self.main_script_obj.get_command()
+
     def set_spec_script_name(self,sample=None):
         """ Sets the current spec_script_name to a regular name, i.e.:
                 sample level: "_".join([self.step,self.name,sample])
@@ -543,14 +617,12 @@ Dependencies: {depends}""".format(name = self.name,
             self.spec_script_name = "_".join([self.step,self.name,self.sample_data["Title"]])
 
         return self.spec_script_name
-        
-        
-        
-    def add_jid_to_jid_list(self):
+
+    def add_jid_to_jid_list(self, script_id):
         """ Adds a jid for a sub process (e.g. a sample-specific script) to the jid list of the current step
         """
         
-        self.jid_list.append(self.spec_qsub_name)
+        self.jid_list.append(script_id)
         
         
     def get_jid_list(self):
@@ -572,24 +644,49 @@ Dependencies: {depends}""".format(name = self.name,
                 depend_jid_list += (base_step.get_jid_list() + base_step.get_dependency_jid_list())
 
         return depend_jid_list
-        
+
+    def get_glob_jid_list(self):
+        """ Return list of jids
+            To be used by pipeline for creating the delete function (99.del...)
+        """
+
+        return self.glob_jid_list
+
+    def get_dependency_glob_jid_list(self):
+        """ Returns the list of jids of all base steps
+            Recursion. beware!
+        """
+
+        glob_depend_jid_list = []
+
+        if self.base_step_list:
+            for base_step in self.base_step_list:
+                glob_depend_jid_list += (base_step.get_glob_jid_list() + base_step.get_dependency_glob_jid_list())
+
+        return list(set(glob_depend_jid_list))
+
+    def import_ScriptConstructor(self, level): #modname, classname):
+        """Returns a class of "classname" from module "modname". 
+        """
+
+        level = level.lower().capitalize()
+        modname = "neatseq_flow.script_constructors.scriptconstructor{executor}".format(executor=self.pipe_data["Executor"])
+        classname = "{level}ScriptConstructor{executor}".format(level=level, executor=self.pipe_data["Executor"])  #SGE"
+        return getattr(importlib.import_module(modname), classname)
+
         
     def create_low_level_script(self):
         """ Create the low (i.e. 3rd) level scripts, which are the scripts that actually do the work
             The actual part of the script is produced by the particular step class.
             This function is responsible for the generic part: opening the file and writing the qsub parameters and the script
         """
-        # Name of specific qsub command:
-        self.spec_qsub_name = self.spec_script_name
-        # Adding path to spec_script_name: 
-        self.spec_script_name = os.path.join(self.step_scripts_dir, \
-                                             ".".join([self.step_number,self.spec_script_name,"csh" if self.shell=="csh" else "sh"])) 
-        # local spec_qsub_name will store the qsub_name without the run_code.
-        spec_qsub_name = self.spec_qsub_name
-        self.spec_qsub_name = "_".join([self.spec_qsub_name,self.pipe_data["run_code"]])
+        getChildClass = self.import_ScriptConstructor(level="low")
+        # Create ScriptConstructor for low level script.
+        self.child_script_obj = \
+            getChildClass(master=self)
 
-        
-        self.add_jid_to_jid_list()  # Adds spec_qsub_name to jid_list
+        # Adds script_id to jid_list
+        self.add_jid_to_jid_list(self.child_script_obj.script_id)  
         
         # Add qsub headers to the script:
             # Decide wether to use csh or bash
@@ -600,44 +697,41 @@ Dependencies: {depends}""".format(name = self.name,
         # DONE. Update list of jids for this step (maybe different function)
         # Add jid to list of jids in pipe_data for process deletion script. TO BE DONE IN PIPELINE, NOT HERE! USE get_jid_list() METHOD FOR THIS! 
         
-        # Print script to level 3 script file
-        
         # Get dependency jid list 
-        dependency_jid_list = self.get_dependency_jid_list() 
+        self.dependency_jid_list = self.get_dependency_jid_list()
         # Add prelimanry jids if exist (if not, is an empty list and will not affect the outcome)
         # Adding at the head of the list. That's why is done in two steps - just to make it clearer.
-        dependency_jid_list = self.preliminary_jids + dependency_jid_list
-        
-        # Create header with dependency_jid_list:
-        qsub_header = self.make_qsub_header(jid_list = ",".join(dependency_jid_list) if dependency_jid_list else None)
-        
-        # Without logging:
-        # self.script = qsub_header + self.script
-        # With logging:
-        self.script = "\n".join([qsub_header,                                                       \
-                                self.create_trap_line(self.spec_qsub_name,level="low"),             \
-                                self.create_log_lines(self.spec_qsub_name,"Started", level="low"),  \
-#                                self.add_qdel_line(type="Start"),                                   \ Now added in high-level script before qsub. This will enable qdeling jobs in qw state...
-                                self.create_activate_lines(type = "activate"),                      \
-                                self.create_set_options_line(self.spec_qsub_name,level="low", type="set"),  \
-                                self.script,                                                        \
-                                self.register_files(self.spec_qsub_name),                           \
-                                self.create_set_options_line(self.spec_qsub_name,level="low", type="unset"),  \
-                                self.create_activate_lines(type = "deactivate"),                    \
-                                self.add_qdel_line(type="Stop"),                                    \
-                                self.create_log_lines(self.spec_qsub_name,"Finished", level="low")])
-        
+        self.dependency_jid_list = self.preliminary_jids + self.dependency_jid_list
+        self.dependency_glob_jid_list = self.preliminary_jids + self.get_dependency_glob_jid_list()
 
+        # Request low-level script construction from LowScriptConstructor:
+        self.child_script_obj.write_script()
 
-        # sys.stdout.write(self.spec_script_name + "\n")
-        with open(self.spec_script_name, "w") as script_fh:
-            script_fh.write(self.script)
-            
-        # Adding qdel and qsub lines to high level
-        self.write_low_cmds_to_high_level_script(spec_qsub_name)
+        # Clear stamped files list
+        self.stamped_files = list()
+
+        # Add child command execution lines to main script:
+        self.main_script_obj.write_command(self.main_script_obj.get_child_command(self.child_script_obj))
 
         # Adding to qsub_names_dict:
-        self.qsub_names_dict["low_qsubs"].append(self.spec_qsub_name)
+        self.qsub_names_dict["low_qsubs"].append(self.child_script_obj.script_id)
+
+        # Adding job name and path to script and run indices
+        self.add_job_script_run_indices(self.child_script_obj)
+        
+        self.child_script_obj.__del__()
+
+    def add_job_script_run_indices(self, script_obj):
+        """ Add current script to script_index and run_index files
+        """
+        with open(self.pipe_data["script_index"], "a") as script_fh:
+            script_fh.write("{qsub_name}\t{script_name}\n".format(qsub_name   = script_obj.script_id,
+                                                                  script_name = script_obj.script_path))
+        with open(self.pipe_data["run_index"], "a") as script_fh:
+            if script_obj.level == "high":
+                script_fh.write("\n----\n")
+            script_fh.write("# {qsub_name}\n".format(qsub_name   = script_obj.script_id))
+        
         
     def create_scripts_dir(self):
         """ Create a dir for storing the step scripts.
@@ -656,89 +750,48 @@ Dependencies: {depends}""".format(name = self.name,
         """ Create the high (i.e. 2nd) level scripts, which are the scripts that run the 3rd level scripts for the step
         """
         
-        # Set script name for high level script:
-        self.high_level_script_name = self.pipe_data["scripts_dir"] + ".".join([self.step_number,"_".join([self.step,self.name]),"csh" if self.shell=="csh" else "sh"]) 
-        
 
+        # Set script name for high level script:
+        # Is done in HighScriptConstructor construction.
         
-        self.spec_qsub_name = self.get_qsub_name()   #"_".join([self.step,self.name,self.pipe_data["run_code"]])
-        # Storing name of high level script (only used for correct logging at "Finshed" step)
-        self.high_spec_qsub_name = self.spec_qsub_name
         # Adding high-level jid to jid_list
-        self.add_jid_to_jid_list()
-        
-        # -------------------------------------
+        self.add_jid_to_jid_list(self.main_script_obj.script_id)
+        self.glob_jid_list.append("{step}_{name}*".format(step=self.get_step_step(),
+                                                          name=self.get_step_name()))
+
         # Add qdel command to main qdel script:
-        f = open(self.qdel_filename_main,'r')
-        qdel_file = f.read()
-        f.close()
-         
-        qdel_file = re.sub("# entry_point", "# entry_point\nqdel {qsubname}".format(qsubname=self.spec_qsub_name),qdel_file)
-         
-        f = open(self.qdel_filename_main,'w')
-        f.write(qdel_file)
-        f.close()
-        # -------------------------------------
-        
-        # Get dependency jid list and add prelimanry jids if exist 
-            # (if not, is an empty list and will not affect the outcome)
-        dependency_jid_list = self.get_dependency_jid_list()# + self.preliminary_jids  
-        
-        # Create header with dependency_jid_list:
-        qsub_header = self.make_qsub_header(jid_list   = ",".join(dependency_jid_list) if dependency_jid_list else None,\
-                                            script_lev = "high")
-        script = qsub_header
-        
-        script = "\n".join([qsub_header,                                                         \
-                            self.create_trap_line(self.spec_qsub_name, level="high"),  \
-                            self.create_log_lines(self.spec_qsub_name,"Started", level="high"),  \
-                            self.create_set_options_line(self.spec_qsub_name, level="high", type="set"),  \
-                            "# Calling low level scripts:\n\n"])
-        
-        # Write script to high-level script
-        with open(self.high_level_script_name, "w") as script_fh:
-            script_fh.write(script)        
-        
-        # The actual qsub commands must be written in the create_low_level_script() function because they are step_name dependent!
+        self.main_script_obj.main_script_kill_commands(self.kill_script_filename_main)
+
+        self.dependency_jid_list = self.get_dependency_jid_list()   # + self.preliminary_jids
+        self.dependency_glob_jid_list = self.get_dependency_glob_jid_list()
+
+        # Write main script preamble:
+        self.main_script_obj.write_command(self.main_script_obj.get_script_preamble())
+
+        # The actual qsub commands must be written in the create_low_level_script() function because they are
+        # step_name dependent!
             
         # Adding to qsub_names_dict:
         self.qsub_names_dict["step"] = self.get_step_step()
-        self.qsub_names_dict["high_qsub"] = self.high_spec_qsub_name
+        self.qsub_names_dict["high_qsub"] = self.main_script_obj.script_id
         self.qsub_names_dict["low_qsubs"] = list()
-        
-            
+
+        # Adding qsub_name and script path to script_index and run_index
+        self.add_job_script_run_indices(self.main_script_obj)
+
     def close_high_level_script(self):
-        """ Add lines at the end of the high level script:
+        """ Create the high (i.e. 2nd) level scripts, which are the scripts that run the 3rd level scripts for the step
         """
-        
-        # Unsetting error trapping and flags before qalter, since qalter usually fails (because dependencies don't exist, etc.)
-        script = """
-sleep {sleep}
 
-trap '' ERR
-{unset_line}
+        # self.main_script_obj.write_command(self.main_script_obj.get_script_postamble())
+        self.main_script_obj.close_script()
 
-csh {scripts_dir}98.qalter_all.csh
-
-{log_line}
-""".format(sleep       = self.pipe_data["Default_wait"],
-           scripts_dir = self.pipe_data["scripts_dir"],
-           unset_line  = self.create_set_options_line(self.high_spec_qsub_name, level="high", type="unset"),
-           log_line    = self.create_log_lines(self.high_spec_qsub_name, "Finished", level="high"))
-
-        with open(self.high_level_script_name, "a") as script_fh:
-            script_fh.write(script)        
-
-     
     def create_preliminary_script(self):
         """ Create a script that will run before all other low level scripts commence
 
         """
-
-        #----- Define actual script here
-        # Adding line to remove temporary folder:
-
-        # Creating script. If 'create_spec_preliminary_script' is not defined or returns nothing, return from here without doing anything
+        # Creating script. If 'create_spec_preliminary_script' is not defined or returns nothing,
+        # return from here without doing anything
         self.script = ""
         try:
             self.create_spec_preliminary_script()
@@ -746,71 +799,53 @@ csh {scripts_dir}98.qalter_all.csh
             return 
 
         if not self.script.strip():                 # If script is empty, do not create a wrapper function
-            return 
-        
-        # Create name without the run code:
-        self.spec_qsub_name = "_".join([self.step,self.name,"preliminary"])
-        # Storing local copy without runcode:
-        spec_qsub_name = self.spec_qsub_name
+            return
 
-        self.spec_script_name = os.path.join(self.step_scripts_dir, \
-                                             ".".join([self.step_number,self.spec_qsub_name,"csh" if self.shell=="csh" else "sh"])) 
+        self.spec_script_name = "_".join([self.step, self.name, "preliminary"])
 
-                                             
-        self.spec_qsub_name = "_".join([self.spec_qsub_name,self.pipe_data["run_code"]])
-        
-            
-        # Get dependency jid list and add preliminary jids if exist (if not, is an empty list and will not affect the outcome)
-        #    Also, add all jids of current step, as this script is to run only after all previous steps have completed.
-        dependency_jid_list = self.get_dependency_jid_list() #+ self.get_jid_list()
-        
-        # Create header with dependency_jid_list:
-        qsub_header = self.make_qsub_header(jid_list = ",".join(dependency_jid_list) if dependency_jid_list else None)
-            
-        # Orignal line: 
-        # self.script = qsub_header +  self.script
-        # New, with host reporting and time logging:
-        self.script = "\n".join([qsub_header,                                                   \
-                        self.create_trap_line(self.spec_qsub_name,level="prelim"),                 \
-                        self.create_log_lines(self.spec_qsub_name, "Started", level="prelim"),  \
-                        self.create_activate_lines(type = "activate"),                          \
-                        self.create_set_options_line(self.spec_qsub_name,level="prelim", type="set"),  \
-                        self.script,                                                            \
-                        self.register_files(self.spec_qsub_name),                               \
-                        self.create_set_options_line(self.spec_qsub_name,level="prelim", type="unset"),  \
-                        self.create_activate_lines(type = "deactivate"),                        \
-                        self.add_qdel_line(type="Stop"),                                        \
-                        self.create_log_lines(self.spec_qsub_name, "Finished", level="prelim")])
+        getChildClass = self.import_ScriptConstructor(level="low")
+        # Create ScriptConstructor for low level script.
+        self.prelim_script_obj = \
+            getChildClass(master=self)
 
+        # Get dependency jid list and add preliminary jids if exist
+        # (if not, is an empty list and will not affect the outcome)
+        self.dependency_jid_list = self.get_dependency_jid_list()
+        self.dependency_glob_jid_list = self.get_dependency_glob_jid_list()
 
-        with open(self.spec_script_name, "w") as script_fh:
-            script_fh.write(self.script)
-            
-        # Adding qdel and qsub lines to high level
-        self.write_low_cmds_to_high_level_script(spec_qsub_name)
+        self.prelim_script_obj.write_script()
 
-        # # Append the qsub command to the 2nd level script:
-        # with open(self.high_level_script_name, "a") as script_fh:
-            # script_fh.write("qsub " + self.spec_script_name + "\n\n")        
-            
-        # This is here because I want to use jid_list to make wrapping_up script dependent on this step's main low-level scripts
-        # Explantion: get_jid_list() was used above (line 'qsub_header...') to make the wrapping_up script dependent on the other scripts created by the step
-        #    Now that that is done, the following line adds this step to the jid_list, so that subsequent steps are dependent on the wrapping up script as well. (I hope this makes it clear...)
-        self.add_jid_to_jid_list()
+        # Clear stamped files list
+        self.stamped_files = list()
+                
+        self.main_script_obj.write_command(self.main_script_obj.get_child_command(self.prelim_script_obj))
+
+        # This is here because I want to use jid_list to make wrapping_up script dependent on this step's
+        # main low-level scripts
+        # Explantion: get_jid_list() was used above (line 'qsub_header...') to make the wrapping_up script dependent
+        # on the other scripts created by the step. Now that that is done, the following line adds this step to the
+        # jid_list, so that subsequent steps are dependent on the wrapping up script as well.
+        # (I hope this makes it clear...)
+        self.add_jid_to_jid_list(self.prelim_script_obj.script_id)
 
         # Add the preliminary jid to the list of preliminary jids.  
-        self.preliminary_jids.append(self.spec_qsub_name)
+        self.preliminary_jids.append(self.prelim_script_obj.script_id)
 
         # Adding to qsub_names_dict:
-        self.qsub_names_dict["low_qsubs"].append(self.spec_qsub_name)
+        self.qsub_names_dict["low_qsubs"].append(self.prelim_script_obj.script_id)
 
+        # Adding job name and path to script and run indices
+        self.add_job_script_run_indices(self.prelim_script_obj)
+
+        self.prelim_script_obj.__del__()
         
     def create_wrapping_up_script(self):
         """ Create a script that will run once all other low level scripts terminate
             Ideal place for putting testing and agglomeration procedures.
         """
-        
-        # Creating script. If 'create_spec_wrapping_up_script' is not defined or returns nothing, return from here without doing anything
+
+        # Creating script. If 'create_spec_wrapping_up_script' is not defined or returns nothing,
+        # return from here without doing anything
         self.script = ""
         try:
             self.create_spec_wrapping_up_script()
@@ -820,63 +855,46 @@ csh {scripts_dir}98.qalter_all.csh
         if not self.script.strip():                 # If script is empty, do not create a wrapper function
             return 
 
+        self.spec_script_name = "_".join([self.step,self.name,"wrapping_up"])
 
-        self.spec_qsub_name = "_".join([self.step,self.name,"wrapping_up"])
-        spec_qsub_name = self.spec_qsub_name
-        
-        self.spec_script_name = os.path.join(self.step_scripts_dir, \
-                                             ".".join([self.step_number,self.spec_qsub_name,"csh" if self.shell=="csh" else "sh"])) 
+        getChildClass = self.import_ScriptConstructor(level="low")
 
-        self.spec_qsub_name = "_".join([self.spec_qsub_name,self.pipe_data["run_code"]])
-        
-        #----- Define actual script here
-        # Adding line to remove temporary folder:
-        
-            
-        # Get dependency jid list and add prelimanry jids if exist (if not, is an empty list and will not affect the outcome)
+        # Create ScriptConstructor for low level script.
+        self.wrap_script_obj = getChildClass(master=self)
+
+        # Get dependency jid list and add preliminary jids if exist
+        # (if not, is an empty list and will not affect the outcome)
         #    Also, add all jids of current step, as this script is to run only after all previous steps have completed.
-        dependency_jid_list = self.preliminary_jids + self.get_jid_list() + self.get_dependency_jid_list()
+        self.dependency_jid_list = self.preliminary_jids + self.get_jid_list() + self.get_dependency_jid_list()
+        self.dependency_glob_jid_list = self.preliminary_jids + \
+                                        self.get_glob_jid_list() + \
+                                        self.get_dependency_glob_jid_list()
+        # Removing parent name from wrapping_up dependencies
+        self.dependency_jid_list.remove(self.main_script_obj.script_id)
+
+        # sys.exit(self.spec_qsub_name)
+        self.wrap_script_obj.write_script()
+
+        # Clear stamped files list
+        self.stamped_files = list()
         
-        # Create header with dependency_jid_list:
-        qsub_header = self.make_qsub_header(jid_list = ",".join(dependency_jid_list) if dependency_jid_list else None)
-            
-        # Orignal line: 
-        # self.script = qsub_header +  self.script
-        # New, with host reporting and time logging:
-        self.script = "\n".join([qsub_header,                                                       \
-                        self.create_trap_line(self.spec_qsub_name,level="wrapping"),             \
-                        self.create_log_lines(self.spec_qsub_name, "Started", level="wrapping"),    \
-                        self.create_activate_lines(type = "activate"),                              \
-                        self.create_set_options_line(self.spec_qsub_name,level="wrapping", type="set"),  \
-                        self.script,                                                                \
-                        self.register_files(self.spec_qsub_name),                                   \
-                        self.create_set_options_line(self.spec_qsub_name,level="wrapping", type="unset"),  \
-                        self.create_activate_lines(type = "deactivate"),                            \
-                        self.add_qdel_line(type="Stop"),                                            \
-                        self.create_log_lines(self.spec_qsub_name, "Finished", level="wrapping")])
+        self.main_script_obj.write_command(self.main_script_obj.get_child_command(self.wrap_script_obj))
 
-
-        with open(self.spec_script_name, "w") as script_fh:
-            script_fh.write(self.script)
-            
-        # Adding qdel and qsub lines to high level
-        self.write_low_cmds_to_high_level_script(spec_qsub_name)
-
-        # # Append the qsub command to the 2nd level script:
-        # # script_name = self.pipe_data["scripts_dir"] + ".".join([self.step_number,"_".join([self.step,self.name]),self.shell]) 
-        # with open(self.high_level_script_name, "a") as script_fh:
-            # script_fh.write("qsub " + self.spec_script_name + "\n\n")        
-            
-        # This is here because I want to use jid_list to make wrapping_up script dependent on this step's main low-level scripts
-        # Explantion: get_jid_list() was used above (line 'qsub_header...') to make the wrapping_up script dependent on the other scripts created by the step
-        #    Now that that is done, the following line adds this step to the jid_list, so that subsequent steps are dependent on the wrapping up script as well. (I hope this makes it clear...)
-        self.add_jid_to_jid_list()
+        # This is here because I want to use jid_list to make wrapping_up script dependent on this step's
+        # main low-level scripts
+        # Explantion: get_jid_list() was used above (line 'qsub_header...') to make the wrapping_up script dependent
+        # on the other scripts created by the step. Now that that is done, the following line adds this step to the
+        # jid_list, so that subsequent steps are dependent on the wrapping up script as well.
+        # (I hope this makes it clear...)
+        self.add_jid_to_jid_list(self.wrap_script_obj.script_id)
 
         # Adding to qsub_names_dict:
-        self.qsub_names_dict["low_qsubs"].append(self.spec_qsub_name)
+        self.qsub_names_dict["low_qsubs"].append(self.wrap_script_obj.script_id)
 
+        # Adding job name and path to script and run indices
+        self.add_job_script_run_indices(self.wrap_script_obj)
+        self.wrap_script_obj.__del__()
 
-            
     def create_all_scripts(self):
         """ Contains code to be done after build_scripts()
         """
@@ -900,6 +918,7 @@ csh {scripts_dir}98.qalter_all.csh
                 self.create_wrapping_up_script()
                 
                 # Add closing lines to the high level script
+                # self.main_script_obj.get_script_postamble()
                 self.close_high_level_script()
 
             except AssertionExcept as assertErr:
@@ -911,234 +930,28 @@ csh {scripts_dir}98.qalter_all.csh
                 assertErr.set_step_name(self.get_step_name())
                 raise assertErr
 
-    
         if "stop_and_show" in self.params:
             print "project slots:\n-------------"
-            pp(self.sample_data.keys())
+            pp([key for key in self.sample_data.keys() if key not in self.sample_data["samples"]])
             
             if self.sample_data["samples"]:  # Sample list may be empty if only project data was passed!
                 print "sample slots:\n-------------"
                 pp(self.sample_data[self.sample_data["samples"][0]].keys())
 
             sys.exit("Showed. Now stopping. To continue, remove the 'stop_and_show' tag from %s" % self.get_step_name())
-            
-        
-    def make_qsub_header(self, jid_list, script_lev = "low"):
-        """ Make the first few lines for the scripts
-            Is called for high level, low level and wrapper scripts
-        """
-        
-        
-        qsub_shell = "#!/bin/%(shell)s\n#$ -S /bin/%(shell)s" % {"shell": "csh" if self.shell=="csh" else "bash"}
-        # Make hold_jids line only if there are jids (i.e. self.get_dependency_jid_list() != [])
-        if jid_list:
-            qsub_holdjids = "#$ -hold_jid %s " % jid_list
-        else:
-            qsub_holdjids = ""
-        qsub_name =    "#$ -N %s " % (self.spec_qsub_name)
-        qsub_stderr =  "#$ -e %s" % self.pipe_data["stderr_dir"]
-        qsub_stdout =  "#$ -o %s" % self.pipe_data["stdout_dir"]
-        # qsub_opts = "#$ " + " ".join(self.pipe_data["Qsub_opts"])
-        qsub_queue =   "#$ -q %s" % self.params["qsub_params"]["queue"]
-        # If there are values in Qsub_opts, add them to the qsub parameter lines:
-        qsub_opts = ""
-        
-        
-        if self.params["qsub_params"]["opts"]:
-            qsub_opts += "#$ %s" % self.params["qsub_params"]["opts"]
-        for qsub_opt in (set(self.params["qsub_params"].keys()) - set(["qstat_path","node","queue","opts","-pe","-q"])):       # For all qsub_params except node, queue and (global) opts which get special treatment:
-            qsub_opts += "\n#$ %s %s" % (qsub_opt,self.params["qsub_params"][qsub_opt] if self.params["qsub_params"][qsub_opt]!=None else "")
-        # Adding "-V" to all high level scripts (otherwise, if shell is bash, the SGE commands are not recognized)
-        if "-V" not in self.params["qsub_params"].keys() and script_lev == "high":
-            qsub_opts += "\n#$ -V"
 
-        if script_lev == "low":
-            
-            if self.params["qsub_params"]["node"]:     # If not defined then this will be "None"
-                
-                
-                # Perform two joins:
-                #   1. For each node, join it to the queue name with '@' (e.g. 'bio.q@sge100')
-                #   2. Comma-join all nodes to one list (e.g. 'bio.q@sge100,bio.q@sge102')
-                qsub_queue = ",".join(["@".join([self.params["qsub_params"]["queue"],item]) for item in self.params["qsub_params"]["node"]])
-                
-                # qsub_queue += "@%s" % self.params["qsub_params"]["node"]
-                qsub_queue = "#$ -q %s" % qsub_queue
-            if "-pe" in self.params["qsub_params"].keys():     # If not defined then this will be "None"
-                # Add newline if qsub_opts exists:
-                if qsub_opts:
-                    qsub_opts += "\n"
-                qsub_opts += "#$ -pe %s" % self.params["qsub_params"]["-pe"]
-            
-        # Sometimes qsub_opts is empty and then there is an ugly empty line in the middle of the qsub definition
-        # The following if-else is ugly, but solves the problem
-        if qsub_opts.strip():
-            return "\n".join([qsub_shell,qsub_queue,qsub_opts,qsub_name,qsub_stderr,qsub_stdout,qsub_holdjids]) + "\n\n"
-        else:
-            return "\n".join([qsub_shell,qsub_queue,qsub_name,qsub_stderr,qsub_stdout,qsub_holdjids]) + "\n\n"
-
-    def set_qdel_files(self, qdel_filename, qdel_filename_main):
+    def get_kill_script_name(self):
+        """"""
+        
+        return self.kill_script_obj.script_path
+    
+    def set_kill_files(self, kill_script_filename_main):
         """ Called by PLC_main to store the qdel filename for the step.
         """
         
-        self.qdel_filename = qdel_filename  # Step-specific qdel filename
-        self.qdel_filename_main = qdel_filename_main  # Project global qdel filename
+        self.kill_script_filename_main = kill_script_filename_main  # Project global qdel filename
         
         
-    def add_qdel_line(self, type = "Start"):
-        """ Add and remove qdel lines from qdel file.
-            type can be "Start" or "Stop"
-        """
-        
-
-        qdel_cmd = "qdel {script_name}".format(script_name = self.spec_qsub_name)
-        
-        if type == "Start":
-            return "# Adding qdel command to qdel file.\necho '{qdel_cmd}' >> {qdel_file}\n".format(qdel_cmd = qdel_cmd, qdel_file = self.qdel_filename)
-        elif type == "Stop":
-            return "# Removing qdel command from qdel file.\nsed -i -e 's:^{qdel_cmd}$:#&:' {qdel_file}\n".format(qdel_cmd = re.escape(qdel_cmd), qdel_file = self.qdel_filename)
-        else:
-            raise AssertionExcept("Bad type value in add_qdel_lines()", step = self.get_step_name())
-            
-            
-                                           
-    def create_log_lines(self, qsub_name, type = "Started", level = "high", status = "\033[0;32mOK\033[m"):
-        """ Create logging lines. Added before and after script to return start and end times
-            If bash, adding at beginning of script also lines for error trapping
-        """
-
-        log_cols_dict = {"type"       : type,                                        \
-                         "step"       : self.get_step_step(),                        \
-                         "stepname"   : self.get_step_name(),                        \
-                         "stepID"     : qsub_name,                                   \
-                         "qstat_path" : self.pipe_data["qsub_params"]["qstat_path"], \
-                         "level"      : level,                                       \
-                         "status"     : status,                                      \
-                         "file"       : self.pipe_data["log_file"]}
-        
-        if self.shell=="csh":
-        
-            script = """
-if ($?JOB_ID) then 
-	# Adding line to log file:  Date    Step    Host
-	echo `date '+%%d/%%m/%%Y %%H:%%M:%%S'`'\\t%(type)s\\t%(step)s\\t%(stepname)s\\t%(stepID)s\\t%(level)s\\t'$HOSTNAME'\\t'`%(qstat_path)s -j $JOB_ID | grep maxvmem | cut -d = -f 6`'\\t%(status)s' >> %(file)s
-else
-	echo `date '+%%d/%%m/%%Y %%H:%%M:%%S'`'\\t%(type)s\\t%(step)s\\t%(stepname)s\\t%(stepID)s\\t%(level)s\\t'$HOSTNAME'\\t-\\t%(status)s' >> %(file)s
-endif
-####
-""" % log_cols_dict
-        
-        elif self.shell == "bash":
-
-            script = """
-# Adding line to log file
-log_echo {step} {stepname} {stepID} {level} $HOSTNAME $JOB_ID {type}
-
-""".format(**log_cols_dict)
-
-        else:
-            script = ""
-            self.write_warning("shell not recognized. Not creating log writing lines in scripts.\n", admonition = "WARNING")
-        
-        return script
-        
-    def create_trap_line(self, qsub_name, level = "high"):
-        """ Returns the lines for ERR trapping
-            bash only!
-        """
-
-        if self.shell=="csh":
-            self.write_warning("Error trapping not defined for csh scripts. Consider using bash instead.\n", admonition = "WARNING")
-
-            script = ""
-            
-        elif self.shell == "bash":
-            # script = """trap \"if [ ! -z "$JOB_ID" ]; then echo -e $(date '+%d/%m/%Y %H:%M:%S')'\\t{type}\\t{step}\\t{stepname}\\t{stepID}\\t{level}\\t'$HOSTNAME'\\t'$({qstat_path} -j $JOB_ID | grep maxvmem | cut -d = -f 6)'\\t{status}' >> {file}; else echo -e $(date '+%d/%m/%Y %H:%M:%S')'\\t{type}\\t{step}\\t{stepname}\\t{stepID}\\t{level}\\t'$HOSTNAME'\\t-\\t{status}' >> {file}; fi\" ERR
-            script = """
-# Import trap functions
-. {helper_funcs}
-
-# If not in SGE context, set JOB_ID to ND
-if [ -z "$JOB_ID" ]; then JOB_ID="ND"; fi
-
-# Trap various signals. SIGUSR2 is passed by qdel when -notify is passes
-trap_with_arg func_trap {step} {stepname} {stepID} {level} $HOSTNAME $JOB_ID SIGUSR2 ERR INT TERM
-            """.format(#type       = "Finished",                                        \
-                   step       = self.get_step_step(),                        \
-                   stepname   = self.get_step_name(),                        \
-                   stepID     = qsub_name,                                   \
-                   # qstat_path = self.pipe_data["qsub_params"]["qstat_path"], \
-                   helper_funcs = self.pipe_data["helper_funcs"], \
-                   level      = level)#,                                       \
-                   # status     = "\033[0;31mERROR\033[m",                                      \
-                   # file       = self.pipe_data["log_file"])
-
-        else:
-            script = ""
-            self.write_warning("shell not recognized. Not creating error trapping lines.\n", admonition = "WARNING")
-        # set -Eeuxo pipefail        
-        return script
-        
-    def create_set_options_line(self, qsub_name, level = "high", type = "set"):
-        """ Adds line for activating and deactivating certain bash options
-        """
-        
-        if self.shell=="csh":
-            self.write_warning("Option setting is not defined for csh. Consider using bash for your modules.\n", admonition = "WARNING")
-
-            script = ""
-            
-        elif self.shell == "bash":
-            if type=="set":
-                script = """set -Eeuxo pipefail\n\n"""
-            else:
-                script = """set +Eeuxo pipefail\n\n"""
-        else:
-            script = ""
-            self.write_warning("shell not recognized.\n", admonition = "WARNING")
-            
-        return script
-            
-    def create_activate_lines(self, type):
-        """ Function for adding activate/deactivate lines to scripts so that virtual environments can be used 
-            A workflow that uses this option is the QIIME2 workflow.
-        """
-        
-        if type not in ["activate","deactivate"]:
-            sys.exit("Wrong 'type' passed to create_activate_lines")
-            
-        if "conda" in self.params:
-            if not self.params["conda"]:  # Was provided with 'null' or empty - do not do activate overriding possible global conda defs
-                
-                return ""
-            if "path" in self.params["conda"] and "env" in self.params["conda"]:
-                activate_path = os.path.join(self.params["conda"]["path"],type)
-                environ       = self.params["conda"]["env"]
-            else:
-                raise AssertionExcept("'conda' parameter must include 'path' and 'env'", step = self.get_step_name())
-            
-        #=======================================================================
-        # elif "conda" in self.pipe_data:
-        #     activate_path  = os.path.join(self.pipe_data["conda"]["path"],type)
-        #     environ        = self.pipe_data["conda"]["env"]
-        #=======================================================================
-        else:
-            return ""
-            
-            
-
-
-        if self.shell=="csh":
-            self.write_warning("Are you sure you want to use 'activate' with a 'csh' based script?")
-        
-        script = """
-# Adding environment activation/deactivation command:
-source {activate_path} {environ}
-
-""".format(activate_path = activate_path,
-             environ = environ if type == "activate" else "") 
-        
-        return script
         
     def make_folder_for_sample(self, sample):
         """ Creates a folder for sample in this step's results folder
@@ -1158,7 +971,15 @@ source {activate_path} {environ}
     def get_redir_parameters_script(self):
         """ Returns a piece of script containing the redirect parameters
         """
-        
+        # This is so that keys can be separated from values by '=', e.g.
+        # See PICARD
+        # Can be set: 1. in module init. 2. in params. 3. defaults to ' '
+        if not hasattr(self,"arg_separator"):
+            self.arg_separator = " "
+        # print self.params
+        if "arg_separator" in self.params:
+            self.arg_separator = self.params["arg_separator"]
+
         redir_param_script = ""
         if "redir_params" in self.params:
             for key in self.params["redir_params"].keys():
@@ -1166,9 +987,21 @@ source {activate_path} {environ}
                 if isinstance(self.params["redir_params"][key],list):
                     self.write_warning("Passed %s twice as redirected parameter!" % key)
                     for keyval in self.params["redir_params"][key]:
-                        redir_param_script += "%s %s \\\n\t" % (key,keyval if self.params["redir_params"][key]!=None else "")
+                        redir_param_script += "{key}{sep}{val} \\\n\t".\
+                            format(key=key,
+                                   val=keyval if keyval is not None else "",
+                                   sep=self.arg_separator)
                 else:
-                    redir_param_script += "%s %s \\\n\t" % (key,self.params["redir_params"][key] if self.params["redir_params"][key]!=None else "")
+                    redir_param_script += "{key}{sep}{val} \\\n\t".\
+                            format(key=key,
+                                   val=self.params["redir_params"][key]
+                                       if self.params["redir_params"][key] is not None
+                                       else "",
+                                   sep=self.arg_separator)
+
+                                          # % (key,self.params["redir_params"][key]
+                                          #                   if self.params["redir_params"][key] is not None
+                                          #                   else "")
 
         return redir_param_script
 
@@ -1231,27 +1064,27 @@ source {activate_path} {environ}
             If both are passed, print a comment and use 'queue'
         """
         
-        
+        # print "=> ",self.get_step_name()
         try:
             self.params["qsub_params"]
         except KeyError:
             self.params["qsub_params"] = self.pipe_data["qsub_params"]
         else:
-            # 'queue' can be set with 'qsub_opts_queue' and with 'qsub_opts_-q'. Dealing with it here:
-            if "-q" in self.params["qsub_params"].keys():
-                if "queue" in self.params["qsub_params"].keys():
-                    sys.stdout.write("In %s:\tGot both '-q' and 'queue' params for qsub. Using 'queue'\n" % self.get_step_name())
-                else:
-                    self.params["qsub_params"]["queue"] = self.params["qsub_params"]["-q"]
-                del self.params["qsub_params"]["-q"]
                 
-            # For each opt in default AND NOT IN step-specific qsub params
-            for default_q_opt in [qsub_opt for qsub_opt in self.pipe_data["qsub_params"].keys() if not qsub_opt in self.params["qsub_params"].keys()]:
-                # print "---->"+default_q_opt
-                self.params["qsub_params"][default_q_opt] = self.pipe_data["qsub_params"][default_q_opt]
+
+            # Updating step 'qsub_params' with global 'qsub_params', but with step params taking precedence!
+            # 'opts' needs special attention. Needs to be 'updated' independently.
+            # 1. deepcopy global qsub params
+            # 2. Update with step qsub_params
+            # 3. Replace 'opts' with global opts updated with local opts.
+            qsub_params = deepcopy(self.pipe_data["qsub_params"])
+            qsub_params.update(self.params["qsub_params"])
+            qsub_opts = deepcopy(self.pipe_data["qsub_params"]["opts"])
+            qsub_opts.update(self.params["qsub_params"]["opts"])
+            self.params["qsub_params"] = qsub_params
+            self.params["qsub_params"]["opts"] = qsub_opts
+            # All steps will have an 'opts' dictionary, at least an empty one...
             
-            # Require a queue to be defined globally or locally:
-            assert "queue" in self.params["qsub_params"].keys(), "In %s:\tNo 'queue' defined for qsub\n" % self.get_step_name()
 
 
     def local_start(self,base_dir):
@@ -1261,10 +1094,10 @@ source {activate_path} {environ}
         # If "local" is set, will do all IO to local folder and then copy everything to self.base_dir
         if "local" in self.params.keys():
             assert self.params["local"], "In step %s: You must supply a local destination when requesting 'local' in parameters" % self.name
-            local_dir = "".join([os.sep,                                                        \
-                                self.params["local"].strip(os.sep),                             \
-                                os.sep,                                                         \
-                                "_".join([self.spec_script_name,self.pipe_data["run_code"]]),   \
+            local_dir = "".join([os.sep,
+                                self.params["local"].strip(os.sep),
+                                os.sep,
+                                "_".join([self.spec_script_name,self.pipe_data["run_code"]]),
                                 os.sep])
             self.script += "# Adding lines for local execution:\n" 
             self.script += "mkdir -p %s \n\n" % local_dir
@@ -1281,11 +1114,9 @@ source {activate_path} {environ}
             self.script += " ".join(["cp -prf ", use_dir + "*", base_dir,"\n\n"])
             self.script += "".join(["rm -rf ", use_dir,"\n\n"])
 
-            
-
     def get_dict_encoding(self):
         """ Returns a dict containing all the step information
-            Used for JSON serialization and storage in MongoDB
+            Used for JSON serialization
         """
         
         ret_dict = dict()
@@ -1295,13 +1126,14 @@ source {activate_path} {environ}
         except AttributeError:
             ret_dict["sample_data"] = None
             # ret_dict["base_sample_data"] = None
-        ret_dict["param_data"]  = self.params
-        
-        
+        ret_dict["param_data"] = self.params
+
+        # keys_not_to_encode = ["prev_sample_lists"]
+        # for key in keys_not_to_encode:
+        #     ret_dict["sample_data"].pop(key)
+        #
         return ret_dict
-        
-        
-        
+
     def return_formatted_message(self, comment, sample=None):
         """ Returns a formatted comment 
         
@@ -1339,21 +1171,18 @@ source {activate_path} {environ}
 
         for filename in self.stamped_files:
             script += """
-%(echo_cmd)s `date '+%%d/%%m/%%Y %%H:%%M:%%S'` '\\t%(step)s\\t%(stepname)s\\t%(stepID)s\\t' `md5sum %(filename)s` >> %(file)s
-""" %      {"echo_cmd" : echo_cmd,             \
-            "filename" : filename,             \
-            "step"     : self.get_step_step(), \
-            "stepname" : self.get_step_name(), \
-            "stepID"   : qsub_name,            \
-            "file"     : self.pipe_data["registration_file"]}
+{echo_cmd} `date '+%%d/%%m/%%Y %%H:%%M:%%S'` '\\t{step}\\t{stepname}\\t{stepID}\\t' `md5sum {filename}` >> {file}
+""".format(echo_cmd=echo_cmd,
+           filename=filename,
+           step= self.get_step_step(),
+           stepname=self.get_step_name(),
+           stepID=qsub_name,
+           file=self.pipe_data["registration_file"])
         
         script += "#############\n\n"
             
         return script
-        
-        
-        
-        
+
     def register_files(self, qsub_name):
         """
         """
@@ -1387,105 +1216,6 @@ source {activate_path} {environ}
     
         return self.qsub_names_dict
     
-    
-    
-    #===========================================================================
-    # def create_sample_file(self):
-    #     """ Creates a sample file based on the current version of get_sample_data
-    #     """
-    #     
-    #     with open(self.base_dir+'sample_file.nsfs', 'w') as smp_f:
-    #         smp_f.write("Title\t{title}\n\n".format(title=self.sample_data["Title"]))
-    #         for sample in self.sample_data["samples"]:
-    #             for direction in self.params["sample_file"]:
-    #===========================================================================
-            
-                                       
-                                       
-                                       
-    # def add_exit_status_check(self, success_status = 0, comment = ""):
-        # """ This should be called during script building to add success status testing and exiting 
-        # """
-        
-        
-        
-        # if self.shell == "csh":
-            # return """
-# # Testing exit status
-# if ( $? != {success} ) then
-	# echo "\033[31m Exiting with error: {comment}. Check stderr file.\033[m\\n"
-	# {erro2log}
-	# exit
-# endif
-
-# """.format(success  = success_status, 
-           # comment  = comment,
-           # erro2log = self.create_log_lines(self.spec_qsub_name,"Finished", level="low", status = "\033[31mERROR\033[m"))
-           # # erro2log = re.sub(pattern = "\n",
-                             # # repl    = "\n\t",
-                             # # string  = self.create_log_lines(self.spec_qsub_name,"ERROR", level="low")))       
-           
-        # elif self.shell=="bash":
-            # return """
-# # Testing exit status
-# if [[ $? != {success} ]]; then 
-	# echo -e "\033[31m Exiting with error: {comment}. Check stderr file.\033[m\\n"
-	# {erro2log}
-	# exit
-# fi
-
-# """.format(success  = success_status, 
-           # comment  = comment,
-           # erro2log = self.create_log_lines(self.spec_qsub_name,"Finished", level="low", status = "\033[31mERROR\033[m"))
-
-           # # erro2log = re.sub(pattern = "\n",
-                             # # repl    = "\n\t",
-                             # # string  = self.create_log_lines(self.spec_qsub_name,"ERROR", level="low")))
-
-                             
-                             
-                             
-    def write_low_cmds_to_high_level_script(self, spec_qsub_name):
-        """ Writing low level lines to high level script: job_limit loop, adding qdel line and qsub line
-            spec_qsub_name is the qsub name without the run code (see caller)
-        """
-        
-
-        with open(self.high_level_script_name, "a") as script_fh:
-        
-            if "job_limit" in self.pipe_data.keys():
-               
-                job_limit = """
-    # Sleeping while jobs exceed limit
-    perl -e 'use Env qw(USER); open(my $fh, "<", "%(limit_file)s"); ($l,$s) = <$fh>=~/limit=(\d+) sleep=(\d+)/; close($fh); while (scalar split("\\n",qx(%(qstat)s -u $USER)) > $l) {sleep $s; open(my $fh, "<", "%(limit_file)s"); ($l,$s) = <$fh>=~/limit=(\d+) sleep=(\d+)/} print 0; exit 0'
-
-    """ % {"limit_file" : self.pipe_data["job_limit"],\
-                "qstat" : self.pipe_data["qsub_params"]["qstat_path"]}
-
-                
-                # Append the qsub command to the 2nd level script:
-                script_fh.write(job_limit + "\n\n")        
-
-#######            
-            # Append the qsub command to the 2nd level script:
-            # script_name = self.pipe_data["scripts_dir"] + ".".join([self.step_number,"_".join([self.step,self.name]),self.shell]) 
-            script_fh.write("""
-# ---------------- Code for {spec_qsub} ------------------
-{qdel_line}
-# Adding qsub command:
-qsub {script_name}
-
-""".format(qdel_line = self.add_qdel_line(type="Start"),
-            script_name = self.spec_script_name,
-            spec_qsub = spec_qsub_name))
-            # script_fh.write("# ---------------- Code for %s ------------------\n" % spec_qsub_name)
-            # script_fh.write(self.add_qdel_line(type="Start"))
-            # script_fh.write("# Adding qsub command:\n")        
-            # script_fh.write("qsub " + self.spec_script_name + "\n\n")        
-
-            
-            
-            
         
     def manage_conda_opts(self):
         if "conda" in self.pipe_data and "conda" not in self.params: # Only global "conda" params defined:
@@ -1515,15 +1245,6 @@ qsub {script_name}
                         if "env" not in self.params["conda"] or not self.params["conda"]["env"]: ##==None:
                             raise AssertionExcept("'conda: path' is empty, taking from CONDA_BASE. Failed because no 'env' was passed. When using CONDA_BASE, you must supply an environment name with 'conda: env'",step=self.get_step_name())
 
-                    # elif "CONDA_PREFIX" in os.environ:
-                        # # CONDA_PREFIX is: conda_path/'envs'/env_name
-                        # # First split gets the env name
-                        # # Second split gets the conda_path and adds 'bin'
-                        # (t1,env) = os.path.split(os.environ["CONDA_PREFIX"])
-                        # self.params["conda"]["path"] = os.environ["CONDA_PREFIX"]
-                        # if "env" not in self.params["conda"] or not self.params["conda"]["env"]: ##==None:
-                            # self.params["conda"]["env"] = env
-        
                     else:
                         raise AssertionExcept("""'conda' 'path' is empty, but no CONDA_BASE is defined. 
 Make sure you are in an active conda environment, and that you executed the following command:
@@ -1566,7 +1287,8 @@ Make sure you are in an active conda environment, and that you executed the foll
                 if param:
                     step_params.append(param.group(1))
                     
-        # Return the unique list of such params, after excluding the ones that are true for all modules: base, module, script_path, etc.
-        return list(set(step_params)-set(["redir_params","qsub_params","base", "module", "sample_list", "exclude_sample_list", "script_path"]))
-                
-        
+        # Return the unique list of such params, after excluding the ones that are true for all modules:
+        # base, module, script_path, etc.
+        return list(set(step_params)-set(["redir_params","qsub_params","base", "module",
+                                          "sample_list", "exclude_sample_list", "script_path"]))
+

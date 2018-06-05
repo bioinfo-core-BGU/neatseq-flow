@@ -176,7 +176,7 @@ __version__ = "1.1.0"
 class Step_merge(Step):
     
     def step_specific_init(self):
-        self.shell = "bash"      # Can be set to "bash" by inheriting instances
+        self.shell = "bash"
         self.file_tag = "merge"
         
 

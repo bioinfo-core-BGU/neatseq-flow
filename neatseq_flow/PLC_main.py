@@ -9,42 +9,49 @@ __author__ = "Menachem Sklarz"
 __version__ = "1.2.0"
 
 
-import os, sys, json, shutil, time, yaml, re
-
-
+import os
+import sys
+import json
+import shutil
+import time
+import re
+import importlib
 from copy import *
 from pprint import pprint as pp
-from random import randint
 from datetime import datetime
 from collections import OrderedDict
 
 from modules.parse_sample_data import parse_sample_file
 from modules.parse_param_data import parse_param_file
 
-from PLC_step import Step,AssertionExcept
+from PLC_step import Step, AssertionExcept
 
 
-class neatseq_flow:
+class NeatSeqFlow:
     """Main pipeline class. Contains sample data and parameters
     """
     
-    def __init__(self,                \
-                 sample_file,         \
-                 param_file,          \
-                 home_dir = None,     \
-                 message = None,      \
-                 runid = None,        \
+    def __init__(self,
+                 sample_file,
+                 param_file,
+                 home_dir = None,
+                 message = None,
+                 runid = None,
                  verbose = False):
-        
+        """
+        Initialize and create all workflow scripts.
+        :returns: A workflow object
+        """
         # Read and parse the sample and parameter files:
 
         sys.stdout.write("Reading files...\n")
 
         try:
             self.sample_data = parse_sample_file(sample_file)
-        except Exception:
-            
-            print("An exception has occured in sample file reading. Double check!")
+        except Exception as raisedex:
+            print("An exception has occurred in sample file reading. Double check!")
+            if raisedex.args[0] == "Issues in samples":
+                sys.exit()
             raise
 
         try:
@@ -54,7 +61,7 @@ class neatseq_flow:
             if raisedex.args[0] == "Issues in parameters":
                 sys.exit()
             elif len(raisedex.args)>1:
-                if raisedex.args[1] in ["Variables","parameters"]:
+                if raisedex.args[1] in ["Variables", "parameters"]:
                     sys.exit(raisedex.args[0])
                     # raise
                 else:  # Unknown
@@ -62,7 +69,7 @@ class neatseq_flow:
                     raise
             else:
                 raise
-            # sys.stderr.write("An exception has occured in parameter file reading. Double check!")
+            # sys.stderr.write("An exception has occurred in parameter file reading. Double check!")
             # raise
         except:
             raise
@@ -70,10 +77,12 @@ class neatseq_flow:
         # Prepare dictionary for pipe data (in perl version: pipe_hash)
         self.pipe_data = dict()
 
-        self.pipe_data["step_order"] = self.param_data["step_order"]
-        #print(self.pipe_data["step_order"])
-        del(self.param_data["step_order"])
+        # Is not currently used. Saves order of steps in parameter file.
+        self.pipe_data["usr_step_order"] = self.param_data["usr_step_order"]
+        del(self.param_data["usr_step_order"])
 
+        # Saving Executor in pipe_data
+        self.pipe_data["Executor"] = self.param_data["Global"]["Executor"]
         # Determine type of sample: SE, PE or mixed:
         self.determine_sample_types()
 
@@ -84,10 +93,12 @@ class neatseq_flow:
         self.pipe_data["home_dir"] = os.path.realpath(self.pipe_data["home_dir"])
 
         # Store message:
-        assert message==None or isinstance(message, basestring), "Message must be text or 'None'."
+        assert message is None or isinstance(message, basestring), "Message must be text or 'None'."
         self.pipe_data["message"] = message
 
-        # Store list of sample names in pipe_data (A patch. This is so that steps can have access to the full sample list after a user requests a step to operate on a subset of samples.)
+        # Store list of sample names in pipe_data
+        # (A patch. This is so that steps can have access to the full sample list after a user requests a step to
+        # operate on a subset of samples.)
         # See definition of PLC_step.set_sample_data()
         self.pipe_data["samples"] = self.sample_data["samples"]
         
@@ -101,47 +112,26 @@ class neatseq_flow:
         # Storing in self.depend_dict 
         self.expand_depends()
 
-        
         # Create run code to identify the scripts etc.
-        # Original: just random number: self.run_code = str(randint(0,1e6)) # Is always used as a string
-        # Current: Date+rand num (to preserve order of pipelines)
+        # Date+rand num (to preserve order of pipelines)
         if runid:
+            # Testing runid
+            if re.search("\s",runid):
+                sys.exit("--runid should not contain whitespacve characters")
             self.run_code = runid
         else:
-            self.run_code = datetime.now().strftime("%Y%m%d%H%M%S") # Is always used as a string
+            self.run_code = datetime.now().strftime("%Y%m%d%H%M%S")  # (Is always used as a string)
         self.pipe_data["run_code"] = self.run_code
         if "Default_wait" in self.param_data["Global"].keys():
             self.pipe_data["Default_wait"] = self.param_data["Global"]["Default_wait"]
         if "job_limit" in self.param_data["Global"].keys():
             self.pipe_data["job_limit"] = self.param_data["Global"]["job_limit"]
-        
-        
-        # ------------------------------
-        # Define default qsub parameters
-        self.pipe_data["qsub_params"] = {}
-        
-        self.pipe_data["qsub_params"]["queue"] = self.param_data["Global"]["Qsub_q"]    # This is required by assertion in parse_param_data()
-        # if "Qsub_nodes" in self.param_data["Global"].keys():
-            # self.pipe_data["qsub_params"]["node"] = ",".join(list(set(self.param_data["Global"]["Qsub_nodes"])))
-        # else:
-            # self.pipe_data["qsub_params"]["node"] = None
-        if "Qsub_nodes" in self.param_data["Global"].keys():
-            self.pipe_data["qsub_params"]["node"] = list(set(self.param_data["Global"]["Qsub_nodes"]))
-        else:
-            self.pipe_data["qsub_params"]["node"] = None
 
-        # If Qsub_opts is defined by user in global params, copy into pipe_data:
-        self.pipe_data["qsub_params"]["opts"] = self.param_data["Global"]["Qsub_opts"] if "Qsub_opts" in self.param_data["Global"].keys() else ""
+        self.manage_qsub_params()
         
         # Setting path to qstat
-        if "Qsub_path" in self.param_data["Global"].keys():
-            self.pipe_data["qsub_params"]["qstat_path"] = os.sep.join([self.param_data["Global"]["Qsub_path"].rstrip(os.sep),"qstat"])
-        else:
-            self.pipe_data["qsub_params"]["qstat_path"] = "qstat"
+        self.set_qstat_path()
 
-        # --------------------------------
-        
-        # --------------------------------
         # Define conda parameters
         self.define_conda_params()
         
@@ -152,15 +142,29 @@ class neatseq_flow:
         # Create log file:
         self.create_log_file()
 
+        # Create script_index and run_index files
+        # These (will be)[are] used by the in-house NeatSeq-Flow job controller for non-qsub based clusters
+        self.create_job_index_files()
+
         # Create file with functions for trapping error:
         self.create_bash_helper_funcs()
-        
+
+        # Create script execution script:
+        self.create_script_execution_script()
+
         # Create file md5sum registration file:
         self.create_registration_file()
         
         # Backup parameter and sample files:
         self.backup_source_files(param_file, sample_file)
         
+        # Make the directory for the step-wise kill scripts (must be done before make_step_instances()
+        # because the steps need to know the directory):
+        self.create_kill_scripts_dir()
+
+        # Save name for dependency ensuring script
+        self.pipe_data["depends_script_name"] = self.pipe_data["scripts_dir"] + "98.Ensure_high_depends.csh"
+
         # Create step instances:
         sys.stdout.write("Making step instances...\n")
         self.make_step_instances()
@@ -168,19 +172,8 @@ class neatseq_flow:
         # Storing names index in pipe_data. Could be used by the step instances 
         self.pipe_data["names_index"] = self.get_names_index()
 
-
-        # if convert2yaml:
-            # # Convert to YAML
-            # self.convert_data_to_YAML()
-            # print "Exported sample and param data to YAML format.\nExitting...\n"
-            # # sys.exit()
-            # return
-
-        # Make main script:
-        self.make_main_pipeline_script()
-
         # Make the qdel script:
-        self.create_qdel_script()
+        self.create_kill_scripts()
         
         # Do the actual script building:
         # Also, catching assetion exceptions raised by class build_scripts() and 
@@ -190,13 +183,14 @@ class neatseq_flow:
             
         except AssertionExcept as assertErr:
             print assertErr.get_error_str()
-            print "An error has occured. See comment above.\nPrinting current JSON and exiting\n"
-            with open(self.pipe_data["objects_dir"]+"WorkflowData.json","w") as json_fh:
+            print "An error has occurred. See comment above.\nPrinting current JSON and exiting\n"
+            with open(self.pipe_data["objects_dir"]+"WorkflowData.json", "w") as json_fh:
                 json_fh.write(self.get_json_encoding())
             # sys.exit() 
             return
             
-        
+        # Make main script:
+        self.make_main_pipeline_script()
         
         # Make the qalter script:
         self.create_qalter_script()
@@ -208,19 +202,38 @@ class neatseq_flow:
         
         # Writing JSON encoding ofg pipeline:
         sys.stdout.write("Writing JSON files...\n")
-        with open(self.pipe_data["objects_dir"]+"WorkflowData.json","w") as json_fh:
+        with open(self.pipe_data["objects_dir"]+"WorkflowData.json", "w") as json_fh:
             json_fh.write(self.get_json_encoding())
         # Writing JSON encoding of qsub names (can be used by remote progress monitor)
-        with open(self.pipe_data["objects_dir"]+"qsub_names.json","w") as json_fh:
+        with open(self.pipe_data["objects_dir"]+"qsub_names.json", "w") as json_fh:
             json_fh.write(self.get_qsub_names_json_encoding())
-            
-        
+
+        # Step cleanup
+        [step_n.cleanup() for step_n in self.step_list]
         
         self.create_log_plotter()
         
         sys.stderr.flush()
+        sys.stdout.flush()
+
         sys.stdout.write("Finished successfully....\n\n")
         
+    def manage_qsub_params(self):
+        """  Define default qsub parameters
+        """
+        self.pipe_data["qsub_params"] = {}
+
+        # Store default queue. Not relevant for all Executors. seen to in parse_param_data()
+        self.pipe_data["qsub_params"]["queue"] = self.param_data["Global"]["Qsub_q"]
+
+        if "Qsub_nodes" in self.param_data["Global"].keys():
+            self.pipe_data["qsub_params"]["node"] = list(set(self.param_data["Global"]["Qsub_nodes"]))
+        else:
+            self.pipe_data["qsub_params"]["node"] = None
+
+        # If Qsub_opts is defined by user in global params, copy into pipe_data:
+        self.pipe_data["qsub_params"]["opts"] = self.param_data["Global"]["Qsub_opts"] if "Qsub_opts" in self.param_data["Global"].keys() else {}
+
     # Handlers
     def get_param_data(self):
         """ Return parameter data
@@ -231,26 +244,22 @@ class neatseq_flow:
         """ Return step-wise parameter data
         """
         return self.param_data["Step"]
-        
-        
+
     def get_steps(self):
         """ return a list of step types required 
         """
         
         return self.param_data["Step"].keys()
-        
-        
+
     def get_step_names(self):
         """ return a list of step names (=step instances)
         """
         return self.name_index.keys()
         pass
-        
-        
+
     def get_names_index(self):
         return self.name_index
-        
-        
+
     def make_names_index(self):
         """ Make a dict of the form name:steps
         """
@@ -268,47 +277,37 @@ class neatseq_flow:
         # For each step name (step_n), set sample_data based on the steps base(s) and then create scripts
         for step_n in self.step_list:
            
-            step_name = step_n.get_step_name()
-            step_step = step_n.get_step_step()
+            # step_name = step_n.get_step_name()
+            # step_step = step_n.get_step_step()
 
             # Find base step(s) for current step: (If does not exist return None)
             base_name_list = step_n.get_base_step_name()    
 
-            
             # For merge, 1st step, this will be true, passing the original sample_data to the step:
-            if base_name_list == None:
+            if base_name_list is None:
                 step_n.set_sample_data(self.sample_data)
                 step_n.set_base_step([])
-            # For the others, finds the instance(s) of the base step(s) and calls set_base_step() with the list of bases:
+            # For the others, finds the instance(s) of the base step(s) and
+            # calls set_base_step() with the list of bases:
             else:
-                # Note: set_base_step() takes a list of step objects, not names. Finding them is done by the .index() method.
+                # Note: set_base_step() takes a list of step objects, not names.
+                # Finding them is done by the .index() method.
                 step_n.set_base_step([self.step_list[self.step_list_index.index(base_name)] for base_name in base_name_list])
 
-                
             # Do the actual script building for step_n
             step_n.create_all_scripts()
-                
-            
-                
-                
-    def make_step_order(self):
-        pass
-        
-    # def complete_depends(self):     # Complete the dependencies 
-    
+
     def make_depends_dict(self):
         """ Creates and returns the basic depend_dict structure
             step names are keys, values are a list of the step names which are bases for the step
         """
         step_data = self.get_step_param_data()
         # Get the base list for each step.
-        # self.depend_dict = {name:[step_data[self.name_index[name]][name]["base"] if self.name_index[name] != "merge" else ""] for name in self.name_index.keys() }
-        self.depend_dict = {name:deepcopy(step_data[self.name_index[name]][name]["base"]) 
-                                if self.name_index[name] != "merge" 
-                                else [""] for name in self.name_index.keys() }
+        self.depend_dict = {name:deepcopy(step_data[self.name_index[name]][name]["base"])
+                                if self.name_index[name] != "merge"
+                                else [""] for name in self.name_index.keys()}
         return self.depend_dict
-        
-        
+
     def expand_depends(self):
         """ Extract base info for each step from parameters and expand the dependency info
             i.e. if base(samtools)=['Bowtie_mapper'], expand it to ['merge','Bowtie_mapper']
@@ -320,19 +319,20 @@ class neatseq_flow:
         # ### Helper recursive function
         def expand_depend_list(step_name,depend_list,depend_dict):
             """ helper function. takes a list and RECURSIVELY expands it based on the dependency dict
-            step_name is the name of the step on which it is executing. Used to hault the recursion on cases of loops in the DAG...
+            step_name is the name of the step on which it is executing.
+            Used to hault the recursion on cases of loops in the DAG...
             """
             
-            if depend_list==[]:
+            if not depend_list:  # i.e. depend_list==[]:
                 return depend_list
             ret_list = depend_list
             if step_name in depend_list:
                 sys.exit("There seems to be a cycle in the workflow design. Check dependencies of step %s" % step_name)
             for elem in depend_list:
-                if (elem==""):
+                if (elem == ""):
                     pass
                 else:
-                    ret_list += expand_depend_list(step_name, list(depend_dict[elem]),depend_dict)
+                    ret_list += expand_depend_list(step_name, list(depend_dict[elem]), depend_dict)
                     
             return list(set(ret_list))
         # ######
@@ -348,10 +348,8 @@ class neatseq_flow:
         for step in step_data:
             for name in self.param_data["Step"][step]:
                 self.param_data["Step"][step][name]["depend_list"] = self.depend_dict[name]
-            
-        
-        return self.depend_dict 
 
+        return self.depend_dict 
 
     def sort_step_list(self):
         """ This function sorts the step list
@@ -361,7 +359,6 @@ class neatseq_flow:
         
         self.step_list.sort()    # Sort by internal __lt__ and __gt__
         
-            
     def make_step_instances(self):
         """ Makes step instances and stores them in self.step_list.
             The steps are also sorted based on their dependencies. See __lt__ and __gt__ in "Step" class definition.
@@ -371,9 +368,7 @@ class neatseq_flow:
         self.step_list = [self.make_step_type_instance(step_n) for step_n in self.get_step_names()]
 
         self.sort_step_list()
-        
-       
-        
+
         # Send number of step to the instances:
         # This is used for numbering the scripts in the scripts_dir
         counter = 1
@@ -381,28 +376,31 @@ class neatseq_flow:
             step_n.set_step_number(counter)
             counter+=1
             
-        # Create index of step names. Once their order is set, above, this new list will contain the step names in the same order
+        # Create index of step names. Once their order is set, above, this new list will contain
+        # the step names in the same order
         # Is used to search the list of classes.
         self.step_list_index = [step_n.get_step_name() for step_n in self.step_list]
-        
+
+        # Perform step finalization steps before continuing:
+        [step_n.finalize_contruction() for step_n in self.step_list]
 
         # NOTE: Each step's base step is set in build_scripts(), because not all info exists at construction time...
         
         return self.step_list
-        
 
-        
     def make_directory_structure(self):
         """ Creating the directory structure to hold the scripts, data etc.
         """
-        for directory in ["data_dir","scripts_dir","stderr_dir","stdout_dir","objects_dir","logs_dir","backups_dir"]:
+        for directory in ["data_dir", "scripts_dir", "stderr_dir", "stdout_dir",
+                          "objects_dir", "logs_dir", "backups_dir"]:
             # Get only the first part of 'directory' for directory name:
             dir_name = directory.split("_")[0]
             # Concatenate the directory name to the home path:
             self.pipe_data[directory] = self.pipe_data["home_dir"] + os.sep + dir_name + os.sep
-            if (os.path.isdir(self.pipe_data[directory])):
+            if os.path.isdir(self.pipe_data[directory]):
                 if self.pipe_data["verbose"]:
-                    sys.stderr.write("WARNING: {dirname} folder exists. Overwriting existing! (existing files will not be deleted)\n".format(dirname=dir_name))
+                    sys.stderr.write("WARNING: {dirname} folder exists. Overwriting existing! "
+                                     "(existing files will not be deleted)\n".format(dirname=dir_name))
             else:
                 if self.pipe_data["verbose"]:
                     sys.stderr.write("WARNING: Creating {dir_name} directory\n".format(dir_name=dir_name))
@@ -410,63 +408,30 @@ class neatseq_flow:
         
 
     def make_main_pipeline_script(self):
-        """ Create the main pipline script stored in 00.workflow.commands.csh 
+        """ Create the main pipline script stored in 00.workflow.commands.sh
         """
         
-        with open(self.pipe_data["scripts_dir"] + "00.workflow.commands.csh", "w") as pipe_fh:
+        with open(self.pipe_data["scripts_dir"] + "00.workflow.commands.sh", "w") as pipe_fh:
             # Writing header :)
             pipe_fh.write("""
 \n\n
 # This is the main executable script of this pipeline
-# It was created on %(date)s by NeatSeq-Flow version %(version)s
+# It was created on {date} by NeatSeq-Flow version {version}
 # See http://neatseq-flow.readthedocs.io/en/latest/
 
-\n\n\n""" % {"date": time.strftime("%d/%m/%Y %H:%M:%S"), "version": __version__})
-            
+# Import helper functions
+. {helper_funcs}
+
+""".format(date=time.strftime("%d/%m/%Y %H:%M:%S"),
+           version=__version__,
+           helper_funcs=self.pipe_data["helper_funcs"]))
+
             # For each step, write the qsub command created by get_qsub_command() method:
             for step_n in self.step_list:
-                if not step_n.skip_scripts:   # Add the line only for modules that produce scripts (see del_type and move_type for examples of modules that don't...)
-                    pipe_fh.write(self.get_qsub_command(step_n))
-
-                
-                
-    def get_qsub_command(self,step):
-        """ Get the qsub command for step to print in main pipeline script, 00....
-        """
-        qsub_line = ""
-        qsub_line += "echo running " + step.get_step_name() + " ':\\n------------------------------'\n"
-        
-        # slow_release_script_loc = os.sep.join([self.pipe_data["home_dir"],"utilities","qsub_scripts","run_jobs_slowly.pl"])
-
-        if "slow_release" in step.params.keys():
-            # Define the code for slow release 
-            # Define the slow_release command (common to both options of slow_release)
-            qsub_line += """ 
-qsub -N %(step_step)s_%(step_name)s_%(run_code)s \\
-    -q %(queue)s \\
-    -e %(stderr)s \\
-    -o %(stdout)s \\
-    %(slow_rel_params)s \\
-    -f %(scripts_dir)s%(script_name)s \n""" % \
-                        {"step_step"              : step.get_step_step(),
-                        "step_name"               : step.get_step_name(),
-                        "run_code"                : self.run_code,
-                        "stderr"                  : self.pipe_data["stderr_dir"],
-                        "stdout"                  : self.pipe_data["stdout_dir"],
-                        "queue"                   : self.pipe_data["qsub_params"]["queue"],
-                        "scripts_dir"             : self.pipe_data["scripts_dir"],
-                        "script_name"             : step.get_script_name(),
-                        "slow_rel_params"         : step.params["slow_release"]}
-
-        else:
-            qsub_line += "qsub %(scripts_dir)s%(script_name)s\n" % {"scripts_dir" : self.pipe_data["scripts_dir"], 
-                                                                    "script_name" : step.get_script_name()}
-
-        qsub_line += "\n\n"
-        return qsub_line
-
-
-
+                # Add the line only for modules that produce scripts
+                # (see del_type and move_type for examples of modules that don't...)
+                if not step_n.skip_scripts:
+                    pipe_fh.write(step_n.get_main_command())
 
     def make_step_type_instance(self,step_name):
         """ Create and return a class of the type defined in step_type
@@ -479,28 +444,44 @@ qsub -N %(step_step)s_%(step_name)s_%(run_code)s \\
         step_module_loc, step_module_path = Step.find_step_module(step_type, self.param_data, self.pipe_data)  # Passing param data because it contains the optional search path...
         try:
             # Import the module:
-            exec "from %s import %s as StepClass" % (step_module_loc,'Step_' + step_type)
+            StepClass = getattr(importlib.import_module(step_module_loc), 'Step_'+step_type)
+            # exec "from %s import %s as StepClass" % (step_module_loc,'Step_' + step_type)
         except ImportError:
-            print "An error has occured loading module %s.\n" % step_module_loc
+            print "An error has occurred loading module %s.\n" % step_module_loc
             print "CMD: from %s import %s as StepClass\n" % (step_module_loc,'Step_' + step_type)
             raise
 
         # Run constructor:
         try:
-            new_step = StepClass(step_name,   \
-                                 step_type,   \
-                                 step_params, \
-                                 self.pipe_data)
-            new_step.path = step_module_path
+            new_step = StepClass(step_name,
+                                 step_type,
+                                 step_params,
+                                 self.pipe_data,
+                                 step_module_path)
+
             return new_step
         except AssertionExcept as assertErr:
             print assertErr.get_error_str()
-            print("An error has occured in step initialization (type: %s). See comment above.\n" % step_type)
-
+            print("An error has occurred in step initialization (type: %s). See comment above.\n" % step_type)
             sys.exit()
-        else:
-            raise
 
+            
+    def set_qstat_path(self):
+        """ Set qstat path according to Executor used.
+        """
+        
+        qstat_cmd_dict = \
+            {"SGE" : "qstat",
+             "QSUB" : "qstat",
+             "SLURM" : "squeue",
+             "Local" : ""}
+        qstat_cmd = qstat_cmd_dict[self.param_data["Global"]["Executor"]]
+        if "Qsub_path" in self.param_data["Global"].keys():
+            self.pipe_data["qsub_params"]["qstat_path"] = os.sep.join([self.param_data["Global"]["Qsub_path"].rstrip(os.sep),qstat_cmd])
+        else:
+            self.pipe_data["qsub_params"]["qstat_path"] = qstat_cmd
+
+        
     def define_conda_params(self):
         """ If conda params are required, define them:
         """
@@ -554,66 +535,62 @@ qsub -N %(step_step)s_%(step_name)s_%(run_code)s \\
                 self.sample_data[sample]["type"].append("mapping")
             
                 
-    def create_qdel_script(self):
-        """ This function creates the 99.qdel_all script
-        """
-        
-        # Create name for qdel script:
-        self.qdel_script_name = self.pipe_data["scripts_dir"] + "99.qdel_all.csh"
-        
-        # Create directory for step-wise qdel 
-        stepWiseDir = "%s99.qdel_all%s" % (self.pipe_data["scripts_dir"],os.sep)
+    def create_kill_scripts_dir(self):
+    
+        # Create directory for step-wise qdel
+        stepWiseDir = "%s99.kill_all%s" % (self.pipe_data["scripts_dir"],os.sep)
         if not os.path.isdir(stepWiseDir):
             if self.pipe_data["verbose"]:
-                sys.stderr.write("Making dir 99.qdel_all directory at %s\n" % stepWiseDir)
+                sys.stderr.write("Making dir 99.kill_all directory at %s\n" % stepWiseDir)
             os.makedirs(stepWiseDir) 
         else:
             if self.pipe_data["verbose"]:
                 sys.stderr.write("Dir %s exists. Will overwrite... \n" % stepWiseDir)
 
-        
-        
-        with open(self.qdel_script_name, "w") as script_fh:
-            # Adding preliminary stuff:
-            script_fh.write("#!/bin/csh\n\n")
-            # script_fh.write("# Adding line to log file:\n")
-            # script_fh.write("date '+%%d %%b %%Y, %%H:%%M' >> %s\n" % (self.pipe_data["log_file"]))
-            # script_fh.write("echo '\\t\\tDeleting all jobs with 99.qdel_all.csh' >> %s\n\n\n" % (self.pipe_data["log_file"]))
 
-            script_fh.write("# Remove high level scripts:\n# entry_point\n\n\n")
-            
+    def create_kill_scripts(self):
+        """ This function creates the 99.kill_all script
+        """
+        
+        # Create name for qdel script:
+        self.pipe_data["kill_script_name"] = self.pipe_data["scripts_dir"] + "99.kill_all.sh"
+        
+        # Creation itself is done in ScriptConstrutor class
+        modname = "neatseq_flow.script_constructors.scriptconstructor{executor}".format(executor=self.pipe_data["Executor"])
+        classname = "KillScriptConstructor{executor}".format(executor=self.pipe_data["Executor"])
+
+
+        scriptclass = getattr(importlib.import_module(modname), classname)
+        kill_script_preamble = scriptclass.get_main_preamble(self.pipe_data["run_index"])
+        kill_script_postamble = scriptclass.get_main_postamble(self.pipe_data["run_index"])
+
+        with open(self.pipe_data["kill_script_name"], "w") as script_fh:
+            # Adding preliminary stuff:
+            script_fh.write(kill_script_preamble)
+
             # For every step, create separate qdel file with step jobs.
             # These files are populated and de-populated on the run:
             for step in self.step_list:
-                # Create step-specific del script:
-                step_del_script_fn = "%s99.qdel_all_%s.csh" % (stepWiseDir,step.name)
-                with open(step_del_script_fn, "w") as step_del_script:
-                    # Write header
-                    step_del_script.write("#!/bin/csh\n\n")
-                    step.set_qdel_files(step_del_script_fn, self.qdel_script_name)
-                    # # For every jid, add a qdel line:
-                    # for jid in step.get_jid_list():
-                        # step_del_script.write("qdel %s\n" % jid)
-                # Add call to step-specific qdel script to main qdel script:
-                script_fh.write("csh %s\n" % step_del_script_fn)
-            # Add logging:
-            # script_fh.write("\n\n# Adding line to log file:\n")
-            # script_fh.write("date '+%%d %%b %%Y, %%H:%%M' >> %s\n" % (self.pipe_data["log_file"]))
-            # script_fh.write("echo '\\t\\tCompleted deleting all jobs with 99.qdel_all.csh' >> %s\n\n\n" % (self.pipe_data["log_file"]))
-              
+                # New method:
+                # Write script execution command:
+                script_fh.write("sh %s\n" % step.get_kill_script_name())
+                step.set_kill_files(self.pipe_data["kill_script_name"])
+
+            script_fh.write(kill_script_postamble)
+
     def create_qalter_script(self):
         """ This function creates the 98.qalter_all script
         """
         
-        self.qalter_script_name = self.pipe_data["scripts_dir"] + "98.qalter_all.csh"
+        # self.pipe_data["depends_script_name"] = self.pipe_data["scripts_dir"] + "98.Ensure_high_depends.csh"
 
-        with open(self.qalter_script_name, "w") as script_fh:
+        with open(self.pipe_data["depends_script_name"], "w") as script_fh:
             script_fh.write("#!/bin/csh\n\n")
             for step in self.step_list:
                 if step.get_depend_list():      # The step has dependencies:
-                    script_fh.write("qalter \\\n\t-hold_jid %s \\\n\t%s\n\n" % (",".join(step.get_dependency_jid_list()), step.get_qsub_name()))
+                    # import pdb; pdb.set_trace()
+                    script_fh.write(step.get_high_depends_command())
 
-                    
     def create_bash_helper_funcs(self):
         """ This function creates the 97.helper_funcs.sh script
             In includes functions to be execute for trapping error and SIGUSR2 signals 
@@ -621,80 +598,19 @@ qsub -N %(step_step)s_%(step_name)s_%(run_code)s \\
         
         self.pipe_data["helper_funcs"] = self.pipe_data["scripts_dir"] + "97.helper_funcs.sh"
 
-        with open(self.pipe_data["helper_funcs"], "w") as script_fh:
-            script_fh.write("#!/bin/bash\n\n")
-            
-            script = """
-trap_with_arg() {{
-    # $1: func
-    # $2: module
-    # $3: instance
-    # $4: instance_id
-    # $5: level
-    # $6: hostname
-    # $7: jobid
+        modname = "neatseq_flow.script_constructors.scriptconstructor{executor}".format(executor=self.pipe_data["Executor"])
+        classname = "ScriptConstructor{executor}".format(executor=self.pipe_data["Executor"])
 
-    args="$1 $2 $3 $4 $5 $6 $7"
-    shift 7
-    for sig ; do
-        trap "$args $sig" "$sig"
-    done
-}}
+        try:
+            scriptclass = getattr(importlib.import_module(modname), classname)
+            helper_script = scriptclass.get_helper_script(self.pipe_data)
+            with open(self.pipe_data["helper_funcs"], "w") as script_fh:
+                script_fh.write(helper_script)
+        except:
 
-func_trap() {{
-    # $1: module
-    # $2: instance
-    # $3: instance_id
-    # $4: level
-    # $5: hostname
-    # $6: jobid
-    # $7: sig
+            print "Make sure the script constructor defines class method 'get_helper_script()'"
+            raise
 
-    if [ ! $6 == 'ND' ]; then
-        maxvmem=$({qstat_path} -j $6 | grep maxvmem | cut -d = -f 6);
-    else
-        maxvmem="NA";
-    fi
-    
-    if [ $7 == 'ERR' ]; then err_code='ERROR'; fi
-    if [ $7 == 'INT' ]; then err_code='TERMINATED'; fi
-    if [ $7 == 'TERM' ]; then err_code='TERMINATED'; fi
-    if [ $7 == 'SIGUSR2' ]; then err_code='TERMINATED'; fi
-
-
-    echo -e $(date '+%d/%m/%Y %H:%M:%S')'\\tFinished\\t'$1'\\t'$2'\\t'$3'\\t'$4'\\t'$5'\\t'$maxvmem'\\t[0;31m'$err_code'[m' >> {log_file}; 
-    
-    exit 1;
-}}         
-
-log_echo() {{
-    # $1: module
-    # $2: instance
-    # $3: instance_id
-    # $4: level
-    # $5: hostname
-    # $6: jobid
-    # $7: type (Started/Finished)
-    
-    if [ ! $6 == 'ND' ]; then
-        if [ $7 == 'Finished' ]; then
-            maxvmem=$({qstat_path} -j $6 | grep maxvmem | cut -d = -f 6);
-        else    
-            maxvmem="-"
-        fi
-    else
-        maxvmem="NA";
-    fi
-    
-
-    echo -e $(date '+%d/%m/%Y %H:%M:%S')'\\t'$7'\\t'$1'\\t'$2'\\t'$3'\\t'$4'\\t'$5'\\t'$maxvmem'\\t[0;32mOK[m' >> {log_file};
-    
-}}
-
-            """.format(log_file = self.pipe_data["log_file"],
-                        qstat_path = self.pipe_data["qsub_params"]["qstat_path"])
-            script_fh.write(script)
-            
     def create_log_file(self):
         """ Create a initialize the log file.
         """
@@ -723,16 +639,26 @@ Pipeline {run_code} logfile:
 Timestamp\tEvent\tModule\tInstance\tJob name\tLevel\tHost\tMax mem\tStatus
 """)
 
-                
         # Set file name for storing list of pipeline versions:
         self.pipe_data["version_list_file"] = "".join([self.pipe_data["logs_dir"], "version_list.txt"])
         # if not os.path.exists(self.pipe_data["version_list_file"]):
         with open(self.pipe_data["version_list_file"],"a") as logf:
             logf.write("%s\t%s\n" % (self.pipe_data["run_code"], self.pipe_data["message"]))
 
+    def create_job_index_files(self):
+        """ Create files for in-house NeatSeq-Flow job controller
+        """
+        # Set script_index filename in pipe_data
+        # Used for connecting qsub_names with script paths and more
+        self.pipe_data["script_index"] = "".join([self.pipe_data["objects_dir"], "script_index_" ,  self.pipe_data["run_code"] , ".txt"])
 
+        # Set run_index filename in pipe_data
+        # Used for flagging active jobs.
+        # self.pipe_data["run_index"] = "".join([self.pipe_data["objects_dir"], "run_index_" ,  self.pipe_data["run_code"] , ".txt"])
+        self.pipe_data["run_index"] = "".join([self.pipe_data["objects_dir"], "run_index" ,  ".txt"])
+        # Clearing file:
+        open(self.pipe_data["run_index"], "w").close()
 
-            
     def create_registration_file(self):
         """
         """
@@ -745,8 +671,6 @@ Timestamp\tEvent\tModule\tInstance\tJob name\tLevel\tHost\tMax mem\tStatus
 Date\tStep\tName\tScript\tFile\tmd5sum\n
 """)
               
-              
-
     def get_dict_encoding(self):
         """ Returns a dict representation of the pipeline.
         """
@@ -755,11 +679,12 @@ Date\tStep\tName\tScript\tFile\tmd5sum\n
         ret_dict["sample_data"] = self.sample_data
         ret_dict["pipe_data"] = self.pipe_data
         ret_dict["global_params"] = self.param_data["Global"]
-        ret_dict["step_data"] = {step.get_step_name():step.get_dict_encoding() for step in self.step_list}
+        ret_dict["step_data"] = {step.get_step_name(): step.get_dict_encoding()
+                                 for step
+                                 in self.step_list}
         
         return ret_dict
-        
-        
+
     def get_json_encoding(self):
         """ Convert pipeline data into JSON format
         """
@@ -785,20 +710,20 @@ Date\tStep\tName\tScript\tFile\tmd5sum\n
         filenames = param_file.split(",")
         i = 0
         for filename in filenames:
-            shutil.copyfile(filename, "%s%s_params_%d.txt" % (self.pipe_data["backups_dir"], \
-                                                                self.pipe_data["run_code"], \
+            shutil.copyfile(filename, "%s%s_params_%d.txt" % (self.pipe_data["backups_dir"],
+                                                                self.pipe_data["run_code"],
                                                                 i))
             i += 1
 
         filenames = sample_file.split(",")
         i = 0
         for filename in filenames:
-            shutil.copyfile(filename, "%s%s_samples_%d.txt" % (self.pipe_data["backups_dir"], \
-                                                                self.pipe_data["run_code"], \
+            shutil.copyfile(filename, "%s%s_samples_%d.txt" % (self.pipe_data["backups_dir"],
+                                                                self.pipe_data["run_code"],
                                                                 i))
             i += 1
         
-        modules_bck_dir = "{bck_dir}{run_code}".format(bck_dir = self.pipe_data["backups_dir"], \
+        modules_bck_dir = "{bck_dir}{run_code}".format(bck_dir = self.pipe_data["backups_dir"],
                                                        run_code = self.pipe_data["run_code"]) 
         if not os.path.exists(modules_bck_dir):
             os.mkdir(modules_bck_dir)
@@ -818,11 +743,11 @@ Date\tStep\tName\tScript\tFile\tmd5sum\n
         for step in self.step_list:
             if step.get_base_step_name():
                 for base_step in step.get_base_step_list():
-                    links_part.append("{source: \"%s(%s)\", target: \"%s(%s)\", type: \"dependency\"}" % \
-                                    (base_step.get_step_name(),\
-                                    base_step.get_step_step(),\
-                                    step.get_step_name(),\
-                                    step.get_step_step()))
+                    links_part.append("{{source: \"{basename}({basestep})\", target: \"{stepname}({stepstep})\", type: \"dependency\"}}".format(\
+                                    basename = base_step.get_step_name(),
+                                    basestep = base_step.get_step_step(),
+                                    stepname = step.get_step_name(),
+                                    stepstep = step.get_step_step()))
         links_part = "\n,".join(links_part)
 
         
@@ -1016,11 +941,11 @@ library(reshape2); library(googleVis); args <- commandArgs(trailingOnly =T);log_
         # sys.exit()
         links_part = "\n".join(links_part)
         nodes_part = "\n".join(["{node_num} [label = '@@{node_num}', fillcolor = {step_col} {skipped}]".format( \
-                                node_num = 1+counter,  \
+                                node_num = 1+counter,
                                 step_col = "gray" if "SKIP" in self.step_list[self.step_list_index.index(step)].params else step_colors_index[nodes_list_step[counter]], \
-                                skipped  = skipped_props if "SKIP" in self.step_list[self.step_list_index.index(step)].params else "") \
+                                skipped  = skipped_props if "SKIP" in self.step_list[self.step_list_index.index(step)].params else "")
                                     for counter,step in enumerate(nodes_list)])
-        footnote_part = "\n".join(["[%d]: '%s\\\\n(%s)'" % (1+counter, step, nodes_list_step[counter]) \
+        footnote_part = "\n".join(["[%d]: '%s\\\\n(%s)'" % (1+counter, step, nodes_list_step[counter])
                                     for counter,step in enumerate(nodes_list)])
        
         Gviz_text =  """
@@ -1055,12 +980,7 @@ saveWidget(myviz,file = "%(out_file_name)s",selfcontained = F)
         
         with open(self.pipe_data["objects_dir"] + "diagrammer.R" , "w") as diagrammer:
             diagrammer.write(Gviz_text)
-                
-                
-                
-                
-                
-                
+
     def find_modules(self):
         """ Searches all module repositories for a list of possible modules
             Meant to be used by the GUI generator for supplying the user with a list of modules he can include
@@ -1098,9 +1018,7 @@ saveWidget(myviz,file = "%(out_file_name)s",selfcontained = F)
                         if re.search("class Step_%s"%file.strip(".py"),pyt_fh.read()):
                             module_list.append(file.strip(".py"))
             return module_list
-                            
-                
-                
+
     def add_step(self, step_name, step_params):
         """ Add a step to an existing main neatseq-flow class
             To be used with the GUI
@@ -1123,11 +1041,7 @@ saveWidget(myviz,file = "%(out_file_name)s",selfcontained = F)
         # Expanding dependencies based on "base" parameter:
         # Storing in self.depend_dict 
         self.expand_depends()
-       
-        
 
-        
-        
         # Create step instances:
         sys.stdout.write("Making step instances...\n")
         self.make_step_instances()
@@ -1135,13 +1049,9 @@ saveWidget(myviz,file = "%(out_file_name)s",selfcontained = F)
         # Storing names index in pipe_data. Could be used by the step instances 
         self.pipe_data["names_index"] = self.get_names_index()
 
-
-        # Make main script:
-        self.make_main_pipeline_script()
-
         # Make the qdel script:
-        self.create_qdel_script()
-        
+        self.create_kill_scripts()
+
         # Do the actual script building:
         # Also, catching assetion exceptions raised by class build_scripts() and 
         sys.stdout.write("Building scripts...\n")
@@ -1150,16 +1060,17 @@ saveWidget(myviz,file = "%(out_file_name)s",selfcontained = F)
             
         except AssertionExcept as assertErr:
             print assertErr.get_error_str()
-            print "An error has occured. See comment above.\nPrinting current JSON and exiting\n"
-            with open(self.pipe_data["objects_dir"]+"WorkflowData.json","w") as json_fh:
+            print "An error has occurred. See comment above.\nPrinting current JSON and exiting\n"
+            with open(self.pipe_data["objects_dir"]+"WorkflowData.json", "w") as json_fh:
                 json_fh.write(self.get_json_encoding())
             # sys.exit() 
             return
             
-        
         # Make the qalter script:
         self.create_qalter_script()
 
+        # Make main script:
+        self.make_main_pipeline_script()
         
         # # Make js graphical representation (maybe add parameter to not include this feature?)
         # sys.stdout.write("Making workflow plots...\n")
@@ -1168,18 +1079,41 @@ saveWidget(myviz,file = "%(out_file_name)s",selfcontained = F)
         
         # Writing JSON encoding ofg pipeline:
         sys.stdout.write("Writing JSON files...\n")
-        with open(self.pipe_data["objects_dir"]+"WorkflowData.json","w") as json_fh:
+        with open(self.pipe_data["objects_dir"]+"WorkflowData.json", "w") as json_fh:
             json_fh.write(self.get_json_encoding())
         # Writing JSON encoding of qsub names (can be used by remote progress monitor)
-        with open(self.pipe_data["objects_dir"]+"qsub_names.json","w") as json_fh:
+        with open(self.pipe_data["objects_dir"]+"qsub_names.json", "w") as json_fh:
             json_fh.write(self.get_qsub_names_json_encoding())
-            
-        
-        
+
         # self.create_log_plotter()
         
         sys.stderr.flush()
         sys.stdout.write("Finished successfully....\n\n")
-        
-        
+
         return self.step_list[self.step_list_index==step_name]
+
+    def create_script_execution_script(self):
+        """
+        """
+
+        modname = "neatseq_flow.script_constructors.scriptconstructor{executor}".format(
+            executor=self.pipe_data["Executor"])
+        # classname = "get_script_exec_line"
+        classname = "ScriptConstructor{executor}".format(executor=self.pipe_data["Executor"])
+
+        try:
+            scriptclass = getattr(importlib.import_module(modname), classname)
+            exec_script = scriptclass.get_exec_script(self.pipe_data)
+
+            if exec_script:
+                self.pipe_data["exec_script"] = "".join([self.pipe_data["scripts_dir"], "NSF_exec.sh"])
+                with open(self.pipe_data["exec_script"], "w") as exec_file:
+                    exec_file.write(exec_script)
+
+
+            # with open(self.pipe_data["helper_funcs"], "w") as script_fh:
+            #     script_fh.write(helper_script)
+        except:
+
+            print "Make sure the script constructor defines class method 'get_helper_script()'"
+            raise

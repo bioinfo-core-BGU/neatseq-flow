@@ -43,14 +43,16 @@ def remove_comments(filelines):
     
     return filelines
 
+
 def check_newlines(filelines):
     """
     """
     # Assert that the list of lines containing "\r" charaters is empty.
     lines_with_CRs = [line for line in filelines if re.search("\r",line)]
-    assert not lines_with_CRs, "The sample and parameter files must not contain carriage returns. Convert newlines to UNIX style!\n"
-    
-    
+    if lines_with_CRs:
+        print "The sample and parameter files must not contain carriage returns. Convert newlines to UNIX style!\n"
+        raise Exception("Issues in samples", "samples")
+
 
 def parse_sample_file(filename):
     """Parses a file from filename
