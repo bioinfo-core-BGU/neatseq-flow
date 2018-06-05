@@ -115,6 +115,9 @@ class NeatSeqFlow:
         # Create run code to identify the scripts etc.
         # Date+rand num (to preserve order of pipelines)
         if runid:
+            # Testing runid
+            if re.search("\s",runid):
+                sys.exit("--runid should not contain whitespacve characters")
             self.run_code = runid
         else:
             self.run_code = datetime.now().strftime("%Y%m%d%H%M%S")  # (Is always used as a string)

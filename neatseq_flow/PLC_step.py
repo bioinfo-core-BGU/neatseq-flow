@@ -930,20 +930,16 @@ Dependencies: {depends}""".format(name = self.name,
                 assertErr.set_step_name(self.get_step_name())
                 raise assertErr
 
-    
         if "stop_and_show" in self.params:
             print "project slots:\n-------------"
-            pp(self.sample_data.keys())
+            pp([key for key in self.sample_data.keys() if key not in self.sample_data["samples"]])
             
             if self.sample_data["samples"]:  # Sample list may be empty if only project data was passed!
                 print "sample slots:\n-------------"
                 pp(self.sample_data[self.sample_data["samples"][0]].keys())
 
             sys.exit("Showed. Now stopping. To continue, remove the 'stop_and_show' tag from %s" % self.get_step_name())
-            
 
-        
-        
     def get_kill_script_name(self):
         """"""
         
