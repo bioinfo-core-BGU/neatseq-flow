@@ -610,7 +610,6 @@ class KillScriptConstructor(ScriptConstructor):
 
     def __init__(self, **kwargs):
 
-
         super(KillScriptConstructor, self).__init__(**kwargs)
         
         self.script_id = self.name + "_killscript"
@@ -621,7 +620,6 @@ class KillScriptConstructor(ScriptConstructor):
                      os.sep,
                      "99.kill_all_{name}".format(name=self.name),
                      ".sh"])
-
 
         self.filehandle = open(self.script_path, "w")
 

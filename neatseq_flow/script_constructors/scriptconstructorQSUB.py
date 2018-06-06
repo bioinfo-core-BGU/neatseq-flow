@@ -51,11 +51,9 @@ locksed "s:\($qsubname\).*$:\\1\\trunning\\t$jobid:" $run_index
 
         else:
             script += """\
-bash {nsf_exec} \\
-    {script_id} \\ 
-    1>> {nsf_exec}.stdout \\
-    2>> {nsf_exec}.stderr &\n\n""".format(script_id = self.script_id,
-                          nsf_exec = self.pipe_data["exec_script"])
+bash {nsf_exec} {script_id} 1>> {nsf_exec}.stdout 2>> {nsf_exec}.stderr &\n\n""".\
+                format(script_id = self.script_id,
+                       nsf_exec = self.pipe_data["exec_script"])
 
         return script
 
@@ -324,6 +322,7 @@ touch {run_index}.killall
 
         return """\
 wait
+sleep 10 
 
 rm -rf {run_index}.killall
 """.format(run_index=run_index)

@@ -607,7 +607,6 @@ class NeatSeqFlow:
             with open(self.pipe_data["helper_funcs"], "w") as script_fh:
                 script_fh.write(helper_script)
         except:
-
             print "Make sure the script constructor defines class method 'get_helper_script()'"
             raise
 

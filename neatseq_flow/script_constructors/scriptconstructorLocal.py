@@ -76,13 +76,11 @@ locksed "s:\($qsubname\).*$:\\1\\tPID\\t$!:" $run_index
             sys.exit("Slow release no longer supported. Use 'job_limit'")
         else:
             script += """\
-bash {nsf_exec} \\
-    {script_id} \\
-    1> {stdout} \\
-    2> {stderr} & \n\n""".format(script_id = self.script_id,
-                          nsf_exec = self.pipe_data["exec_script"],
-                          stderr = "{dir}{id}.e".format(dir=self.pipe_data["stderr_dir"], id=self.script_id),
-                          stdout = "{dir}{id}.o".format(dir=self.pipe_data["stdout_dir"], id=self.script_id))
+bash {nsf_exec} {script_id} 1> {stdout} 2> {stderr} & \n\n""".\
+                format(script_id = self.script_id,
+                       nsf_exec = self.pipe_data["exec_script"],
+                       stderr = "{dir}{id}.e".format(dir=self.pipe_data["stderr_dir"], id=self.script_id),
+                       stdout = "{dir}{id}.o".format(dir=self.pipe_data["stdout_dir"], id=self.script_id))
 
         return script
 
@@ -291,6 +289,7 @@ touch {run_index}.killall
 
         return """\
 wait
+sleep 10 
 
 rm -rf {run_index}.killall
 """.format(run_index=run_index)
