@@ -138,7 +138,7 @@ class HighScriptConstructorLocal(ScriptConstructorLocal,HighScriptConstructor):
         if "job_limit" in self.pipe_data.keys():
             job_limit = """\
 # Sleeping while jobs exceed limit
-wait_limit()
+wait_limit
         """
                 # .format(limit_file=self.pipe_data["job_limit"],
                 #    run_index=self.pipe_data["run_index"])
@@ -170,7 +170,7 @@ sleep {sleep_time}
         if "job_limit" in self.pipe_data.keys():
             job_limit = """\
 # Sleeping while jobs exceed limit
-wait_limit()
+wait_limit
 """#.format(limit_file=self.pipe_data["job_limit"],
     #       run_index=self.pipe_data["run_index"])
 
