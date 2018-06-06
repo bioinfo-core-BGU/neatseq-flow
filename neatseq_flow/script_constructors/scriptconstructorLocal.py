@@ -66,6 +66,14 @@ locksed "s:\($qsubname\).*$:\\1\\tPID\\t$!:" $run_index
 """
         return script
 
+    @classmethod
+    def get_run_index_clean_script(cls, pipe_data):
+            # Create run_index cleaning script
+        return """\
+#!/bin/bash
+sed -i -e 's/^\([^#]\w\+\).*/\# \\1/g' -e 's/^\(\# \w\+\).*/\\1/g' {run_index}""".\
+                            format(run_index=pipe_data["run_index"])
+
     def get_command(self):
         """ Returnn the command for executing the this script
         """

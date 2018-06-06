@@ -145,6 +145,8 @@ class NeatSeqFlow:
         # Create script_index and run_index files
         # These (will be)[are] used by the in-house NeatSeq-Flow job controller for non-qsub based clusters
         self.create_job_index_files()
+        # Create script for cleaning up run_index file:
+        self.create_run_index_cleaning_script()
 
         # Create file with functions for trapping error:
         self.create_bash_helper_funcs()
@@ -1116,3 +1118,27 @@ saveWidget(myviz,file = "%(out_file_name)s",selfcontained = F)
 
             print "Make sure the script constructor defines class method 'get_helper_script()'"
             raise
+
+    def create_run_index_cleaning_script(self):
+        """
+        """
+
+        modname = "neatseq_flow.script_constructors.scriptconstructor{executor}".format(
+            executor=self.pipe_data["Executor"])
+        # classname = "get_script_exec_line"
+        classname = "ScriptConstructor{executor}".format(executor=self.pipe_data["Executor"])
+
+        try:
+            scriptclass = getattr(importlib.import_module(modname), classname)
+            clean_script = scriptclass.get_run_index_clean_script(self.pipe_data)
+
+            if clean_script:
+                cleaning_script = "{run_index}.clean.sh".format(run_index=self.pipe_data["run_index"])
+
+                with open(cleaning_script, "w") as clean_scr:
+                    clean_scr.write(clean_script)
+
+        except:
+
+            print "Script constructor does not define class method 'get_run_index_clean_script()'. Not creating"
+

@@ -56,6 +56,14 @@ locksed "s:\($qsubname\).*$:\\1\\trunning\\t$jobid:" $run_index
 """
         return script
 
+    @classmethod
+    def get_run_index_clean_script(cls, pipe_data):
+
+        return """\
+#!/bin/bash
+sed -i -e 's/^\([^#]\w\+\).*/\# \\1/g' -e 's/^\(\# \w\+\).*/\\1/g' {run_index}""". \
+            format(run_index=pipe_data["run_index"])
+
     def get_command(self):
         """ Returnn the command for executing the this script
         """
@@ -85,8 +93,7 @@ bash {nsf_exec} {script_id} &\n\n""".format(script_id = self.script_id,
         """ Make the first few lines for the scripts
             Is called for high level, low level and wrapper scripts
         """
-        
-            
+
         qsub_header = """\
 #!/bin/{shell}
 #SBATCH --job-name {jobname}
