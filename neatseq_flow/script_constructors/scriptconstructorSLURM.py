@@ -66,7 +66,7 @@ locksed "s:\($qsubname\).*$:\\1\\trunning\\t$jobid:" $run_index
             sys.exit("Slow release no longer supported. Use 'job_limit'")
         else:
             script += """\
-sh {nsf_exec} \\
+bash {nsf_exec} \\
     {script_id} &\n\n""".format(script_id = self.script_id,
                                 nsf_exec = self.pipe_data["exec_script"])
 
@@ -302,7 +302,7 @@ class KillScriptConstructorSLURM(ScriptConstructorSLURM,KillScriptConstructor):
         """ Return main kill-script preamble"""
         pass
         return """\
-#!/bin/sh
+#!/bin/bash
 
 # Kill held scripts:
 touch {run_index}.killall

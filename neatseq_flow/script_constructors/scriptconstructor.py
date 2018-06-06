@@ -598,7 +598,7 @@ class KillScriptConstructor(ScriptConstructor):
         """ Return main kill-script preamble"""
 
         return """\
-#!/bin/sh
+#!/bin/bash
 """
 
     @classmethod

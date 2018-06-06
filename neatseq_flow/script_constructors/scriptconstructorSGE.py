@@ -293,7 +293,7 @@ class KillScriptConstructorSGE(ScriptConstructorSGE,KillScriptConstructor):
     def get_main_preamble(cls, *args):
         """ Return main kill-script preamble"""
         return """\
-#!/bin/sh
+#!/bin/bash
 
 # Remove high level scripts:
 # entry_point

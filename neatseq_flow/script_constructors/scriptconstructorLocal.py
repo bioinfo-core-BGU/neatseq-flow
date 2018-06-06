@@ -55,7 +55,7 @@ wait_limit() {{
 
 iscsh=$(grep "csh" <<< $script_path)
 if [ -z $iscsh ]; then
-    sh $script_path &
+    bash $script_path &
 else
     csh $script_path &
 fi
@@ -76,7 +76,7 @@ locksed "s:\($qsubname\).*$:\\1\\tPID\\t$!:" $run_index
             sys.exit("Slow release no longer supported. Use 'job_limit'")
         else:
             script += """\
-sh {nsf_exec} \\
+bash {nsf_exec} \\
     {script_id} \\
     1> {stdout} \\
     2> {stderr} & \n\n""".format(script_id = self.script_id,
@@ -278,7 +278,7 @@ class KillScriptConstructorLocal(ScriptConstructorLocal, KillScriptConstructor):
         """ Return main kill-script preamble"""
         pass
         return """\
-#!/bin/sh
+#!/bin/bash
 
 # Kill held scripts:
 touch {run_index}.killall

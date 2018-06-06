@@ -573,7 +573,7 @@ class NeatSeqFlow:
             for step in self.step_list:
                 # New method:
                 # Write script execution command:
-                script_fh.write("sh %s\n" % step.get_kill_script_name())
+                script_fh.write("bash %s\n" % step.get_kill_script_name())
                 step.set_kill_files(self.pipe_data["kill_script_name"])
 
             script_fh.write(kill_script_postamble)
