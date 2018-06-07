@@ -129,13 +129,13 @@ run_index="{run_index}"
 # Import helper functions
 . {helper_funcs}
 
-echo $1
+echo "Running job: " $qsubname
 
 # script_path=$(grep $qsubname $script_index | cut -f 2 )
 
-script_path=$(awk '/$qsubname/ {{print $2}}' $script_index)
+script_path=$(awk -v qsname="$qsubname" '$0 ~ qsname".*" {{print $2}}' $script_index)
 
-echo $script_path
+echo "Running script: " $script_path
 
 # 2. Marking in run_index as running
 
