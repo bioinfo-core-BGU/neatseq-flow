@@ -31,7 +31,7 @@ job_limit={job_limit}
 
 wait_limit() {{
     while : ; do
-        numrun=$(egrep -c "^\w" $run_index);
+        numrun=$(awk 'BEGIN {{jobsc=0}} /^\w/ {{jobsc=jobsc+1}} END {{print jobsc}}' $run_index);
         maxrun=$(sed -ne "s/limit=\([0-9]*\).*/\\1/p" $job_limit);
         sleeptime=$(sed -ne "s/.*sleep=\([0-9]*\).*/\\1/p" $job_limit);
         [[ $numrun -ge $maxrun ]] || break;
@@ -61,7 +61,7 @@ locksed "s:\($qsubname\).*$:\\1\\trunning\\t$jobid:" $run_index
 
         return """\
 #!/bin/bash
-sed -i -e 's/^\([^#]\w\+\).*/\# \\1/g' -e 's/^\(\# \w\+\).*/\\1/g' {run_index}""". \
+sed -i -e 's/^\([^#]\w\+\).*/\# \\1/g' -e 's/^\(\# \w\+\).*/\\1/g' {run_index}\n""". \
             format(run_index=pipe_data["run_index"])
 
     def get_command(self):

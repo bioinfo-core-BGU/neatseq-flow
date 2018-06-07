@@ -165,9 +165,7 @@ class HighScriptConstructorSGE(ScriptConstructorSGE,HighScriptConstructor):
             job_limit = """
 # Sleeping while jobs exceed limit
 wait_limit
-"""#.format(limit_file=self.pipe_data["job_limit"],
-    #       qstat=self.pipe_data["qsub_params"]["qstat_path"])
-
+"""
         # TODO: Add output from stdout and stderr
 
         script = """
@@ -193,8 +191,7 @@ echo running {script_id}
             job_limit = """
 # Sleeping while jobs exceed limit
 wait_limit
-"""#.format(limit_file=self.pipe_data["job_limit"],
-    #       qstat=self.pipe_data["qsub_params"]["qstat_path"])
+"""
 
         script = """
 # ---------------- Code for {script_id} ------------------
@@ -210,7 +207,7 @@ qsub {script_name}
            step_kill_file = self.params["kill_script_path"])
 
         return script
-                            
+
     def get_script_postamble(self):
                             
         # Get general postamble
