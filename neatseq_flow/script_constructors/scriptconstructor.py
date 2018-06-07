@@ -131,7 +131,9 @@ run_index="{run_index}"
 
 echo $1
 
-script_path=$(grep $qsubname $script_index | cut -f 2 )
+# script_path=$(grep $qsubname $script_index | cut -f 2 )
+
+script_path=$(awk '/$qsubname/ {{print $2}}' $script_index)
 
 echo $script_path
 
