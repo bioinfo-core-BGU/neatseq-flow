@@ -553,7 +553,7 @@ Dependencies: {depends}""".format(name = self.name,
             if self.params["sample_list"] == "all_samples":
                 # self.sample_data["samples"] = self.pipe_data["samples"]
                 try:
-                    self.sample_data["samples"] = self.sample_data["prev_sample_lists"].pop()
+                    self.sample_data["samples"] = self.sample_data["sample_data_history"]["prev_sample_lists"].pop()
                 except KeyError:
                     raise AssertionExcept("'sample_list' set to 'all_samples' before sample subset selected",
                                           step=self.get_step_name())
