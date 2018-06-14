@@ -16,8 +16,12 @@ import os, sys
 import argparse
 from pprint import pprint as pp
 
-from PLC_main import neatseq_flow
-from PLC_step import Step
+# from PLC_main import neatseq_flow
+# from PLC_step import Step
+
+sys.path.append(os.path.realpath(os.path.expanduser(os.path.dirname(os.path.abspath(__file__))+os.sep+"..")))
+from neatseq_flow.PLC_main import NeatSeqFlow
+from neatseq_flow.PLC_step import Step
 
 
 # Parse arguments:

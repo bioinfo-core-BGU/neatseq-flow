@@ -55,7 +55,7 @@ Create a new directory anywhere, `cd` into it and execute the following commands
 Install and execute with **Conda**
 ====================================
 
-#. Install `Miniconda`_.
+#. Install `Miniconda`_ (for python version 2.7).
 #. Download the **NeatSeq-Flow** |conda_env|. 
 #. Create an environment::
 
