@@ -18,10 +18,10 @@ from scriptconstructor import *
 class ScriptConstructorQSUB(ScriptConstructor):
 
     @classmethod
-    def get_helper_script(cls, *args):
+    def get_helper_script(cls, pipe_data):
         """ Returns the code for the helper script
         """
-        script = super(ScriptConstructorQSUB, cls).get_helper_script(*args)
+        script = super(ScriptConstructorQSUB, cls).get_helper_script(pipe_data)
         script = re.sub("## locksed command entry point", r"""locksed  "s:^\\($3\\).*:# \\1\\t$err_code:" $run_index""", script)
 
         # Add job_limit function:

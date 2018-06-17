@@ -106,7 +106,7 @@ bash {nsf_exec} {script_id} &\n\n""".format(script_id = self.script_id,
         if  self.params["qsub_params"]["queue"]:
             qsub_header +=   "#SBATCH --partition %s\n" % self.params["qsub_params"]["queue"]
         if self.master.dependency_jid_list:
-            qsub_header += "#$ -hold_jid %s " % ",".join(self.master.dependency_jid_list)
+            qsub_header += "#$ -hold_jid {hjids}\n".format(hjids=",".join(self.master.dependency_jid_list))
 
         return qsub_header  
 # ----------------------------------------------------------------------------------

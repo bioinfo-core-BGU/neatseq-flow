@@ -1138,7 +1138,8 @@ saveWidget(myviz,file = "%(out_file_name)s",selfcontained = F)
                 with open(cleaning_script, "w") as clean_scr:
                     clean_scr.write(clean_script)
 
-        except:
-
-            print "Script constructor does not define class method 'get_run_index_clean_script()'. Not creating"
+        except AttributeError:
+            if self.pipe_data["verbose"]:
+                sys.stderr.write("Script constructor does not define class method 'get_run_index_clean_script()'. "
+                                 "Not creating\n")
 
