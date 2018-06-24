@@ -994,7 +994,8 @@ sample slots:
 
                 #pp(self.sample_data[self.sample_data["samples"][0]].keys())
 
-            sys.exit("Showed. Now stopping. To continue, remove the 'stop_and_show' tag from %s" % self.get_step_name())
+            raise AssertionExcept("Showed. Now stopping. "
+                                  "To continue, remove the 'stop_and_show' tag from %s" % self.get_step_name())
 
     def get_kill_script_name(self):
         """"""
