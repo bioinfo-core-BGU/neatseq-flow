@@ -188,7 +188,8 @@ class NeatSeqFlow:
             print "An error has occurred. See comment above.\nPrinting current JSON and exiting\n"
             with open(self.pipe_data["objects_dir"]+"WorkflowData.json", "w") as json_fh:
                 json_fh.write(self.get_json_encoding())
-            # sys.exit() 
+            # sys.exit()
+            self.cleanup()
             return
             
         # Make main script:
@@ -465,6 +466,7 @@ class NeatSeqFlow:
         except AssertionExcept as assertErr:
             print assertErr.get_error_str()
             print("An error has occurred in step initialization (type: %s). See comment above.\n" % step_type)
+            self.cleanup()
             sys.exit()
 
             
@@ -1064,7 +1066,8 @@ saveWidget(myviz,file = "%(out_file_name)s",selfcontained = F)
             print "An error has occurred. See comment above.\nPrinting current JSON and exiting\n"
             with open(self.pipe_data["objects_dir"]+"WorkflowData.json", "w") as json_fh:
                 json_fh.write(self.get_json_encoding())
-            # sys.exit() 
+            # sys.exit()
+            self.cleanup()
             return
             
         # Make the qalter script:
@@ -1143,3 +1146,6 @@ saveWidget(myviz,file = "%(out_file_name)s",selfcontained = F)
                 sys.stderr.write("Script constructor does not define class method 'get_run_index_clean_script()'. "
                                  "Not creating\n")
 
+    def cleanup(self):
+        for step_n in self.step_list:
+            step_n.cleanup()
