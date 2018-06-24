@@ -247,7 +247,7 @@ class Step:
             self.shell_ext = "sh"
         else:
             self.shell_ext = "csh"
-            
+
         # Check that auto_redirs do not exist in parameter redirects list:
         try:
             auto_redirs = list(set(self.params["redir_params"].keys()) & set(self.auto_redirs))
@@ -544,7 +544,9 @@ Dependencies: {depends}""".format(name = self.name,
                 # Add the base sample_data to this step's base_sample_data:
                 self.base_sample_data[base_step.get_step_name()] = deepcopy(base_step.get_sample_data())
 
-        # Limit operation to sample_list only
+        # ----------Limit operation to sample_list only
+        # This part is experimental and not 100% complete. Changes will probably occur in the future.
+        # 1. Convert "exclude_sample_list" to "sample_list":
         if "exclude_sample_list" in self.params:
             if not isinstance(self.params["exclude_sample_list"] , list):
                 self.params["exclude_sample_list"] = re.split("[, ]+", self.params["exclude_sample_list"])
@@ -552,40 +554,24 @@ Dependencies: {depends}""".format(name = self.name,
                 raise AssertionExcept("'exclude_sample_list' includes samples not defined in sample data!",
                                       step=self.get_step_name())
             self.params["sample_list"] = list(set(self.pipe_data["samples"]) - set(self.params["exclude_sample_list"]))
-
+        # 2. Deal with 'sample_list' option:
         if "sample_list" in self.params:
+            # 2a. For 'all_samples', pop the last sample list from stash 'sample_data_history'
             if self.params["sample_list"] == "all_samples":
-                # self.sample_data["samples"] = self.pipe_data["samples"]
                 try:
-                    self.sample_data["samples"] = self.sample_data["sample_data_history"]["prev_sample_lists"].pop()
+                    self.recover_sample_list()
                 except KeyError:
                     raise AssertionExcept("'sample_list' set to 'all_samples' before sample subset selected",
                                           step=self.get_step_name())
+
+            # 2b. For 'all_samples', pop the last sample list from stash 'sample_data_history'
             else:
                 if not isinstance(self.params["sample_list"], list):
                     self.params["sample_list"] = re.split("[, ]+", self.params["sample_list"])
                 if set(self.params["sample_list"])-set(self.pipe_data["samples"]):
                     raise AssertionExcept("'sample_list' includes samples not defined in sample data!",
                                           step=self.get_step_name())
-
-                # Push previous sample list into prev_sample_lists
-                try:
-                    self.sample_data["sample_data_history"]["prev_sample_lists"].append(self.sample_data["samples"])
-                except KeyError:
-                    # container for unused sample data:
-                    self.sample_data["sample_data_history"] = dict()
-                    # Container for magazine of sample lists:
-                    self.sample_data["sample_data_history"]["prev_sample_lists"] = list()
-                    self.sample_data["sample_data_history"]["prev_sample_lists"].append(self.sample_data["samples"])
-                    # Container for unused sample info:
-                    self.sample_data["sample_data_history"]["unused_sample_data"] = dict()
-                    self.sample_data["sample_data_history"]["prev_sample_lists"].append(self.sample_data["samples"])
-                    samples2remove = list(set(self.sample_data["samples"])-set(self.params["sample_list"]))
-                    # for sample in samples2remove:
-                    #
-                    # for sample in self.params["sample_list"]:
-                # Create new sample list:
-                self.sample_data["samples"] = self.params["sample_list"]
+                self.stash_sample_list(self.params["sample_list"])
 
         # Trying running step specific sample initiation script:
         try:
@@ -596,6 +582,54 @@ Dependencies: {depends}""".format(name = self.name,
         except AssertionExcept as assertErr: 
             assertErr.set_step_name(self.get_step_name())
             raise assertErr
+
+    def stash_sample_list(self, sample_list):
+        """ Call this function to change the sample_list and put current sample list in history.
+            Following the call to the function, you should be able to manipulate the sample list in such a way that it
+            is recoverable from sample_data_history
+            Note: AN EXPERIMENTAL FEATURE STILL
+        """
+
+        try:
+            self.sample_data["sample_data_history"]["prev_sample_lists"].append(self.sample_data["samples"])
+        except KeyError:
+            # container for unused sample data:
+            self.sample_data["sample_data_history"] = dict()
+            # Container for magazine of sample lists:
+            self.sample_data["sample_data_history"]["prev_sample_lists"] = list()
+            self.sample_data["sample_data_history"]["prev_sample_lists"].append(self.sample_data["samples"])
+            # # Container for unused sample info:
+            # self.sample_data["sample_data_history"]["unused_sample_data"] = dict()
+            # self.sample_data["sample_data_history"]["unused_sample_data"].append(self.sample_data["samples"])
+            # samples2remove = list(set(self.sample_data["samples"])-set(self.params["sample_list"]))
+            # for sample in samples2remove:
+            #
+            # for sample in self.params["sample_list"]:
+        # Create new sample list:
+        if isinstance(sample_list,str):
+            sample_list = [sample_list]
+        elif isinstance(sample_list,list):
+            pass
+        else:
+            raise AssertionExcept("sample_list must be string or list in stash_sample_list()")
+        self.sample_data["samples"] = sample_list  #self.params["sample_list"]
+
+    def recover_sample_list(self,base=None):
+        """ Call this function to recover the most recent sample list from history.
+            Note: AN EXPERIMENTAL FEATURE STILL
+            If sample_data_history does not exist, will throw a KeyError exception. You have to catch it!
+        """
+
+        if base is None:
+            # try:
+            self.sample_data["samples"] = self.sample_data["sample_data_history"]["prev_sample_lists"].pop()
+            # except KeyError:
+            #     raise AssertionExcept("'sample_list' set to 'all_samples' before sample subset selected",
+            #                           step=self.get_step_name())
+        else:  # Recover sample list from base
+            if base not in self.get_depend_list():
+                raise AssertionExcept("Base {base} undefined.".format(base=base))
+            self.sample_data["samples"] = self.base_sample_data[base]["sample"]
 
     def get_main_command(self):
         """ Return the command to put in the main workflow script to run the main step script.
@@ -935,12 +969,30 @@ Dependencies: {depends}""".format(name = self.name,
                 raise assertErr
 
         if "stop_and_show" in self.params:
-            print "project slots:\n-------------"
-            pp([key for key in self.sample_data.keys() if key not in self.sample_data["samples"]])
-            
+            print """\
+project slots:
+--------------
+{project_slots}""".format(project_slots="\n".join(["- "+key
+                                                   for key
+                                                   in self.sample_data.keys()
+                                                   if key not in self.sample_data["samples"]]))
+            # pp([key for key in self.sample_data.keys() if key not in self.sample_data["samples"]])
+
             if self.sample_data["samples"]:  # Sample list may be empty if only project data was passed!
-                print "sample slots:\n-------------"
-                pp(self.sample_data[self.sample_data["samples"][0]].keys())
+                print """
+samples:
+-------------
+{sample_list}
+
+sample slots:
+-------------
+{sample_slots}
+""".format(sample_list=", ".join(self.sample_data["samples"]),
+           sample_slots="\n".join("- "+key for key in self.sample_data[self.sample_data["samples"][0]].keys()))
+                # print ", ".join(self.sample_data["samples"])
+                # print "sample slots:\n-------------"
+
+                #pp(self.sample_data[self.sample_data["samples"][0]].keys())
 
             sys.exit("Showed. Now stopping. To continue, remove the 'stop_and_show' tag from %s" % self.get_step_name())
 
