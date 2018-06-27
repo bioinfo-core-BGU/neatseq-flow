@@ -401,9 +401,14 @@ def test_and_modify_global_params(global_params):
                 raise Exception("'conda' 'path' is empty, but no CONDA_PREFIX is defined. "
                                 "Make sure you are in an active conda environment.")
                 
-        if "env" not in global_params["conda"] or global_params["conda"]["env"] is None:
-            raise Exception("When using 'conda', you must supply an 'env' containing the "
-                            "name of the environment to use.\n", "parameters")
+        if "env" not in global_params["conda"]:
+            if global_params["conda"]["env"] is None:
+                try:
+                    global_params["conda"]["env"] = os.environ['CONDA_DEFAULT_ENV']
+                except KeyError:
+                    raise Exception("When using 'conda', you must supply an 'env' containing the "
+                                    "name of the environment to use, or run NeatSeq-Flow from inside an active "
+                                    "CONDA environment.\n", "parameters")
         
     return global_params
 

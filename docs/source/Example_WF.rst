@@ -24,35 +24,34 @@ This tutorial describes how to create the workflow described in the **NeatSeq-Fl
 Short Description
 --------------------
 
-This example workflow performs:
+The example workflow performs:
 
 * Quality testing and trimming of raw reads (paired or single).
-* Alignment (“mapping”) of the reads to each sample’s reference genome using two different programs.
-* Produce sorted bam file for each sample as final results.
-* Creates a report on reads and mapping quality.
+* Alignment (“mapping”) of the reads to a reference genome using two different programs.
+* Sorting the samples' bam files as final results.
+* Creation of a report on reads and mapping quality.
 
-This workflow is a classical starting point for a bacterial sequencing analysis workflow, of which additional steps can be implemented such as de-novo assembly, variant calling etc.
+The workflow is a classical starting point for a bacterial sequencing analysis workflow, of which additional steps can be implemented such as de-novo assembly, variant calling etc.
 
 **The example workflow is distributed as part of NeatSeq-Flow for quick testing.**
 
 The workflow consists of the following steps: 
 
 .. csv-table:: 
-    :header: "Step", "Module"
-    :widths: 15, 10
+    :header: "Step", "Module", "Program"
+    :widths: 15, 10, 10
 
-    "Merge",                  "merge"
-    "Fastqc_Merge",           "fastqc_html"
-    "Trimmomatic",            "trimmo"
-    "FastQC_Trimmomatic",     "fastqc_html"
-    "BWA_Index_Builder",      "bwa_builder"
-    "BWA",                    "bwa_mapper"
-    "Bwt2_Index_Builder",     "bowtie2_builder"
-    "Bwt2",                   "bowtie2_mapper"
-    "Samtools_BWA",           "samtools"
-    "Samtools_Bwt2",          "samtools"
-    "QC_and_Map_MultQC",      "Multiqc"
-
+    "Merge","merge","-"
+    "Fastqc_Merge","fastqc_html","fastqc"
+    "Trimmomatic","trimmo","trimmomatic"
+    "FastQC_Trimmomatic","fastqc_html","fastqc"
+    "BWA_Index_Builder","bwa_builder","bwa"
+    "BWA","bwa_mapper","bwa"
+    "Bwt2_Index_Builder","bowtie2_builder","bowtie2"
+    "Bwt2","bowtie2_mapper","bowtie2"
+    "Samtools_BWA","samtools","samtools"
+    "Samtools_Bwt2","samtools","samtools"
+    "QC_and_Map_MultQC","Multiqc","MultiQC"
 
 
 

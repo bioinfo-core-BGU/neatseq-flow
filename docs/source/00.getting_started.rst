@@ -23,7 +23,7 @@ Download and Install
 
 #. Clone the package from github::
 
-    git clone https://github.com/bioinfo-core-BGU/neatseq-flow.git``
+    git clone https://github.com/bioinfo-core-BGU/neatseq-flow.git
 
 #. You may have to install two `python` dependencies: `yaml` and `bunch`. This can be done with::
 
@@ -32,6 +32,9 @@ Download and Install
 #. Clone the package of modules from github::
 
     git clone https://github.com/bioinfo-core-BGU/neatseq-flow-modules.git
+    
+
+.. Tip:: A NeatSeq-Flow GUI is available. See the detailed `GUI tutorial`_.
 
 .. Note:: You can also download the repository code from the following links:
 
@@ -54,6 +57,8 @@ Create a new directory anywhere, `cd` into it and execute the following commands
 
 Install and execute with **Conda**
 ====================================
+
+.. Attention:: The following instructions are for use with the ``bash`` shell!
 
 #. Install `Miniconda`_ (for python version 2.7).
 #. Download the **NeatSeq-Flow** |conda_env|. 

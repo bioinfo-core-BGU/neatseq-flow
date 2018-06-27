@@ -102,7 +102,7 @@ For standard file types, you should use the appropriate slots (check out similar
 
     As mentioned above, module instances can be based on more than one instance. *i.e.* ``i`` can be based on ``j,k``. It was stated that in this case, if ``j`` and ``k`` instances write to the same slot, ``i`` will have access only to the version created by ``j``.
     
-    However, you can write modules such that ``i`` has access to the same slot both in ``k`` and in ``j``: Previous versions of the ``sample_data`` dict are stored in the ``base_sample_data`` slot within the ``sample_data`` dict. The ``base_sample_data`` dict is keyed by the base instance name. This can be used to access *overwridden* versions of files created by instances upstream to the present module.
+    However, you can write modules such that ``i`` has access to the same slot both in ``k`` and in ``j``: Previous versions of the ``sample_data`` dict are stored in the ``base_sample_data`` dictionary in the module class. The ``base_sample_data`` dict is keyed by the base instance name. This can be used to access *overwridden* versions of files created by instances upstream to the present module.
     
     For example, if **base** contains the name of the base instance (*e.g.* **merge1**), you can access the base's sample data as follows::
         
