@@ -30,10 +30,10 @@
 
 .. topic:: Important links
 
-   * `Get from github <https://github.com/bioinfo-core-BGU/neatseq-flow>`_
-   * `GUI on github <https://github.com/bioinfo-core-BGU/NeatSeq-Flow-GUI>`_
-   * `List of modules <http://neatseq-flow.readthedocs.io/projects/neatseq-flow-modules/en/latest/>`_
-   * `Publication <https://www.biorxiv.org/content/early/2018/03/26/173005>`_
+   * `Install NeatSeq-Flow <https://github.com/bioinfo-core-BGU/neatseq-flow>`_
+   * `NeatSeq-Flow GUI <https://github.com/bioinfo-core-BGU/NeatSeq-Flow-GUI>`_
+   * `Module and Workflow repository <http://neatseq-flow.readthedocs.io/projects/neatseq-flow-modules/en/latest/>`_
+   * `NeatSeq-Flow article on BioRXiv <https://www.biorxiv.org/content/early/2018/03/26/173005>`_
    * `Contact <mailto:sklarz@bgu.ac.il?subject=Inquiry\ about\ NeatSeq-Flow>`_
 
 
