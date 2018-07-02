@@ -1147,5 +1147,10 @@ saveWidget(myviz,file = "%(out_file_name)s",selfcontained = F)
                                  "Not creating\n")
 
     def cleanup(self):
-        for step_n in self.step_list:
-            step_n.cleanup()
+        try:
+            for step_n in self.step_list:
+                step_n.cleanup()
+        except AttributeError:
+            # This happens when AssertionExeption is called from the step_specific_init function in modules
+            # At this stage, steps have not yet been initialized.
+            pass

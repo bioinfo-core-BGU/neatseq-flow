@@ -15,6 +15,8 @@
    :target: http://neatseq-flow.readthedocs.io/en/latest/
 
    
+
+
 .. sidebar:: **NeatSeq-Flow**...
 
    * is an easy-to-install python package; 
@@ -25,6 +27,16 @@
    * records information about files produced by the scripts;
    * provides documentation, version control and time & memory usage reports and
    * provides a monitor for tracking execution progress.
+
+.. topic:: Important links
+
+   * `Get from github <https://github.com/bioinfo-core-BGU/neatseq-flow>`_
+   * `GUI on github <https://github.com/bioinfo-core-BGU/NeatSeq-Flow-GUI>`_
+   * `List of modules <http://neatseq-flow.readthedocs.io/projects/neatseq-flow-modules/en/latest/>`_
+   * `Publication <https://www.biorxiv.org/content/early/2018/03/26/173005>`_
+   * `Contact <mailto:sklarz@bgu.ac.il?subject=Inquiry\ about\ NeatSeq-Flow>`_
+
+
 
 .. contents:: Table of Contents
    :depth: 1
@@ -47,6 +59,7 @@ What is **NeatSeq-Flow**?
 	* documentation, version control as well as time & memory usage reports and 
 	* adding modules and expanding existing WFs requires only basic python skills.
 * **NeatSeq-Flow** is available on |github| (See :ref:`installation_section`)
+* A |GUI| is available for parameter and sample file editting and **NeatSeq-Flow** execution.
 
     
 

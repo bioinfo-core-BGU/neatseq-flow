@@ -400,12 +400,14 @@ def parse_tabular_sample_data(sample_lines):
         # print line_data[1]
         if line[0] in sample_x_dict.keys():
             # If type exists, append path to list
-            sample_x_dict[line[0]].append(get_full_path(line[1]))
-            
+            # sample_x_dict[line[0]].append(get_full_path(line[1]))
+            sample_x_dict[line[0]].append(line[1])
+
         else:
             # If not, create list with path
-            sample_x_dict[line[0]] = [get_full_path(line[1])]
-            
+            # sample_x_dict[line[0]] = [get_full_path(line[1])]
+            sample_x_dict[line[0]] = [line[1]]
+
     # pp(sample_x_dict)
     # sys.exit()
 

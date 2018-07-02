@@ -61,11 +61,13 @@ if args.sample_file is None or args.param_file is None:
     parser.print_help()
     sys.exit()
 
+    
 if args.clean:
-    if args.home_dir != os.getcwd():
-        text = raw_input("Are you sure you want to delete the workflow in {home_dir}? ".format(home_dir = args.home_dir))
-        if not text.lower() == "yes":
-            sys.exit()
+    # if args.home_dir != os.getcwd():
+    text = raw_input("Are you sure you want to delete the workflow in {home_dir}? ".format(home_dir = args.home_dir))
+
+    if not text.lower() == "yes":
+        sys.exit()
     if args.clean_all:
         text = raw_input("Are you sure you want to delete '{data}'? ".format(data=os.sep.join([args.home_dir, "data"])))
         if os.path.isdir(os.sep.join([args.home_dir, "data"])):
@@ -76,7 +78,11 @@ if args.clean:
     for wfdir in ["backups", "logs", "objects", "scripts", "stderr", "stdout"]:
         if os.path.isdir(os.sep.join([args.home_dir, wfdir])):
             shutil.rmtree(os.sep.join([args.home_dir, wfdir]))
-
+else:
+    if args.clean_all:
+        sys.exit("Please pass -l as well as --clean-all. This is a safety precaution...")
+    
+    
 # Checking that sample_file and param_file were passed:
 if args.sample_file is None or args.param_file is None:
     print "Don't forget to pass sample and parameter files with the -s and -p flags.\n", parser.print_help()
