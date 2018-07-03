@@ -197,7 +197,9 @@ Other parameters you can set for each step to control the execution of the step 
     Defines whether to use sample-wise files or project-wise files. Check per-module documentation for whether and how this parameter is defined (see, *e.g.*, the ``blast`` module).
 
 ``sample_list``
-    This is an experimental feature. A comma-separated list of samples on which to execute the module. Scripts will be created only for the samples in the list. This selection will be valid for all instances based on this instance, untill the value ``all_samples`` is passed. Use this option with care since the samples not in the list will not own the step outputs, which may well be required downstream. 
+    This is an experimental feature. A comma-separated list of samples on which to execute the module. Scripts will be created only for the samples in the list. This selection will be valid for all instances based on this instance, untill the value ``all_samples`` is passed. Use this option with care since the samples not in the list will not own the step outputs, which may well be required downstream.
+
+    For using all but a subset of samples, use replace ``sample_list`` with ``exclude_sample_list``.
     
 .. Tip:: A use case could be when you want to run a step with different parameters for different sample subsets. Both versions of the instance should inherit from a common ``base`` and the downstream step can inherit both versions, thus all samples will have all files, created with different parameters.
 
@@ -205,6 +207,10 @@ Other parameters you can set for each step to control the execution of the step 
     Is used to define step specific `conda` parameters. The syntax is the same as for the global ``conda`` definition (:ref:`see here <conda_param_definition>`). If set, the ``path`` and ``env`` will be used to execute the scripts of this step only. If a global ``conda`` exists, the local definition will override the global definition. 
     
 .. Attention:: If you have set global `conda` parameters, and want a step to execute **not within** a `conda` environment, pass an empty ``conda`` field.
+
+``arg_separator``
+    Sometimes, the delimiter between program argument and value is not blank space (' ') but something else, like '='. For these modules, you should set ``arg_separator`` to the separator character. `e.g.` ``arg_separator: '='``
+    See `PICARD <https://broadinstitute.github.io/picard/index.html>`_ programs for examples.
 
 .. _local_step_parameter:
 
