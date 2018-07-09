@@ -1191,10 +1191,10 @@ saveWidget(myviz,file = "%(out_file_name)s",selfcontained = F)
                     glob_name_inst2 = instance2.get_glob_name()
 
                     if qsub_name_glob(glob_name_inst1,glob_name_inst2):
-                        print "Instance '{inst1}' name is a prefix of instance '{inst2}' name, and both are from " \
+                        print "* Instance '{inst1}' name is a prefix of instance '{inst2}' name, and both are from " \
                               "the same module. This can cause cyclic dependencies! " \
-                              "Please modify '{inst1}' to avoid this.".format(inst1=instance1.get_step_name(),
-                                                                              inst2=instance2.get_step_name())
+                              "Please modify '{inst1}' to avoid this.\n".format(inst1=instance1.get_step_name(),
+                                                                                inst2=instance2.get_step_name())
                         issues = True
                     else:
                         pass

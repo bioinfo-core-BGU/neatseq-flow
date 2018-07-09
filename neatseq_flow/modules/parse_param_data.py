@@ -146,7 +146,8 @@ def get_param_data_YAML(filelines):
                 # Converting node to list if it is not one already
                 if "node" in yamlname_params["qsub_params"]:
                     if isinstance(yamlname_params["qsub_params"]["node"], str):
-                        yamlname_params["qsub_params"]["node"] = [yamlname_params["qsub_params"]["node"]]
+                        yamlname_params["qsub_params"]["node"] = re.split("[\, ]*",yamlname_params["qsub_params"]["node"])
+                        #[yamlname_params["qsub_params"]["node"]]
 
                 # 3. Moving all params which are not 'node', '-q' or 'queue', to 'opts'
                 params2mv = list(set(yamlname_params["qsub_params"]) - {"node", "queue", "-q"})
@@ -382,7 +383,8 @@ def test_and_modify_global_params(global_params):
         if isinstance(global_params["Qsub_nodes"],str):
             # Convert to list by splitting by comma.
             # Remove extra spaces from around node names, if these exist (e.g. 'node1, node2')
-            global_params["Qsub_nodes"] = [node.strip() for node in global_params["Qsub_nodes"].split(",")]
+            global_params["Qsub_nodes"] = re.split("[\, ]*",global_params["Qsub_nodes"])
+                # [node.strip() for node in global_params["Qsub_nodes"].split(",")]
         elif isinstance(global_params["Qsub_nodes"], list):
             pass      # OK
         else:
