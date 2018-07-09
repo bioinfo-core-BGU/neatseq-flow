@@ -1180,6 +1180,7 @@ saveWidget(myviz,file = "%(out_file_name)s",selfcontained = F)
                                                               repl="",
                                                               string=qsubname1))
 
+        issues = False
         for instance1 in self.step_list:
             for instance2 in self.step_list:
                 # Don't test steps against themselves:
@@ -1190,9 +1191,13 @@ saveWidget(myviz,file = "%(out_file_name)s",selfcontained = F)
                     glob_name_inst2 = instance2.get_glob_name()
 
                     if qsub_name_glob(glob_name_inst1,glob_name_inst2):
-                        sys.exit("Instance '{inst1}' name is a prefix of instance '{inst2}' name, and both are from "
-                                 "the same module. This can cause cyclic dependencies! "
-                                 "Please modify '{inst1}' to avoid this.".format(inst1=instance1.get_step_name(),
-                                                                                 inst2=instance2.get_step_name()))
+                        print "Instance '{inst1}' name is a prefix of instance '{inst2}' name, and both are from " \
+                              "the same module. This can cause cyclic dependencies! " \
+                              "Please modify '{inst1}' to avoid this.".format(inst1=instance1.get_step_name(),
+                                                                              inst2=instance2.get_step_name())
+                        issues = True
                     else:
                         pass
+
+        if issues:
+            sys.exit("Issues with instance names. See above")
