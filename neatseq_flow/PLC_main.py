@@ -107,7 +107,7 @@ class NeatSeqFlow:
         # Making a step name index (dict of form {step_name:step_type})
         # Storing in self.name_index
         self.make_names_index()
-        
+
         # Expanding dependencies based on "base" parameter:
         # Storing in self.depend_dict 
         self.expand_depends()
@@ -170,7 +170,12 @@ class NeatSeqFlow:
         # Create step instances:
         sys.stdout.write("Making step instances...\n")
         self.make_step_instances()
-        
+
+        # Check instance names for possible cyclic names
+        # This can happen when a instance name is a prefix of a different instance name.
+        # Stopping and alerting the user. Another possibility is to add a short random str to the shorter name
+        self.check_cyclic_step_names()
+
         # Storing names index in pipe_data. Could be used by the step instances 
         self.pipe_data["names_index"] = self.get_names_index()
 
@@ -270,7 +275,7 @@ class NeatSeqFlow:
         for step in self.param_data["Step"]:
             for name in self.param_data["Step"][step].keys():
                 self.name_index[name] = step
-        
+
         return self.name_index
         
     def build_scripts(self):
@@ -1049,6 +1054,11 @@ saveWidget(myviz,file = "%(out_file_name)s",selfcontained = F)
         sys.stdout.write("Making step instances...\n")
         self.make_step_instances()
 
+        # Check instance names for possible cyclic names
+        # This can happen when a instance name is a prefix of a different instance name.
+        # Stopping and alerting the user. Another possibility is to add a short random str to the shorter name
+        self.check_cyclic_step_names()
+
         # Storing names index in pipe_data. Could be used by the step instances 
         self.pipe_data["names_index"] = self.get_names_index()
 
@@ -1154,3 +1164,35 @@ saveWidget(myviz,file = "%(out_file_name)s",selfcontained = F)
             # This happens when AssertionExeption is called from the step_specific_init function in modules
             # At this stage, steps have not yet been initialized.
             pass
+
+    def check_cyclic_step_names(self):
+        """ Check no names are prefixes of other names.
+        """
+
+        def qsub_name_glob(qsubname1, qsubname2):
+            """ Helper function: Checks if name A is a prefix of name B, after removing final glob *
+                Returns True if A is prefix of B
+            """
+            # print "{i1} <---> {i2}".format(i1=qsubname1,i2=qsubname2)
+            return re.sub(pattern="\*.*$",
+                          repl="",
+                          string=qsubname2).startswith(re.sub(pattern="\*.*$",
+                                                              repl="",
+                                                              string=qsubname1))
+
+        for instance1 in self.step_list:
+            for instance2 in self.step_list:
+                # Don't test steps against themselves:
+                if instance1.get_step_name() == instance2.get_step_name():
+                    pass
+                else:
+                    glob_name_inst1 = instance1.get_glob_name()
+                    glob_name_inst2 = instance2.get_glob_name()
+
+                    if qsub_name_glob(glob_name_inst1,glob_name_inst2):
+                        sys.exit("Instance '{inst1}' name is a prefix of instance '{inst2}' name, and both are from "
+                                 "the same module. This can cause cyclic dependencies! "
+                                 "Please modify '{inst1}' to avoid this.".format(inst1=instance1.get_step_name(),
+                                                                                 inst2=instance2.get_step_name()))
+                    else:
+                        pass

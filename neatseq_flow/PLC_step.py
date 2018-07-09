@@ -286,10 +286,12 @@ They are set automatically or module is not defined to use them""".format(parame
 Name:         {name}
 Step:         {module}
 Base:         {base}
-Dependencies: {depends}""".format(name = self.name, 
-                                module = self.step, 
-                                base   = [step.get_step_name() for step in self.get_base_step_list()] if self.get_base_step_list() else None, 
-                                depends = self.get_depend_list())
+Dependencies: {depends}""".format(name=self.name,
+                                  module=self.step,
+                                  base=[step.get_step_name()
+                                        for step
+                                        in self.get_base_step_list()] if self.get_base_step_list() else None,
+                                  depends=self.get_depend_list())
         
     def write_warning(self, warning = "Unknown problem", sample = None, admonition = "WARNING"):
         """ Write a warning when doing something that might be foolish.
@@ -352,7 +354,8 @@ Dependencies: {depends}""".format(name = self.name,
         try:
             return self.base_step_list
         except AttributeError:
-            sys.exit("base_step not found in %s\n" % (self.name))
+            return []
+            # sys.exit("base_step not found in %s\n" % (self.name))
             
 ## Comprison methods
     
@@ -690,6 +693,12 @@ Dependencies: {depends}""".format(name = self.name,
 
         return self.glob_jid_list
 
+    def get_glob_name(self):
+
+        return "{step}_{name}*{runid}".format(step=self.get_step_step(),
+                                              name=self.get_step_name(),
+                                              runid=self.pipe_data["run_code"])
+
     def get_dependency_glob_jid_list(self):
         """ Returns the list of jids of all base steps
             Recursion. beware!
@@ -794,8 +803,9 @@ Dependencies: {depends}""".format(name = self.name,
         
         # Adding high-level jid to jid_list
         self.add_jid_to_jid_list(self.main_script_obj.script_id)
-        self.glob_jid_list.append("{step}_{name}*".format(step=self.get_step_step(),
-                                                          name=self.get_step_name()))
+        self.glob_jid_list.append(self.get_glob_name())
+        # "{step}_{name}*".format(step=self.get_step_step(),
+        #                                                   name=self.get_step_name()))
 
         # Add qdel command to main qdel script:
         self.main_script_obj.main_script_kill_commands(self.kill_script_filename_main)
