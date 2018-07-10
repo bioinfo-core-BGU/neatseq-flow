@@ -171,6 +171,8 @@ class Step:
         self.pipe_data = pipe_data
         
         self.path = module_path
+
+        self.jid_name_sep = ".."
         
         ###### Place for testing parameters:
         try:
@@ -653,9 +655,9 @@ Dependencies: {depends}""".format(name=self.name,
         """
         
         if sample:
-            self.spec_script_name = "_".join([self.step,self.name,sample])
+            self.spec_script_name = self.jid_name_sep.join([self.step,self.name,sample])
         else:
-            self.spec_script_name = "_".join([self.step,self.name,self.sample_data["Title"]])
+            self.spec_script_name = self.jid_name_sep.join([self.step,self.name,self.sample_data["Title"]])
 
         return self.spec_script_name
 
@@ -695,7 +697,7 @@ Dependencies: {depends}""".format(name=self.name,
 
     def get_glob_name(self):
 
-        return "{step}_{name}*{runid}".format(step=self.get_step_step(),
+        return "{step}_{name}_*{runid}".format(step=self.get_step_step(),
                                               name=self.get_step_name(),
                                               runid=self.pipe_data["run_code"])
 

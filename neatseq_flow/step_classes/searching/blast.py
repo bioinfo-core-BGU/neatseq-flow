@@ -276,15 +276,14 @@ class Step_blast(Step):
         """ Script building function for sample-level BLAST
             
         """
-   
-        
         # Each iteration must define the following class variables:
             # spec_script_name
             # script
         for sample in self.sample_data["samples"]:      # Getting list of samples out of samples_hash
             
             # Name of specific script:
-            self.spec_script_name = "_".join([self.step,self.name,sample])
+            # self.spec_script_name = "_".join([self.step,self.name,sample])
+            self.spec_script_name = self.create_spec_script_name(sample)
             self.script = ""
 
             # Make a dir for the current sample:
@@ -326,16 +325,13 @@ class Step_blast(Step):
         """ Script building function for project-level BLAST
 
         """
-
-
-        
-        
         # Each iteration must define the following class variables:
         # spec_script_name
         # script
         
         # Name of specific script:
-        self.spec_script_name = "_".join([self.step,self.name,self.sample_data["Title"]])
+        # self.spec_script_name = "_".join([self.step,self.name,self.sample_data["Title"]])
+        self.spec_script_name = self.create_spec_script_name()
         self.script = ""
 
         
