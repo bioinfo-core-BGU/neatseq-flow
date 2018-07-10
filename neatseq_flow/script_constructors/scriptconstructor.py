@@ -514,7 +514,7 @@ echo '{kill_cmd}' >> {qdel_file}\n""".format(kill_cmd = kill_cmd, qdel_file = se
             script = """\
 # Removing kill command from kill commands file.
 sed -i -e 's:^{kill_cmd}$:#&:' {qdel_file}\n""".format(kill_cmd = re.escape(kill_cmd), 
-                                qdel_file = self.script_path)
+                                qdel_file = self.params["kill_script_path"])
         else:
             raise AssertionExcept("Bad type value in add_qdel_lines()", step = self.name)
             
