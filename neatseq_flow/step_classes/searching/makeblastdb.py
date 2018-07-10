@@ -167,7 +167,7 @@ class Step_makeblastdb(Step):
                 # raise AssertionExcept("No file matching the -dbtype you supplied.\n",sample)
         
             # Name of specific script:
-            self.spec_script_name = "_".join([self.step,self.name,sample])
+            self.spec_script_name = self.set_spec_script_name(sample)
             self.script = ""
 
             # Make a dir for the current sample:
@@ -226,7 +226,7 @@ class Step_makeblastdb(Step):
             # raise AssertionExcept("No file matching the -dbtype you suppplied.\n")
     
         # Name of specific script:
-        self.spec_script_name = "_".join([self.step,self.name,self.sample_data["Title"]])
+        self.spec_script_name = self.set_spec_script_name()
         self.script = ""
 
         

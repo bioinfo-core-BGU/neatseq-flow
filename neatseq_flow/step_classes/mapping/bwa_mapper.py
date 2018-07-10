@@ -260,7 +260,7 @@ class Step_bwa_mapper(Step):
                     self.script = ""
                     direction_tag = direction[-1] # Get last letter in direction
                     # Name of specific script:
-                    self.spec_script_name = "_".join([self.step,self.name,sample,direction_tag]) 
+                    self.spec_script_name = self.jid_name_sep.join([self.step,self.name,sample,direction_tag])
                     self.script = ""
 
                     
@@ -306,7 +306,7 @@ class Step_bwa_mapper(Step):
             else:  # Not 'aln': one of the mods that create sam files.
                 
                 # Name of specific script:
-                self.spec_script_name = "_".join([self.step,self.name,sample])
+                self.spec_script_name = self.set_spec_script_name(sample)
                 self.script = ""
                 
                 

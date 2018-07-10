@@ -429,26 +429,17 @@ Dependencies: {depends}""".format(name=self.name,
         # Done before high level script so that high level knows about the 'kill_script_path' in params
         getScriptConstructorClass = self.import_ScriptConstructor(level="kill")
         self.kill_script_obj = getScriptConstructorClass(master = self)
-        # step = self.get_step_step(), \
-        #                                         name = self.get_step_name(), \
-        #                                         number = self.step_number, \
-        #                                         shell = self.shell,
-        #                                         params = self.params,
-        #                                         pipe_data = self.pipe_data)
+
         # Store path to kill script in params:
         self.params["kill_script_path"] = self.kill_script_obj.script_path
 
         getScriptConstructorClass = self.import_ScriptConstructor(level="high")
 
         ## Create main script class
+        # First, setting spec_script_name:
+        self.spec_script_name = self.jid_name_sep.join([self.step,self.name])
+        # Then, creating high-level script:
         self.main_script_obj = getScriptConstructorClass(master=self)
-        # step = self.get_step_step(),
-        #                                                  name = self.get_step_name(),
-        #                                                  number = self.step_number,
-        #                                                  shell = self.shell,
-        #                                                  kill_obj=self.kill_script_obj,
-        #                                                  params = self.params,
-        #                                                  pipe_data = self.pipe_data)
 
         
     def cleanup(self):
@@ -644,8 +635,8 @@ Dependencies: {depends}""".format(name=self.name,
 
     def set_spec_script_name(self,sample=None):
         """ Sets the current spec_script_name to a regular name, i.e.:
-                sample level: "_".join([self.step,self.name,sample])
-                project level: "_".join([self.step,self.name,self.sample_data["Title"]])
+                sample level: self.jid_name_sep.join([self.step,self.name,sample])
+                project level: self.jid_name_sep.join([self.step,self.name,self.sample_data["Title"]])
             In the build_scripts function, run:
                 sample level: self.set_spec_script_name(sample)
                 project level: self.set_spec_script_name()
@@ -697,9 +688,10 @@ Dependencies: {depends}""".format(name=self.name,
 
     def get_glob_name(self):
 
-        return "{step}_{name}_*{runid}".format(step=self.get_step_step(),
-                                              name=self.get_step_name(),
-                                              runid=self.pipe_data["run_code"])
+        return "{step}{sep}{name}{sep}*{runid}".format(step=self.get_step_step(),
+                                                       name=self.get_step_name(),
+                                                       sep=self.jid_name_sep,
+                                                       runid=self.pipe_data["run_code"])
 
     def get_dependency_glob_jid_list(self):
         """ Returns the list of jids of all base steps
@@ -731,8 +723,7 @@ Dependencies: {depends}""".format(name=self.name,
         """
         getChildClass = self.import_ScriptConstructor(level="low")
         # Create ScriptConstructor for low level script.
-        self.child_script_obj = \
-            getChildClass(master=self)
+        self.child_script_obj = getChildClass(master=self)
 
         # Adds script_id to jid_list
         self.add_jid_to_jid_list(self.child_script_obj.script_id)  
@@ -809,6 +800,8 @@ Dependencies: {depends}""".format(name=self.name,
         # "{step}_{name}*".format(step=self.get_step_step(),
         #                                                   name=self.get_step_name()))
 
+        self.spec_script_name = self.jid_name_sep.join([self.step,self.name])
+
         # Add qdel command to main qdel script:
         self.main_script_obj.main_script_kill_commands(self.kill_script_filename_main)
 
@@ -851,7 +844,7 @@ Dependencies: {depends}""".format(name=self.name,
         if not self.script.strip():                 # If script is empty, do not create a wrapper function
             return
 
-        self.spec_script_name = "_".join([self.step, self.name, "preliminary"])
+        self.spec_script_name = self.jid_name_sep.join([self.step, self.name, "preliminary"])
 
         getChildClass = self.import_ScriptConstructor(level="low")
         # Create ScriptConstructor for low level script.
@@ -905,7 +898,7 @@ Dependencies: {depends}""".format(name=self.name,
         if not self.script.strip():                 # If script is empty, do not create a wrapper function
             return 
 
-        self.spec_script_name = "_".join([self.step,self.name,"wrapping_up"])
+        self.spec_script_name = self.jid_name_sep.join([self.step,self.name,"wrapping_up"])
 
         getChildClass = self.import_ScriptConstructor(level="low")
 
@@ -1166,8 +1159,11 @@ sample slots:
             local_dir = "".join([os.sep,
                                 self.params["local"].strip(os.sep),
                                 os.sep,
-                                "_".join([self.spec_script_name,self.pipe_data["run_code"]]),
+                                "_".join(["_".join(self.spec_script_name.split(self.jid_name_sep)), # Convert '..' into "_":
+                                          self.pipe_data["run_code"]]),
                                 os.sep])
+
+
             self.script += "# Adding lines for local execution:\n" 
             self.script += "mkdir -p %s \n\n" % local_dir
             return local_dir 

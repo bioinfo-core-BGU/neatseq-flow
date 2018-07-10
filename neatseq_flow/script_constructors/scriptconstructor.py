@@ -216,6 +216,7 @@ done
         self.shell = self.master.shell
         self.params = self.master.params
         self.pipe_data = self.master.pipe_data
+
         try:
             self.kill_obj = self.master.kill_script_obj
         except:
@@ -401,8 +402,9 @@ class HighScriptConstructor(ScriptConstructor):
         self.script_name = "{step_number}.{step}_{name}.{shell_ext}".format(**vars(self))
 
         self.script_path = self.pipe_data["scripts_dir"] + self.script_name
-        
-        self.script_id = "_".join([self.step,self.name, self.pipe_data["run_code"]])
+
+        self.script_id = self.master.spec_script_name
+        self.script_id = self.master.jid_name_sep.join([self.script_id, self.pipe_data["run_code"]])
         self.level = "high"
         
         self.filehandle = open(self.script_path, "w")
@@ -485,11 +487,12 @@ class LowScriptConstructor(ScriptConstructor):
 
         self.script_path = \
             "{scripts_dir}{number}.{id}.{ext}".format(scripts_dir = self.scripts_dir,
-                                                    number = self.step_number,
-                                                    id = self.script_id,
-                                                    ext = self.shell_ext)
+                                                      number = self.step_number,
+                                                      id = "_".join(self.script_id.split(self.master.jid_name_sep)),
+                                                      ext = self.shell_ext)
 
-        self.script_id = "_".join([self.script_id, self.pipe_data["run_code"]])
+
+        self.script_id = self.master.jid_name_sep.join([self.script_id, self.pipe_data["run_code"]])
         self.level = "low"
         self.filehandle = open(self.script_path, "w")
 

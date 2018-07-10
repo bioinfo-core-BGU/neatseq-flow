@@ -198,7 +198,7 @@ class Step_quast(Step):
                 # print "in here: multiple_bases"
                 # print multiple_bases
                 # Name of specific script:
-                self.spec_script_name = "_".join([self.step,self.name,self.sample_data["Title"]])
+                self.spec_script_name = self.set_spec_script_name()
                 self.script = ""
 
                 
@@ -240,7 +240,7 @@ class Step_quast(Step):
                 for sample in self.sample_data["samples"]:      # Getting list of samples out of samples_hash
                     
                     # Name of specific script:
-                    self.spec_script_name = "_".join([self.step,self.name,sample])
+                    self.spec_script_name = self.set_spec_script_name(sample)
                     self.script = ""
 
                     # Make a dir for the current sample:
@@ -286,7 +286,7 @@ class Step_quast(Step):
         else:    # 'scope' = project
             
             # Name of specific script:
-            self.spec_script_name = "_".join([self.step,self.name,self.sample_data["Title"]])
+            self.spec_script_name = self.set_spec_script_name()
             self.script = ""
 
             
