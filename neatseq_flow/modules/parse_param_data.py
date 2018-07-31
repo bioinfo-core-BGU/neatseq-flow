@@ -97,7 +97,23 @@ from collections import OrderedDict
 def ordered_load(stream, Loader=yaml.Loader, object_pairs_hook=OrderedDict):
     class OrderedLoader(Loader):
         pass
-    def construct_mapping(loader, node):
+    def construct_mapping(loader, node, deep=False, upper_key=None):
+        ##########
+        # Detecting duplicate keys. From: https://gist.github.com/pypt/94d747fe5180851196eb
+        mapping = {}
+
+        for key_node, value_node in node.value:
+            # import pdb;
+            # pdb.set_trace()
+            key = loader.construct_object(key_node, deep=deep)
+            value = loader.construct_object(value_node, deep=deep)
+            # print "key:{key}; value:{value}\n".format(key=key, value=value)
+            if key in mapping and node.value:
+                raise ConstructorError("while constructing a mapping", node.start_mark,
+                                       "found duplicate key (%s)" % key, key_node.start_mark)
+            mapping[key] = value
+
+        ##########
         loader.flatten_mapping(node)
         return object_pairs_hook(loader.construct_pairs(node))
     OrderedLoader.add_constructor(
@@ -169,6 +185,9 @@ def get_param_data_YAML(filelines):
     # yaml_params = yaml.load("\n".join(filelines),  Loader=yaml.SafeLoader)
     # yaml_params = yaml.safe_load("\n".join(filelines))
     yaml_params = ordered_load("\n".join(filelines), yaml.SafeLoader)
+
+    # yaml.safe_dump(yaml_params)
+    # sys.exit()
     usr_step_order = yaml_params["Step_params"].keys()
     
     # If there is a Variables section, interpolate any appearance of the variables in the params
@@ -293,6 +312,8 @@ def param_data_testing_step_wise(param_data):
                         
                     if "node" in param_data[step][name][param]:
                         if not isinstance(param_data[step][name][param]["node"],list):
+                            print name
+                            print param_data[step][name][param]["node"]
                             issue_warning += "%s. 'node' must be a string or a list in step %s (name %s)\n" % (issue_count,step,name)
                     # Checking no automatically set qsub parameters are defined by user
                     if any(map(lambda x: x in param_data[step][name][param]["opts"],NOT_PASSABLE_EXECUTOR_PARAMS)):

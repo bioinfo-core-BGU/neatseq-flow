@@ -323,7 +323,8 @@ class NeatSeqFlow:
         step_data = self.get_step_param_data()
         # Get the base list for each step.
         self.make_depends_dict()
-        
+
+
         # ### Helper recursive function
         def expand_depend_list(step_name,depend_list,depend_dict):
             """ helper function. takes a list and RECURSIVELY expands it based on the dependency dict
@@ -334,14 +335,18 @@ class NeatSeqFlow:
             if not depend_list:  # i.e. depend_list==[]:
                 return depend_list
             ret_list = depend_list
+
             if step_name in depend_list:
                 sys.exit("There seems to be a cycle in the workflow design. Check dependencies of step %s" % step_name)
             for elem in depend_list:
                 if (elem == ""):
                     pass
                 else:
-                    ret_list += expand_depend_list(step_name, list(depend_dict[elem]), depend_dict)
-                    
+                    try:
+                        ret_list += expand_depend_list(step_name, list(depend_dict[elem]), depend_dict)
+                    except RuntimeError:
+                        sys.exit("There seems to be a cycle in the workflow design. "
+                                 "Check dependencies of step %s" % step_name)
             return list(set(ret_list))
         # ######
 

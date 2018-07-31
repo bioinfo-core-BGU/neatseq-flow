@@ -560,12 +560,14 @@ Dependencies: {depends}""".format(name=self.name,
                     raise AssertionExcept("'sample_list' set to 'all_samples' before sample subset selected",
                                           step=self.get_step_name())
 
-            # 2b. For 'all_samples', pop the last sample list from stash 'sample_data_history'
+            # 2b. For sample list, stash the new sample list
             else:
                 if not isinstance(self.params["sample_list"], list):
                     self.params["sample_list"] = re.split("[, ]+", self.params["sample_list"])
                 if set(self.params["sample_list"])-set(self.pipe_data["samples"]):
-                    raise AssertionExcept("'sample_list' includes samples not defined in sample data!",
+                    raise AssertionExcept("'sample_list' includes samples not defined in sample data! ({bad})".
+                                          format(bad=", ".join(set(self.params["sample_list"]) -
+                                                               set(self.pipe_data["samples"]))),
                                           step=self.get_step_name())
                 self.stash_sample_list(self.params["sample_list"])
 
@@ -1060,10 +1062,6 @@ sample slots:
                                        if self.params["redir_params"][key] is not None
                                        else "",
                                    sep=self.arg_separator)
-
-                                          # % (key,self.params["redir_params"][key]
-                                          #                   if self.params["redir_params"][key] is not None
-                                          #                   else "")
 
         return redir_param_script
 
