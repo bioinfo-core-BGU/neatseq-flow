@@ -173,7 +173,19 @@ def get_param_data_YAML(filelines):
                                                           if key in params2mv}
                 for param in params2mv:
                     del yamlname_params["qsub_params"][param]
-            endparams[param_dict[yamlname]["module"]][yamlname] = yamlname_params    
+
+                # Convert sample_list to list, or empty list if empty
+            if "sample_list" in yamlname_params:
+                if isinstance(yamlname_params["sample_list"], str):
+                    yamlname_params["sample_list"] = re.split("[\, ]*", yamlname_params["sample_list"])
+                elif isinstance(sample_list, list):
+                    pass
+                else:
+                    raise AssertionExcept("sample_list must be string or list in stash_sample_list()")
+                # Remove empty strings:
+                yamlname_params["sample_list"] = [a for a in yamlname_params["sample_list"] if a!=""]
+
+            endparams[param_dict[yamlname]["module"]][yamlname] = yamlname_params
         return endparams
  
     filelines = remove_comments(filelines)

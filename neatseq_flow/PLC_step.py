@@ -554,6 +554,8 @@ Dependencies: {depends}""".format(name=self.name,
         if "sample_list" in self.params:
             # 2a. For 'all_samples', pop the last sample list from stash 'sample_data_history'
             if self.params["sample_list"] == "all_samples":
+                raise AssertionExcept("'all_samples' is no longer supported as valsue for 'sample_list'."
+                                      "Use a secondary base to import old samples")
                 try:
                     self.recover_sample_list()
                 except KeyError:
@@ -562,9 +564,7 @@ Dependencies: {depends}""".format(name=self.name,
 
             # 2b. For sample list, stash the new sample list
             else:
-                if not isinstance(self.params["sample_list"], list):
-                    self.params["sample_list"] = re.split("[, ]+", self.params["sample_list"])
-                if set(self.params["sample_list"])-set(self.pipe_data["samples"]):
+                if list(set(self.params["sample_list"]) - set(self.pipe_data["samples"])):
                     raise AssertionExcept("'sample_list' includes samples not defined in sample data! ({bad})".
                                           format(bad=", ".join(set(self.params["sample_list"]) -
                                                                set(self.pipe_data["samples"]))),
@@ -588,28 +588,28 @@ Dependencies: {depends}""".format(name=self.name,
             Note: AN EXPERIMENTAL FEATURE STILL
         """
 
-        try:
-            self.sample_data["sample_data_history"]["prev_sample_lists"].append(self.sample_data["samples"])
-        except KeyError:
-            # container for unused sample data:
-            self.sample_data["sample_data_history"] = dict()
-            # Container for magazine of sample lists:
-            self.sample_data["sample_data_history"]["prev_sample_lists"] = list()
-            self.sample_data["sample_data_history"]["prev_sample_lists"].append(self.sample_data["samples"])
-            # # Container for unused sample info:
-            # self.sample_data["sample_data_history"]["unused_sample_data"] = dict()
-            # self.sample_data["sample_data_history"]["unused_sample_data"].append(self.sample_data["samples"])
-            # samples2remove = list(set(self.sample_data["samples"])-set(self.params["sample_list"]))
-            # for sample in samples2remove:
-            #
-            # for sample in self.params["sample_list"]:
-        # Create new sample list:
-        if isinstance(sample_list,str):
-            sample_list = [sample_list]
-        elif isinstance(sample_list,list):
-            pass
-        else:
-            raise AssertionExcept("sample_list must be string or list in stash_sample_list()")
+        # try:
+        #     self.sample_data["sample_data_history"]["prev_sample_lists"].append(self.sample_data["samples"])
+        # except KeyError:
+        #     # container for unused sample data:
+        #     self.sample_data["sample_data_history"] = dict()
+        #     # Container for magazine of sample lists:
+        #     self.sample_data["sample_data_history"]["prev_sample_lists"] = list()
+        #     self.sample_data["sample_data_history"]["prev_sample_lists"].append(self.sample_data["samples"])
+
+        # # Create new sample list:
+        # if isinstance(sample_list,str):
+        #     sample_list = [sample_list]
+        # elif isinstance(sample_list,list):
+        #     pass
+        # else:
+        #     raise AssertionExcept("sample_list must be string or list in stash_sample_list()")
+
+        # Removing unused sample slots from sample_data
+        old_samples = list(set(self.sample_data["samples"]) - set(sample_list))
+        for sample in old_samples:
+            self.sample_data.pop(sample)
+
         self.sample_data["samples"] = sample_list  #self.params["sample_list"]
 
     def recover_sample_list(self,base=None):
@@ -617,7 +617,7 @@ Dependencies: {depends}""".format(name=self.name,
             Note: AN EXPERIMENTAL FEATURE STILL
             If sample_data_history does not exist, will throw a KeyError exception. You have to catch it!
         """
-
+        sys.exit("recover_sample_list is no longer used")
         if base is None:
             # try:
             self.sample_data["samples"] = self.sample_data["sample_data_history"]["prev_sample_lists"].pop()
@@ -983,7 +983,6 @@ project slots:
                                                    for key
                                                    in self.sample_data.keys()
                                                    if key not in self.sample_data["samples"]]))
-            # pp([key for key in self.sample_data.keys() if key not in self.sample_data["samples"]])
 
             if self.sample_data["samples"]:  # Sample list may be empty if only project data was passed!
                 print """
