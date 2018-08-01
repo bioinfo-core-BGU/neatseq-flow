@@ -1,5 +1,14 @@
-#!/usr/bin/env python2                                                       
+#!/usr/bin/env python                                                          
 # -*- coding: UTF-8 -*-
+
+__author__ = "Liron Levin"
+__version__ = "1.3"
+
+
+__affiliation__ = "Bioinformatics Core Unit, NIBN, Ben Gurion University"
+
+
+
 """ 
 :Neatseq-Flow Monitor
 -----------------------
@@ -97,12 +106,12 @@ from datetime import datetime
 from multiprocessing import Process, Queue
 
 
-SCREEN_W=200
-SCREEN_H=100
-VERSION= "v1.2"
-PARAM_LIST = ["Dir"]
-__author__ = "Liron Levin"
-
+SCREEN_W     = 200
+SCREEN_H     = 100
+VERSION      = "v1.3"
+PARAM_LIST   = ["Dir"]
+__author__   = "Liron Levin"
+jid_name_sep = '..'
 class nsfgm:
 #  Main class for neatseq-flow Log file parser
     #Function for setting the main directory [the pipeline run location]
@@ -119,15 +128,15 @@ class nsfgm:
         try:
             file_sys=pd.DataFrame()
             # get the available log files names 
-            file_sys["Name"]=filter(lambda x:len(re.findall(Regular,x)) ,os.listdir(self.params["Dir"]))
+            file_sys["Name"]=[x for x in os.listdir(self.params["Dir"]) if len(re.findall(Regular,x))]
             # get the available log files created times
-            file_sys["Created"]=map(lambda x: datetime.fromtimestamp(os.path.getctime(os.path.join(self.params["Dir"],x))).strftime('%d/%m/%Y %H:%M:%S')  ,file_sys["Name"])
+            file_sys["Created"]=[datetime.fromtimestamp(os.path.getctime(os.path.join(self.params["Dir"],x))).strftime('%d/%m/%Y %H:%M:%S') for x in file_sys["Name"]]
             # get the available log files last modified times
-            file_sys["Last Modified"]=map(lambda x: os.path.getmtime(os.path.join(self.params["Dir"],x))  ,file_sys["Name"])
+            file_sys["Last Modified"]=[os.path.getmtime(os.path.join(self.params["Dir"],x)) for x in file_sys["Name"]]
             file_sys=file_sys.sort_values(by="Last Modified",ascending=False).reset_index(drop=True).copy()
-            file_sys["Last Modified"]=map(lambda x: datetime.fromtimestamp(x).strftime('%d/%m/%Y %H:%M:%S')  ,file_sys["Last Modified"])
+            file_sys["Last Modified"]=[datetime.fromtimestamp(x).strftime('%d/%m/%Y %H:%M:%S') for x in file_sys["Last Modified"]]
             # get the available log files sizes
-            file_sys["Size"]=map(lambda x: os.path.getsize(os.path.join(self.params["Dir"],x))  ,file_sys["Name"])
+            file_sys["Size"]=[os.path.getsize(os.path.join(self.params["Dir"],x)) for x in file_sys["Name"]]
            
         except :
             file_sys=pd.DataFrame(columns=["Name","Created","Last Modified","Size"])
@@ -135,21 +144,25 @@ class nsfgm:
 
     #Function for getting information from qstat 
     def get_qstat(self):
-       qstat=pd.DataFrame()
-       # run qstat and get running information in xml format 
-       xml=os.popen('qstat -xml -u $USER').read()
-       # extract the jobs names  
-       qstat["Job name"]=map(lambda x: re.sub("[</]+JB_name>","",x) , re.findall('[</]+JB_name>\S+',xml))
-       # extract the jobs status  
-       qstat["State"]=map(lambda x:x.strip('job_list state="') , re.findall('job_list state="\w+',xml))
-       return qstat
+        import subprocess
+        qstat=pd.DataFrame()
+        # run qstat and get running information in xml format
+        if subprocess.call('type qstat', shell=True, 
+                                stdout=subprocess.PIPE, stderr=subprocess.PIPE) == 0:
+            #xml = os.popen('qstat -xml -u $USER').read()
+            xml = os.popen('qstat -xml ').read()
+            # extract the jobs names  
+            qstat["Job name"]=[re.sub("[</]+JB_name>","",x) for x in re.findall('[</]+JB_name>\S+',xml)]
+            # extract the jobs status  
+            qstat["State"]=[x.strip('job_list state="') for x in re.findall('job_list state="\w+',xml)]
+        return qstat
 
     # function for generating the progress bar
     def gen_bar(self,Bar_len,Bar_Marker,Bar_Spacer):
         char_value=float(self.logpiv["Finished"].max().total_seconds())/Bar_len
         if char_value==0:
             char_value=1.0/Bar_len
-        return [char_value,map(lambda x,y: (int(x.total_seconds()/char_value)*Bar_Spacer + ((int(-(-(y.total_seconds()-x.total_seconds())/char_value))+1)*Bar_Marker)).ljust(Bar_len,Bar_Spacer)  ,self.logpiv["Started"],self.logpiv["Finished"])]
+        return [char_value,list(map(lambda x,y: (int(x.total_seconds()/char_value)*Bar_Spacer + ((int(-(-(y.total_seconds()-x.total_seconds())/char_value))+1)*Bar_Marker)).ljust(Bar_len,Bar_Spacer)  ,self.logpiv["Started"],self.logpiv["Finished"]))]
     
     # main function for parsing log file
     def read_run_log(self,runlog_file,Bar_len,Bar_Marker,Bar_Spacer,q=None,Instance=True,read_from_disk=True):
@@ -166,10 +179,10 @@ class nsfgm:
                 runlog_Data=runlog_Data.loc[runlog_Data["Level"]!="high",]
             # If there is a Status column: Convert to OK or ERROR
             if "Status" in runlog_Data.columns:
-                runlog_Data['Status']=map(lambda x: 'OK' if 'OK' in x else 'ERROR' ,runlog_Data['Status'])
+                runlog_Data['Status']=['OK' if 'OK' in x else 'ERROR' for x in runlog_Data['Status']]
             # Format the Timestamp column
-            runlog_Data.Timestamp = map(lambda x: datetime.strptime(x, '%d/%m/%Y %H:%M:%S'),runlog_Data.Timestamp)
-            runlog_Data['Timestamp2'] = map(lambda x: int(time.mktime(x.timetuple())),runlog_Data.Timestamp)
+            runlog_Data.Timestamp = [datetime.strptime(x, '%d/%m/%Y %H:%M:%S') for x in runlog_Data.Timestamp]
+            runlog_Data['Timestamp2'] = [int(time.mktime(x.timetuple())) for x in runlog_Data.Timestamp]
             # sort the Data-Frame according to the Timestamp column
             runlog_Data=runlog_Data.sort_values(by="Timestamp2",ascending=True).reset_index(drop=True).copy()
             # remove old runs [duplicated jobs names events]
@@ -180,7 +193,7 @@ class nsfgm:
 
             if "Finished" in pre_logpiv.columns:
                 pre_logpiv=pre_logpiv.loc[~pre_logpiv["Finished"].isnull(),]
-                log=map( lambda x,y: (x in pre_logpiv[pre_logpiv["Finished"]<pre_logpiv["Started"]].index)&(y=="Finished")==False , runlog_Data["Job name"],runlog_Data["Event"] )
+                log=list(map( lambda x,y: (x in pre_logpiv[pre_logpiv["Finished"]<pre_logpiv["Started"]].index)&(y=="Finished")==False , runlog_Data["Job name"],runlog_Data["Event"] ))
                 runlog_Data=runlog_Data[log].copy()
 
             # for the main window information:    
@@ -198,7 +211,7 @@ class nsfgm:
                 # get only the data for the chosen step
                 runlog_Data=runlog_Data.loc[runlog_Data["Instance"]==Instance,].copy()
                 # change the names of the jobs to the samples names
-                runlog_Data['Job name']=map(lambda x,y,z: re.sub("^"+y+"_"+z+"_","",re.sub("_[0-9]+$","",x)) ,runlog_Data['Job name'],runlog_Data['Module'],runlog_Data['Instance'] )
+                runlog_Data['Job name']=list(map(lambda x,y,z: re.sub("^"+y+jid_name_sep+z+jid_name_sep,"",re.sub(jid_name_sep+"[0-9]+$","",x)) ,runlog_Data['Job name'],runlog_Data['Module'],runlog_Data['Instance'] ))
                 args_pivot=['Job name','Event','Timestamp']
                 # generate a pivot table
                 logpiv = runlog_Data.pivot(index=args_pivot[0], columns=args_pivot[1], values=args_pivot[2])
@@ -210,23 +223,23 @@ class nsfgm:
                 logpiv=logpiv.sort_values("Finished")
                 # generate the items Data-Frame
                 self.items=pd.DataFrame()
-                self.items['Samples']=map(lambda x: str(x),logpiv.index.values)
-                self.items['Started']=map(lambda x: str(x),logpiv['Started'])
-                self.items['Finished']=map(lambda x: str(x) if str(x)!="NaT" else '',logpiv['Finished'])
-                self.items['Host']=map(lambda x: str(list(runlog_Data.loc[runlog_Data['Job name']==x,'Host'])[0]),logpiv.index.values)
-                self.items['Memory']=map(lambda x: str(max(list(runlog_Data.loc[runlog_Data['Job name']==x,'Max mem']))),logpiv.index.values)
-                self.items['Running?']=map(lambda x: str(list(runlog_Data.loc[runlog_Data['Job name']==x,'State'])[0]),logpiv.index.values)                
+                self.items['Samples']=[str(x) for x in logpiv.index.values]
+                self.items['Started']=[str(x) for x in logpiv['Started']]
+                self.items['Finished']=[str(x) if str(x)!="NaT" else '' for x in logpiv['Finished']]
+                self.items['Host']=[str(list(runlog_Data.loc[runlog_Data['Job name']==x,'Host'])[0]) for x in logpiv.index.values]
+                #self.items['Memory']=[str(max(list(runlog_Data.loc[runlog_Data['Job name']==x,'Max mem']))) for x in logpiv.index.values]
+                self.items['Running?']=[str(list(runlog_Data.loc[runlog_Data['Job name']==x,'State'])[0]) for x in logpiv.index.values]                
                 
                 #mark un-Finished samples
-                self.rowmode=map(lambda x: 2 if x =='' else 1,self.items['Finished'])
-                self.rowmode=map(lambda x,y: 3 if len(y)>0  else x,self.rowmode,self.items['Running?'])
-                self.items['Running?']=map(lambda x: x  if len(x)>0  else "No" ,self.items['Running?'])
+                self.rowmode=[2 if x =='' else 1 for x in self.items['Finished']]
+                self.rowmode=list(map(lambda x,y: 3 if len(y)>0  else x,self.rowmode,self.items['Running?']))
+                self.items['Running?']=[x  if len(x)>0  else "No" for x in self.items['Running?']]
                 
                 # If there is a Status column: Display the samples status
                 if "Status" in runlog_Data.columns:
-                    self.items['Status']=map(lambda x: str(list(runlog_Data.loc[(runlog_Data['Job name']==x)&(runlog_Data['Event']=='Finished'),'Status'])).replace('[','').replace(']','').replace("'",'')  ,logpiv.index.values)
+                    self.items['Status']=[str(list(runlog_Data.loc[(runlog_Data['Job name']==x)&(runlog_Data['Event']=='Finished'),'Status'])).replace('[','').replace(']','').replace("'",'') for x in logpiv.index.values]
                     #mark samples with ERRORs
-                    self.rowmode=map(lambda x,y: 2 if 'ERROR' in x else y, self.items['Status'],self.rowmode)
+                    self.rowmode=list(map(lambda x,y: 2 if 'ERROR' in x else y, self.items['Status'],self.rowmode))
                     
                 if q!=None:
                     q.put(self)
@@ -257,12 +270,12 @@ class nsfgm:
             logpiv=logpiv.join(runlog_Data.groupby("Instance")["State"].apply(lambda x:list(x).count("running")),how="left", rsuffix='running')            
 
             # set the Timestamps of instances with no Finished jobs and are still running to the current time [for calculating the progress bar]
-            logpiv["Finished"]=map(lambda x,y,z: {datetime.strptime(str(datetime.now().strftime('%d/%m/%Y %H:%M:%S')), '%d/%m/%Y %H:%M:%S')} if (x=='')&(y>0) else z if (x=='') else x ,logpiv["Finished"],logpiv["State"].values,logpiv["Started"] )
+            logpiv["Finished"]=list(map(lambda x,y,z: {datetime.strptime(str(datetime.now().strftime('%d/%m/%Y %H:%M:%S')), '%d/%m/%Y %H:%M:%S')} if (x=='')&(y>0) else z if (x=='') else x ,logpiv["Finished"],logpiv["State"].values,logpiv["Started"] ))
             #logpiv.loc[logpiv["Finished"]=='',"Finished"]={datetime.strptime(str(datetime.now().strftime('%d/%m/%Y %H:%M:%S')), '%d/%m/%Y %H:%M:%S')}
             # find the earliest Timestamps of every instances
-            Started=map(lambda x:min(x),logpiv["Started"])
+            Started=[min(x) for x in logpiv["Started"]]
             # find the latest Timestamps of every instances
-            Finished=map(lambda x:max(x),logpiv["Finished"])
+            Finished=[max(x) for x in logpiv["Finished"]]
             # Add the new information in the pivot table
             logpiv["Started"]=Started
             logpiv["Finished"]=Finished
@@ -278,38 +291,29 @@ class nsfgm:
             # generate the progress bar column
             [char_value,bar]=self.gen_bar(Bar_len,Bar_Marker,Bar_Spacer)
             Runs_str="Progress #=" + str(char_value)+"seconds"
-            # # get the running information from qstat and add the information to the Data-Frame
-            # qstat=self.get_qstat()
-            # if len(qstat)>0:
-                # runlog_Data=runlog_Data.merge(qstat,how='left')
-                # runlog_Data.loc[runlog_Data["State"].isnull(),"State"]=''
-            # else:
-                # runlog_Data["State"]=''
-            # logpiv=logpiv.join(runlog_Data.groupby("Instance")["State"].apply(lambda x:list(x).count("running")),how="left", rsuffix='running')            
-
             # generate the items Data-Frame to show in the window
             self.items =pd.DataFrame()
             # # Make sure the instances names are no longer then 20 chars
             # self.items["Steps"]=map(lambda x:x[:20],logpiv.index.values)
-            self.items["Steps"]=map(lambda x:x,logpiv.index.values)
+            self.items["Steps"]=[x for x in logpiv.index.values]
             self.items[Runs_str]=bar
-            self.items["Started"]=map(lambda x: str(x),logpiv["Started"])
+            self.items["Started"]=[str(x) for x in logpiv["Started"]]
             # Show the finished Timestamps for only instances with finished jobs
-            self.items["Finished"]=map(lambda x,y: str(x) if y!='' else '',logpiv["Finished"],logpiv["temp_Finished"])
-            self.items["#Started"]=map(lambda x: str(x),logpiv["#Started"])
-            self.items["#Finished"]=map(lambda x: str(x),logpiv["#Finished"])
+            self.items["Finished"]=list(map(lambda x,y: str(x) if y!='' else '',logpiv["Finished"],logpiv["temp_Finished"]))
+            self.items["#Started"]=[str(x) for x in logpiv["#Started"]]
+            self.items["#Finished"]=[str(x) for x in logpiv["#Finished"]]
             self.items["#Running"]=logpiv["State"].values
             
             # Set the lines colour mode
             self.rowmode=logpiv["#Started"]-logpiv["#Finished"]  
-            self.rowmode=map(lambda x: 2 if x > 0 else 1,self.rowmode)
-            self.rowmode=map(lambda x,y: 3 if (y >0)&(x==2) else x,self.rowmode, self.items["#Running"])
+            self.rowmode=[2 if x > 0 else 1 for x in self.rowmode]
+            self.rowmode=list(map(lambda x,y: 3 if (y >0)&(x==2) else x,self.rowmode, self.items["#Running"]))
             
             # If there is a Status column: Display the steps status error count
             if "Status" in runlog_Data.columns:
                 logpiv=logpiv.join(runlog_Data.groupby("Instance")["Status"].apply(lambda x:list(x).count("ERROR")),how="left", rsuffix='ERROR')
                 self.items["#ERRORs"]=logpiv["Status"].values
-                self.rowmode=map(lambda x,y: 2 if x>0 else y, self.items["#ERRORs"],self.rowmode)
+                self.rowmode=list(map(lambda x,y: 2 if x>0 else y, self.items["#ERRORs"],self.rowmode))
             
         except : #ValueError:
             if Instance==True:
@@ -412,7 +416,7 @@ class window(object):
         if (self.id!=None)&(len(self.items)>0):
             if self.id in list(self.items[self.items.columns[0]]):
                 self.position=list(self.items[self.items.columns[0]]).index(self.id)
-                self.page = self.position/self.line_size_
+                self.page = int(self.position/self.line_size_)
         if len(self.items)>0:
         # change the id to the current highlighted line first column cell
             self.id=list(self.items[self.items.columns[0]])[self.position]
@@ -625,7 +629,8 @@ class neatseq_flow_monitor(object):
             file_menu.display()
             #if the user used the Esc Key exit
             if file_menu.choice==-2:
-                exit()
+                #exit()
+                return None
             #keep the file browser window active if the user did not choose a file
             elif file_menu.choice==-1:
                 file_menu.active=True
@@ -779,7 +784,8 @@ class neatseq_flow_monitor(object):
                         if p1.is_alive():
                             q.get(True)
                             p1.join()
-                        exit()
+                        #exit()
+                        return None
 if __name__ == '__main__':
 #getting arguments from the user                                                       
     parser = argparse.ArgumentParser(description='Neatseq-flow Monitor'+VERSION+' By Liron Levin ')

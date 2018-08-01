@@ -236,14 +236,6 @@ class Step:
             # print assertErr.get_error_str()
             raise assertErr 
 
-        # # Create entry in sample_data for history of sample lists:
-        # try:
-        #     print self.sample_data
-        # except:
-        #     sys.exit("Does not exist")
-        # else:
-        #     sys.exit("Does exist")
-
         # self.shell_ext contains the str to use as script extension for step scripts
         if self.shell == "bash":
             self.shell_ext = "sh"

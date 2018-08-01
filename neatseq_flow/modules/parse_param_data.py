@@ -71,11 +71,13 @@ def parse_param_file(filename):
         # pp(get_param_data_YAML(file_conts))
         
     except ConstructorError, exc:
+        error_comm = ""
         if hasattr(exc, 'problem_mark'):
             mark = exc.problem_mark
-            print "Error position: (%s:%s)" % (mark.line+1, mark.column+1)
-            print mark.get_snippet()
-        raise Exception("Possible duplicate value passed", "parameters")
+            error_comm = "Error position: ({l}:{c})\n{snippet}".format(l=mark.line+1,
+                                                                       c=mark.column+1,
+                                                                       snippet=mark.get_snippet())
+        raise Exception("{error}\nPossible duplicate value passed".format(error=error_comm), "parameters")
     except yaml.YAMLError, exc:
         if hasattr(exc, 'problem_mark'):
             mark = exc.problem_mark
@@ -178,7 +180,7 @@ def get_param_data_YAML(filelines):
             if "sample_list" in yamlname_params:
                 if isinstance(yamlname_params["sample_list"], str):
                     yamlname_params["sample_list"] = re.split("[\, ]*", yamlname_params["sample_list"])
-                elif isinstance(sample_list, list):
+                elif isinstance(yamlname_params["sample_list"], list):
                     pass
                 else:
                     raise AssertionExcept("sample_list must be string or list in stash_sample_list()")
