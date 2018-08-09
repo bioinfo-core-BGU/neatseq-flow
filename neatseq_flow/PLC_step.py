@@ -1062,6 +1062,10 @@ sample slots:
         script_const = ""
         # Add "env" line, if it exists:
         # New version
+
+        if "precode" in self.params.keys():         # Add optional code
+            script_const += "%s \n" % self.params["precode"]
+
         if "setenv" in self.params.keys():         # Add optional environmental variables.
             if not isinstance(self.params["setenv"], list):
                 self.params["setenv"] = [self.params["setenv"]]
