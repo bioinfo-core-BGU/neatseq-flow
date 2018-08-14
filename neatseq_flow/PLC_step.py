@@ -174,7 +174,8 @@ class Step:
 
         self.jid_name_sep = ".."
         
-        ###### Place for testing parameters:
+        # -----------------------------
+        # Place for testing parameters:
         try:
             self.params["script_path"]
         except KeyError:
@@ -271,6 +272,11 @@ They are set automatically or module is not defined to use them""".format(parame
         # used for remote run monitor
         self.qsub_names_dict = dict()
 
+        # # Add job_limit to params
+        # # This way, job_limit can be passed globally or by step...
+        # # Problematic because job_limit is treated at the class level in scriptconstructor...
+        # if "job_limit" in self.pipe_data:
+        #     self.params["job_limit"] = self.pipe_data["job_limit"]
                                     
     def __str__(self):
         """ Print a summary of the class: name, step and depend list

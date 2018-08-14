@@ -131,7 +131,10 @@ def get_classic_sample_data(filelines):
     # Extract sample-related lines from filelines:
     filelines = get_classic_sample_data_lines(filelines)
     # Get list of tuples: (index, sample name) where "index" is the line in filelines holding the sample name line
-    sample_index = [(ind,get_sample_name(line)) for ind,line in list(enumerate(filelines)) if re.split("\s+", line, maxsplit=1)[0]=="Sample"]
+    sample_index = [(ind,get_sample_name(line))
+                    for ind,line
+                    in list(enumerate(filelines))
+                    if re.split("\s+", line, maxsplit=1)[0]=="Sample"]
     
     
     # Get project title:
@@ -151,7 +154,10 @@ def get_classic_sample_data(filelines):
     
 
     # Get Sample_Control data for ChIP-seq samples:
-    Sample_Control = [re.split("\s+", line, maxsplit=1)[1] for line in filelines if re.split("\s+", line, maxsplit=1)[0]=="Sample_Control"]
+    Sample_Control = [re.split("\s+", line, maxsplit=1)[1]
+                      for line
+                      in filelines
+                      if re.split("\s+", line, maxsplit=1)[0]=="Sample_Control"]
     if Sample_Control:
         controls = parse_sample_control_data(Sample_Control,sample_names=sample_data.keys())
         
@@ -275,13 +281,12 @@ def check_sample_constancy(sample_data):
             extensions = map(lambda fn: os.path.splitext(fn)[1], sample_data[sample][direction])
             # Convert file extension to 'zip' or 'regular', depending on the extension:
             # Keep only unique values (using set: {}) and adding to ext_types
-            ext_types = ext_types | set(map(lambda ext: "zip" if ext in ZIPPED_EXTENSIONS else "regular", extensions)) #{"zip" if ext in ZIPPED_EXTENSIONS else "regular" for ext in extensions}
+            #{"zip" if ext in ZIPPED_EXTENSIONS else "regular" for ext in extensions}
+            ext_types = ext_types | set(map(lambda ext: "zip" if ext in ZIPPED_EXTENSIONS else "regular", extensions))
         
     if len(ext_types) > 1:
         sys.exit("At the moment, you can't mix zipped and unzipped files!")
-        
-        
-        
+
 def get_tabular_sample_data(filelines):
     """
     Get sample data from filelines
@@ -298,17 +303,22 @@ def get_tabular_sample_data(filelines):
     
     # Add a list of sample names to sample_data
     sample_data["samples"] = sorted(sample_names)  
-    
+
     # pp(raw_data["Sample_data"])     
     for sample in sample_names:
         # Parse lines for a single sample.
-        # Get the lines that have the sample name in first column and extract data from them with parse_tabular_sample_data()
-        # Note: Sample name is removed from element 0 (line[1:]) so that function parse_tabular_sample_data() can be used for project wide table, too.
-        sample_data[sample] = parse_tabular_sample_data([line[1:] for line in raw_data["Sample_data"] if line[0]==sample])
+        # Get the lines that have the sample name in first column and extract data from them
+        # with parse_tabular_sample_data()
+        # Note: Sample name is removed from element 0 (line[1:]) so that function
+        # parse_tabular_sample_data() can be used for project wide table, too.
+        sample_data[sample] = parse_tabular_sample_data([line[1:]
+                                                         for line
+                                                         in raw_data["Sample_data"]
+                                                         if line[0]==sample])
     # pp(sample_data)
     
     if "Project_data" in raw_data:
-        sample_data["project_data"] = parse_tabular_sample_data(raw_data["Project_data"])
+        sample_data["project_data"] = parse_tabular_project_data(raw_data["Project_data"])
         
     # Get Sample_Control data for ChIP-seq samples:
     if "ChIP_data" in raw_data:
@@ -324,7 +334,8 @@ def get_tabular_sample_data_lines(filelines):
     """ Get sample data from "Tabular" sample data lines
         Will keep one line beginning with "Title" and all consecutive lines from "#SampleID" till first blank line
         
-        The reason for this is that the user should have the option of embedding the sample file in the parameter file. This way, all line except the title and the consecutive sample lines will be discarded
+        The reason for this is that the user should have the option of embedding the sample file in the parameter file.
+        This way, all line except the title and the consecutive sample lines will be discarded
     """
 
     return_results = {}
@@ -350,7 +361,10 @@ def get_tabular_sample_data_lines(filelines):
     
     # looking for range begining with "#SampleID" till first blank line:
     # Index of header line:
-    head_ind =  [ind for (ind,param_l) in list(enumerate(filelines)) if re.split("\s+", param_l, maxsplit=1)[0].lower() == "#sampleid"]
+    head_ind = [ind
+                for (ind,param_l)
+                in list(enumerate(filelines))
+                if re.split("\s+", param_l, maxsplit=1)[0].lower() == "#sampleid"]
     if head_ind:  # A line beginning with '#SampleID' exists.
 
         # Range of lines to keep: from header index till first blank line
@@ -393,10 +407,10 @@ def parse_tabular_sample_data(sample_lines):
         The ... are ignored. 
     """
     sample_x_dict = dict()
-    
+
     for line in sample_lines:
         # line_data = re.split("\s+", line)
-        
+
         # print line_data[1]
         if line[0] in sample_x_dict.keys():
             # If type exists, append path to list
@@ -412,7 +426,32 @@ def parse_tabular_sample_data(sample_lines):
     # sys.exit()
 
     return(sample_x_dict)
-    
+
+def parse_tabular_project_data(proj_lines):
+    """ Gets list of lists of file info: [type,path,...]
+        The ... are ignored.
+    """
+    sample_x_dict = dict()
+
+    for line in proj_lines:
+        # line_data = re.split("\s+", line)
+
+        # print line_data[1]
+        if line[0] in sample_x_dict.keys():
+            # If type exists, append path to list
+            # sample_x_dict[line[0]].append(get_full_path(line[1]))
+            sample_x_dict[line[0]].append(line[1])
+
+        else:
+            # If not, create list with path
+            # sample_x_dict[line[0]] = [get_full_path(line[1])]
+            sample_x_dict[line[0]] = [line[1]]
+
+    # pp(sample_x_dict)
+    # sys.exit()
+
+    return sample_x_dict
+
 def get_project_title(filelines):
     """ Extract the project title from the file lines
     """

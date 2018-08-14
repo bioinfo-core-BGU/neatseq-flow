@@ -176,7 +176,10 @@ Other parameters you can set for each step to control the execution of the step 
 ``setenv``
     Set various environment variables for the duration of script execution. This is useful when the software executed by the script requires setting specific environment variables which you do not want to set globally on all nodes.
 
-.. For ``bash`` scripts, ``export`` will be used instead of ``setenv``. 
+.. Note:: For ``bash`` scripts, ``export`` will be used instead of ``setenv``.
+
+``precode``
+    Additional code to be added before the actual script, such as unsetting variables and what not. Rarely used.
     
 ``qsub_params``
     Set cluster-related parameters which will be effective for the current step only:
