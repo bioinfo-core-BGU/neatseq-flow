@@ -33,7 +33,10 @@ Can be used in two modes:
 
 .. Tip:: **NeatSeq-Flow** attempts to guess the ``script_path`` and ``pipe`` values based on the input file extensions. For this to work, leave the ``script_path`` and ``pipe`` lists empty and make sure all files from the same source have the same extensions (*e.g.* all gzipped files should have *.gz* as file extension). 
 
-    If you want **NeatSeq-Flow** to guess only some of the ``script_path`` values, set them to `null`, *e.g.* if ``src`` is ``[Single,TYP1]`` and ``script_path`` is ``[null,cat]``, then the ``script_path`` for *Single* will be guessed and the ``script_path`` for *TYP1* will be set to *cat*.
+    If you want **NeatSeq-Flow** to guess only some of the ``script_path`` values, set them to `null` or to ``..guess..``, *e.g.* if ``src`` is ``[Single,TYP1]`` and ``script_path`` is ``[null,cat]``, then the ``script_path`` for *Single* will be guessed and the ``script_path`` for *TYP1* will be set to *cat*.
+
+    Two more options are available for ``script path``: ``..skip..`` will skip the type entirely, while ``..import..`` will import the values from the sample file into the relevant slots without actually producing any scripts (This is useful for including entities which are not files in the sample file. `e.g.` in the qiime2 pipeline you might want to include a semantic type in the sample file).
+
 
     The following extensions are recognized:
 
@@ -218,8 +221,14 @@ class Step_merge(Step):
         # Get list of existing file types in samples file:
         for sample in self.sample_data["samples"]:
             sample_src = list(set(self.sample_data[sample].keys()))
-            if "type" in sample_src: 
-                sample_src.remove("type")   # 'type' is the type of sample (PE, etc.)
+            # if "type" in sample_src:
+            #     sample_src.remove("type")   # 'type' is the type of sample (PE, etc.)
+            # Remove keywords from sample. These are not 'src's.
+            # At the moment, "type" and "grouping". Add more when required!
+            sample_src = [src1
+                          for src1
+                          in sample_src
+                          if src1 not in ["type","grouping"]]
             sample_scope = ["sample"] * len(sample_src)
             # If sample data exists, store in 'src' and 'scope'
             # Do this only if one of the following:
@@ -274,12 +283,13 @@ class Step_merge(Step):
                         else:
                             raise AssertionExcept("Unrecognized value for '%s'" % param)
                            
-                else: # 4. If not passed by user, creating list with None. This is so that pipe can be populated by automatic file extension recognition
+                else:
+                    # 4. If not passed by user, creating list with None. This is so that pipe can be populated by
+                    # automatic file extension recognition
                     self.params[param] = [None] * len(self.params["src"])
             # Defining 'scope' (basic mode. user should not pass this. Setting it here)
             self.params["scope"] = scope
 
-            
         else: # 'src' is user-defined (Advanced mode)
             # Converting 'src' into list
             if isinstance(self.params['src'], str):
@@ -361,8 +371,10 @@ class Step_merge(Step):
                 # print "==>", bad_srcs
                 # Guessing script_path:
                 # Get file extensions:
-                if not script_path:  # Is none - try guessing
-                    # src_exts is defined as follows: For each sample in samples list, get the list of file extensions. Creates a list of lists.
+                if not script_path or script_path == "..guess..":
+                    # Is none or ..guess.. - try guessing
+                    # src_exts is defined as follows: For each sample in samples list,
+                    # get the list of file extensions. Creates a list of lists.
 
                     src_exts = [[os.path.splitext(filename)[1]
                                  for filename
@@ -397,7 +409,8 @@ class Step_merge(Step):
 
                 # Guessing script_path:
                 # Get file extensions:
-                if not script_path:  # Is none - try geussing
+                if not script_path or script_path == "..guess..":
+                    # Is none or ..guess.. - try guessing
                     src_exts = list(set([os.path.splitext(filename)[1] for filename in self.sample_data["project_data"][src]]))
                     if len(src_exts)>1:
                         raise AssertionExcept("More than one file extension in source '{src}' for project ({ext}). "
@@ -455,13 +468,16 @@ class Step_merge(Step):
                     script_path = self.params["script_path"][scope_ind]
                     pipe = self.params["pipe"][scope_ind]
 
-                
-                    self.script = ""
-                    
                     # src_type not defined for this sample. Move on.
                     if src not in self.sample_data[sample]:
                         continue
-                        
+
+                    if script_path == "..import..":
+                        self.sample_data[sample][trg] = self.sample_data[sample][src]
+                        return
+                    if script_path == "..skip..":
+                        return
+
                     self.spec_script_name = self.jid_name_sep.join([self.step,self.name,sample,src])
                     
                     # This line should be left before every new script. It sees to local issues.
@@ -470,7 +486,8 @@ class Step_merge(Step):
                     
                     fq_fn = ".".join([sample, src, self.file_tag,ext])          #The filename containing the end result. Used both in script and to set reads in $sample_params
 
-                    if not script_path:         # Not all samples have the same file types. Sample-specific guessing...
+                    if not script_path or script_path == "..guess..":
+                        # Not all samples have the same file types. Sample-specific guessing...
 
                         src_exts = list(set([os.path.splitext(filename)[1]
                                              for filename
@@ -491,7 +508,8 @@ class Step_merge(Step):
                                 pipe = self.script_path_map[src_exts][1]
                             else:
                                 script_path = self.script_path_map[src_exts]
-                                    
+                    # Composing script:
+                    self.script = ""
                     self.script += script_path + " \\\n\t"
                     # The following line concatenates all the files in the direction separated by a " "
                     self.script += " ".join(self.sample_data[sample][src]) 
@@ -512,11 +530,15 @@ class Step_merge(Step):
                     
             elif scope == "project":
 
-                self.script = ""
-
                 # src_type not defined for this sample. Move on.
                 if src not in self.sample_data["project_data"]:
                     continue
+
+                if script_path == "..import..":
+                    self.sample_data[trg] = self.sample_data["project_data"][src]
+                    return
+                if script_path == "..skip..":
+                    return
 
                 self.spec_script_name = self.jid_name_sep.join([self.step,self.name,self.sample_data["Title"],src])
                 
@@ -526,6 +548,8 @@ class Step_merge(Step):
                 
                 fq_fn = ".".join([self.sample_data["Title"], src, self.file_tag,ext])          #The filename containing the end result. Used both in script and to set reads in $sample_params
 
+                # Defining script:
+                self.script = ""
                 self.script += script_path + " \\\n\t"
                 # The following line concatenates all the files in the direction separated by a " "
                 self.script += " ".join(self.sample_data["project_data"][src]) 

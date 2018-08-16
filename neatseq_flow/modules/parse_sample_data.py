@@ -32,9 +32,13 @@ def remove_comments(filelines):
     filelines = list of lines read from parameter file with "readlines()"
     Used by parse_param_data as well
     """
-    
+
+    exceptions = ["#sampleid","#type"]
     # Remove all comments, empty lines and trailing white space:
-    filelines = [line.partition("#")[0].rstrip() for line in filelines if len(line.partition("#")[0].strip())>0]
+    filelines = [line.partition("#")[0].rstrip()
+                 for line
+                 in filelines
+                 if len(line.partition("#")[0].strip())>0 ]
     # Remove all lines after "STOP_HERE"
     try:
         filelines = filelines[0:filelines.index("STOP_HERE")]
@@ -171,7 +175,8 @@ def get_classic_sample_data(filelines):
         sample_data["Controls"] = controls 
     
     return sample_data
-    
+
+
 def parse_classic_sample_data(lines):
     """
     Given lines for one sample, return a dictionary holding the data for that sample:
@@ -485,4 +490,54 @@ def get_full_path(path):
         if not os.path.isabs(path):
             return os.path.abspath(os.path.expanduser(path)) 
     return path
-    
+
+
+def parse_grouping_file(grouping_file):
+    """
+    Converts a tab-separated grouping (or mapping) file into a ditcionary format which can then be merged
+    into sample_data
+    :param grouping_file: A path to the grouping file
+    :return: grouping_data in by-sample dictionary format
+    """
+    grouping_file = os.path.realpath(os.path.expanduser(grouping_file))
+
+    if not os.path.isfile(grouping_file):
+        # sys.exit("Grouping file {file} does not exist.\n".format(file=grouping_file))
+        raise Exception("Issues in grouping", "Grouping file {file} does not exist.Unidentified extension in source\n".format(file=grouping_file))
+
+    with open(grouping_file) as csvfile:
+        file_conts = csvfile.readlines()
+
+    # Convert SampleID at line start to lower case
+    file_conts = [re.sub("^#sampleid", "#sampleid", line, flags=re.IGNORECASE)
+                  if line.lower().startswith("#sampleid")
+                  else line
+                  for line
+                  in file_conts]
+
+    # Remove all comments, empty lines and trailing white space:
+    filelines = [line.partition("#")[0].rstrip()
+                 if not line.lower().startswith("#sampleid")
+                 else "#" + line.split("#")[1].strip()
+                 for line
+                 in file_conts
+                 if len(line.partition("#")[0].strip()) > 0 or
+                 line.lower().startswith("#sampleid")]
+
+    # Read lines as dictionary
+    reader = csv.DictReader(filelines, dialect='excel-tab')
+    grouping_rows = [row for row in reader]
+
+    # Convert to sample-wise dict
+    # e.g:
+    # {'Sample1': {'Group1': 'grpa', 'Group2': 'ga'},
+    # 'Sample2': {'Group1': 'grpa', 'Group2': 'gb'},
+    # 'Sample3': {'Group1': 'grpb', 'Group2': 'gb'}}
+    grouping_data = dict()
+    for row in grouping_rows:
+        if row["#sampleid"] not in grouping_data:
+            grouping_data[row["#sampleid"]] = dict()
+        for category in list(set(row.keys()) - {"#sampleid"}):
+            grouping_data[row["#sampleid"]][category] = row[category]
+
+    return grouping_data

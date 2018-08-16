@@ -95,8 +95,9 @@ class Step:
                 except StopIteration:
                     sys.stderr.write("WARNING: Module path %s seems to be empty! Possibly issue with permissions..." % \
                                      module_path)
-                while mod_t + ".py" not in level[2]:
+                while mod_t + ".py" not in level[2] or "__init__.py" not in level[2]:
                     # Repeat while expected filename is NOT in current dir contents (=level[2]. see above)
+                    #   and while __init__.py is not in current dir (avoid finding modules in non-active dirs)
                     try:
                         level = dir_generator.next()    # Try getting another level    
                     except StopIteration:
