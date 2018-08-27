@@ -103,6 +103,7 @@ class NeatSeqFlow:
         # Saving Executor in pipe_data
         self.pipe_data["Executor"] = self.param_data["Global"]["Executor"]
         # Determine type of sample: SE, PE or mixed:
+        # Removed usage of sample type. Rarely used and compliactes matters with sample grouping
         self.determine_sample_types()
 
         # if home_dir is None or empty, set to cwd, else leave as is
@@ -544,30 +545,11 @@ class NeatSeqFlow:
     def determine_sample_types(self):
         """ Add a "type" field to each sample with "PE", "SE" or "Mixed"
         """
-        
-        
-        for sample in self.sample_data["samples"]:      # Getting list of samples out of samples_hash
-            
-            # Prepare holder for type:
-            self.sample_data[sample]["type"] = list()
-            if "Single" in self.sample_data[sample]:
-                # Only one type of file: SE
-                self.sample_data[sample]["type"].append("SE")
-            if "Forward" in self.sample_data[sample] and "Reverse" in self.sample_data[sample]:
-                self.sample_data[sample]["type"].append("PE")
-            if "Forward" in self.sample_data[sample] and "Reverse" not in self.sample_data[sample]:
-                sys.exit("You have only Forward for sample %s. Can't proceed!" % sample)
-            if "Reverse" in self.sample_data[sample] and "Forward" not in self.sample_data[sample]:
-                sys.exit("You have only Reverse for sample %s. Can't proceed!" % sample)
-            # IF fasta exists, add to types list
-            if "Nucleotide" in self.sample_data[sample]:
-                self.sample_data[sample]["type"].append("nucl")
-            if "Protein" in self.sample_data[sample]:
-                self.sample_data[sample]["type"].append("prot")
-            if "BAM" in self.sample_data[sample] or "SAM" in self.sample_data[sample]:
-                self.sample_data[sample]["type"].append("mapping")
-            
-                
+
+        for sample in self.sample_data["samples"]:
+            # Using Step class method for determining sample type:
+            self.sample_data[sample]["type"] = Step.determine_sample_types(self.sample_data[sample])
+
     def create_kill_scripts_dir(self):
     
         # Create directory for step-wise qdel
@@ -580,7 +562,6 @@ class NeatSeqFlow:
             if self.pipe_data["verbose"]:
                 sys.stderr.write("Dir %s exists. Will overwrite... \n" % stepWiseDir)
 
-
     def create_kill_scripts(self):
         """ This function creates the 99.kill_all script
         """
@@ -591,7 +572,6 @@ class NeatSeqFlow:
         # Creation itself is done in ScriptConstrutor class
         modname = "neatseq_flow.script_constructors.scriptconstructor{executor}".format(executor=self.pipe_data["Executor"])
         classname = "KillScriptConstructor{executor}".format(executor=self.pipe_data["Executor"])
-
 
         scriptclass = getattr(importlib.import_module(modname), classname)
         kill_script_preamble = scriptclass.get_main_preamble(self.pipe_data["run_index"])

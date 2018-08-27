@@ -157,7 +157,45 @@ class Step:
 
         return retval, module_loc
 
+    @classmethod
+    def determine_sample_types(cls, sample_data):
+        """
 
+        :param sample_data:
+        :return: List of sample types
+        """
+
+        # Prepare holder for type:
+        sample_type = list()
+        # Testing fastq files:
+        if "Single" in sample_data:
+            # Only one type of file: SE
+            sample_type.append("SE")
+        if "Forward" in sample_data and "Reverse" in sample_data:
+            sample_type.append("PE")
+        if "Forward" in sample_data and "Reverse" not in sample_data:
+            sys.exit("You have only Forward for sample %s. Can't proceed!" % sample)
+        if "Reverse" in sample_data and "Forward" not in sample_data:
+            sys.exit("You have only Reverse for sample %s. Can't proceed!" % sample)
+        if "fastq.S" in sample_data:
+            # Only one type of file: SE
+            sample_type.append("SE")
+        if "fastq.F" in sample_data and "fastq.R" in sample_data:
+            sample_type.append("PE")
+        if "fastq.F" in sample_data and "fastq.R" not in sample_data:
+            sys.exit("You have only fastq.F for sample %s. Wierd!" % sample)
+        if "fastq.R" in sample_data and "fastq.F" not in sample_data:
+            sys.exit("You have only fastq.R for sample %s. Weird!" % sample)
+        # IF fasta exists, add to types list
+        if "Nucleotide" in sample_data or "fasta.nucl" in sample_data:
+            sample_type.append("nucl")
+        if "Protein" in sample_data or "fasta.prot" in sample_data:
+            sample_type.append("prot")
+
+        if "BAM" in sample_data or "SAM" in sample_data:
+            sample_type.append("mapping")
+
+        return sample_type
 # ----------------------------------------------------------------------------------
 # Step instance methods
 # ----------------------------------------------------------------------------------
@@ -1012,9 +1050,7 @@ sample slots:
         """
         
         self.kill_script_filename_main = kill_script_filename_main  # Project global qdel filename
-        
-        
-        
+
     def make_folder_for_sample(self, sample):
         """ Creates a folder for sample in this step's results folder
         """
@@ -1356,4 +1392,40 @@ Make sure you are in an active conda environment, and that you executed the foll
         # base, module, script_path, etc.
         return list(set(step_params)-set(["redir_params","qsub_params","base", "module",
                                           "sample_list", "exclude_sample_list", "script_path"]))
+
+    def get_category_levels(self, category):
+        """
+
+        :param category:
+        :return: List of levels in category
+        """
+        try:
+            return list({self.sample_data[sample]["grouping"][category]
+                         for sample
+                         in self.sample_data["samples"]})
+        except KeyError:
+            raise AssertionExcept("Category {cat} not defined for all samples".format(cat=category))
+
+    def get_samples_in_category_level(self, category, cat_level):
+
+        return [sample
+                for sample
+                in self.sample_data["samples"]
+                if self.sample_data[sample]["grouping"][category] == cat_level]
+
+
+    def create_group_slots(self, category):
+        """
+        Combines samples types into category groups
+        :return:
+        """
+
+        cat_levels = self.get_category_levels(category)
+        # print cat_levels
+        for cat_lev in cat_levels:
+            # Creating slot for level data:
+            if cat_lev not in self.sample_data:
+                self.sample_data[cat_lev] = dict()
+
+
 
