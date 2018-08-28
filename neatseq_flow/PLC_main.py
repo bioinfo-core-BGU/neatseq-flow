@@ -21,7 +21,7 @@ from pprint import pprint as pp
 from datetime import datetime
 from collections import OrderedDict
 
-from modules.parse_sample_data import parse_sample_file,parse_grouping_file
+from modules.parse_sample_data import parse_sample_file,parse_mapping_file
 from modules.parse_param_data import parse_param_file
 
 from PLC_step import Step, AssertionExcept
@@ -34,7 +34,7 @@ class NeatSeqFlow:
     def __init__(self,
                  sample_file,
                  param_file,
-                 grouping_file=None,
+                 mapping_file=None,
                  home_dir = None,
                  message = None,
                  runid = None,
@@ -75,23 +75,36 @@ class NeatSeqFlow:
         except:
             raise
 
+        try:
+            self.sample_data["project_data"]["mapping_file"]
+        except KeyError:
+            # No mapping_file or no project_data
+            pass
+        else:  # Mapping file exists in project data
+            if mapping_file:
+                sys.exit("You passed both --mapping via CLI and 'mapping_file' in the sample_file.")
+            if len(self.sample_data["project_data"]["mapping_file"]) >1:
+                sys.exit("You passed multiple mapping_files in the sample_file.")
+            else:
+                # If mapping file passed via sample file, transfer into grouping_file and remove from sample data
+                mapping_file = self.sample_data["project_data"]["mapping_file"][0]
+                del self.sample_data["project_data"]["mapping_file"]
         # Reading grouping file
-        if grouping_file:
+        if mapping_file:
             try:
-                grouping_data = parse_grouping_file(grouping_file)
+                mapping_data = parse_mapping_file(mapping_file)
             except Exception as raisedex:
                 if raisedex.args[0] == "Issues in grouping":
                     sys.exit(raisedex.args[1])
                 else:
                     raise
-            # Merge sample_data with grouping_data:
-            if set(grouping_data.keys()) - set(self.sample_data["samples"]):
+            # Merge sample_data with mapping_data:
+            if set(mapping_data.keys()) - set(self.sample_data["samples"]):
                 sys.stderr.write("Extra samples in grouping data!")
             for sample in self.sample_data["samples"]:
-                if sample not in grouping_data:
+                if sample not in mapping_data:
                     sys.exit("sample {smp} does no exist in grouping data".format(smp=sample))
-                self.sample_data[sample]["grouping"] = grouping_data[sample]
-
+                self.sample_data[sample]["grouping"] = mapping_data[sample]
 
         # Prepare dictionary for pipe data (in perl version: pipe_hash)
         self.pipe_data = dict()

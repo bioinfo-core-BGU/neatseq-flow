@@ -492,20 +492,20 @@ def get_full_path(path):
     return path
 
 
-def parse_grouping_file(grouping_file):
+def parse_mapping_file(mapping_file):
     """
     Converts a tab-separated grouping (or mapping) file into a ditcionary format which can then be merged
     into sample_data
-    :param grouping_file: A path to the grouping file
-    :return: grouping_data in by-sample dictionary format
+    :param mapping_file: A path to the grouping file
+    :return: mapping_data in by-sample dictionary format
     """
-    grouping_file = os.path.realpath(os.path.expanduser(grouping_file))
+    mapping_file = os.path.realpath(os.path.expanduser(mapping_file))
 
-    if not os.path.isfile(grouping_file):
-        # sys.exit("Grouping file {file} does not exist.\n".format(file=grouping_file))
-        raise Exception("Issues in grouping", "Grouping file {file} does not exist.Unidentified extension in source\n".format(file=grouping_file))
+    if not os.path.isfile(mapping_file):
+        # sys.exit("Grouping file {file} does not exist.\n".format(file=mapping_file))
+        raise Exception("Issues in grouping", "Grouping file {file} does not exist.Unidentified extension in source\n".format(file=mapping_file))
 
-    with open(grouping_file) as csvfile:
+    with open(mapping_file) as csvfile:
         file_conts = csvfile.readlines()
 
     # Convert SampleID at line start to lower case
@@ -533,11 +533,11 @@ def parse_grouping_file(grouping_file):
     # {'Sample1': {'Group1': 'grpa', 'Group2': 'ga'},
     # 'Sample2': {'Group1': 'grpa', 'Group2': 'gb'},
     # 'Sample3': {'Group1': 'grpb', 'Group2': 'gb'}}
-    grouping_data = dict()
+    mapping_data = dict()
     for row in grouping_rows:
-        if row["#sampleid"] not in grouping_data:
-            grouping_data[row["#sampleid"]] = dict()
+        if row["#sampleid"] not in mapping_data:
+            mapping_data[row["#sampleid"]] = dict()
         for category in list(set(row.keys()) - {"#sampleid"}):
-            grouping_data[row["#sampleid"]][category] = row[category]
+            mapping_data[row["#sampleid"]][category] = row[category]
 
-    return grouping_data
+    return mapping_data
