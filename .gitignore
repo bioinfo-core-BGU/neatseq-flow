@@ -22,3 +22,4 @@ my_backup_log.txt
 .idea/
 condaenv/
 venv/
+workflows_devel/

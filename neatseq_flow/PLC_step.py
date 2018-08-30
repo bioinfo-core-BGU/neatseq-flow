@@ -2,7 +2,11 @@
 """ A class defining a step in the pipeline.
 
 """
-import os, shutil, sys, re, importlib
+import os
+import shutil
+import sys
+import re
+import importlib
 import traceback
 import datetime
 
@@ -10,6 +14,7 @@ import datetime
 
 from copy import *
 from pprint import pprint as pp
+from modules.parse_param_data import manage_conda_params
 
 __author__ = "Menachem Sklarz"
 __version__ = "1.2.0"
@@ -1336,38 +1341,42 @@ sample slots:
                 if filter(lambda x: x not in ["path","env"],self.params["conda"].keys()):
                     self.write_warning("You provided extra 'conda' parameters. They will be ignored!")
                 
-                
-                if not self.params["conda"]["path"]: # == None:  # Path is empty (None or "", take from $CONDA_PREFIX
-                    # 1. If CONDA_BASE defined, use it
-                    # 2. If CONDA_PREFIX defined, compute CONDA_BASE from `conda info --root`
-                    # 3. Fail
-                    if "CONDA_BASE" in os.environ:
-                        self.params["conda"]["path"] = os.environ["CONDA_BASE"]
-                        if "env" not in self.params["conda"] or not self.params["conda"]["env"]: ##==None:
-                            raise AssertionExcept("'conda: path' is empty, taking from CONDA_BASE. Failed because no 'env' was passed. When using CONDA_BASE, you must supply an environment name with 'conda: env'",step=self.get_step_name())
-
-                    else:
-                        raise AssertionExcept("""'conda' 'path' is empty, but no CONDA_BASE is defined. 
-Make sure you are in an active conda environment, and that you executed the following command:
-> {start_col}export CONDA_BASE=$(conda info --root){end_col}
-""".format(start_col='\033[93m',end_col='\033[0m'),step = self.get_step_name())
-                
-                    
-                    
-                if "env" not in self.params["conda"] or not self.params["conda"]["env"]:# == None:
-                    # if self.pipe_data["conda"]["env"]:
-                        # self.write_warning("'env' is empty. Using global 'env'")
-                    try:
-                        self.params["conda"]["env"] = self.pipe_data["conda"]["env"]
-                    except KeyError:
-                        raise AssertionExcept("You must supply an 'env' in conda params.", step=self.get_step_name())
-                    else:
-                        self.write_warning("'env' is empty. Using global 'env'")
-                    # re_env = re.search("envs/(\S+)", self.params["conda"]["path"])
-                    # try:
-                        # self.params["conda"]["env"] = re_env.group(1)
-                    # except:
-                        # raise AssertionExcept("Bad conda env path. Make sure it ends with 'envs/ENV_NAME'", step=self.get_step_name())
+                # print self.params["conda"]
+                self.params["conda"] = manage_conda_params(self.params["conda"])
+                # print self.params["conda"]
+#                 sys.exit()
+#
+#                 if not self.params["conda"]["path"]: # == None:  # Path is empty (None or "", take from $CONDA_PREFIX
+#                     # 1. If CONDA_BASE defined, use it
+#                     # 2. If CONDA_PREFIX defined, compute CONDA_BASE from `conda info --root`
+#                     # 3. Fail
+#                     if "CONDA_BASE" in os.environ:
+#                         self.params["conda"]["path"] = os.environ["CONDA_BASE"]
+#                         if "env" not in self.params["conda"] or not self.params["conda"]["env"]: ##==None:
+#                             raise AssertionExcept("'conda: path' is empty, taking from CONDA_BASE. Failed because no 'env' was passed. When using CONDA_BASE, you must supply an environment name with 'conda: env'",step=self.get_step_name())
+#
+#                     else:
+#                         raise AssertionExcept("""'conda' 'path' is empty, but no CONDA_BASE is defined.
+# Make sure you are in an active conda environment, and that you executed the following command:
+# > {start_col}export CONDA_BASE=$(conda info --root){end_col}
+# """.format(start_col='\033[93m',end_col='\033[0m'),step = self.get_step_name())
+#
+#
+#
+#                 if "env" not in self.params["conda"] or not self.params["conda"]["env"]:# == None:
+#                     # if self.pipe_data["conda"]["env"]:
+#                         # self.write_warning("'env' is empty. Using global 'env'")
+#                     try:
+#                         self.params["conda"]["env"] = self.pipe_data["conda"]["env"]
+#                     except KeyError:
+#                         raise AssertionExcept("You must supply an 'env' in conda params.", step=self.get_step_name())
+#                     else:
+#                         self.write_warning("'env' is empty. Using global 'env'")
+#                     # re_env = re.search("envs/(\S+)", self.params["conda"]["path"])
+#                     # try:
+#                         # self.params["conda"]["env"] = re_env.group(1)
+#                     # except:
+#                         # raise AssertionExcept("Bad conda env path. Make sure it ends with 'envs/ENV_NAME'", step=self.get_step_name())
                 
                 # Add bin at end of path
                 self.params["conda"]["path"] = os.path.join(self.params["conda"]["path"],"bin")    

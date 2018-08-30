@@ -427,25 +427,63 @@ def test_and_modify_global_params(global_params):
                             "must be a single path or a list. \n", "parameters")
     # Checking conda params are sensible:
     if "conda" in global_params:
-        if "path" not in global_params["conda"]:   # or "env" not in global_params["conda"]:
-            raise Exception("When using 'conda', you must supply a 'path' to the environment to use.\n"
-                            "Leave 'path:' empty if you want it to be taken from $CONDA_PREFIX\n", "parameters")
-        if global_params["conda"]["path"] is None:  # Path is empty, take from $CONDA_PREFIX
-            if "CONDA_PREFIX" in os.environ:
-                global_params["conda"]["path"] = os.environ["CONDA_PREFIX"]
+        # print global_params["conda"]
+        global_params["conda"] = manage_conda_params(global_params["conda"])
+        # print global_params["conda"]
 
-            else:
-                raise Exception("'conda' 'path' is empty, but no CONDA_PREFIX is defined. "
-                                "Make sure you are in an active conda environment.")
-                
-        if "env" not in global_params["conda"]:
-            if global_params["conda"]["env"] is None:
-                try:
-                    global_params["conda"]["env"] = os.environ['CONDA_DEFAULT_ENV']
-                except KeyError:
-                    raise Exception("When using 'conda', you must supply an 'env' containing the "
-                                    "name of the environment to use, or run NeatSeq-Flow from inside an active "
-                                    "CONDA environment.\n", "parameters")
-        
+        # sys.exit()
+        # if "path" not in global_params["conda"]:   # or "env" not in global_params["conda"]:
+        #     raise Exception("When using 'conda', you must supply a 'path' to the environment to use.\n"
+        #                     "Leave 'path:' empty if you want it to be taken from $CONDA_PREFIX\n", "parameters")
+        # if global_params["conda"]["path"] is None:  # Path is empty, take from $CONDA_PREFIX
+        #     if "CONDA_PREFIX" in os.environ:
+        #         global_params["conda"]["path"] = os.environ["CONDA_PREFIX"]
+        #
+        #     else:
+        #         raise Exception("'conda' 'path' is empty, but no CONDA_PREFIX is defined. "
+        #                         "Make sure you are in an active conda environment.")
+        #
+        # if "env" not in global_params["conda"]:
+        #     if global_params["conda"]["env"] is None:
+        #         try:
+        #             global_params["conda"]["env"] = os.environ['CONDA_DEFAULT_ENV']
+        #         except KeyError:
+        #             raise Exception("When using 'conda', you must supply an 'env' containing the "
+        #                             "name of the environment to use, or run NeatSeq-Flow from inside an active "
+        #                             "CONDA environment.\n", "parameters")
+        #
     return global_params
 
+def manage_conda_params(conda_params):
+    """
+
+    :param conda_params:
+    :return:
+    """
+
+    if "path" not in conda_params or "env" not in conda_params:
+        raise Exception("You must supply both 'path' and 'env' in conda block. Leave them empty if you want them to "
+                        "be guessed from the current environment","parameters")
+
+    if not conda_params["path"] or not conda_params["env"]:
+        if "CONDA_PREFIX" not in os.environ:
+            raise Exception(
+                "If one of conda 'path' and 'env' are empty, you need to have an active environment, with "
+                "$CONDA_PREFIX defined", "parameters")
+
+    if not conda_params["path"]:
+        if "CONDA_BASE" in os.environ:
+            conda_params["path"] = os.environ["CONDA_BASE"]
+        else:
+            raise Exception("""'conda' 'path' is empty, but no CONDA_BASE is defined. 
+Make sure you are in an active conda environment, and that you executed the following command:
+> {start_col}export CONDA_BASE=$(conda info --root){end_col}
+""".format(start_col='\033[93m',end_col='\033[0m'), "parameters")
+
+    if not conda_params["env"]:
+        if "CONDA_DEFAULT_ENV" in os.environ:
+            conda_params["env"] = os.environ['CONDA_DEFAULT_ENV']
+        else:
+            raise Exception("'conda' 'env' is empty, but there is no active environment. Please activate "
+                            "the environment and try again", "parameters")
+    return conda_params
