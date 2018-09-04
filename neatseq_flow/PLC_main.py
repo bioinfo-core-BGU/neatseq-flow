@@ -149,6 +149,16 @@ class NeatSeqFlow:
         # Date+rand num (to preserve order of pipelines)
         if runid:
             # Testing runid
+            if runid.lower() == "curr":
+                if os.path.isfile(os.sep.join([self.pipe_data["home_dir"],"logs","version_list.txt"])):
+                    # Get runid from last line in log file
+                    with open(os.sep.join([self.pipe_data["home_dir"],"logs","version_list.txt"]), 'r') as f:
+                        lines = f.read().splitlines()
+                        last_line = lines[-1]
+                        runid = last_line.split("\t")[0]
+                else:
+                    sys.exit("First run. Please do not set 'runid' to 'curr'")
+
             if re.search("\s",runid):
                 sys.exit("--runid should not contain whitespacve characters")
             self.run_code = runid
