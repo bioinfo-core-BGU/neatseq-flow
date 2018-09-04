@@ -190,7 +190,7 @@ def get_param_data_YAML(filelines):
             endparams[param_dict[yamlname]["module"]][yamlname] = yamlname_params
         return endparams
  
-    filelines = remove_comments(filelines)
+    #filelines = remove_comments(filelines)
     
     # Convert all tabs to 4 spaces. Tabs do not work well with YAML!
     filelines = [re.sub("\t","    ",line) for line in filelines]
