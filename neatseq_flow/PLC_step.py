@@ -55,7 +55,7 @@ class AssertionExcept(Exception):
 
 
 
-class Step:
+class Step(object):
     """ A class that defines a pipeline step name (=instance).
     """
     Cwd = os.path.dirname(os.path.abspath(__file__))
@@ -205,7 +205,7 @@ class Step:
 # Step instance methods
 # ----------------------------------------------------------------------------------
 
-    def __init__(self,name,step_type,params,pipe_data,module_path):
+    def __init__(self,name,step_type,params,pipe_data,module_path,caller):
         """ should not be used. only specific step inits should be called. 
             Maybe a default init can be defined as well. check.
         """
@@ -213,8 +213,11 @@ class Step:
         self.step = step_type
         self.params = params
         self.pipe_data = pipe_data
-        
+
         self.path = module_path
+
+        # Storing reference to main pipeline object:
+        self.main_pl_obj = caller
 
         self.jid_name_sep = ".."
         
@@ -519,8 +522,19 @@ Dependencies: {depends}""".format(name=self.name,
     def get_base_sample_data(self):
         """ Get base_sample_data
         """
-        return self.base_sample_data
-        
+        # print [step.get_step_name()
+        #        for step
+        #        in self.get_base_step_list()] if self.get_base_step_list() else None
+        # print self.get_step_name(), " new: ", {stepname:self.main_pl_obj.global_sample_data[stepname]
+        #        for stepname
+        #        in self.get_depend_list()}
+        # print self.get_step_name(), " old: ", self.base_sample_data
+
+        # return self.base_sample_data
+        return {stepname:self.main_pl_obj.global_sample_data[stepname]
+               for stepname
+               in self.get_depend_list()}
+
     def sample_data_merge(self, sample_data, other_sample_data, other_step_name):
         """ Merge a different sample_data dict into this step's sample_data
             Used for cyclic sungrebe - basing a step on more than one base.
@@ -559,7 +573,7 @@ Dependencies: {depends}""".format(name=self.name,
         if sample_data is not None:     # When passing sample_data (i.e. for merge)
             # Copying sample_data. Just '=' would create a kind of reference
             self.sample_data = deepcopy(sample_data)
-            self.base_sample_data = dict()  
+            # self.base_sample_data = dict()
         else:   # Extract sample_data from base steps:
             self.sample_data = dict()
 
@@ -570,17 +584,23 @@ Dependencies: {depends}""".format(name=self.name,
                                                           base_step.get_sample_data(),
                                                           base_step.get_step_name())
 
+
             # Storing sample_data from base_step in base_sample_data dict:
             # This might be used when more than one copy of sample_data is required, for instance
             #   one might need two bam files.
-            self.base_sample_data = dict()
+            # self.base_sample_data = dict()
 
-            for base_step in self.base_step_list:
-                # Update current base_sample_data to include base's base_sample_data
-                # This effectively merges bases base_sample_data into this step's base_sample_data
-                self.base_sample_data.update(base_step.get_base_sample_data())
-                # Add the base sample_data to this step's base_sample_data:
-                self.base_sample_data[base_step.get_step_name()] = deepcopy(base_step.get_sample_data())
+            # for base_step in self.base_step_list:
+            #     # Update current base_sample_data to include base's base_sample_data
+            #     # This effectively merges bases base_sample_data into this step's base_sample_data
+            #     self.base_sample_data.update(base_step.get_base_sample_data())
+            #     # Add the base sample_data to this step's base_sample_data:
+            #     self.base_sample_data[base_step.get_step_name()] = deepcopy(base_step.get_sample_data())
+
+        # print self.get_step_name(),self.sample_data
+        # # Adding sample_data to main sample_data storage in main PL object
+        # self.main_pl_obj.global_sample_data[self.get_step_name()] = deepcopy(self.sample_data)
+
 
         # ----------Limit operation to sample_list only
         # This part is experimental and not 100% complete. Changes will probably occur in the future.
@@ -1017,8 +1037,16 @@ Dependencies: {depends}""".format(name=self.name,
                 assertErr.set_step_name(self.get_step_name())
                 raise assertErr
 
+        self.main_pl_obj.global_sample_data[self.get_step_name()] = deepcopy(self.sample_data)
+
         if "stop_and_show" in self.params:
-            print """\
+            print self.get_stop_and_show_message()
+            raise AssertionExcept("Showed. Now stopping. "
+                                  "To continue, remove the 'stop_and_show' tag from %s" % self.get_step_name())
+
+    def get_stop_and_show_message(self):
+
+        message = """\
 project slots:
 --------------
 {project_slots}""".format(project_slots="\n".join(["- "+key
@@ -1026,8 +1054,8 @@ project slots:
                                                    in self.sample_data.keys()
                                                    if key not in self.sample_data["samples"]]))
 
-            if self.sample_data["samples"]:  # Sample list may be empty if only project data was passed!
-                print """
+        if self.sample_data["samples"]:  # Sample list may be empty if only project data was passed!
+            message = message + """
 samples:
 -------------
 {sample_list}
@@ -1037,13 +1065,9 @@ sample slots:
 {sample_slots}
 """.format(sample_list=", ".join(self.sample_data["samples"]),
            sample_slots="\n".join("- "+key for key in self.sample_data[self.sample_data["samples"][0]].keys()))
-                # print ", ".join(self.sample_data["samples"])
-                # print "sample slots:\n-------------"
 
-                #pp(self.sample_data[self.sample_data["samples"][0]].keys())
+        return message
 
-            raise AssertionExcept("Showed. Now stopping. "
-                                  "To continue, remove the 'stop_and_show' tag from %s" % self.get_step_name())
 
     def get_kill_script_name(self):
         """"""

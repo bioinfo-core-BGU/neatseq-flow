@@ -27,7 +27,7 @@ from modules.parse_param_data import parse_param_file
 from PLC_step import Step, AssertionExcept
 
 
-class NeatSeqFlow:
+class NeatSeqFlow(object):
     """Main pipeline class. Contains sample data and parameters
     """
     
@@ -46,6 +46,7 @@ class NeatSeqFlow:
         # Read and parse the sample and parameter files:
 
         sys.stdout.write("Reading files...\n")
+        sys.stdout.flush()
 
         try:
             self.sample_data = parse_sample_file(sample_file)
@@ -180,6 +181,8 @@ class NeatSeqFlow:
         
         # Create directory structure:
         sys.stdout.write("Creating directory structure...\n")
+        sys.stdout.flush()
+
         self.make_directory_structure()
 
         # Create log file:
@@ -212,7 +215,11 @@ class NeatSeqFlow:
 
         # Create step instances:
         sys.stdout.write("Making step instances...\n")
+        sys.stdout.flush()
         self.make_step_instances()
+
+        # Create a dictionary for storing all step sample data
+        self.make_global_sample_data_container()
 
         # Check instance names for possible cyclic names
         # This can happen when a instance name is a prefix of a different instance name.
@@ -509,11 +516,12 @@ class NeatSeqFlow:
 
         # Run constructor:
         try:
-            new_step = StepClass(step_name,
-                                 step_type,
-                                 step_params,
-                                 self.pipe_data,
-                                 step_module_path)
+            new_step = StepClass(name=step_name,
+                                 step_type=step_type,
+                                 params=step_params,
+                                 pipe_data=self.pipe_data,
+                                 module_path=step_module_path,
+                                 caller=self)
 
             return new_step
         except AssertionExcept as assertErr:
@@ -1228,3 +1236,14 @@ saveWidget(myviz,file = "%(out_file_name)s",selfcontained = F)
 
         if issues:
             sys.exit("Issues with instance names. See above")
+
+    def update_step_sample_data(self,step_name, sample_data):
+        pass
+
+    def make_global_sample_data_container(self):
+        """
+
+        :return:
+        """
+        self.global_sample_data = {step:{} for step in self.get_step_names()}
+        return self.global_sample_data
