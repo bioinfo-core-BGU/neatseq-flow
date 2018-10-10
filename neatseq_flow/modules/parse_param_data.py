@@ -10,34 +10,18 @@ __version__ = "1.2.0"
 import os, sys, re, yaml
 from pprint import pprint as pp
 import collections
+from collections import OrderedDict
 
 ######################## From here: https://gist.github.com/pypt/94d747fe5180851196eb
 from yaml.constructor import ConstructorError
 
 try:
-    from yaml import CLoader as Loader
+    # from yaml import CLoader as Loader
+    from yaml import CSafeLoader as Loader
 except ImportError:
-    from yaml import Loader
+    from yaml import SafeLoader as Loader
 
 from neatseq_flow.modules.parse_sample_data import remove_comments, check_newlines
-
-
-def no_duplicates_constructor(loader, node, deep=False):
-    """Check for duplicate keys."""
-
-    mapping = {}
-    for key_node, value_node in node.value:
-        key = loader.construct_object(key_node, deep=deep)
-        value = loader.construct_object(value_node, deep=deep)
-        if key in mapping:
-            raise ConstructorError("while constructing a mapping", node.start_mark,
-                                   "found duplicate key (%s)" % key, key_node.start_mark)
-        mapping[key] = value
-
-    return loader.construct_mapping(node, deep)
-
-# yaml.add_constructor(yaml.resolver.BaseResolver.DEFAULT_MAPPING_TAG, no_duplicates_constructor)
-########################
 
 STEP_PARAMS_SINGLE_VALUE = ['module','redirects']
 
@@ -52,7 +36,7 @@ def parse_param_file(filename):
     """Parses a file from filename
     """
     file_conts = []
-    
+
     filenames = filename.split(",")
     for filename_raw in filenames:
         # Expanding '~' and returning full path 
@@ -93,9 +77,6 @@ def parse_param_file(filename):
     # print "YAML failed. trying classic"
     # return get_param_data(file_conts)
 
-    
-from collections import OrderedDict
-    
 def ordered_load(stream, Loader=yaml.Loader, object_pairs_hook=OrderedDict):
     class OrderedLoader(Loader):
         pass
@@ -117,6 +98,7 @@ def ordered_load(stream, Loader=yaml.Loader, object_pairs_hook=OrderedDict):
 
         ##########
         loader.flatten_mapping(node)
+
         return object_pairs_hook(loader.construct_pairs(node))
     OrderedLoader.add_constructor(
         yaml.resolver.BaseResolver.DEFAULT_MAPPING_TAG,
@@ -198,7 +180,8 @@ def get_param_data_YAML(filelines):
     # Read params with pyyaml package:
     # yaml_params = yaml.load("\n".join(filelines),  Loader=yaml.SafeLoader)
     # yaml_params = yaml.safe_load("\n".join(filelines))
-    yaml_params = ordered_load("\n".join(filelines), yaml.SafeLoader)
+
+    yaml_params = ordered_load("\n".join(filelines),Loader=Loader)
 
     # yaml.safe_dump(yaml_params)
     # sys.exit()

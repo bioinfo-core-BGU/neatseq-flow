@@ -58,6 +58,7 @@ class NeatSeqFlow(object):
 
         try:
             self.param_data = parse_param_file(param_file)
+
         except Exception as raisedex:
             
             if raisedex.args[0] == "Issues in parameters":
@@ -110,6 +111,7 @@ class NeatSeqFlow(object):
         # Prepare dictionary for pipe data (in perl version: pipe_hash)
         self.pipe_data = dict()
 
+
         # Is not currently used. Saves order of steps in parameter file.
         self.pipe_data["usr_step_order"] = self.param_data["usr_step_order"]
         del(self.param_data["usr_step_order"])
@@ -135,7 +137,7 @@ class NeatSeqFlow(object):
         # operate on a subset of samples.)
         # See definition of PLC_step.set_sample_data()
         self.pipe_data["samples"] = self.sample_data["samples"]
-        
+
         self.pipe_data["verbose"] = verbose
 
         # Making a step name index (dict of form {step_name:step_type})
@@ -172,7 +174,7 @@ class NeatSeqFlow(object):
             self.pipe_data["job_limit"] = self.param_data["Global"]["job_limit"]
 
         self.manage_qsub_params()
-        
+
         # Setting path to qstat
         self.set_qstat_path()
 
@@ -374,39 +376,29 @@ class NeatSeqFlow(object):
         # Get the base list for each step.
         self.make_depends_dict()
 
+        # Convert from dict of lists to dict of sets:
+        depend_dict = {key:set(value) for key,value in self.depend_dict.iteritems()}
+        new_depend_dict = deepcopy(depend_dict)
 
-        # ### Helper recursive function
-        def expand_depend_list(step_name,depend_list,depend_dict):
-            """ helper function. takes a list and RECURSIVELY expands it based on the dependency dict
-            step_name is the name of the step on which it is executing.
-            Used to hault the recursion on cases of loops in the DAG...
-            """
-            
-            if not depend_list:  # i.e. depend_list==[]:
-                return depend_list
-            ret_list = depend_list
+        while True:
+            temp_dd = deepcopy(new_depend_dict)
+            for key in temp_dd.keys():
+                for substep in temp_dd[key]:
+                    if substep:
+                        new_depend_dict[key] = new_depend_dict[key] | (temp_dd[substep] - set([""]))
+            if all(map(lambda x: temp_dd[x] == new_depend_dict[x], new_depend_dict.keys())):
+                break
+        new_depend_dict = {key:list(value) if value!={''} else list()
+                           for key,value
+                           in new_depend_dict.iteritems()}
 
-            if step_name in depend_list:
-                sys.exit("There seems to be a cycle in the workflow design. Check dependencies of step %s" % step_name)
-            for elem in depend_list:
-                if (elem == ""):
-                    pass
-                else:
-                    try:
-                        ret_list += expand_depend_list(step_name, list(depend_dict[elem]), depend_dict)
-                    except RuntimeError:
-                        sys.exit("There seems to be a cycle in the workflow design. "
-                                 "Check dependencies of step %s" % step_name)
-            return list(set(ret_list))
-        # ######
+        looping_steps = [k for k,v in new_depend_dict.iteritems() if k in v]
+        if looping_steps:
+            sys.exit("There seems to be a cycle in the workflow design. "
+                     "Check dependencies of steps: {offenders}".format(offenders=", ".join(looping_steps)))
 
-        # Expand to include all dependencies in the list
-        # This is a little bit of recursive and comprehension magic...
-        local_depend_dict = {step:expand_depend_list(step, self.depend_dict[step], self.depend_dict) for step in self.depend_dict}
-        # Remove empty strings ('') from the lists of dependencies:
-        local_depend_dict = {step:[depend for depend in local_depend_dict[step] if depend != ""] for step in local_depend_dict}    
-        self.depend_dict = local_depend_dict
-        
+        self.depend_dict = new_depend_dict
+
         # Store dependencies in param structure:
         for step in step_data:
             for name in self.param_data["Step"][step]:
