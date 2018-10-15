@@ -538,7 +538,6 @@ class NeatSeqFlow(object):
         else:
             self.pipe_data["qsub_params"]["qstat_path"] = qstat_cmd
 
-        
     def define_conda_params(self):
         """ If conda params are required, define them:
         """
@@ -548,23 +547,22 @@ class NeatSeqFlow(object):
             self.pipe_data["conda"] = self.param_data["Global"]["conda"]
             # 2. If inside active conda environment (CONDA_PREFIX defined), 
             #    search for additional module dir and add to search path
-            if "CONDA_PREFIX" in os.environ:
-                conda_module_path = os.path.join(os.environ["CONDA_PREFIX"], "lib/python2.7/site-packages/neatseq_flow_modules")
-                if not os.path.isdir(conda_module_path):
-                    if self.pipe_data["verbose"]:
-                        sys.stderr.write("WARNING: conda default additional modules path (%s) does not exist!\n" % conda_module_path)
+        if "CONDA_PREFIX" in os.environ:
+            conda_module_path = os.path.join(os.environ["CONDA_PREFIX"], "lib/python2.7/site-packages/neatseq_flow_modules")
+            if not os.path.isdir(conda_module_path):
+                if self.pipe_data["verbose"]:
+                    sys.stderr.write("WARNING: conda default additional modules path (%s) does not exist!\n" % conda_module_path)
+            else:
+                if self.pipe_data["verbose"]:
+                    sys.stderr.write("ATTENTION: Adding conda default additional modules path (%s). "
+                                     "If it is different, please add manually to 'module_path' "
+                                     "in 'Global_params'." % conda_module_path)
+                if "module_path" in self.param_data["Global"]:
+                    if conda_module_path not in self.param_data["Global"]["module_path"]:
+                        self.param_data["Global"]["module_path"].append(conda_module_path)
                 else:
-                    if self.pipe_data["verbose"]:
-                        sys.stderr.write("ATTENTION: Adding conda default additional modules path (%s). If it is different, please add manually to 'module_path' in 'Global_params'." % conda_module_path)
-                    if "module_path" in self.param_data["Global"]:
-                        if conda_module_path not in self.param_data["Global"]["module_path"]:
-                            self.param_data["Global"]["module_path"].append(conda_module_path)
-                    else:
-                        self.param_data["Global"]["module_path"] = [os.path.join(conda_module_path)]
+                    self.param_data["Global"]["module_path"] = [os.path.join(conda_module_path)]
 
-    
-        
-                        
     def determine_sample_types(self):
         """ Add a "type" field to each sample with "PE", "SE" or "Mixed"
         """
@@ -576,14 +574,14 @@ class NeatSeqFlow(object):
     def create_kill_scripts_dir(self):
     
         # Create directory for step-wise qdel
-        stepWiseDir = "%s99.kill_all%s" % (self.pipe_data["scripts_dir"],os.sep)
-        if not os.path.isdir(stepWiseDir):
+        stepwise_dir = "%s99.kill_all%s" % (self.pipe_data["scripts_dir"], os.sep)
+        if not os.path.isdir(stepwise_dir):
             if self.pipe_data["verbose"]:
-                sys.stderr.write("Making dir 99.kill_all directory at %s\n" % stepWiseDir)
-            os.makedirs(stepWiseDir) 
+                sys.stderr.write("Making dir 99.kill_all directory at %s\n" % stepwise_dir)
+            os.makedirs(stepwise_dir)
         else:
             if self.pipe_data["verbose"]:
-                sys.stderr.write("Dir %s exists. Will overwrite... \n" % stepWiseDir)
+                sys.stderr.write("Dir %s exists. Will overwrite... \n" % stepwise_dir)
 
     def create_kill_scripts(self):
         """ This function creates the 99.kill_all script
@@ -593,7 +591,8 @@ class NeatSeqFlow(object):
         self.pipe_data["kill_script_name"] = self.pipe_data["scripts_dir"] + "99.kill_all.sh"
         
         # Creation itself is done in ScriptConstrutor class
-        modname = "neatseq_flow.script_constructors.scriptconstructor{executor}".format(executor=self.pipe_data["Executor"])
+        modname = "neatseq_flow.script_constructors.scriptconstructor{executor}".\
+            format(executor=self.pipe_data["Executor"])
         classname = "KillScriptConstructor{executor}".format(executor=self.pipe_data["Executor"])
 
         scriptclass = getattr(importlib.import_module(modname), classname)
@@ -618,8 +617,6 @@ class NeatSeqFlow(object):
         """ This function creates the 98.qalter_all script
         """
         
-        # self.pipe_data["depends_script_name"] = self.pipe_data["scripts_dir"] + "98.Ensure_high_depends.csh"
-
         with open(self.pipe_data["depends_script_name"], "w") as script_fh:
             script_fh.write("#!/bin/csh\n\n")
             for step in self.step_list:
@@ -634,7 +631,8 @@ class NeatSeqFlow(object):
         
         self.pipe_data["helper_funcs"] = self.pipe_data["scripts_dir"] + "97.helper_funcs.sh"
 
-        modname = "neatseq_flow.script_constructors.scriptconstructor{executor}".format(executor=self.pipe_data["Executor"])
+        modname = "neatseq_flow.script_constructors.scriptconstructor{executor}".\
+            format(executor=self.pipe_data["Executor"])
         classname = "ScriptConstructor{executor}".format(executor=self.pipe_data["Executor"])
 
         try:
@@ -650,25 +648,27 @@ class NeatSeqFlow(object):
         """ Create a initialize the log file.
         """
         # Set log file name in pipe_data
-        self.pipe_data["log_file"] = "".join([self.pipe_data["logs_dir"], "log_" ,  self.pipe_data["run_code"] , ".txt"])
+        self.pipe_data["log_file"] = "{log_dir}log_{run_code}.txt".format(log_dir=self.pipe_data["logs_dir"],
+                                                                          run_code=self.pipe_data["run_code"])
 
         # Initialize log file with current datetime:
         # Only if file does not exist yet. This is to enable rerunning with the same runcode
         if not os.path.exists(self.pipe_data["log_file"]):
-            with open(self.pipe_data["log_file"],"w") as logf:
+            with open(self.pipe_data["log_file"], "w") as logf:
                 logf.write("""
 Pipeline {run_code} logfile:
 ----------------
 
 {datetime}:   Pipeline {run_code} created.
 
-""".format(datetime = datetime.now().strftime("%d %b %Y, %H:%M"),
-           run_code = self.pipe_data["run_code"]))
+""".format(datetime=datetime.now().strftime("%d %b %Y, %H:%M"), run_code=self.pipe_data["run_code"]))
             
-                if(self.pipe_data["message"] != None):
+                if self.pipe_data["message"] is not None:
                     logf.write("Message: %s\n" % self.pipe_data["message"])
                 else:
-                    logf.write("Message: No message passed for this pipeline\n")  # This is here to keep the number of header lines constant. The reason - R reading the log file for graphing!
+                    # This is here to keep the number of header lines constant.
+                    # The reason - R reading the log file for graphing!
+                    logf.write("Message: No message passed for this pipeline\n")
     
                 logf.write("""
 Timestamp\tEvent\tModule\tInstance\tJob name\tLevel\tHost\tMax mem\tStatus
@@ -677,7 +677,7 @@ Timestamp\tEvent\tModule\tInstance\tJob name\tLevel\tHost\tMax mem\tStatus
         # Set file name for storing list of pipeline versions:
         self.pipe_data["version_list_file"] = "".join([self.pipe_data["logs_dir"], "version_list.txt"])
         # if not os.path.exists(self.pipe_data["version_list_file"]):
-        with open(self.pipe_data["version_list_file"],"a") as logf:
+        with open(self.pipe_data["version_list_file"], "a") as logf:
             logf.write("%s\t%s\n" % (self.pipe_data["run_code"], self.pipe_data["message"]))
 
     def create_job_index_files(self):
@@ -733,7 +733,7 @@ Date\tStep\tName\tScript\tFile\tmd5sum\n
         """
         
         dict_to_dump = {step.get_step_name():step.get_qsub_names_dict() for step in self.step_list}
-        return json.dumps(dict_to_dump, sort_keys = False, indent = 4, separators=(',', ': '))
+        return json.dumps(dict_to_dump, sort_keys=False, indent=4, separators=(',', ': '))
         
         
         
@@ -753,13 +753,13 @@ Date\tStep\tName\tScript\tFile\tmd5sum\n
         filenames = sample_file.split(",")
         i = 0
         for filename in filenames:
-            shutil.copyfile(filename, "%s%s_samples_%d.txt" % (self.pipe_data["backups_dir"],
-                                                                self.pipe_data["run_code"],
-                                                                i))
+            shutil.copyfile(filename, "{dir}{run_code}_samples_{id}.txt".format(dir=self.pipe_data["backups_dir"],
+                                                                                run_code=self.pipe_data["run_code"],
+                                                                                id=i))
             i += 1
         
-        modules_bck_dir = "{bck_dir}{run_code}".format(bck_dir = self.pipe_data["backups_dir"],
-                                                       run_code = self.pipe_data["run_code"]) 
+        modules_bck_dir = "{bck_dir}{run_code}".format(bck_dir=self.pipe_data["backups_dir"],
+                                                       run_code=self.pipe_data["run_code"])
         if not os.path.exists(modules_bck_dir):
             os.mkdir(modules_bck_dir)
         

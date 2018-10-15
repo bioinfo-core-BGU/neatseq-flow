@@ -125,6 +125,7 @@ class Step(object):
                     retval = (level[0].split(module_path)[1].partition(os.sep)[2].replace(os.sep,".") + "." + mod_t).lstrip(".")
                     module_loc = level[0] + os.sep + mod_t + ".py"
 
+                    # print "----> %s" % module_loc
                     return retval, module_loc
 
 
@@ -160,6 +161,7 @@ class Step(object):
         retval = "neatseq_flow."+level[0].split(cls.Cwd)[1].partition(os.sep)[2].replace(os.sep,".") + "." + mod_t
         module_loc = level[0] + os.sep + mod_t + ".py"
 
+        # print "----> %s" % module_loc
         return retval, module_loc
 
     @classmethod
