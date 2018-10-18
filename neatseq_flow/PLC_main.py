@@ -108,9 +108,11 @@ class NeatSeqFlow(object):
                     sys.exit("sample {smp} does no exist in grouping data".format(smp=sample))
                 self.sample_data[sample]["grouping"] = mapping_data[sample]
 
-        # Prepare dictionary for pipe data (in perl version: pipe_hash)
-        self.pipe_data = dict()
+        sys.stdout.write("Preparing objects...\n")
+        sys.stdout.flush()
 
+        # Prepare dictionary for pipe data
+        self.pipe_data = dict()
 
         # Is not currently used. Saves order of steps in parameter file.
         self.pipe_data["usr_step_order"] = self.param_data["usr_step_order"]
