@@ -28,6 +28,9 @@ class AssertionExcept(Exception):
         """ initializize with error comment and sample, if exists)
             step is not required. Can be set later with set_step_name()
             """
+        if sample == "project_data":
+            # Sometimes, sample is project_data for routines which are both for samples and for projects
+            sample = None
         self.sample = sample
         self.comment = comment
         self.step = step
@@ -48,8 +51,8 @@ class AssertionExcept(Exception):
         if self.sample: # If a sample was passed. The exception is specific to a sample
             self.comment =  error_str + " (sample %s): %s" % (self.sample, self.comment)
         else:       
-            self.comment = error_str + ": " + self.comment if error_str else self.comment
-        
+            self.comment = error_str + " (project scope): " + self.comment if error_str else self.comment
+
         return self.comment
 
 
@@ -125,7 +128,6 @@ class Step(object):
                     retval = (level[0].split(module_path)[1].partition(os.sep)[2].replace(os.sep,".") + "." + mod_t).lstrip(".")
                     module_loc = level[0] + os.sep + mod_t + ".py"
 
-                    # print "----> %s" % module_loc
                     return retval, module_loc
 
 
@@ -161,7 +163,6 @@ class Step(object):
         retval = "neatseq_flow."+level[0].split(cls.Cwd)[1].partition(os.sep)[2].replace(os.sep,".") + "." + mod_t
         module_loc = level[0] + os.sep + mod_t + ".py"
 
-        # print "----> %s" % module_loc
         return retval, module_loc
 
     @classmethod
@@ -207,7 +208,7 @@ class Step(object):
 # Step instance methods
 # ----------------------------------------------------------------------------------
 
-    def __init__(self,name,step_type,params,pipe_data,module_path,caller):
+    def __init__(self, name, step_type, params, pipe_data, module_path, caller):
         """ should not be used. only specific step inits should be called. 
             Maybe a default init can be defined as well. check.
         """
@@ -699,7 +700,7 @@ Dependencies: {depends}""".format(name=self.name,
 
         return self.main_script_obj.get_command()
 
-    def set_spec_script_name(self,sample=None):
+    def set_spec_script_name(self, sample=None):
         """ Sets the current spec_script_name to a regular name, i.e.:
                 sample level: self.jid_name_sep.join([self.step,self.name,sample])
                 project level: self.jid_name_sep.join([self.step,self.name,self.sample_data["Title"]])
@@ -711,10 +712,10 @@ Dependencies: {depends}""".format(name=self.name,
                 
         """
         
-        if sample:
+        if sample and sample != "project_data":
             self.spec_script_name = self.jid_name_sep.join([self.step,self.name,sample])
         else:
-            self.spec_script_name = self.jid_name_sep.join([self.step,self.name,self.sample_data["Title"]])
+            self.spec_script_name = self.jid_name_sep.join([self.step, self.name, self.sample_data["Title"]])
 
         return self.spec_script_name
 
@@ -1049,20 +1050,24 @@ Dependencies: {depends}""".format(name=self.name,
     def get_stop_and_show_message(self):
 
         message = """\
-project slots:
+Project: {title}
+--------------""".format(title=self.sample_data["Title"])
+
+        if "project_data" in self.sample_data:  # If no project data exists, skip this
+            message = message + """
+Project slots:
 --------------
 {project_slots}""".format(project_slots="\n".join(["- "+key
                                                    for key
-                                                   in self.sample_data.keys()
-                                                   if key not in self.sample_data["samples"]]))
+                                                   in self.sample_data["project_data"].keys()]))
 
         if self.sample_data["samples"]:  # Sample list may be empty if only project data was passed!
             message = message + """
-samples:
+Samples:
 -------------
 {sample_list}
 
-sample slots:
+Sample slots:
 -------------
 {sample_slots}
 """.format(sample_list=", ".join(self.sample_data["samples"]),
@@ -1084,8 +1089,12 @@ sample slots:
 
     def make_folder_for_sample(self, sample):
         """ Creates a folder for sample in this step's results folder
+            If sample="project_data", will return the base dir for the step instance
         """
-        
+
+        if sample == "project_data":
+            return self.base_dir
+
         sample_folder = self.base_dir + sample + os.sep
         if not os.path.isdir(sample_folder):
             self.write_warning("Making dir at %s \n" % sample_folder, admonition = "ATTENTION")
