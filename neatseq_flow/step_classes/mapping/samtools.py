@@ -7,7 +7,7 @@
 :Affiliation: Bioinformatics core facility
 :Organization: National Institute of Biotechnology in the Negev, Ben Gurion University.
 
-A class that defines a module for executing samtools on a SAM file.
+A class that defines a module for executing samtools on a SAM or BAM file.
 
 .. attention:: The module was tested on samtools 1.3
 
@@ -19,6 +19,7 @@ The samtools programs included in the module are the following:
 * ``flagstat`` Runs flagstat on the BAM file
 * ``stats`` Runs stats on the BAM file
 * ``idxstats`` Runs idxstats on the BAM file
+* ``fastq/a`` Converts a BAM or CRAM into either FASTQ or FASTA format depending on the command invoked.
 
 .. Note:: Order of samtools subprogram execution:
 
@@ -29,7 +30,13 @@ The samtools programs included in the module are the following:
 
 * A SAM file in the following location:
 
-    * ``sample_data[<sample>]["sam"]``
+    * ``sample_data[<sample>]["sam"]`` (for ``scope=sample``)
+    * ``sample_data["sam"]`` (for ``scope=project``)
+
+* Or a BAM file in:
+
+    * ``sample_data[<sample>]["bam"]`` (for ``scope=sample``)
+    * ``sample_data["bam"]`` (for ``scope=project``)
 
 **Output**:
 
@@ -43,18 +50,37 @@ The samtools programs included in the module are the following:
     * ``sample_data[<sample>]["stats"]``
     * ``sample_data[<sample>]["idxstats"]``
 
+* If ``fastq`` was called, will also create the following files:
+
+    * ``self.sample_data[<sample>]["fastq.F"]
+    * ``self.sample_data[<sample>]["fastq.R"]
+    * ``self.sample_data[<sample>]["fastq.S"]
+
+* If ``fasta`` was called, will also create the following files:
+
+    * ``self.sample_data[<sample>]["fasta.F"]
+    * ``self.sample_data[<sample>]["fasta.R"]
+    * ``self.sample_data[<sample>]["fasta.S"]
+
+
+.. Note:: If ``sample`` is set to ``project``, the above mentioned output files will be created in the project
+    scope, e.g. ``sample_data["stats"]``..
+
 .. csv-table:: Parameters that can be set:
     :header: "Parameter", "Values", "Comments"
 
+    "project", "sample|project", "Scope of SAM/BAM top operate on. Defaults to ``sample``."
     "view", "*e.g.*: -buh  -q 30", "``samtools view`` parameters."
     "sort", "*e.g.*: -@ 20", "``samtools sort`` parameters."
     "index", "", "``samtools index`` parameters."
     "flagstat", "", "Leave empty. flagstat takes no parameters"
     "stats", "``samtools stats`` parameters", "Adds code for ``samtools stats``"
     "idxstats", "", "Adds code for ``samtools idxstats``"
+    "fastq/a", "``samtools fastq/a`` parameters", "Adds code for ``samtools fastq/a``"
     "filter_by_tag", "*e.g.*: NM:i:[01]", "Filter BAM by one of the tags. Use an awk-compliant regular expression. In this example, keep only lines where the edit distance is 0 or 1. This is an experimental feature and should be used with caution..."
     "del_sam", "", "Remove SAM file"
     "del_unsorted", "", "Remove unsorted bam file."
+    "type2use","sam|bam","Type of file to use. Must exist in scope"
 
 Lines for parameter file
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -69,20 +95,18 @@ Lines for parameter file
             -pe: shared 20
         view: -buh  -q 30 -@ 20 -F 4
         sort: -@ 20
-        flagstat: 
-        index: 
+        flagstat:
+        index:
         stats: --remove-dups
-        del_sam: 
-        del_unsorted: 
+        del_sam:
+        del_unsorted:
 
- 
+
 References
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Li, H., Handsaker, B., Wysoker, A., Fennell, T., Ruan, J., Homer, N., Marth, G., Abecasis, G. and Durbin, R., 2009. **The sequence alignment/map format and SAMtools**. *Bioinformatics*, 25(16), pp.2078-2079.
 
 """
-
-
 
 import os
 import sys, re
