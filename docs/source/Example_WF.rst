@@ -126,7 +126,7 @@ To install, perform the following steps:
 
 #. Get the installation file 
 
-    You will need to copy the :download:`NeatSeq-Flow CONDA installer <_static/NeatSeq_Flow_Tutorial_Install.yaml>` file into the current directory, or download it directly with the following command:
+    You will need to copy the :download:`NeatSeq-Flow CONDA installer <NeatSeq_Flow_Tutorial_Install.yaml>` file into the current directory, or download it directly with the following command:
 
     .. code-block:: csh
 
