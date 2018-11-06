@@ -130,7 +130,7 @@ To install, perform the following steps:
 
     .. code-block:: csh
 
-        wget http://neatseq-flow.readthedocs.io/en/latest/_downloads/NeatSeq_Flow_Tutorial_Install.yaml 
+        wget http://neatseq-flow.readthedocs.io/en/latest/NeatSeq_Flow_Tutorial_Install.yaml
     
 #. Install the **NeatSeq-Flow** environment
 
