@@ -6,7 +6,6 @@
 git-gui*
 jupyter-notebook-Shortcut*
 pipe_dirs/**
-docs/build/**
 additional_modules
 jupyter/**
 pull_commands.csh
