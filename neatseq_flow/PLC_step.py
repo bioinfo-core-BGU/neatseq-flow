@@ -719,6 +719,16 @@ Dependencies: {depends}""".format(name=self.name,
 
         return self.spec_script_name
 
+
+    def set_sample_name(self, sample):
+        """
+        Returns a sample name. If sample is "project_data", returns the project title. Otherwise, bounces sample back.
+        :param sample:
+        :return: A sample name
+        """
+
+        return sample if sample != "project_data" else self.sample_data["Title"]
+
     def add_jid_to_jid_list(self, script_id):
         """ Adds a jid for a sub process (e.g. a sample-specific script) to the jid list of the current step
         """
