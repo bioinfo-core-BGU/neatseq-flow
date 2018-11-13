@@ -700,7 +700,7 @@ Dependencies: {depends}""".format(name=self.name,
 
         return self.main_script_obj.get_command()
 
-    def set_spec_script_name(self, sample=None):
+    def set_spec_script_name(self, sample="project_data"):
         """ Sets the current spec_script_name to a regular name, i.e.:
                 sample level: self.jid_name_sep.join([self.step,self.name,sample])
                 project level: self.jid_name_sep.join([self.step,self.name,self.sample_data["Title"]])
@@ -712,7 +712,7 @@ Dependencies: {depends}""".format(name=self.name,
                 
         """
         
-        if sample and sample != "project_data":
+        if make_folder_for_samplesample != "project_data":
             self.spec_script_name = self.jid_name_sep.join([self.step,self.name,sample])
         else:
             self.spec_script_name = self.jid_name_sep.join([self.step, self.name, self.sample_data["Title"]])
@@ -1097,7 +1097,7 @@ Sample slots:
         
         self.kill_script_filename_main = kill_script_filename_main  # Project global qdel filename
 
-    def make_folder_for_sample(self, sample):
+    def make_folder_for_sample(self, sample="project_data"):
         """ Creates a folder for sample in this step's results folder
             If sample="project_data", will return the base dir for the step instance
         """
