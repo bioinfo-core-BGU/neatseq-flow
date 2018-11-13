@@ -590,15 +590,15 @@ sed -i -e 's:^{kill_cmd}$:#&:' {qdel_file}\n""".format(kill_cmd = re.escape(kill
             self.get_script_preamble(),  #dependency_jid_list
             self.get_trap_line(),
             self.get_log_lines(state="Started"),
-            self.get_set_options_line(type = "set"),
             self.get_activate_lines(type = "activate"),
+            self.get_set_options_line(type = "set"),
             self.test_executed(state="Start"),
             # THE SCRIPT!!!!
             self.master.script,
             self.test_executed(state="Stop"),
             self.get_stamped_file_register(),
-            self.get_activate_lines(type = "deactivate"),
             self.get_set_options_line(type = "unset"),
+            self.get_activate_lines(type = "deactivate"),
             self.get_kill_line(state = "Stop"),
             self.get_log_lines(state = "Finished")])
 
