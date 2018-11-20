@@ -9,6 +9,7 @@ import re
 import importlib
 import traceback
 import datetime
+import itertools
 
 # from script_constructors.ScriptConstructorSGE import HighScriptConstructorSGE, KillScriptConstructorSGE
 
@@ -576,36 +577,24 @@ Dependencies: {depends}""".format(name=self.name,
         if sample_data is not None:     # When passing sample_data (i.e. for merge)
             # Copying sample_data. Just '=' would create a kind of reference
             self.sample_data = deepcopy(sample_data)
-            # self.base_sample_data = dict()
+            # # Also starting a new provenance dictionary
+            self.create_provenance()
+            self.sample_data_original = deepcopy(self.sample_data)
+
         else:   # Extract sample_data from base steps:
             self.sample_data = dict()
-
+            self.provenance = dict()
             for base_step in self.base_step_list:
                 # Merge sample_data from all base steps.
                 # Function sample_data_merge uses deepcopy as well
                 self.sample_data = self.sample_data_merge(self.get_sample_data(),
                                                           base_step.get_sample_data(),
                                                           base_step.get_step_name())
+                self.provenance = self.sample_data_merge(self.get_provenance(),
+                                                          base_step.get_provenance(),
+                                                          base_step.get_step_name())
+                self.sample_data_original = deepcopy(self.sample_data)
 
-
-            # Storing sample_data from base_step in base_sample_data dict:
-            # This might be used when more than one copy of sample_data is required, for instance
-            #   one might need two bam files.
-            # self.base_sample_data = dict()
-
-            # for base_step in self.base_step_list:
-            #     # Update current base_sample_data to include base's base_sample_data
-            #     # This effectively merges bases base_sample_data into this step's base_sample_data
-            #     self.base_sample_data.update(base_step.get_base_sample_data())
-            #     # Add the base sample_data to this step's base_sample_data:
-            #     self.base_sample_data[base_step.get_step_name()] = deepcopy(base_step.get_sample_data())
-
-        # print self.get_step_name(),self.sample_data
-        # # Adding sample_data to main sample_data storage in main PL object
-        # self.main_pl_obj.global_sample_data[self.get_step_name()] = deepcopy(self.sample_data)
-
-
-        # ----------Limit operation to sample_list only
         # This part is experimental and not 100% complete. Changes will probably occur in the future.
         # 1. Convert "exclude_sample_list" to "sample_list":
         if "exclude_sample_list" in self.params:
@@ -621,12 +610,6 @@ Dependencies: {depends}""".format(name=self.name,
             if self.params["sample_list"] == "all_samples":
                 raise AssertionExcept("'all_samples' is no longer supported as valsue for 'sample_list'."
                                       "Use a secondary base to import old samples")
-                try:
-                    self.recover_sample_list()
-                except KeyError:
-                    raise AssertionExcept("'sample_list' set to 'all_samples' before sample subset selected",
-                                          step=self.get_step_name())
-
             # 2b. For sample list, stash the new sample list
             else:
                 if list(set(self.params["sample_list"]) - set(self.pipe_data["samples"])):
@@ -645,6 +628,13 @@ Dependencies: {depends}""".format(name=self.name,
         except AssertionExcept as assertErr: 
             assertErr.set_step_name(self.get_step_name())
             raise assertErr
+
+        # # self.create_provenance()
+        # print self.get_step_name()
+        # pp(self.sample_data)
+        # pp(self.provenance)
+        # sys.exit()
+
 
     def stash_sample_list(self, sample_list):
         """ Call this function to change the sample_list and put current sample list in history.
@@ -712,7 +702,7 @@ Dependencies: {depends}""".format(name=self.name,
                 
         """
         
-        if make_folder_for_samplesample != "project_data":
+        if sample != "project_data":
             self.spec_script_name = self.jid_name_sep.join([self.step,self.name,sample])
         else:
             self.spec_script_name = self.jid_name_sep.join([self.step, self.name, self.sample_data["Title"]])
@@ -1049,8 +1039,10 @@ Dependencies: {depends}""".format(name=self.name,
 
                 assertErr.set_step_name(self.get_step_name())
                 raise assertErr
-
+        # Add sample_data to collection of sample_data dicts in main class:
         self.main_pl_obj.global_sample_data[self.get_step_name()] = deepcopy(self.sample_data)
+        # Updating provenance data:
+        self.update_provenance()
 
         if "stop_and_show" in self.params:
             print self.get_stop_and_show_message()
@@ -1067,7 +1059,9 @@ Project: {title}
             message = message + """
 Project slots:
 --------------
-{project_slots}""".format(project_slots="\n".join(["- "+key
+{project_slots}""".format(project_slots="\n".join(["- {key} ({prov})".
+                                                  format(key=key,
+                                                         prov="->".join(self.provenance["project_data"][key]))
                                                    for key
                                                    in self.sample_data["project_data"].keys()]))
 
@@ -1081,7 +1075,12 @@ Sample slots:
 -------------
 {sample_slots}
 """.format(sample_list=", ".join(self.sample_data["samples"]),
-           sample_slots="\n".join("- "+key for key in self.sample_data[self.sample_data["samples"][0]].keys()))
+           sample_slots="\n".join("- {key} ({prov})".
+                                  format(key=key,
+                                         prov="->".join(self.provenance[self.sample_data["samples"][0]][key]))
+                                  for key
+                                  # in self.sample_data[self.sample_data["samples"][0]].keys()))
+                                  in self.provenance[self.sample_data["samples"][0]].keys()))
 
         return message
 
@@ -1483,3 +1482,42 @@ Sample slots:
 
 
 
+    def update_provenance(self):
+        """
+        Creates and updates a self.sample_data shadow dict with the formation history of each slot
+        :return:
+        """
+
+        sample_and_proj_list = deepcopy(self.sample_data["samples"])
+        sample_and_proj_list.append("project_data")
+
+        for sample in sample_and_proj_list:
+            all_keys = set(itertools.chain(self.provenance[sample].keys(),
+                                           self.sample_data[sample].keys(),
+                                           self.sample_data_original[sample].keys()))
+
+            for key in all_keys:
+                if key in self.sample_data[sample] and key in self.sample_data_original[sample]:
+                    if self.sample_data[sample][key] != self.sample_data_original[sample][key]:
+                        self.provenance[sample][key].append(self.get_step_name())
+                elif key in self.sample_data[sample]: # And not in original!
+                    self.provenance[sample][key] = [">"+self.get_step_name()]
+                elif key in self.sample_data_original[sample]:  # And not in current!
+                    self.provenance[sample][key].append(self.get_step_name()+"|")
+                else:
+                    pass
+
+    def create_provenance(self):
+        """
+        Create a provenance dict based on sample_da
+        :return:
+        """
+
+        self.provenance = dict()
+        sample_and_proj_list = deepcopy(self.sample_data["samples"])
+        sample_and_proj_list.append("project_data")
+        for sample in sample_and_proj_list:
+            self.provenance[sample] = {key:[">"+self.get_step_name()] for key in self.sample_data[sample]}
+
+    def get_provenance(self):
+        return self.provenance
