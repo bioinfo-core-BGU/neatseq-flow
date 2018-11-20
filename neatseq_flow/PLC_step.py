@@ -224,7 +224,8 @@ class Step(object):
         self.main_pl_obj = caller
 
         self.jid_name_sep = ".."
-        
+
+        self.use_provenance = False
         # -----------------------------
         # Place for testing parameters:
         try:
@@ -578,22 +579,25 @@ Dependencies: {depends}""".format(name=self.name,
             # Copying sample_data. Just '=' would create a kind of reference
             self.sample_data = deepcopy(sample_data)
             # # Also starting a new provenance dictionary
-            self.create_provenance()
-            self.sample_data_original = deepcopy(self.sample_data)
+            if self.use_provenance:
+                self.create_provenance()
+                self.sample_data_original = deepcopy(self.sample_data)
 
         else:   # Extract sample_data from base steps:
             self.sample_data = dict()
-            self.provenance = dict()
+            if self.use_provenance:
+                self.provenance = dict()
             for base_step in self.base_step_list:
                 # Merge sample_data from all base steps.
                 # Function sample_data_merge uses deepcopy as well
                 self.sample_data = self.sample_data_merge(self.get_sample_data(),
                                                           base_step.get_sample_data(),
                                                           base_step.get_step_name())
-                self.provenance = self.sample_data_merge(self.get_provenance(),
-                                                          base_step.get_provenance(),
-                                                          base_step.get_step_name())
-                self.sample_data_original = deepcopy(self.sample_data)
+                if self.use_provenance:
+                    self.provenance = self.sample_data_merge(self.get_provenance(),
+                                                             base_step.get_provenance(),
+                                                             base_step.get_step_name())
+                    self.sample_data_original = deepcopy(self.sample_data)
 
         # This part is experimental and not 100% complete. Changes will probably occur in the future.
         # 1. Convert "exclude_sample_list" to "sample_list":
@@ -1042,7 +1046,8 @@ Dependencies: {depends}""".format(name=self.name,
         # Add sample_data to collection of sample_data dicts in main class:
         self.main_pl_obj.global_sample_data[self.get_step_name()] = deepcopy(self.sample_data)
         # Updating provenance data:
-        self.update_provenance()
+        if self.use_provenance:
+            self.update_provenance()
 
         if "stop_and_show" in self.params:
             print self.get_stop_and_show_message()
@@ -1056,16 +1061,36 @@ Project: {title}
 --------------""".format(title=self.sample_data["Title"])
 
         if "project_data" in self.sample_data:  # If no project data exists, skip this
+            if self.use_provenance:
+                project_slots_text = "\n".join(["- {key} ({prov})".
+                                                      format(key=key,
+                                                             prov="->".join(self.provenance["project_data"][key]))
+                                                       for key
+                                                       in self.sample_data["project_data"].keys()])
+            else:
+                project_slots_text = "\n".join(["- " + key
+                                                for key
+                                                in self.sample_data["project_data"].keys()])
+
+
             message = message + """
 Project slots:
 --------------
-{project_slots}""".format(project_slots="\n".join(["- {key} ({prov})".
-                                                  format(key=key,
-                                                         prov="->".join(self.provenance["project_data"][key]))
-                                                   for key
-                                                   in self.sample_data["project_data"].keys()]))
+{project_slots}""".format(project_slots=project_slots_text)
 
         if self.sample_data["samples"]:  # Sample list may be empty if only project data was passed!
+            if self.use_provenance:
+                sample_slots_text = "\n".join("- {key} ({prov})".
+                                              format(key=key,
+                                                     prov="->".join(self.provenance[self.sample_data["samples"][0]][key]))
+                                              for key
+                                              # in self.sample_data[self.sample_data["samples"][0]].keys()))
+                                              in self.provenance[self.sample_data["samples"][0]].keys())
+            else:
+                sample_slots_text = "\n".join("- "+key
+                                              for key
+                                              in self.sample_data[self.sample_data["samples"][0]].keys())
+
             message = message + """
 Samples:
 -------------
@@ -1075,12 +1100,7 @@ Sample slots:
 -------------
 {sample_slots}
 """.format(sample_list=", ".join(self.sample_data["samples"]),
-           sample_slots="\n".join("- {key} ({prov})".
-                                  format(key=key,
-                                         prov="->".join(self.provenance[self.sample_data["samples"][0]][key]))
-                                  for key
-                                  # in self.sample_data[self.sample_data["samples"][0]].keys()))
-                                  in self.provenance[self.sample_data["samples"][0]].keys()))
+           sample_slots=sample_slots_text)
 
         return message
 
