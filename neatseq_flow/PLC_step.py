@@ -225,7 +225,7 @@ class Step(object):
 
         self.jid_name_sep = ".."
 
-        self.use_provenance = False
+        self.use_provenance = True
         # -----------------------------
         # Place for testing parameters:
         try:
@@ -1062,12 +1062,22 @@ Project: {title}
 
         if "project_data" in self.sample_data:  # If no project data exists, skip this
             if self.use_provenance:
-                project_slots_text = "\n".join(["- {key} ({prov})".
-                                                      format(key=key,
-                                                             prov="->".join(self.provenance["project_data"][key]))
-                                                       for key
-                                                       in self.sample_data["project_data"].keys()])
+                # Creating string of project data including provenance
+                try:
+                    project_slots_text = "\n".join(["- {key} ({prov})".
+                                                   format(key=key,
+                                                          prov="->".join(self.provenance["project_data"][key]))
+                                                    for key
+                                                    in self.sample_data["project_data"].keys()])
+                except KeyError:
+                    # print "~~~~~~~~~~~~~~~~ %s ~~~~~" % self.get_step_name()
+                    # print self.sample_data["project_data"].keys()
+                    # print self.provenance["project_data"].keys()
+                    # print "~~~~~~~~~~~~~~~~~~~~~"
+                    raise AssertionExcept("Weird error!")
+
             else:
+                # Creating string of project data not including provenance
                 project_slots_text = "\n".join(["- " + key
                                                 for key
                                                 in self.sample_data["project_data"].keys()])
@@ -1080,6 +1090,7 @@ Project slots:
 
         if self.sample_data["samples"]:  # Sample list may be empty if only project data was passed!
             if self.use_provenance:
+                # Creating string of (first) sample data including provenance
                 sample_slots_text = "\n".join("- {key} ({prov})".
                                               format(key=key,
                                                      prov="->".join(self.provenance[self.sample_data["samples"][0]][key]))
@@ -1087,6 +1098,7 @@ Project slots:
                                               # in self.sample_data[self.sample_data["samples"][0]].keys()))
                                               in self.provenance[self.sample_data["samples"][0]].keys())
             else:
+                # Creating string of (first) sample data not including provenance
                 sample_slots_text = "\n".join("- "+key
                                               for key
                                               in self.sample_data[self.sample_data["samples"][0]].keys())
@@ -1508,13 +1520,57 @@ Sample slots:
         :return:
         """
 
-        sample_and_proj_list = deepcopy(self.sample_data["samples"])
-        sample_and_proj_list.append("project_data")
+        # Samples added in current step
+        for sample in [sample
+                       for sample
+                       in self.sample_data["samples"]
+                       if sample not in self.sample_data_original["samples"]]:
+            # print "sample -->", sample
+            all_keys = list()
+            if sample in self.provenance:
+                all_keys = itertools.chain(all_keys,self.provenance[sample].keys())
+            else:
+                self.provenance[sample] = dict()
+            if sample in self.sample_data:
+                all_keys = itertools.chain(all_keys,self.sample_data[sample].keys())
+            for key in all_keys:
+                self.provenance[sample][key] = [">"+self.get_step_name()]
+        # Samples removed in current step
+        for sample in [sample
+                       for sample
+                       in self.sample_data_original["samples"]
+                       if sample not in self.sample_data["samples"]]:
+            # print "sample -->", sample
+            all_keys = list()
+            if sample in self.provenance:
+                all_keys = itertools.chain(all_keys,self.provenance[sample].keys())
+            if sample in self.sample_data:
+                all_keys = itertools.chain(all_keys,self.sample_data_original[sample].keys())
+            for key in all_keys:
+                self.provenance[sample][key].append(self.get_step_name()+"|")
+
+        # Get samples that were not added or removed, + project_data:
+        sample_and_proj_list = list(set(self.sample_data["samples"]) &
+                                    set(self.sample_data_original["samples"]) |
+                                    set(["project_data"]))
+        # # sample_and_proj_list.append("project_data")
+        # print "--------- %s ---------------------" % self.get_step_name()
+        # print sample_and_proj_list
+        # print "P> ",self.provenance["project_data"].keys()
+        # print "S> ",self.sample_data["project_data"].keys()
+        # print "O> ",self.sample_data_original["project_data"].keys()
+        # print "------------------------------"
 
         for sample in sample_and_proj_list:
-            all_keys = set(itertools.chain(self.provenance[sample].keys(),
-                                           self.sample_data[sample].keys(),
-                                           self.sample_data_original[sample].keys()))
+            all_keys = list()
+            if sample in self.provenance:
+                all_keys = itertools.chain(all_keys,self.provenance[sample].keys())
+            if sample in self.sample_data:
+                all_keys = itertools.chain(all_keys,self.sample_data[sample].keys())
+            if sample in self.sample_data_original:
+                all_keys = itertools.chain(all_keys,self.sample_data_original[sample].keys())
+            # Gey unique keys!
+            all_keys = list(set(all_keys))
 
             for key in all_keys:
                 if key in self.sample_data[sample] and key in self.sample_data_original[sample]:
