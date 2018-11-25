@@ -550,7 +550,33 @@ sed -i -e 's:^{kill_cmd}$:#&:' {qdel_file}\n""".format(kill_cmd = re.escape(kill
         script += "#############\n\n"
             
         return script
-        
+
+    def test_executed(self, state="Start"):
+        """
+        If 'rerun' is set to 'no' in params, test for existance of stamped files:
+        Adds test for existance of stamped files.  If all exist, skip the script
+        :return:
+        """
+
+        if not self.master.stamped_files:
+            return ""
+
+        if "keep_previous" not in self.params:
+            return ""
+
+        if state=="Start":
+            script = "if [[ -e "
+            script += " && \\\n\t-e ".join(self.master.stamped_files)
+            script += " ]]; then \n" \
+                      "    echo Skipping because output files exist >&2\n" \
+                      "else\n\n\n"
+            return script
+            # for filename in self.master.stamped_files:
+            #     script += "-e {filename} && \\".format(filename=filename)
+        else:
+            return "fi\n"
+
+
     def write_script(self):
         # ,
         #              script,
@@ -560,20 +586,16 @@ sed -i -e 's:^{kill_cmd}$:#&:' {qdel_file}\n""".format(kill_cmd = re.escape(kill
         """ Assembles the scripts to writes to file
         """
 
-        # try:
-        #     print "get_dependency_glob_jid_list() output:"
-        #     print self.master.get_dependency_glob_jid_list()
-        # except:
-        #     print "not printing dependency_glob_jid_list"
-
         script = "\n".join([
             self.get_script_preamble(),  #dependency_jid_list
             self.get_trap_line(),
             self.get_log_lines(state="Started"),
             self.get_activate_lines(type = "activate"),
             self.get_set_options_line(type = "set"),
+            self.test_executed(state="Start"),
             # THE SCRIPT!!!!
             self.master.script,
+            self.test_executed(state="Stop"),
             self.get_stamped_file_register(),
             self.get_set_options_line(type = "unset"),
             self.get_activate_lines(type = "deactivate"),

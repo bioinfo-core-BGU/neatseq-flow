@@ -324,6 +324,9 @@ def get_tabular_sample_data(filelines):
     
     if "Project_data" in raw_data:
         sample_data["project_data"] = parse_tabular_project_data(raw_data["Project_data"])
+    else:
+        # Create an empty project_data slot in case an instance needs it before it has been created
+        sample_data["project_data"] = dict()
         
     # Get Sample_Control data for ChIP-seq samples:
     if "ChIP_data" in raw_data:

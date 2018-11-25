@@ -123,7 +123,7 @@ class Step_MODULENAME(Step):
         self.script += self.get_script_const()
         # Specifically add input and output files:
         # This changes per module. The input files MUST BE taken from the sample_data dictionary!
-        self.script += "%s \\\n\t" % self.sample_data["INPUT_FILE_TYPE"]
+        self.script += "%s \\\n\t" % self.sample_data["project_data"]["INPUT_FILE_TYPE"]
         self.script += "%s \n\n"   % output_prefix
 
         # Put the output file/s in the sample_data dictionary
@@ -133,7 +133,7 @@ class Step_MODULENAME(Step):
         self.sample_data[sample]["OUTPUT_FILE_TYPE2"] = ...
         # Mark file for md5 stamping in log files:
         # Repeat for each file created by the module that you wish to stamp
-        self.stamp_file(self.sample_data["OUTPUT_FILE_TYPE1"])
+        self.stamp_file(self.sample_data["project_data"]["OUTPUT_FILE_TYPE1"])
        
 
         # Move all files from temporary local dir to permanent base_dir

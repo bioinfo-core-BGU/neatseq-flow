@@ -9,6 +9,8 @@ import re
 import importlib
 import traceback
 import datetime
+import itertools
+import json
 
 # from script_constructors.ScriptConstructorSGE import HighScriptConstructorSGE, KillScriptConstructorSGE
 
@@ -28,6 +30,9 @@ class AssertionExcept(Exception):
         """ initializize with error comment and sample, if exists)
             step is not required. Can be set later with set_step_name()
             """
+        if sample == "project_data":
+            # Sometimes, sample is project_data for routines which are both for samples and for projects
+            sample = None
         self.sample = sample
         self.comment = comment
         self.step = step
@@ -48,8 +53,8 @@ class AssertionExcept(Exception):
         if self.sample: # If a sample was passed. The exception is specific to a sample
             self.comment =  error_str + " (sample %s): %s" % (self.sample, self.comment)
         else:       
-            self.comment = error_str + ": " + self.comment if error_str else self.comment
-        
+            self.comment = error_str + " (project scope): " + self.comment if error_str else self.comment
+
         return self.comment
 
 
@@ -125,7 +130,6 @@ class Step(object):
                     retval = (level[0].split(module_path)[1].partition(os.sep)[2].replace(os.sep,".") + "." + mod_t).lstrip(".")
                     module_loc = level[0] + os.sep + mod_t + ".py"
 
-                    # print "----> %s" % module_loc
                     return retval, module_loc
 
 
@@ -161,7 +165,6 @@ class Step(object):
         retval = "neatseq_flow."+level[0].split(cls.Cwd)[1].partition(os.sep)[2].replace(os.sep,".") + "." + mod_t
         module_loc = level[0] + os.sep + mod_t + ".py"
 
-        # print "----> %s" % module_loc
         return retval, module_loc
 
     @classmethod
@@ -207,7 +210,7 @@ class Step(object):
 # Step instance methods
 # ----------------------------------------------------------------------------------
 
-    def __init__(self,name,step_type,params,pipe_data,module_path,caller):
+    def __init__(self, name, step_type, params, pipe_data, module_path, caller):
         """ should not be used. only specific step inits should be called. 
             Maybe a default init can be defined as well. check.
         """
@@ -222,7 +225,8 @@ class Step(object):
         self.main_pl_obj = caller
 
         self.jid_name_sep = ".."
-        
+
+        self.use_provenance = True
         # -----------------------------
         # Place for testing parameters:
         try:
@@ -575,36 +579,27 @@ Dependencies: {depends}""".format(name=self.name,
         if sample_data is not None:     # When passing sample_data (i.e. for merge)
             # Copying sample_data. Just '=' would create a kind of reference
             self.sample_data = deepcopy(sample_data)
-            # self.base_sample_data = dict()
+            # # Also starting a new provenance dictionary
+            if self.use_provenance:
+                self.create_provenance()
+                self.sample_data_original = deepcopy(self.sample_data)
+
         else:   # Extract sample_data from base steps:
             self.sample_data = dict()
-
+            if self.use_provenance:
+                self.provenance = dict()
             for base_step in self.base_step_list:
                 # Merge sample_data from all base steps.
                 # Function sample_data_merge uses deepcopy as well
                 self.sample_data = self.sample_data_merge(self.get_sample_data(),
                                                           base_step.get_sample_data(),
                                                           base_step.get_step_name())
+                if self.use_provenance:
+                    self.provenance = self.sample_data_merge(self.get_provenance(),
+                                                             base_step.get_provenance(),
+                                                             base_step.get_step_name())
+                    self.sample_data_original = deepcopy(self.sample_data)
 
-
-            # Storing sample_data from base_step in base_sample_data dict:
-            # This might be used when more than one copy of sample_data is required, for instance
-            #   one might need two bam files.
-            # self.base_sample_data = dict()
-
-            # for base_step in self.base_step_list:
-            #     # Update current base_sample_data to include base's base_sample_data
-            #     # This effectively merges bases base_sample_data into this step's base_sample_data
-            #     self.base_sample_data.update(base_step.get_base_sample_data())
-            #     # Add the base sample_data to this step's base_sample_data:
-            #     self.base_sample_data[base_step.get_step_name()] = deepcopy(base_step.get_sample_data())
-
-        # print self.get_step_name(),self.sample_data
-        # # Adding sample_data to main sample_data storage in main PL object
-        # self.main_pl_obj.global_sample_data[self.get_step_name()] = deepcopy(self.sample_data)
-
-
-        # ----------Limit operation to sample_list only
         # This part is experimental and not 100% complete. Changes will probably occur in the future.
         # 1. Convert "exclude_sample_list" to "sample_list":
         if "exclude_sample_list" in self.params:
@@ -620,12 +615,6 @@ Dependencies: {depends}""".format(name=self.name,
             if self.params["sample_list"] == "all_samples":
                 raise AssertionExcept("'all_samples' is no longer supported as valsue for 'sample_list'."
                                       "Use a secondary base to import old samples")
-                try:
-                    self.recover_sample_list()
-                except KeyError:
-                    raise AssertionExcept("'sample_list' set to 'all_samples' before sample subset selected",
-                                          step=self.get_step_name())
-
             # 2b. For sample list, stash the new sample list
             else:
                 if list(set(self.params["sample_list"]) - set(self.pipe_data["samples"])):
@@ -644,6 +633,13 @@ Dependencies: {depends}""".format(name=self.name,
         except AssertionExcept as assertErr: 
             assertErr.set_step_name(self.get_step_name())
             raise assertErr
+
+        # # self.create_provenance()
+        # print self.get_step_name()
+        # pp(self.sample_data)
+        # pp(self.provenance)
+        # sys.exit()
+
 
     def stash_sample_list(self, sample_list):
         """ Call this function to change the sample_list and put current sample list in history.
@@ -699,7 +695,7 @@ Dependencies: {depends}""".format(name=self.name,
 
         return self.main_script_obj.get_command()
 
-    def set_spec_script_name(self,sample=None):
+    def set_spec_script_name(self, sample="project_data"):
         """ Sets the current spec_script_name to a regular name, i.e.:
                 sample level: self.jid_name_sep.join([self.step,self.name,sample])
                 project level: self.jid_name_sep.join([self.step,self.name,self.sample_data["Title"]])
@@ -711,12 +707,22 @@ Dependencies: {depends}""".format(name=self.name,
                 
         """
         
-        if sample:
+        if sample != "project_data":
             self.spec_script_name = self.jid_name_sep.join([self.step,self.name,sample])
         else:
-            self.spec_script_name = self.jid_name_sep.join([self.step,self.name,self.sample_data["Title"]])
+            self.spec_script_name = self.jid_name_sep.join([self.step, self.name, self.sample_data["Title"]])
 
         return self.spec_script_name
+
+
+    def set_sample_name(self, sample):
+        """
+        Returns a sample name. If sample is "project_data", returns the project title. Otherwise, bounces sample back.
+        :param sample:
+        :return: A sample name
+        """
+
+        return sample if sample != "project_data" else self.sample_data["Title"]
 
     def add_jid_to_jid_list(self, script_id):
         """ Adds a jid for a sub process (e.g. a sample-specific script) to the jid list of the current step
@@ -1038,8 +1044,11 @@ Dependencies: {depends}""".format(name=self.name,
 
                 assertErr.set_step_name(self.get_step_name())
                 raise assertErr
-
+        # Add sample_data to collection of sample_data dicts in main class:
         self.main_pl_obj.global_sample_data[self.get_step_name()] = deepcopy(self.sample_data)
+        # Updating provenance data:
+        if self.use_provenance:
+            self.update_provenance()
 
         if "stop_and_show" in self.params:
             print self.get_stop_and_show_message()
@@ -1049,24 +1058,82 @@ Dependencies: {depends}""".format(name=self.name,
     def get_stop_and_show_message(self):
 
         message = """\
-project slots:
+Project: {title}
+--------------""".format(title=self.sample_data["Title"])
+
+        if "project_data" in self.sample_data:  # If no project data exists, skip this
+            if self.use_provenance:
+                # Creating string of project data including provenance
+                try:
+                    project_slots_text = "\n".join(["- {key} ({prov})".
+                                                   format(key=key,
+                                                          prov="->".join(self.provenance["project_data"][key]))
+                                                    for key
+                                                    in self.sample_data["project_data"].keys()])
+                except KeyError:
+                    # print "~~~~~~~~~~~~~~~~ %s ~~~~~" % self.get_step_name()
+                    # print self.sample_data["project_data"].keys()
+                    # print self.provenance["project_data"].keys()
+                    # print "~~~~~~~~~~~~~~~~~~~~~"
+                    raise AssertionExcept("Weird error!")
+
+            else:
+                # Creating string of project data not including provenance
+                project_slots_text = "\n".join(["- " + key
+                                                for key
+                                                in self.sample_data["project_data"].keys()])
+
+
+            message = message + """
+Project slots:
 --------------
-{project_slots}""".format(project_slots="\n".join(["- "+key
-                                                   for key
-                                                   in self.sample_data.keys()
-                                                   if key not in self.sample_data["samples"]]))
+{project_slots}""".format(project_slots=project_slots_text)
 
         if self.sample_data["samples"]:  # Sample list may be empty if only project data was passed!
+            if self.use_provenance:
+                all_samples = set(self.provenance.keys()) - {"project_data"}
+                uniq_prov_list = list(set([json.dumps(self.provenance[sample], sort_keys=True)
+                                           for sample
+                                           in all_samples]))
+                prov_dict = {sample: json.dumps(self.provenance[sample], sort_keys=True)
+                             for sample
+                             in all_samples}
+                uniq_sample_lists = [[sample
+                                         for sample
+                                         in prov_dict.keys()
+                                         if prov_dict[sample] == prov]
+                                  for prov
+                                  in uniq_prov_list]
+                # Creating string of (first) sample data including provenance
+                # Create slot data for each group of samples:
+                # 1. uniq_sample_lists is a list of sample lists, each list having the same provenance
+                # 2. For each of the lists in uniq_sample_lists, print the list of samples and a formatted version of the provenance
+                sample_slots_text = "\n\n".join(["Samples: {samples}\nSlots:\n{slots}".
+                                                # format(samples=", ".join(sorted(value) if len(value)<2 else sorted(value[0:1])+["..."]),   #
+                                                format(samples=", ".join(sorted(value)),  #
+                                                       slots="\n".join(["- {key} ({prov})".
+                                                                       format(key=key,
+                                                                              prov="->".join(self.provenance[value[0]][key]))
+                                                                        for key
+                                                                        in self.provenance[value[0]]]))
+                                                 for value
+                                                 in uniq_sample_lists])
+            else:
+                # Creating string of (first) sample data not including provenance
+                sample_slots_text = "\n".join("- "+key
+                                              for key
+                                              in self.sample_data[self.sample_data["samples"][0]].keys())
+
             message = message + """
-samples:
+Samples:
 -------------
 {sample_list}
 
-sample slots:
+Sample slots:
 -------------
 {sample_slots}
 """.format(sample_list=", ".join(self.sample_data["samples"]),
-           sample_slots="\n".join("- "+key for key in self.sample_data[self.sample_data["samples"][0]].keys()))
+           sample_slots=sample_slots_text)
 
         return message
 
@@ -1082,10 +1149,14 @@ sample slots:
         
         self.kill_script_filename_main = kill_script_filename_main  # Project global qdel filename
 
-    def make_folder_for_sample(self, sample):
+    def make_folder_for_sample(self, sample="project_data"):
         """ Creates a folder for sample in this step's results folder
+            If sample="project_data", will return the base dir for the step instance
         """
-        
+
+        if sample == "project_data":
+            return self.base_dir
+
         sample_folder = self.base_dir + sample + os.sep
         if not os.path.isdir(sample_folder):
             self.write_warning("Making dir at %s \n" % sample_folder, admonition = "ATTENTION")
@@ -1464,3 +1535,86 @@ sample slots:
 
 
 
+    def update_provenance(self):
+        """
+        Creates and updates a self.sample_data shadow dict with the formation history of each slot
+        :return:
+        """
+
+        # Samples added in current step
+        for sample in [sample
+                       for sample
+                       in self.sample_data["samples"]
+                       if sample not in self.sample_data_original["samples"]]:
+            # print "sample -->", sample
+            all_keys = list()
+            if sample in self.provenance:
+                all_keys = itertools.chain(all_keys,self.provenance[sample].keys())
+            else:
+                self.provenance[sample] = dict()
+            if sample in self.sample_data:
+                all_keys = itertools.chain(all_keys,self.sample_data[sample].keys())
+            for key in all_keys:
+                self.provenance[sample][key] = [">"+self.get_step_name()]
+        # Samples removed in current step
+        for sample in [sample
+                       for sample
+                       in self.sample_data_original["samples"]
+                       if sample not in self.sample_data["samples"]]:
+            # print "sample -->", sample
+            all_keys = list()
+            if sample in self.provenance:
+                all_keys = itertools.chain(all_keys,self.provenance[sample].keys())
+            if sample in self.sample_data:
+                all_keys = itertools.chain(all_keys,self.sample_data_original[sample].keys())
+            for key in all_keys:
+                self.provenance[sample][key].append(self.get_step_name()+"|")
+
+        # Get samples that were not added or removed, + project_data:
+        sample_and_proj_list = list(set(self.sample_data["samples"]) &
+                                    set(self.sample_data_original["samples"]) |
+                                    set(["project_data"]))
+        # # sample_and_proj_list.append("project_data")
+        # print "--------- %s ---------------------" % self.get_step_name()
+        # print sample_and_proj_list
+        # print "P> ",self.provenance["project_data"].keys()
+        # print "S> ",self.sample_data["project_data"].keys()
+        # print "O> ",self.sample_data_original["project_data"].keys()
+        # print "------------------------------"
+
+        for sample in sample_and_proj_list:
+            all_keys = list()
+            if sample in self.provenance:
+                all_keys = itertools.chain(all_keys,self.provenance[sample].keys())
+            if sample in self.sample_data:
+                all_keys = itertools.chain(all_keys,self.sample_data[sample].keys())
+            if sample in self.sample_data_original:
+                all_keys = itertools.chain(all_keys,self.sample_data_original[sample].keys())
+            # Gey unique keys!
+            all_keys = list(set(all_keys))
+
+            for key in all_keys:
+                if key in self.sample_data[sample] and key in self.sample_data_original[sample]:
+                    if self.sample_data[sample][key] != self.sample_data_original[sample][key]:
+                        self.provenance[sample][key].append(self.get_step_name())
+                elif key in self.sample_data[sample]: # And not in original!
+                    self.provenance[sample][key] = [">"+self.get_step_name()]
+                elif key in self.sample_data_original[sample]:  # And not in current!
+                    self.provenance[sample][key].append(self.get_step_name()+"|")
+                else:
+                    pass
+
+    def create_provenance(self):
+        """
+        Create a provenance dict based on sample_da
+        :return:
+        """
+
+        self.provenance = dict()
+        sample_and_proj_list = deepcopy(self.sample_data["samples"])
+        sample_and_proj_list.append("project_data")
+        for sample in sample_and_proj_list:
+            self.provenance[sample] = {key:[">"+self.get_step_name()] for key in self.sample_data[sample]}
+
+    def get_provenance(self):
+        return self.provenance

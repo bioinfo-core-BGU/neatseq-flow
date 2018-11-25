@@ -165,9 +165,9 @@ def get_param_data_YAML(filelines):
                 elif isinstance(yamlname_params["sample_list"], list):
                     pass
                 else:
-                    raise AssertionExcept("sample_list must be string or list in stash_sample_list()")
+                    raise AssertionExcept("sample_list must be string or list!")
                 # Remove empty strings:
-                yamlname_params["sample_list"] = [a for a in yamlname_params["sample_list"] if a!=""]
+                yamlname_params["sample_list"] = filter(lambda x: x != "", yamlname_params["sample_list"])
 
             endparams[param_dict[yamlname]["module"]][yamlname] = yamlname_params
         return endparams
