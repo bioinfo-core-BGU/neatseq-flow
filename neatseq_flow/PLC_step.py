@@ -1105,17 +1105,12 @@ Project slots:
                                   for prov
                                   in uniq_prov_list]
                 # Creating string of (first) sample data including provenance
-                # sample_slots_text = "\n".join("- {key} ({prov})".
-                #                               format(key=key,
-                #                                      prov="->".join(self.provenance[self.sample_data["samples"][0]][key]))
-                #                               for key
-                #                               # in self.sample_data[self.sample_data["samples"][0]].keys()))
-                #                               in self.provenance[self.sample_data["samples"][0]].keys())
                 # Create slot data for each group of samples:
                 # 1. uniq_sample_lists is a list of sample lists, each list having the same provenance
                 # 2. For each of the lists in uniq_sample_lists, print the list of samples and a formatted version of the provenance
                 sample_slots_text = "\n\n".join(["Samples: {samples}\nSlots:\n{slots}".
-                                                format(samples=", ".join(sorted(value)),   #
+                                                # format(samples=", ".join(sorted(value) if len(value)<2 else sorted(value[0:1])+["..."]),   #
+                                                format(samples=", ".join(sorted(value)),  #
                                                        slots="\n".join(["- {key} ({prov})".
                                                                        format(key=key,
                                                                               prov="->".join(self.provenance[value[0]][key]))
