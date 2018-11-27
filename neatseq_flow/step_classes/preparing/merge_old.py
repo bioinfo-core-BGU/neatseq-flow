@@ -144,7 +144,7 @@ class Step_merge(Step):
                 self.script = ""
                 direction_tag = direction[0] # Get first letter in direction
                 # Name of specific script:
-                self.spec_script_name = self.jid_name_sep.join([self.step,self.name,sample,direction_tag])
+                self.spec_script_name = "_".join([self.step,self.name,sample,direction_tag]) 
                 
                 # This line should be left before every new script. It sees to local issues.
                 # Use the dir it returns as the base_dir for this step.
@@ -195,7 +195,7 @@ class Step_merge(Step):
                 direction_tag = fasta_types_dict[direction]
                 
                 # Name of specific script:
-                self.spec_script_name = self.jid_name_sep.join([self.step,self.name,sample,direction_tag])
+                self.spec_script_name = "_".join([self.step,self.name,sample,direction_tag]) 
                 
                 # This line should be left before every new script. It sees to local issues.
                 # Use the dir it returns as the base_dir for this step.
@@ -247,7 +247,7 @@ class Step_merge(Step):
                     direction_tag = sam_bam_dict[direction]
                     
                     # Name of specific script:
-                    self.spec_script_name = self.jid_name_sep.join([self.step,self.name,sample,direction_tag])
+                    self.spec_script_name = "_".join([self.step,self.name,sample,direction_tag]) 
                     
                     # This line should be left before every new script. It sees to local issues.
                     # Use the dir it returns as the base_dir for this step.
@@ -303,7 +303,7 @@ class Step_merge(Step):
                     direction_tag = vcf_dict[direction]
                     
                     # Name of specific script:
-                    self.spec_script_name = self.jid_name_sep.join([self.step,self.name,sample,direction_tag])
+                    self.spec_script_name = "_".join([self.step,self.name,sample,direction_tag]) 
                     
                     # This line should be left before every new script. It sees to local issues.
                     # Use the dir it returns as the base_dir for this step.

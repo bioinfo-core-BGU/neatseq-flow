@@ -76,7 +76,7 @@ class Step_del_type(Step):
             if type2del not in self.sample_data:
                 raise AssertionExcept("type %s does not exist for project." % type2del)
             else:
-                del self.sample_data[type2del]
+                del self.sample_data["project_data"][type2del]
         else:
             raise AssertionExcept("'scope' param must be 'sample' or 'project'")
         

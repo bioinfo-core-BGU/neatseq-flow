@@ -75,10 +75,6 @@ class Step_trimmo(Step):
         self.shell = "bash"      # Can be set to "bash" by inheriting instances
         self.file_tag = "trimmo.fq"
 
-        if not "todo" in self.params:
-            raise AssertionExcept("Please pass 'todo' parameter to 'trimmo' module.")
-            
-            
     def step_sample_initiation(self):
         """ A place to do initiation stages following setting of sample_data
         """

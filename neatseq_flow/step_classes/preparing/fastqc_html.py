@@ -80,7 +80,7 @@ class Step_fastqc_html(Step):
         
         
         # Assert that all samples have reads files:
-        for sample in self.sample_data["samples"]:    
+        for sample in self.sample_data["samples"]:
             if not filter(lambda x: x in ["fastq.F", "fastq.R", "fastq.S"], self.sample_data[sample].keys()):
                 raise AssertionExcept("No read files defined\n", sample)
 
@@ -90,8 +90,8 @@ class Step_fastqc_html(Step):
         """
         if "sum_script" in self.params.keys():
             self.script = "%(script)s \\\n\t-d %(indir)s \\\n\t-o %(outdir)s\n\n" % \
-                    {"script" : self.params["sum_script"],                          \
-                     "indir"  : self.base_dir,                                      \
+                    {"script" : self.params["sum_script"],
+                     "indir"  : self.base_dir,
                      "outdir" : self.base_dir}
 
         
