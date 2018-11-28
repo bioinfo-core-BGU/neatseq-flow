@@ -130,7 +130,7 @@ To install, perform the following steps:
 
     .. code-block:: csh
 
-        wget http://neatseq-flow.readthedocs.io/en/latest/_downloads/NeatSeq_Flow_Tutorial_Install.yaml
+        wget http://neatseq-flow.readthedocs.io/en/latest/extra/NeatSeq_Flow_Tutorial_Install.yaml
     
 #. Install the **NeatSeq-Flow** environment
 
@@ -232,7 +232,7 @@ In the command line type:
 
 .. code-block:: csh
 
-    csh scripts/00.workflow.commands.csh
+    sh scripts/00.workflow.commands.sh
 
 
 Running the **NeatSeq-Flow** monitor

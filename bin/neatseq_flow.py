@@ -66,12 +66,12 @@ if args.sample_file is None or args.param_file is None:
     
 if args.clean:
     # if args.home_dir != os.getcwd():
-    text = raw_input("Are you sure you want to delete the workflow in {home_dir}? ".format(home_dir = args.home_dir))
+    text = raw_input("Are you sure you want to delete the workflow in {home_dir}? ('yes' to approve) > ".format(home_dir = args.home_dir))
 
     if not text.lower() == "yes":
         sys.exit()
     if args.clean_all:
-        text = raw_input("Are you sure you want to delete '{data}'? ".format(data=os.sep.join([args.home_dir, "data"])))
+        text = raw_input("Are you sure you want to delete '{data}'?  ('yes' to approve) > ".format(data=os.sep.join([args.home_dir, "data"])))
         if os.path.isdir(os.sep.join([args.home_dir, "data"])):
             if text.lower() == "yes":
                 shutil.rmtree(os.sep.join([args.home_dir, "data"]))
