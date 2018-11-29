@@ -29,10 +29,10 @@ The directories are elaborated on below.
 The scripts directory
 -----------------------------
 
-* Executing ``csh 00.workflow.commands.csh`` will execute the entire workflow.
+* Executing ``bash 00.workflow.commands.sh`` will execute the entire workflow.
 * The scripts beginning ``01.merge…`` etc. execute entire steps.
 * The actual scripts running each step per sample or on the entire project are contained in the equivalent directories ``01.merge…`` etc.
-* The scripts are numbered by execution order (see ``00.workflow.commands.csh``)
+* The scripts are numbered by execution order (see ``00.workflow.commands.sh``)
 
 .. figure:: figs/image005.png
    :scale: 100 %

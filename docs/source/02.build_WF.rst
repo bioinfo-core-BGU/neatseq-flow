@@ -64,7 +64,7 @@ All global parameters are set within a ``Global_params`` block in YAML format.
 
 .. Tip:: The correct value for the ``Qsub_path`` parameter can be determined by executing the following command:
 
-    .. code-block:: csh
+    .. code-block:: bash
 
         dirname `which qsub`
 
@@ -340,9 +340,7 @@ For example, a project file section could look like this::
 
 The same file types that can be used in the `Sample files`_ section, can also be used in the project files section. 
 
-.. Warning:: Project files in the sample file is an experimental feature, and should be used with caution. See ``merge`` documentation for details on how to import various types of sample files.
-    
-.. Attention:: Up to **NeatSeq-Flow** version 1.2.0, the sample file can only contain **sample files**. No project files are permitted. 
+.. Attention:: Up to **NeatSeq-Flow** version 1.2.0, the sample file can only contain **sample files**. No project files are permitted.
 
     * If you have project files, create a single sample which will represent your project. 
     * If you have mainly sample files, such as `fastq` files, and some project level files such as reference genomes, pass them to the modules through the parameter file.
@@ -374,8 +372,6 @@ Executing **NeatSeq-Flow** is the simplest step in the workflow (make sure ``pyt
 **Comments**:
 
 - **NeatSeq-Flow** does not require installation. If you have a local copy, append the full path to ``neatseq_flow.py``.
-- You can pass a comma-separated list of parameter files. **NeatSeq-Flow** concatenates the files in the order they're passed. Make sure there are no conflicts or duplicated definitions in the files (this occurs mainly for global parameters)
-- Alternatively, you can pass many parameter by specifying more than one ``-p``.
 - It is not compulsory to pass a message via ``-m`` but it is highly recommended for documentation and reproducibility.
 
 
@@ -389,18 +385,18 @@ Automatic execution
 
 Execute the following command within the workflow directory::
 
-    csh scripts/00.workflow.commands.csh 
+    bash scripts/00.workflow.commands.sh
 
-The ``scripts/00.workflow.commands.csh`` script runs all the steps at once, leaving flow control entirely to the cluster job manager.
+The ``scripts/00.workflow.commands.sh`` script runs all the steps at once, leaving flow control entirely to the cluster job manager.
 
 Step-wise execution
 -------------------------
 
-Each line in ``scripts/00.workflow.commands.csh`` calls a step-wise script in ``scripts/``, *e.g.* ``scripts/01.merge_merge1.csh``, which contains a list of ``qsub`` commands executing the individual scripts on each sample.
+Each line in ``scripts/00.workflow.commands.sh`` calls a step-wise script in ``scripts/``, *e.g.* ``scripts/01.merge_merge1.sh``, which contains a list of ``qsub`` commands executing the individual scripts on each sample.
 
 The following command will execute only the ``merge1`` step::
 
-    qsub scripts/01.merge_merge1.csh
+    qsub scripts/01.merge_merge1.sh
 
 Sample-wise execution
 -------------------------

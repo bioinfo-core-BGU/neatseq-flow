@@ -36,7 +36,7 @@ Basic usage does not require much.
 #. Adjust the script paths to the correct paths on your system (These are usually coded as *variables* in the ``Vars`` section at the top of the parameter file).
 #. Create a sample file following the directions in :ref:`Sample_file_definition`.
 #. Execute **NeatSeq-Flow** (see :ref:`Execution_section`) to create the workflow scripts.
-#. Execute the workflow scripts by executing the ``scripts/00.workflow.commands.csh`` script.
+#. Execute the workflow scripts by executing the ``scripts/00.workflow.commands.sh`` script.
 
 
 .. _workflow_contruction:
@@ -46,11 +46,11 @@ Workflow construction
 
 In order to construct workflows, one needs to combine modules in such a way that files are transferred seamlessly between them. 
 
-The module output filenames are organised within **NeatSeq-Flow** in a python dictionary called ``sample_data`` (after executing **NeatSeq-Flow**, this dictionary can be found in the JSON file ``WorkflowData.json`` in the ``objects`` directory). The dictionary tracks the locations of the output files from each module, saving each file type in a dedicated slot. For instance, *fastq* reads are stored in ``reads.X`` slots, where ``X`` is either ``F``, ``R`` or ``S`` for forward-, reverse- and single-end reads, respectively. *FASTA*, *SAM* and *BAM* files, too, have dedicated slots.  
+The module output filenames are organised within **NeatSeq-Flow** in a python dictionary called ``sample_data`` (after executing **NeatSeq-Flow**, this dictionary can be found in the JSON file ``WorkflowData.json`` in the ``objects`` directory). The dictionary tracks the locations of the output files from each module, saving each file type in a dedicated slot. For instance, *fastq* reads are stored in ``fastq.X`` slots, where ``X`` is either ``F``, ``R`` or ``S`` for forward-, reverse- and single-end reads, respectively. *FASTA*, *SAM* and *BAM* files, too, have dedicated slots.
 
 A workflow is a combination of module instances that inherit the above-mentioned dictionary from other modules (these are called the ``base step`` of the instance). Each module expects to find specific files in specific slots in the ``sample_data`` dictionary, which should be put there by one of the modules it inherits from. The instance then stores the filenames of its scripts outputs in slots in the dictionary. You can see these requirements in the module documentation, in the *Requires* and *Output* sections. 
 
-Often, the files are sample-specific, such as fastq files. In this case, they are stored in a dedicated sample slot in the dictionary, *e.g.* ``sample_data["Sample1"]``. Project-wide files, such as an assembly created from all the project fastq files, are stored in the main ``sample_data`` dictionary.
+Often, the files are sample-specific, such as fastq files. In this case, they are stored in a dedicated sample slot in the dictionary, *e.g.* ``sample_data["Sample1"]``. Project-wide files, such as an assembly created from all the project fastq files, are stored in the ``sample_data["project_data"`` dictionary.
 
 Some of the modules take their inputs and put their outputs in the sample-specific slots and some use the project-wide slots. The sample-specific slots are indicated in the documentation as ``sample_data[<sample>]``. Some modules can do both, and their exact behaviour is either controlled by a module parameter (*e.g.* ``scope`` in ``bowtie2_mapper``) or guessed at by the module based on the dictionary structure.
 
@@ -62,12 +62,24 @@ Sometimes, modules *overwrite* existing slots. This **does not mean the files wi
 
 .. tip:: 
     
-    Module instances can be based on more than one instance. *e.g.* if instance ``i`` is based on instances ``j,k``, it is the same as having ``j`` based on ``k`` and ``i`` based on ``j``. In other words, if both ``k`` and ``j`` write to the same slot, ``i`` will have access only to the output from ``j``. 
+    Module instances can be based on more than one instance. *e.g.* if instance *i* is based on instances *j,k*, it is the same as having *j* based on *k* and *i* based on *j*. In other words, if both *k* and *j* write to the same slot, *i* will have access only to the output from *j*.
     
-    If ``k`` and ``j`` are independent of each other, then basing ``i`` on ``j,k`` enables ``j`` and ``k`` to run in parallel, possibly reducing runtime.
+    If *k* and *j* are independent of each other, then basing *i* on *j,k* enables *j* and *k* to run in parallel, possibly reducing runtime.
     
 .. tip::  If you run **NeatSeq-Flow** with the word ``stop_and_show:`` in one of the instances' parameter blocks, **NeatSeq-Flow** will terminate at that instance and show the structure of the ``sample_data`` dictionary. You can use the output to decide which modules can inherit from the instance.
 
+    As of version 1.4, ``stop_and_show:`` output includes the provenance of the file types, *i.e.* the histroy of instances modifying the file types. For examples, the following output::
+
+        Samples: Sample1, Sample2, Sample3
+        Slots:
+        - fastq.R.unpaired (>trim_gal)
+        - Reverse (>merge1)
+        - fastq.F (>merge1->trim_gal)
+        - fastq.F.unpaired (>trim_gal)
+        - Forward (>merge1)
+        - fastq.R (>merge1->trim_gal)
+
+    shows that ``fastq.F`` and ``fastq.R`` files were created by ``merge1`` and **modified** by ``trim_gal``, while files ``fastq.R.unpaired`` and ``fastq.F.unpaired`` were **created** by ``trim_gal`` instance.
 
 .. _adding_modules:
     
@@ -88,24 +100,24 @@ For standard file types, you should use the appropriate slots (check out similar
 
     "fastq", "Sample", ``sample_data[<sample>]['fastq.F|fastq.R|fastq.S']``
     "fasta", "Sample", ``sample_data[<sample>]['fasta.nucl|fasta.prot']``
-    "fasta", "Project", ``sample_data['fasta.nucl|fasta.prot']``
+    "fasta", "Project", ``sample_data["project_data"]['fasta.nucl|fasta.prot']``
     "SAM", "Sample", ``sample_data[<sample>]['sam']``
     "BAM", "Sample", ``sample_data[<sample>]['bam']``
     "Aligner index", "Sample", ``sample_data[<sample>][<aligner name>_index']``
-    "Aligner index", "Project", ``sample_data[<aligner name>_index']``
+    "Aligner index", "Project", ``sample_data["project_data"][<aligner name>_index']``
     "Aligner reference", "Sample", ``sample_data[<sample>]['reference']``
     "GFF", "Sample", ``sample_data[<sample>]['gff']``
-    "GFF", "Project", ``sample_data['gff']``
+    "GFF", "Project", ``sample_data["project_data"]['gff']``
 
 
 .. tip:: 
 
-    As mentioned above, module instances can be based on more than one instance. *i.e.* ``i`` can be based on ``j,k``. It was stated that in this case, if ``j`` and ``k`` instances write to the same slot, ``i`` will have access only to the version created by ``j``.
+    As mentioned above, module instances can be based on more than one instance. *i.e.* *i* can be based on *j,k*. It was stated that in this case, if *j* and *k* instances write to the same slot, *i* will have access only to the version created by *j*.
     
-    However, you can write modules such that ``i`` has access to the same slot both in ``k`` and in ``j``: Previous versions of the ``sample_data`` dict are stored in the ``base_sample_data`` dictionary in the module class. The ``base_sample_data`` dict is keyed by the base instance name. This can be used to access *overwridden* versions of files created by instances upstream to the present module.
+    However, you can write modules such that *i* has access to the same slot both in *k* and in *j*: Previous versions of the ``sample_data`` dict are available in the dictionary returned by  ``self.get_base_sample_data()`` in the module class. The dictionary is keyed by the base instance name. This can be used to access *overwridden* versions of files created by instances upstream to the present module.
     
     For example, if **base** contains the name of the base instance (*e.g.* **merge1**), you can access the base's sample data as follows::
         
-        self.base_sample_data[base]
+        self.get_base_sample_data()[base]
     
     

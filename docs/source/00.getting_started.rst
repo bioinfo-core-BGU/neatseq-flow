@@ -20,6 +20,9 @@
 Download and Install
 ===============================
 
+#. Prerequisites::
+
+    You will need to `git <https://git-scm.com/downloads>`_ and pip installed for the following installation procedure.
 
 #. Clone the package from github::
 
@@ -51,7 +54,7 @@ Create a new directory anywhere, `cd` into it and execute the following commands
     python $NSF_main/bin/neatseq_flow.py                         \
         --sample_file $NSF_main/Workflows/Sample_sets/PE_tabular.nsfs    \
         --param_file  $NSF_main/Workflows/mapping.yaml       \
-        --message     "an informative message"
+        --message     "My first NeatSeq-Flow WF"
 
 .. _install_with_conda:
 
@@ -61,36 +64,59 @@ Install and execute with **Conda**
 .. Attention:: The following instructions are for use with the ``bash`` shell!
 
 #. Install `Miniconda`_ (for python version 2.7).
-#. Download the **NeatSeq-Flow** |conda_env|. 
-#. Create an environment::
+#. Download the **NeatSeq-Flow** |conda_env|.
 
-    conda-env create -f NeatSeq_Flow_conda_env.yaml
+   .. tabs::
 
-#. Activate the environment::
+      .. tab:: wget
 
-    source activate NeatSeq_Flow
+         .. code-block:: bash
+
+            wget http://neatseq-flow.readthedocs.io/en/latest/extra/NeatSeq_Flow_conda_env.yaml
+
+      .. tab:: curl
+
+         .. code-block:: bash
+
+            curl http://neatseq-flow.readthedocs.io/en/latest/extra/NeatSeq_Flow_conda_env.yaml > NeatSeq_Flow_Tutorial_Install.yaml
+
+#. Create an environment:
+
+   .. code-block:: bash
+
+      conda-env create -f NeatSeq_Flow_conda_env.yaml
+
+#. Activate the environment:
+
+   .. code-block:: bash
+
+      source activate NeatSeq_Flow
 
 #. Execute the following command to tell **NeatSeq-Flow** where the base conda installation is located:
 
-    .. code-block:: csh
+   .. code-block:: bash
 
-        export CONDA_BASE=$(conda info --root)
+      export CONDA_BASE=$(conda info --root)
 
 #. Make a dir for your project and change into it::
 
     mkdir first_neatseq_flow_proj; cd first_neatseq_flow_proj
 
-#. Execute **NeatSeq-Flow**::
+#. Execute **NeatSeq-Flow**:
 
-    neatseq_flow.py \
-        --sample_file $CONDA_PREFIX/NeatSeq-Flow-Workflows/Sample_sets/PE_tabular.nsfs \
-        --param_file $CONDA_PREFIX/NeatSeq-Flow-Workflows/mapping.yaml \
-        --message "an informative message"
+   .. code-block:: bash
+
+      neatseq_flow.py \
+         --sample_file $CONDA_PREFIX/NeatSeq-Flow-Workflows/Sample_sets/PE_tabular.nsfs \
+         --param_file $CONDA_PREFIX/NeatSeq-Flow-Workflows/mapping.yaml \
+         --message "My first NeatSeq-Flow WF using conda"
 
     
-#. When done, deactivate the environment::
+#. When done, deactivate the environment:
 
-    source deactivate
+   .. code-block:: bash
+
+      source deactivate
 
 .. Note:: You don't need to have the environment activated in order to execute the scripts!
 

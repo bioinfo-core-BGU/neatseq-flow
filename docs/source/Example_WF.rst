@@ -86,10 +86,10 @@ Sample File for Example
 ::
 
     Title	Example_WF_From_the_manuscript
-    
+
     #Type	Path
     Nucleotide	Reference_genome.fasta
-    
+
     #SampleID	Type	Path
     Sample1	Forward	Sample1F.fastq.gz
     Sample1	Reverse	Sample1R.fastq.gz
@@ -119,7 +119,7 @@ To install, perform the following steps:
 
 #. Create a **NeatSeq-Flow** project directory
 
-    .. code-block:: csh
+    .. code-block:: bash
 
         mkdir Example_WF
         cd Example_WF
@@ -128,37 +128,46 @@ To install, perform the following steps:
 
     You will need to copy the :download:`NeatSeq-Flow CONDA installer <_static/NeatSeq_Flow_Tutorial_Install.yaml>` file into the current directory, or download it directly with the following command:
 
-    .. code-block:: csh
+    .. tabs::
 
-        wget http://neatseq-flow.readthedocs.io/en/latest/extra/NeatSeq_Flow_Tutorial_Install.yaml
+       .. tab:: wget
+
+            .. code-block:: bash
+
+                wget http://neatseq-flow.readthedocs.io/en/latest/extra/NeatSeq_Flow_Tutorial_Install.yaml
+
+       .. tab:: curl
+
+            .. code-block:: bash
+
+                curl http://neatseq-flow.readthedocs.io/en/latest/extra/NeatSeq_Flow_Tutorial_Install.yaml > NeatSeq_Flow_Tutorial_Install.yaml
+
     
 #. Install the **NeatSeq-Flow** environment
 
-    The following commands will install **NeatSeq-Flow** and all the required modules and programs. 
+    The following commands will install **NeatSeq-Flow** and all the required modules and programs.
 
-
-
-    .. code-block:: csh
+    .. code-block:: bash
 
         conda env create -f  NeatSeq_Flow_Tutorial_Install.yaml
 
     .. Note:: For some versions of conda, you might have to replace ``conda env`` with ``conda-env``. If the command above does not work, try the following command:
 
 
-        .. code-block:: csh
+        .. code-block:: bash
 
             conda-env create -f  NeatSeq_Flow_Tutorial_Install.yaml
 
 
     .. Attention:: From the following step onwards, you should be in ``bash`` shell
 
-        .. code-block:: csh
+        .. code-block:: bash
 
             bash
 
 #. Activate the **NeatSeq-Flow** environment
 
-    .. code-block:: csh
+    .. code-block:: bash
 
         source activate NeatSeq_Flow_Tutorial
 
@@ -183,7 +192,7 @@ Run **NeatSeq-Flow**
 
     The ``Qsub_path`` parameter can be determined by executing the following command and replacing ``/PATH_TO_YOUR_QSUB/`` with the result.
 
-    .. code-block:: csh
+    .. code-block:: bash
 
         dirname `which qsub`
 
@@ -194,7 +203,7 @@ Run **NeatSeq-Flow**
 
 #. Execute the following command to tell **NeatSeq-Flow** where the base conda installation is located:
 
-    .. code-block:: csh
+    .. code-block:: bash
 
         export CONDA_BASE=$(conda info --root)
 
@@ -206,21 +215,21 @@ Run **NeatSeq-Flow**
 
     In the command line type:
 
-    .. code-block:: csh
+    .. code-block:: bash
 
         neatseq_flow.py                                                             \
             --sample_file $CONDA_PREFIX/TUTORIAL/Sample_sets/Samples_conda.nsfs     \
             --param_file  $CONDA_PREFIX/TUTORIAL/Example_WF_conda_env.yaml          \
-            --message     "an informative message"
+            --message     "NeatSeq-Flow example WF"
 
     .. tip:: To use the full raw samples files directly through FTP link in the command line type:
 
-        .. code-block:: csh
+        .. code-block:: bash
 
             neatseq_flow.py                                                             \
                 --sample_file $CONDA_PREFIX/TUTORIAL/Sample_sets/Samples_from_FTP.nsfs     \
                 --param_file  $CONDA_PREFIX/TUTORIAL/Example_WF_conda_from_ftp.yaml          \
-                --message     "an informative message"
+                --message     "NeatSeq-Flow example WF using ftp"
 
     .. note::  If **NeatSeq-Flow** says :``Finished successfully....`` it is OK to move on.
 
@@ -230,9 +239,9 @@ Execute the Example Workflow
 
 In the command line type:
 
-.. code-block:: csh
+.. code-block:: bash
 
-    sh scripts/00.workflow.commands.sh
+    bash scripts/00.workflow.commands.sh
 
 
 Running the **NeatSeq-Flow** monitor
@@ -240,7 +249,7 @@ Running the **NeatSeq-Flow** monitor
 
 When the workflow is running, you can check it's progress by running the built-in monitor: 
 
-.. code-block:: csh
+.. code-block:: bash
 
     neatseq_flow_monitor.py
 
@@ -258,7 +267,7 @@ Deactivate the **NeatSeq-Flow** environment
 
 To leave the **NeatSeq-Flow** virtual *conda* environment, execute the following command:
 
-.. code-block:: csh
+.. code-block:: bash
 
     source deactivate
 
@@ -267,7 +276,7 @@ Removing the **NeatSeq-Flow** environment
 
 When done, you can remove the *conda* environment you created with the following command:
 
-.. code-block:: csh
+.. code-block:: bash
 
     conda remove --name  NeatSeq_Flow_Tutorial --all
 
@@ -287,7 +296,7 @@ Download the **NeatSeq-Flow** repositories from github
 
 #. First, create a directory for the tutorial:
 
-    .. code-block:: csh
+    .. code-block:: bash
 
         mkdir neatseq-flow-tutorial
         cd neatseq-flow-tutorial
@@ -297,7 +306,7 @@ Download the **NeatSeq-Flow** repositories from github
     #. The main **NeatSeq-Flow** repository.
     #. The tutorial datasets and workflow repository.
 
-    .. code-block:: csh
+    .. code-block:: bash
 
       git clone https://github.com/bioinfo-core-BGU/neatseq-flow.git
       git clone https://github.com/bioinfo-core-BGU/neatseq-flow-tutorial.git
@@ -307,7 +316,7 @@ Download the **NeatSeq-Flow** repositories from github
 
     .. _copying_files:
 
-    .. code-block:: csh
+    .. code-block:: bash
 
         mkdir Example_WF
         cd Example_WF
@@ -319,7 +328,7 @@ Preparing the workflow parameter file
 
 Edit the example Workflow parameter file to suit your cluster.
 
-    .. code-block:: csh
+    .. code-block:: bash
 
         nano  Example_WF.yaml
 
@@ -336,7 +345,7 @@ Edit the example Workflow parameter file to suit your cluster.
 
     The ``Qsub_path`` parameter can be determined by executing the following command and replacing ``/PATH_TO_YOUR_QSUB/`` with the result.
 
-        .. code-block:: csh
+        .. code-block:: bash
             
             dirname `which qsub`
     
@@ -367,22 +376,22 @@ To save run-time and space, the raw sample files contain only the first 500,000 
 
 In the command line type:
 
-.. code-block:: csh
+.. code-block:: bash
 
     python ../neatseq-flow/bin/neatseq_flow.py  \
         --sample_file   Samples.nsfs            \
         --param_file    Example_WF.yaml         \
-        --message     "an informative message"
+        --message     "Example NeatSeq-Flow WF"
 
 .. tip:: To use the full raw samples files directly through FTP link, in the command line type:
 
-    .. code-block:: csh
+    .. code-block:: bash
 
         cp ../neatseq-flow-tutorial/Example_WF_from_ftp.yaml ../neatseq-flow-tutorial/Samples_from_FTP.nsfs ./
         neatseq_flow.py                                                             \
             --sample_file Samples_from_FTP.nsfs     \
             --param_file  Example_WF_from_ftp.yaml  \
-            --message     "an informative message"
+            --message     "Example NeatSeq-Flow WF using ftp"
 
 .. note::  If **NeatSeq-Flow** says : ``Finished successfully....`` it is OK to move on.
 
@@ -391,16 +400,16 @@ Execute the Example Workflow
 
 In the command line type:
 
-.. code-block:: csh
+.. code-block:: bash
 
-    csh scripts/00.workflow.commands.csh
+    bash scripts/00.workflow.commands.sh
 
 Running the **NeatSeq-Flow** monitor
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 When the workflow is running, you can check it's progress by running the built-in monitor: 
 
-.. code-block:: csh
+.. code-block:: bash
 
     ../neatseq-flow/bin/neatseq_flow_monitor.py
 

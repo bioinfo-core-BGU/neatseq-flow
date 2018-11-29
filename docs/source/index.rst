@@ -19,7 +19,7 @@
 
 .. sidebar:: **NeatSeq-Flow**...
 
-   * is an easy-to-install python package; 
+   * is an easy-to-install python package, available also on `conda`_;
    * creates workflow scripts for high throughput sequencing data, which are executed automatically on a computer cluster, fully under control of the user while the cluster job scheduler controls execution order;
    * creates a directory structure for tidy storing of shell scripts and workflow outputs;
    * utilizes cluster parallelization capabilities;
@@ -30,9 +30,9 @@
 
 .. topic:: Important links
 
-   * `Install NeatSeq-Flow <https://github.com/bioinfo-core-BGU/neatseq-flow>`_
-   * `NeatSeq-Flow GUI <https://github.com/bioinfo-core-BGU/NeatSeq-Flow-GUI>`_
    * `Module and Workflow repository <http://neatseq-flow.readthedocs.io/projects/neatseq-flow-modules/en/latest/>`_
+   * `NeatSeq-Flow on github <https://github.com/bioinfo-core-BGU/neatseq-flow>`_
+   * `NeatSeq-Flow GUI <https://github.com/bioinfo-core-BGU/NeatSeq-Flow-GUI>`_
    * `NeatSeq-Flow article on BioRXiv <https://www.biorxiv.org/content/early/2018/03/26/173005>`_
    * `Contact <mailto:sklarz@bgu.ac.il?subject=Inquiry\ about\ NeatSeq-Flow>`_
 
@@ -80,6 +80,7 @@ Customers
 -----------
 
 * `The National Knowledge Center for Rare / Orphan Diseases <http://in.bgu.ac.il/en/rod/Pages/default.aspx>`_.
+* `Faculty of Agriculture, Food and Environment <https://en.hafakulta.agri.huji.ac.il/>`_
 
 .. Detailed documentation
 .. -----------------------

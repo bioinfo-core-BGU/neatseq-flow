@@ -3,6 +3,7 @@
 .. _Generic module: 
 .. _qsub man page: http://gridscheduler.sourceforge.net/htmlman/htmlman1/qsub.html
 .. _Miniconda: https://conda.io/miniconda.html
+.. _conda: https://conda.io/docs
 .. _GUI tutorial: https://github.com/bioinfo-core-BGU/NeatSeq-Flow-GUI/blob/master/Tutorial.md
 
 .. |sample_template|    replace:: :download:`sample template <_static/NeatSeqFlow_ModuleTemplate_Sample.py>`
