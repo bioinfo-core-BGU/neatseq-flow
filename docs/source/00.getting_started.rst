@@ -20,21 +20,27 @@
 Download and Install
 ===============================
 
-#. Prerequisites::
+#. Prerequisites:
 
-    You will need to `git <https://git-scm.com/downloads>`_ and pip installed for the following installation procedure.
+   You will need to have `git <https://git-scm.com/downloads>`_ and pip installed for the following installation procedure.
 
-#. Clone the package from github::
+#. Clone the package from github:
 
-    git clone https://github.com/bioinfo-core-BGU/neatseq-flow.git
+   .. code-block:: bash
 
-#. You may have to install two `python` dependencies: `yaml` and `bunch`. This can be done with::
+       git clone https://github.com/bioinfo-core-BGU/neatseq-flow.git
 
-    pip install pyyaml bunch
+#. You may have to install two `python` dependencies: `yaml` and `bunch`. This can be done with:
 
-#. Clone the package of modules from github::
+   .. code-block:: bash
 
-    git clone https://github.com/bioinfo-core-BGU/neatseq-flow-modules.git
+       pip install pyyaml bunch
+
+#. Clone the package of modules from github:
+
+   .. code-block:: bash
+
+       git clone https://github.com/bioinfo-core-BGU/neatseq-flow-modules.git
     
 
 .. Tip:: A NeatSeq-Flow GUI is available. See the detailed `GUI tutorial`_.
@@ -49,12 +55,14 @@ Download and Install
 Executing **NeatSeq-Flow**
 ===============================
 
-Create a new directory anywhere, `cd` into it and execute the following commands (``$NSF_main`` is the directory where **NeatSeq-Flow** is installed)::
+Create a new directory anywhere, `cd` into it and execute the following commands (``$NSF_main`` is the directory where **NeatSeq-Flow** is installed):
 
-    python $NSF_main/bin/neatseq_flow.py                         \
-        --sample_file $NSF_main/Workflows/Sample_sets/PE_tabular.nsfs    \
-        --param_file  $NSF_main/Workflows/mapping.yaml       \
-        --message     "My first NeatSeq-Flow WF"
+   .. code-block:: bash
+
+       python $NSF_main/bin/neatseq_flow.py                         \
+           --sample_file $NSF_main/Workflows/Sample_sets/PE_tabular.nsfs    \
+           --param_file  $NSF_main/Workflows/mapping.yaml       \
+           --message     "My first NeatSeq-Flow WF"
 
 .. _install_with_conda:
 
@@ -66,19 +74,23 @@ Install and execute with **Conda**
 #. Install `Miniconda`_ (for python version 2.7).
 #. Download the **NeatSeq-Flow** |conda_env|.
 
-   .. tabs::
+   .. code-block:: bash
 
-      .. tab:: wget
+      curl http://neatseq-flow.readthedocs.io/en/latest/extra/NeatSeq_Flow_conda_env.yaml > NeatSeq_Flow_Tutorial_Install.yaml
 
-         .. code-block:: bash
+..   .. tabs::
 
-            wget http://neatseq-flow.readthedocs.io/en/latest/extra/NeatSeq_Flow_conda_env.yaml
+..      .. tab:: wget
 
-      .. tab:: curl
+..         .. code-block:: bash
 
-         .. code-block:: bash
+..    ..        wget http://neatseq-flow.readthedocs.io/en/latest/extra/NeatSeq_Flow_conda_env.yaml
 
-            curl http://neatseq-flow.readthedocs.io/en/latest/extra/NeatSeq_Flow_conda_env.yaml > NeatSeq_Flow_Tutorial_Install.yaml
+..      .. tab:: curl
+
+..         .. code-block:: bash
+
+..            curl http://neatseq-flow.readthedocs.io/en/latest/extra/NeatSeq_Flow_conda_env.yaml > NeatSeq_Flow_Tutorial_Install.yaml
 
 #. Create an environment:
 

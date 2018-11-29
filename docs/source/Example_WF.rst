@@ -128,19 +128,24 @@ To install, perform the following steps:
 
     You will need to copy the :download:`NeatSeq-Flow CONDA installer <_static/NeatSeq_Flow_Tutorial_Install.yaml>` file into the current directory, or download it directly with the following command:
 
-    .. tabs::
+    .. code-block:: bash
 
-       .. tab:: wget
+        curl http://neatseq-flow.readthedocs.io/en/latest/extra/NeatSeq_Flow_Tutorial_Install.yaml > NeatSeq_Flow_Tutorial_Install.yaml
 
-            .. code-block:: bash
 
-                wget http://neatseq-flow.readthedocs.io/en/latest/extra/NeatSeq_Flow_Tutorial_Install.yaml
+..    .. tabs::
 
-       .. tab:: curl
+..       .. tab:: wget
 
-            .. code-block:: bash
+..            .. code-block:: bash
 
-                curl http://neatseq-flow.readthedocs.io/en/latest/extra/NeatSeq_Flow_Tutorial_Install.yaml > NeatSeq_Flow_Tutorial_Install.yaml
+..                wget http://neatseq-flow.readthedocs.io/en/latest/extra/NeatSeq_Flow_Tutorial_Install.yaml
+
+..       .. tab:: curl
+
+..            .. code-block:: bash
+
+..                curl http://neatseq-flow.readthedocs.io/en/latest/extra/NeatSeq_Flow_Tutorial_Install.yaml > NeatSeq_Flow_Tutorial_Install.yaml
 
     
 #. Install the **NeatSeq-Flow** environment
