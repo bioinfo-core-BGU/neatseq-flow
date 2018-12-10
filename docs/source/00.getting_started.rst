@@ -78,20 +78,6 @@ Install and execute with **Conda**
 
       curl http://neatseq-flow.readthedocs.io/en/latest/extra/NeatSeq_Flow_conda_env.yaml > NeatSeq_Flow_Tutorial_Install.yaml
 
-..   .. tabs::
-
-..      .. tab:: wget
-
-..         .. code-block:: bash
-
-..    ..        wget http://neatseq-flow.readthedocs.io/en/latest/extra/NeatSeq_Flow_conda_env.yaml
-
-..      .. tab:: curl
-
-..         .. code-block:: bash
-
-..            curl http://neatseq-flow.readthedocs.io/en/latest/extra/NeatSeq_Flow_conda_env.yaml > NeatSeq_Flow_Tutorial_Install.yaml
-
 #. Create an environment:
 
    .. code-block:: bash
@@ -110,9 +96,11 @@ Install and execute with **Conda**
 
       export CONDA_BASE=$(conda info --root)
 
-#. Make a dir for your project and change into it::
+#. Make a dir for your project and change into it:
 
-    mkdir first_neatseq_flow_proj; cd first_neatseq_flow_proj
+   .. code-block:: bash
+
+      mkdir first_neatseq_flow_proj; cd first_neatseq_flow_proj
 
 #. Execute **NeatSeq-Flow**:
 
@@ -123,7 +111,6 @@ Install and execute with **Conda**
          --param_file $CONDA_PREFIX/NeatSeq-Flow-Workflows/mapping.yaml \
          --message "My first NeatSeq-Flow WF using conda"
 
-    
 #. When done, deactivate the environment:
 
    .. code-block:: bash

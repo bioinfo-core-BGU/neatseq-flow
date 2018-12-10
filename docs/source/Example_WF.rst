@@ -132,7 +132,6 @@ To install, perform the following steps:
 
         curl http://neatseq-flow.readthedocs.io/en/latest/extra/NeatSeq_Flow_Tutorial_Install.yaml > NeatSeq_Flow_Tutorial_Install.yaml
 
-
 ..    .. tabs::
 
 ..       .. tab:: wget
@@ -147,7 +146,6 @@ To install, perform the following steps:
 
 ..                curl http://neatseq-flow.readthedocs.io/en/latest/extra/NeatSeq_Flow_Tutorial_Install.yaml > NeatSeq_Flow_Tutorial_Install.yaml
 
-    
 #. Install the **NeatSeq-Flow** environment
 
     The following commands will install **NeatSeq-Flow** and all the required modules and programs.
