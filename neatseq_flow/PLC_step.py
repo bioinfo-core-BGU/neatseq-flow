@@ -1087,7 +1087,8 @@ Project: {title}
             message = message + """
 Project slots:
 --------------
-{project_slots}""".format(project_slots=project_slots_text)
+{project_slots}
+""".format(project_slots=project_slots_text)
 
         if self.sample_data["samples"]:  # Sample list may be empty if only project data was passed!
             if self.use_provenance:

@@ -48,6 +48,7 @@ parser.add_argument("-l", "--clean", help="Remove old workflow directories excep
 parser.add_argument("--clean-all", help="Remove all old workflow directories", action='store_true')
 parser.add_argument("-V", "--verbose", help="Print admonitions?", action='store_true')
 parser.add_argument("-v", "--version", help="Print version and exit.", action='store_true')
+parser.add_argument("--list_modules", help="List modules available in modules_paths.", action='store_true')
 
 args = parser.parse_args()
 
@@ -99,4 +100,5 @@ NeatSeqFlow(sample_file   = args.sample_file,
             home_dir      = args.home_dir,
             message       = args.message,
             runid         = args.runid,
-            verbose       = args.verbose)
+            verbose       = args.verbose,
+            list_modules  = args.list_modules)

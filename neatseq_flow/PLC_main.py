@@ -38,7 +38,8 @@ class NeatSeqFlow(object):
                  home_dir = None,
                  message = None,
                  runid = None,
-                 verbose = False):
+                 verbose = False,
+                 list_modules = False):
         """
         Initialize and create all workflow scripts.
         :returns: A workflow object
@@ -107,6 +108,17 @@ class NeatSeqFlow(object):
                 if sample not in mapping_data:
                     sys.exit("sample {smp} does no exist in grouping data".format(smp=sample))
                 self.sample_data[sample]["grouping"] = mapping_data[sample]
+
+        if list_modules:
+            sys.stdout.write("Finding modules...\n")
+            sys.stdout.flush()
+            module_list = self.find_modules()
+            print "Modules available in the supplied module_paths:\n------------------------------\n"
+            print "\n".join(["- {mod} ({dirs})".format(mod=module,dirs=",".join(list(set(module_list[module]))))
+                             for module #,dir_list
+                             in sorted(module_list)])
+
+            return
 
         sys.stdout.write("Preparing objects...\n")
         sys.stdout.flush()
@@ -1047,13 +1059,19 @@ saveWidget(myviz,file = "%(out_file_name)s",selfcontained = F)
                 print "WARNING: Error while searching for modules:"
                 print  err
 
-            module_list = []
-            dir_generator = os.walk(module_path, onerror = walkerr)       # Each .next call on this generator returns a level tuple as follows:
-            for level in dir_generator:     # Repeat while expected filename is NOT in current dir contents (=level[2]. see above)
+            # module_list is a dictionary, where module name is the key and the value is a list of dirs in which the
+            # module exists.
+            module_list = dict()
+            dir_generator = os.walk(module_path, onerror = walkerr)
+            # Each .next call on this generator returns a level tuple as follows:
+            for level in dir_generator:
+                # Repeat while expected filename is NOT in current dir contents (=level[2]. see above)
                 for file in [file for file in level[2] if re.match(".*\.py$",file)]:
                     with open(level[0] + os.sep + file,"r") as pyt_fh:
                         if re.search("class Step_%s"%file.strip(".py"),pyt_fh.read()):
-                            module_list.append(file.strip(".py"))
+                            if file.strip(".py") not in module_list:
+                                module_list[file.strip(".py")] = list()
+                            module_list[file.strip(".py")].append(level[0].split(os.sep)[-1])
             return module_list
 
     def add_step(self, step_name, step_params):
