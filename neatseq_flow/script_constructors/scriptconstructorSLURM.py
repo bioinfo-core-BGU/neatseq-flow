@@ -31,7 +31,7 @@ job_limit={job_limit}
 
 wait_limit() {{
     while : ; do
-        numrun=$(grep -c '^\w'  $run_index);
+        numrun=$(grep -c '\sPID\s'  $run_index);
         maxrun=$(sed -ne "s/limit=\([0-9]*\).*/\\1/p" $job_limit);
         sleeptime=$(sed -ne "s/.*sleep=\([0-9]*\).*/\\1/p" $job_limit);
         [[ $numrun -ge $maxrun ]] || break;
@@ -61,8 +61,9 @@ locksed "s:\($qsubname\).*$:\\1\\trunning\\t$jobid:" $run_index
 
         return """\
 #!/bin/bash
-sed -i -e 's/^\([^#]\w\+\).*/\# \\1/g' -e 's/^\(\# \w\+\).*/\\1/g' {run_index}\n""". \
+sed -i -E -e 's/^([^#][^[[:space:]]+).*/# \\1/g' -e 's/^(# [^[[:space:]]+).*/\\1/g' {run_index}\n""".\
             format(run_index=pipe_data["run_index"])
+# sed -i -e 's/^\([^#]\w\+\).*/\# \\1/g' -e 's/^\(\# \w\+\).*/\\1/g' {run_index}\n""". \
 
     def get_command(self):
         """ Returnn the command for executing the this script
@@ -312,6 +313,7 @@ class KillScriptConstructorSLURM(ScriptConstructorSLURM,KillScriptConstructor):
 
 # Kill held scripts:
 touch {run_index}.killall
+echo "Waiting for {run_index}.killall to take effect..."
 sleep 10
 
 """.format(run_index=run_index)

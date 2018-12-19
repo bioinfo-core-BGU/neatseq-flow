@@ -61,8 +61,10 @@ locksed "s:\($qsubname\).*$:\\1\\trunning\\t$jobid:" $run_index
     def get_run_index_clean_script(cls, pipe_data):
         return """\
 #!/bin/bash
-sed -i -e 's/^\([^#]\w\+\).*/\# \\1/g' -e 's/^\(\# \w\+\).*/\\1/g' {run_index}\n""". \
+sed -i -E -e 's/^([^#][^[[:space:]]+).*/# \\1/g' -e 's/^(# [^[[:space:]]+).*/\\1/g' {run_index}\n""".\
             format(run_index=pipe_data["run_index"])
+
+# sed -i -e 's/^\([^#]\w\+\).*/\# \\1/g' -e 's/^\(\# \w\+\).*/\\1/g' {run_index}\n""". \
 
     def get_command(self):
         """ Return the command for executing the this script
@@ -342,6 +344,7 @@ class KillScriptConstructorQSUB(ScriptConstructorQSUB,KillScriptConstructor):
 
 # Kill held scripts:
 touch {run_index}.killall
+echo "Waiting for {run_index}.killall to take effect..."
 sleep 10 
 
 """.format(run_index=run_index)
