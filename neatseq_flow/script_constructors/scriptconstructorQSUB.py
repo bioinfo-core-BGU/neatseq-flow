@@ -342,6 +342,7 @@ class KillScriptConstructorQSUB(ScriptConstructorQSUB,KillScriptConstructor):
 
 # Kill held scripts:
 touch {run_index}.killall
+sleep 10 
 
 """.format(run_index=run_index)
 
@@ -351,7 +352,6 @@ touch {run_index}.killall
 
         return """\
 wait
-sleep 10 
 
 rm -rf {run_index}.killall
 """.format(run_index=run_index)
@@ -364,7 +364,7 @@ rm -rf {run_index}.killall
 
         # Create one killing routine for all instance jobs:
         script = """\
-line2kill=$(grep '^{step}_{name}' {run_index} | awk '{{print $3}}')
+line2kill=$(grep '^{step}{sep}{name}' {run_index} | awk '{{print $3}}')
 line2kill=(${{line2kill//,/ }})
 for item1 in "${{line2kill[@]}}"; do 
     echo running "qdel $item1"
@@ -373,7 +373,8 @@ done
 
 """.format(run_index=self.pipe_data["run_index"],
            step=caller_script.step,
-           name=caller_script.name)
+           name=caller_script.name,
+           sep=caller_script.master.jid_name_sep)
 
         self.filehandle.write(script)
 

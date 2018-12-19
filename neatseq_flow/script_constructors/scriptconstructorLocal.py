@@ -289,6 +289,7 @@ class KillScriptConstructorLocal(ScriptConstructorLocal, KillScriptConstructor):
 
 # Kill held scripts:
 touch {run_index}.killall
+sleep 10 
 
 """.format(run_index=run_index)
 
@@ -298,7 +299,6 @@ touch {run_index}.killall
 
         return """\
 wait
-sleep 10 
 
 rm -rf {run_index}.killall
 """.format(run_index=run_index)

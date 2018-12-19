@@ -31,7 +31,7 @@ job_limit={job_limit}
 
 wait_limit() {{
     while : ; do
-        numrun=$(awk 'BEGIN {{jobsc=0}} /^\w/ {{jobsc=jobsc+1}} END {{print jobsc}}' $run_index);
+        numrun=$(grep -c '^\w'  $run_index);
         maxrun=$(sed -ne "s/limit=\([0-9]*\).*/\\1/p" $job_limit);
         sleeptime=$(sed -ne "s/.*sleep=\([0-9]*\).*/\\1/p" $job_limit);
         [[ $numrun -ge $maxrun ]] || break;
@@ -39,7 +39,7 @@ wait_limit() {{
     done
 }}
 """.format(job_limit=pipe_data["job_limit"])
-
+#        numrun=$(awk 'BEGIN {{jobsc=0}} /^\w/ {{jobsc=jobsc+1}} END {{print jobsc}}' $run_index);
         return script
 
     @classmethod
@@ -312,6 +312,7 @@ class KillScriptConstructorSLURM(ScriptConstructorSLURM,KillScriptConstructor):
 
 # Kill held scripts:
 touch {run_index}.killall
+sleep 10
 
 """.format(run_index=run_index)
 
@@ -321,7 +322,6 @@ touch {run_index}.killall
 
         return """\
 wait
-sleep 10
 
 rm -rf {run_index}.killall
 """.format(run_index=run_index)
@@ -334,7 +334,7 @@ rm -rf {run_index}.killall
 
         # Create one killing routine for all instance jobs:
         script = """\
-line2kill=$(grep '^{step}_{name}' {run_index} | awk '{{print $3}}')
+line2kill=$(grep '^{step}{sep}{name}' {run_index} | awk '{{print $3}}')
 line2kill=(${{line2kill//,/ }})
 for item1 in "${{line2kill[@]}}"; do 
     echo running "scancel --full --signal TERM $item1"
@@ -343,6 +343,7 @@ done
 
 """.format(run_index = self.pipe_data["run_index"],
            step=caller_script.step,
-           name=caller_script.name)
+           name=caller_script.name,
+           sep=caller_script.master.jid_name_sep)
 
         self.filehandle.write(script)
