@@ -1,7 +1,7 @@
 .. neatseq_flow documentation master file, created by
    sphinx-quickstart on Sun Jan 08 15:32:48 2017.
 
-**NeatSeq-Flow**: A Lightweight Software for Efficient Execution of High Throughput Sequencing Workflows.
+**NeatSeq-Flow**: A Lightweight Software for Efficient Execution of High-Throughput Sequencing Workflows.
 ========================================================================================================================
 
 .. figure:: figs/NeatSeq_Flow_logo.png
@@ -14,59 +14,55 @@
 .. image:: https://readthedocs.org/projects/neatseq-flow/badge/?version=latest
    :target: http://neatseq-flow.readthedocs.io/en/latest/
 
-   
 
 
-.. sidebar:: **NeatSeq-Flow**...
 
-   * is an easy-to-install python package, available also on `conda`_;
-   * creates workflow scripts for high throughput sequencing data, which are executed automatically on a computer cluster, fully under control of the user while the cluster job scheduler controls execution order;
-   * creates a directory structure for tidy storing of shell scripts and workflow outputs;
-   * utilizes cluster parallelization capabilities;
-   * is easily expandable with new modules while a generic module exists for quick incorporation of programs;
-   * records information about files produced by the scripts;
-   * provides documentation, version control and time & memory usage reports and
-   * provides a monitor for tracking execution progress.
+.. sidebar:: **What's new**...
+
+
+   * Improved GUI
+
+     .. figure:: https://raw.githubusercontent.com/bioinfo-core-BGU/NeatSeq-Flow-GUI/master/doc/Static_GUI.png
+        :target: https://raw.githubusercontent.com/bioinfo-core-BGU/NeatSeq-Flow-GUI/master/doc/NeatSeq-Flow-GUI.gif
+        :align: left
+
+   * DESeq visual report
+   * GATK workflow
+   * `QIIME2 workflow <https://github.com/bioinfo-core-BGU/neatseq-flow>`_.
 
 .. topic:: Important links
 
+
+   * :ref:`Quick start: install and try NeatSeq-Flow <gui_tutorial>`
+   * GitHub: `NeatSeq-Flow <https://github.com/bioinfo-core-BGU/neatseq-flow>`_.
+   * GitHub: `NeatSeq-Flow GUI <https://github.com/bioinfo-core-BGU/NeatSeq-Flow-GUI>`_.
+   * `A short movie demonstrating the GUI <https://raw.githubusercontent.com/bioinfo-core-BGU/NeatSeq-Flow-GUI/master/doc/NeatSeq-Flow-GUI.gif>`_
    * `Module and Workflow repository <http://neatseq-flow.readthedocs.io/projects/neatseq-flow-modules/en/latest/>`_
-   * `NeatSeq-Flow on github <https://github.com/bioinfo-core-BGU/neatseq-flow>`_
-   * `NeatSeq-Flow GUI <https://github.com/bioinfo-core-BGU/NeatSeq-Flow-GUI>`_
-   * `NeatSeq-Flow article on BioRXiv <https://www.biorxiv.org/content/early/2018/12/18/173005>`_
+   * `Article on BioRXiv <https://www.biorxiv.org/content/early/2018/12/18/173005>`_
    * `Contact <mailto:sklarz@bgu.ac.il?subject=Inquiry\ about\ NeatSeq-Flow>`_
-
-
-
-.. contents:: Table of Contents
-   :depth: 1
-   :local:
-   :backlinks: top
-
 
 What is **NeatSeq-Flow**?
 --------------------------
 
-* A bioinformatics workflow (WF) is a series of computer programs called sequentially, sometimes on hundreds or even thousands of samples.
-* **NeatSeq-Flow** creates human readable and self explanatory shell scripts for execution on computer grids. 
-* The hyrachically-organised scripts are then executed by running a master-script.
-* The main benefits in using **NeatSeq-Flow** are:
-	* the user has full control over the WF execution;
-	* the cluster job scheduler ensures correct execution order and enforces dependencies;
-	* simple, cross-platform installation; 
-	* scripts and output files are neatly organized;
-	* utilization of cluster parallelization capabilities;
-	* documentation, version control as well as time & memory usage reports and 
-	* adding modules and expanding existing WFs requires only basic python skills.
-* **NeatSeq-Flow** is available on |github| (See :ref:`installation_section`)
-* A |GUI| is available for parameter and sample file editting and **NeatSeq-Flow** execution.
+NeatSeq-Flow is a platform for modular design and execution of bioinformatics workflow on a local computer or, preferably, computer cluster.
+The platform has a command-line interface as well as a fully functional graphical user interface (GUI), both used locally without the need to connect to remote servers.
+Analysis programs comprising a workflow can be anything executable from the Linux command-line, either publicly available or in-house programs.
+Ready-to-use workflows are available for common Bioinformatics analyses such as assembly & annotation, RNA-Seq, ChIP-Seq, variant calling, metagenomics and genomic epidemiology.
+Creation and sharing of new workflows is easy and intuitive, without need for programming knowledge.
+NeatSeq-Flow is general-purpose and may easily be adjusted to work on different types of analyses other than high-throughput sequencing.
 
-    
+NeatSeq-Flow is fully accessible to non-programmers, without compromising power, flexibility and efficiency. The user only have to specify the location of input files and the workflow design, and need not bother with the location of intermediate and final files, nor with transferring files between workflow steps. Workflow execution is fully parallelized on the cluster, and progress can be inspected through NeatSeq-Flow “terminal monitor”. All workflow components and their order of execution are stored in one file, which together with the shell scripts produced by NeatSeq-Flow comprise a complete documentation of the workflow and enable future execution of the exact same workflow or modifications thereof.
 
-Modules
--------
+:ref:`Read more about NeatSeq-Flow <about_neatseq_flow>`.
 
-While a basic number of modules come with **NeatSeq-Flow**, the main source of modules is the **NeatSeq-Flow module and workflow repository**. This repository is available on |github|. Check out the `list of modules in the modules repository <http://neatseq-flow.readthedocs.io/projects/neatseq-flow-modules/en/latest/>`_.
+
+Available Modules ans Workflows
+-------------------------------
+
+| NeatSeq-Flow comes with a basic set of modules, marked `here <https://neatseq-flow.readthedocs.io/projects/neatseq-flow-modules/en/latest/#neatseq-flow-modules>`_ with an asterisk (*).
+| The complete set of currently available modules and workflows is downloadable from |github|.
+| Installation and usage instructions, along with full documentation of the modules and workflows, are available at `NeatSeq-Flow's Module and Workflow Repository <https://neatseq-flow.readthedocs.io/projects/neatseq-flow-modules/en/latest/>`_.
+
 
 Authors
 ---------
@@ -76,44 +72,54 @@ Authors
 * Michal Gordon
 * Vered Chalifa-Caspi
 
-Customers
------------
+`Bioinformatics Core Facility`_, NIBN, Ben-Gurion University of the Negev, Beer-Sheva, Israel.
 
-* `The National Knowledge Center for Rare / Orphan Diseases <http://in.bgu.ac.il/en/rod/Pages/default.aspx>`_.
-* `Faculty of Agriculture, Food and Environment <https://en.hafakulta.agri.huji.ac.il/>`_
+
+Cite NeatSeq-Flow
+-----------------
+
+`NeatSeq-Flow article on BioRXiv <https://www.biorxiv.org/content/early/2018/12/18/173005>`_
+
+Contact Us
+----------
+
+| Menachem Sklarz
+| Email: `sklarz@bgu.ac.il <mailto:sklarz@bgu.ac.il?subject=Inquiry\ about\ NeatSeq-Flow>`_
+
 
 .. Detailed documentation
 .. -----------------------
 
-.. toctree::
-   :maxdepth: 3
-   :caption: Getting started
+Further Information
+-------------------
 
-   00.getting_started
+.. toctree::
+   :maxdepth: 1
+
+   About  
+
+.. toctree::
+   :maxdepth: 1
+   :caption: Getting Started: Install and Try
+
+   GUI_tutorial
    Example_WF
 
-.. .. toctree::
-..    :maxdepth: 3
-..    :caption: Tutorial
+.. toctree::
+   :maxdepth: 1
+   :caption: Installation Details
 
-..   Example_WF
-
+   Installation_guide_GUI
+   Installation_guide_CL
    
 .. toctree::
    :maxdepth: 1
-   :caption: Detailed documentation
+   :caption: Detailed Documentation
 
-   01.concept
-   02.build_WF
-   03.output
+   Manual
+   01.How_NSF_works
    06.addnew_module
-   07.monitor
-   
-   
-Indices and tables
-==================
+..   03.output
+..   07.monitor
 
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
-
+.. sphinx-build -b html source build

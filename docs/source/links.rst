@@ -16,12 +16,12 @@
 
 .. |conda_tut_install|  replace:: :download:`Tutorial conda installer <_static/NeatSeq_Flow_Tutorial_Install.yaml>`
 
-.. _Bioinformatics Core Facility: http://bioinfo.bgu.ac.il/bsu/index.htm
+.. _Bioinformatics Core Facility: http://bioinfo.bgu.ac.il/
 .. _National institute of Biotechnology in the Negev: http://in.bgu.ac.il/en/nibn/Pages/default.aspx
 .. _Ben-Gurion University: http://in.bgu.ac.il/en/Pages/default.aspx
 
 
-.. |github|         replace:: `github`_
+.. |github|         replace:: `GitHub`_
 .. _github: https://github.com/bioinfo-core-BGU/neatseq-flow
 
 

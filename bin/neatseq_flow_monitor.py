@@ -1,17 +1,8 @@
 #!/usr/bin/env python                                                          
 # -*- coding: UTF-8 -*-
-
-__author__ = "Liron Levin"
-__version__ = "1.3"
-
-
-__affiliation__ = "Bioinformatics Core Unit, NIBN, Ben Gurion University"
-
-
-
-""" 
-:Neatseq-Flow Monitor
------------------------
+"""
+.. **Neatseq-Flow** Monitor
+.. --------------------------
 
 :Authors: Liron Levin
 :Affiliation: Bioinformatics core facility
@@ -95,7 +86,11 @@ Help message:
 """
 
 
+__author__ = "Liron Levin"
+__version__ = "1.3"
 
+
+__affiliation__ = "Bioinformatics Core Unit, NIBN, Ben Gurion University"
 
 
 import argparse

@@ -6,7 +6,7 @@ NeatSeq-Flow Monitor
 
 **Author:** Liron Levin
 
-**Affiliation:** |affiliation|
+
 
 .. contents:: Table of Contents
    :depth: 2
@@ -14,7 +14,12 @@ NeatSeq-Flow Monitor
    :backlinks: top
 
    
-.. automodule:: neatseq_flow_monitor
+.. automodule:: bin.neatseq_flow_monitor
 
 .. image:: figs/neatseq_flow_monitor.png
    :alt: Neatseq-Flow Monitor
+
+
+.. **NeatSeq-Flow** monitor
+.. ====================================
+

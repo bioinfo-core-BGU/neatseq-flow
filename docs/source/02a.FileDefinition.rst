@@ -1,32 +1,22 @@
-====================
-Building a workflow
-====================
+=========================================
+Parameter and sample file definition
+=========================================
 
 .. include:: links.rst
 
 **Author:** Menachem Sklarz
 
-**Affiliation:** |affiliation|
-
-.. contents:: Table of Contents
+.. contents:: Page Contents:
    :depth: 2
    :local:
    :backlinks: top
 
+Introduction
+==============
 
+Following is a description of the parameter ans sample files which are required in order to execute **NeatSeq-Flow**.
 
-
-.. Typical usage of **NeatSeq-Flow**
-.. ====================================
-
-A typical usage of **NeatSeq-Flow** involves the following steps:
-
-#. `Parameter file definition`_
-#. `Sample file definition`_
-#. `Executing NeatSeq-Flow`_
-#. `Executing the workflow`_
-
-
+The files can be created either using the **NeatSeq-Flow** |GUI| or in a text editor, such as `Notepad++ <https://notepad-plus-plus.org/>`_.
 
 .. _parameter_file_definition:
 
@@ -35,10 +25,14 @@ Parameter file definition
 
 .. Tip:: **The parameter file is rarely created from scratch**. Take an existing parameter file defined for the analysis you require and modify it to suit your SGE cluster and specific requirements.
 
-The parameter file is a YAML file which must include two (unequal) sections:
+The parameter file is a YAML file which must include a :ref:`global_params` section and a :ref:`step_wise_parameters` section. It may also include a :ref:`parameters_variables` section. All sections are described below:
+
+.. _global_params:
 
 Global parameters 
 -------------------------
+
+.. Attention:: In the **NeatSeq-Flow** GUI, the global parameters described below are set in the ``Cluster`` tab.
 
 Several SGE and other parameters can be set globally so that all scripts use them for execution. Overriding the defaults on a step-wise basis is possible in the step-wise section of the parameter file.
 
@@ -108,10 +102,26 @@ Following is an example of a global-parameters block::
             - /path/to/modules2/
 
 
+.. Attention:: As of version 1.4.0, **NeatSeq-Flow** supports *SLURM* clusters, as well as stand-alone computers. This is done by adding the ``Executor`` parameter in the ``Global_params`` section, and setting it's value to ``SLURM`` or ``Local``. This is, however, in **beta** development stage.
+
+
+.. _parameters_variables:
+
+Variables
+----------
+
+.. Attention:: In the **NeatSeq-Flow** GUI, the variables are set in the ``Vars`` tab.
+
+In this section, you can set values to variables which can then be incorporated in required positions in the parameter file.
+
+The values are incoporated by referencing them in curly braces. *e.g.* if you set ``blast: /path/to/blastp`` in the ``Vars`` section, then you you can reference it with ``{Vars.blastp}`` in the other global and step-wise parameters sections.
+
 .. _step_wise_parameters:
 
 Step-wise parameters
 -------------------------
+
+.. Attention:: In the **NeatSeq-Flow** GUI, the step-wise parameters described below are set in the ``Work-Flow`` tab.
 
 Step-wise parameters define parameters which are specific to the various steps included in the workflow. 
 
@@ -253,6 +263,8 @@ Comments
 Sample file definition
 ====================================
 
+.. Attention:: In the **NeatSeq-Flow** GUI, the samples can be defined in the ``Samples`` tab.
+
 .. Attention:: As of version 1.3.0, **NeatSeq-Flow** no longer supports the List-format used in previous versions!
 
 .. Attention:: It is recommended to provide full paths to the files listed in the sample file. However, if relative paths are provided, **NeatSeq-Flow** will attempt to expand them to full paths, using the current directory as the base directory. 
@@ -356,50 +368,3 @@ For ChIP-seq experiments, one must define ChIP and Control ('input') pairs. This
 
 
 Just replace ``anti_sample1`` and ``input_sample1`` with the relevant sample names.
-
-  
-Executing **NeatSeq-Flow**
-====================================
-
-Executing **NeatSeq-Flow** is the simplest step in the workflow (make sure ``python`` and ``neatseq_flow.py`` are in your search path)::
-
-    python neatseq_flow.py                      \
-        -s sample_file.nsfs                     \
-        -p param_file1.nsfp,param_file2.nsfp    \
-        -m "message"                            \
-        -d /path/to/workflow/directory
-
-**Comments**:
-
-- **NeatSeq-Flow** does not require installation. If you have a local copy, append the full path to ``neatseq_flow.py``.
-- It is not compulsory to pass a message via ``-m`` but it is highly recommended for documentation and reproducibility.
-
-
-Executing the workflow
-====================================
-
-The workflow can be executed fully automatically; on a step-by-step basis or for individual samples separately.
-
-Automatic execution
--------------------------
-
-Execute the following command within the workflow directory::
-
-    bash scripts/00.workflow.commands.sh
-
-The ``scripts/00.workflow.commands.sh`` script runs all the steps at once, leaving flow control entirely to the cluster job manager.
-
-Step-wise execution
--------------------------
-
-Each line in ``scripts/00.workflow.commands.sh`` calls a step-wise script in ``scripts/``, *e.g.* ``scripts/01.merge_merge1.sh``, which contains a list of ``qsub`` commands executing the individual scripts on each sample.
-
-The following command will execute only the ``merge1`` step::
-
-    qsub scripts/01.merge_merge1.sh
-
-Sample-wise execution
--------------------------
-
-The individual sample-level scripts are stored in folders within ``scripts/``. *e.g* all ``merge1`` scripts are stored in ``scripts/01.merge_merge1/``. To execute the step only for a specific sample, execute the relevant script from within the individual script folder. 
-

@@ -1,0 +1,95 @@
+==========================
+Executing **NeatSeq-Flow**
+==========================
+
+.. include:: links.rst
+
+**Author:** Menachem Sklarz
+
+.. contents:: Table of Contents
+   :depth: 1
+   :local:
+   :backlinks: top
+
+
+
+  
+Step 1: Workflow script generation
+====================================
+
+Using the GUI
+---------------
+
+To execute the script generator, go to the ``Run`` tab and click on ``Generate scripts``.
+
+If you see the following lines in the ``Terminal`` box, then the scripts were generated successfully::
+
+      Reading files...
+      Preparing objects...
+      Creating directory structure...
+      Making step instances...
+      Building scripts...
+      Making workflow plots...
+      Writing JSON files...
+      Finished successfully....
+
+
+
+Using the command line
+--------------------------
+
+Executing **NeatSeq-Flow**'s script generator is done as follows (make sure ``python`` and ``neatseq_flow.py`` are in your search path)::
+
+    python neatseq_flow.py                      \
+        -s sample_file.nsfs                     \
+        -p param_file1.nsfp,param_file2.nsfp    \
+        -m "message"                            \
+        -d /path/to/workflow/directory
+
+If you get ``Finihed successfully...`` then the scripts were generated successfully.
+
+**Comments**:
+
+- **NeatSeq-Flow** does not require installation. If you have a local copy, append the full path to ``neatseq_flow.py``.
+- It is not compulsory to pass a message via ``-m`` but it is highly recommended for documentation and reproducibility.
+- if ``-d`` is omitted, the current directory will be used as the workflow location.
+
+
+Step 2: Executing the workflow
+====================================
+
+Using the GUI
+---------------
+
+To run the full workflow, click on ``Run scripts`` in the ``Run`` tab.
+
+.. Note:: It is not possible to execute individual steps or samples with the GUI.
+
+Using the command line
+--------------------------
+
+The workflow can be executed fully automatically; on a step-by-step basis or for individual samples separately.
+
+1. **Automatic execution**
+
+   Execute the following command within the workflow directory::
+
+      bash scripts/00.workflow.commands.sh
+
+   The ``scripts/00.workflow.commands.sh`` script runs all the steps at once, leaving flow control entirely to the cluster job manager.
+
+2. **Step-wise execution**
+
+   Each line in ``scripts/00.workflow.commands.sh`` calls a step-wise script in ``scripts/``, *e.g.* ``scripts/01.merge_merge1.sh``, which contains a list of ``qsub`` commands executing the individual scripts on each sample.
+
+   The following command will execute only the ``merge1`` step::
+
+      qsub scripts/01.merge_merge1.sh
+
+3. **Sample-wise execution**
+
+   The individual sample-level scripts are stored in folders within ``scripts/``. *e.g* all ``merge1`` scripts are stored in ``scripts/01.merge_merge1/``. To execute the step only for a specific sample, execute the relevant script from within the individual script folder.
+
+
+
+

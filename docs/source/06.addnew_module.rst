@@ -9,12 +9,34 @@ For the Programmer - Adding Modules
 
 **Author:** Menachem Sklarz
 
-**Affiliation:** |affiliation|
 
-.. contents:: Table of Contents
+
+.. contents:: Page Contents:
    :depth: 2
    :local:
    :backlinks: top
+
+
+
+.. _adding_modules:
+
+Introduction
+================
+
+In order to incorporate in a wrokflow programs which do not yet have modules, one can proceed in two ways:
+
+1. **Use the generic module**
+
+   This method is preferable for quickly getting a working workflow without the need to create a new module for the program. However, the generic modules are more complicated to use and are therefore not accessible to non-programmers. Also, when using a generic module, the workflow file contains execution parameters which distract the user from the structure of the main flow of information, making it more difficult to comprehend and evaluate the workflow.
+
+2. **Creating new modules**
+
+   Creating modules is quite easy. Still, please make sure a module does not already exist for the program you want to run before creating a new module.
+
+   It is our hope that a community of users will provide access to a wide range of modules, making the process of developing new workflows more straightforward for non-programmers.
+
+   This section provides detailed instructions for writing modules. The idea is to use the ``sample_data`` dictionary for input and output files while leaving as many of the other parameters as possible to the user. This will enable as much flexibility as possible while relieving the user of the need to track input and output files.
+
 
 
 Steps in writing **NeatSeq-Flow** modules
@@ -57,52 +79,108 @@ Things to modify in the actual code
 Instructions for ``build_scripts()`` function
 ------------------------------------------------
 
-- If sample-level scripts are required, the function should contain a loop::
+- If sample-level scripts are required, the function should contain a loop:
 
-        for sample in self.sample_data["samples"]:
+  .. code-block:: python
 
+    for sample in self.sample_data["samples"]:
 
 - Set ``self.script`` to contain the command/s executed by the script (This will go inside the ``for`` loop for sample-level steps)
 
     1. Initialize it with ``self.script = ""``
     2. Calling ``self.script += self.get_script_const()`` will add the ``setenv`` parameter, if it exists; the ``script_path`` parameter and the redirected parameters. Then all that remains is to see to input and output parameters.
-    3. The input parameter, typically ``-i``, is usually based on the sample data structure, *e.g.*::
-    
-        self.script += "-i %s \\\n\t" % self.sample_data[sample]["fasta.nucl"]
- 
-    .. Note:: The ``"\\\n\t"`` at the end of the string makes the final script more readable.
-  
-    4. The output parameter (typicall ``-o``) should be set to a filename within ``self.base_dir``. If the step is a sample-level step, get a directory for the output files by calling::
-    
-        sample_dir = self.make_folder_for_sample(sample)
+    3. The input parameter, typically ``-i``, is usually based on the sample data structure, *e.g.*:
 
-- Place the output file somewhere in the ``sample_data`` structure. `e.g.`::
+       .. code-block:: python
 
-        self.sample_data[sample]["bam"] = (sample_dir + os.path.basename(output_filename))
+            self.script += "-i {inp} \\\n\t".format(inp=self.sample_data[sample]["fasta.nucl"])
+
+       .. Note:: The ``"\\\n\t"`` at the end of the string makes the final script more readable.
+
+
+       .. tip:: As mentioned above, module instances can be based on more than one instance. *i.e.* *i* can be based on *j,k*. It was stated that in this case, if *j* and *k* instances write to the same slot, *i* will have access only to the version created by *j*.
+
+          However, you can write modules such that *i* has access to the same slot both in *k* and in *j*: Previous versions of the ``sample_data`` dict are available in the dictionary returned by  ``self.get_base_sample_data()`` in the module class. The dictionary is keyed by the base instance name. This can be used to access *overwridden* versions of files created by instances upstream to the present module.
+
+          For example, if **base** contains the name of the base instance (*e.g.* **merge1**), you can access the base's sample data as follows:
+
+          .. code-block:: python
+
+              self.get_base_sample_data()[base]
+
+          And accessing file ``fasta.nucl`` in sample ``sample1`` from base ``merge1`` can be done with the following command:
+
+          .. code-block:: python
+
+              self.get_base_sample_data()["merge1"]["sample1"]["fasta.nucl"]
+
+
+    4. The output parameter (typicall ``-o``) should be set to a filename within ``self.base_dir``. If the step is a sample-level step, get a directory for the output files by calling ``self.make_folder_for_sample(sample)``.
+
+       The following code sets the output parameter ``-o`` to ``<sample_dir>/<sample_name>.output.bam``.
+
+       .. code-block:: python
+
+            sample_dir = self.make_folder_for_sample(sample)
+            output_filename = sample_dir + sample + ".output.bam"
+            self.script += "-o {outp} \n\n".format(outp=output_filename)
+
+
+- Place the output file somewhere in the ``sample_data`` structure. `e.g.`:
+
+  .. code-block:: python
+
+        self.sample_data[sample]["bam"] = output_filename
     
 - If the output is a standard file, *e.g.* BAM or fastq files, put them in the respective places in ``sample_data``. See documentation for similar modules to find out the naming scheme. Otherwise, use a concise file-type descriptor for the file and specify the location you decided on in the module documentation.
 
+  For standard file types, you should use the appropriate slots (check out similar modules for proper slots to use).
+
+  .. csv-table:: Slots for commonly used files
+      :header: "File type", "Scope", "Slot"
+
+      "f  astq", "Sample", ``sample_data[<sample>]['fastq.F|fastq.R|fastq.S']``
+      "fasta", "Sample", ``sample_data[<sample>]['fasta.nucl|fasta.prot']``
+      "fasta", "Project", ``sample_data["project_data"]['fasta.nucl|fasta.prot']``
+      "SAM", "Sample", ``sample_data[<sample>]['sam']``
+      "BAM", "Sample", ``sample_data[<sample>]['bam']``
+      "Aligner index", "Sample", ``sample_data[<sample>][<aligner name>_index']``
+      "Aligner index", "Project", ``sample_data["project_data"][<aligner name>_index']``
+      "Aligner reference", "Sample", ``sample_data[<sample>]['reference']``
+      "GFF", "Sample", ``sample_data[<sample>]['gff']``
+      "GFF", "Project", ``sample_data["project_data"]['gff']``
+
+
+
 - You can add more than one command in the ``self.script`` variable if the two commands are typically executed together. See ``samtools`` module for an example.
  
-- The function should end with the following line (within the sample-loop, if one exists)::
+- The function should end with the following line (within the sample-loop, if one exists):
 
-        self.create_low_level_script()
+  .. code-block:: python
+
+    self.create_low_level_script()
 
 - That, and a little bit of debugging, usually, is all it requires to add a module to the pipeline. 
 
 .. Attention:: 
-    The steps above assume you don't want to support the option of working on a local directory and transferring the finished results to the final location (see :ref:`local parameter <local_step_parameter>`). If you **do** want to support it, you have to create a temporary directory with::
-    
+    The steps above assume you don't want to support the option of working on a local directory and transferring the finished results to the final location (see :ref:`local parameter <local_step_parameter>`). If you **do** want to support it, you have to create a temporary directory with:
+
+    .. code-block:: python
+
         use_dir = self.local_start(sample_dir)
         
-    or::
-    
+    or:
+
+    .. code-block:: python
+
         use_dir = self.local_start(self.base_dir)
 
     Use ``use_dir`` when defining the script, but use ``sample_dir`` and ``self.base_dir`` when assigining to ``self.sample_data`` (see the templates for examples).
     
-    Finally, add the following line before ``self.create_low_level_script()``::
+    Finally, add the following line before ``self.create_low_level_script()``:
     
+    .. code-block:: python
+
         self.local_finish(use_dir,sample_dir)
         
     **Note that the above procedure enables the user to decide whether to run locally by adding the ``local`` parameter to the step parameter block in the parameter file!**
@@ -125,15 +203,18 @@ In **NeatSeq-Flow**, assertions are managed with the ``AssertionExcept`` excepti
 #. An error message to be displayed. ``AssertionExcept`` will automatically add the step name to the message.
 #. Optional: The sample name, in case the condition failed for a particular sample (e.g. a particular sample does not have a BAM file defined.)
 
-A typical condition testing code snippet::
+A typical condition testing code snippet:
+.. code-block:: python
 
-    for sample in self.sample_data["samples"]:      
+    for sample in self.sample_data["samples"]:
         if not CONDITION:
             raise AssertionExcept("INFORMATIVE error message\n", sample)
 
 .. note:: The reason for using ``if not CONDITION`` rather than ``if CONDITION`` is that the condition is a condition for success rather than for failure, which is more intuitive (for me at least)
 
-If you only want to warn the user about a certain issue, rather than failing, you can induce **NeatSeq-Flow** to produce a warning message with the same format as an ``AssertionExcept`` message, as follows::
+If you only want to warn the user about a certain issue, rather than failing, you can induce **NeatSeq-Flow** to produce a warning message with the same format as an ``AssertionExcept`` message, as follows:
+
+.. code-block:: python
 
     for sample in self.sample_data["samples"]:
         if CONDITION:

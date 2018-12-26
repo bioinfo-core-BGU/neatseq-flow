@@ -583,7 +583,6 @@ Dependencies: {depends}""".format(name=self.name,
             if self.use_provenance:
                 self.create_provenance()
                 self.sample_data_original = deepcopy(self.sample_data)
-
         else:   # Extract sample_data from base steps:
             self.sample_data = dict()
             if self.use_provenance:

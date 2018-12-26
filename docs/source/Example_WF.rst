@@ -1,21 +1,22 @@
 .. _tutorial:
 
 ========================================
-**NeatSeq-Flow** Tutorial
+NeatSeq-Flow Tutorial (Command Line)
 ========================================
 
 .. include:: links.rst
 
 **Author:** Liron Levin
 
-**Affiliation:** |affiliation|
+This tutorial describes how to create and execute the workflow described in the **NeatSeq-Flow** manuscript
+(`Article on BioRXiv <https://www.biorxiv.org/content/early/2018/12/18/173005>`_).
 
-.. contents:: Table of Contents
+.. contents:: Page Contents:
    :depth: 2
    :local:
    :backlinks: top
 
-This tutorial describes how to create the workflow described in the **NeatSeq-Flow** manuscript.
+
 
 .. In order to execute the scripts, you will need access to a computer cluster running an SGE job scheduler.
 
@@ -55,8 +56,8 @@ The workflow consists of the following steps:
 
 
 
-DAG
------
+Workflow Schema
+---------------
 
 .. image:: figs/Example_WF.png
    :alt: Example Workflow DAG
@@ -98,9 +99,9 @@ Sample File for Example
     Sample3	Forward	Sample3F.fastq.gz
     Sample3	Reverse	Sample3R.fastq.gz
 
-----------------------
-Running the Workflow
-----------------------
+------------------------------------------------
+Installing NeatSeq-Flow and Running the Workflow
+------------------------------------------------
 
 Using `conda` virtual environments
 -----------------------------------
@@ -119,26 +120,27 @@ To install, perform the following steps:
 
 #. Create a **NeatSeq-Flow** project directory
 
-    .. code-block:: bash
+   .. code-block:: bash
 
         mkdir Example_WF
         cd Example_WF
 
 #. Get the installation file 
-    You will need to copy the :download:`NeatSeq-Flow CONDA installer <_static/NeatSeq_Flow_Tutorial_Install.yaml>` file into the current directory, or download it directly with the following command:
 
-    .. code-block:: bash
+   You will need to copy the :download:`NeatSeq-Flow CONDA installer <_static/NeatSeq_Flow_Tutorial_Install.yaml>` file into the current directory, or download it directly with the following command:
+
+   .. code-block:: bash
 
         curl http://neatseq-flow.readthedocs.io/en/latest/extra/NeatSeq_Flow_Tutorial_Install.yaml > NeatSeq_Flow_Tutorial_Install.yaml
 
 #. Install the **NeatSeq-Flow** environment
-    The following commands will install **NeatSeq-Flow** and all the required modules and programs.
+   The following commands will install **NeatSeq-Flow** and all the required modules and programs.
 
-    .. code-block:: bash
+   .. code-block:: bash
 
         conda env create -f  NeatSeq_Flow_Tutorial_Install.yaml
 
-    .. Note:: For some versions of conda, you might have to replace ``conda env`` with ``conda-env``. If the command above does not work, try the following command:
+   .. Note:: For some versions of conda, you might have to replace ``conda env`` with ``conda-env``. If the command above does not work, try the following command:
 
 
         .. code-block:: bash
@@ -146,7 +148,7 @@ To install, perform the following steps:
             conda-env create -f  NeatSeq_Flow_Tutorial_Install.yaml
 
 
-    .. Attention:: From the following step onwards, you should be in ``bash`` shell
+   .. Attention:: From the following step onwards, you should be in ``bash`` shell
 
         .. code-block:: bash
 
@@ -154,62 +156,67 @@ To install, perform the following steps:
 
 #. Activate the **NeatSeq-Flow** environment
 
-    .. code-block:: bash
+   .. code-block:: bash
 
         source activate NeatSeq_Flow_Tutorial
 
 
 
-Run **NeatSeq-Flow**
-~~~~~~~~~~~~~~~~~~~~~
+Run **NeatSeq-Flow Script Generator**
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. warning:: The following instructions are for executing the workflow on an SGE computer cluster. To run it on a standalone computer, pay attention to the **Warning** boxes.
 
 #. Edit the example Workflow parameter file to suit your cluster
 
-    The file will be located at this path::
+   The file will be located at this path::
 
         $CONDA_PREFIX/TUTORIAL/Example_WF_conda_env.yaml
         
-    .. Attention:: After activating the virtual environment, ``$CONDA_PREFIX`` contains the path to the environment. Therefore, we use it below to reference the tutorial files.
+   .. Attention:: After activating the virtual environment, ``$CONDA_PREFIX`` contains the path to the environment. Therefore, we use it below to reference the tutorial files.
 
-    Edit the global params section, particularly the following two lines::
+   Edit the global params section, particularly the following two lines::
 
         Global_params:
             Qsub_path:      /PATH_TO_YOUR_QSUB/
             Qsub_q:         NAME_OF_YOUR_QUEUE.q
 
-    The ``Qsub_path`` parameter can be determined by executing the following command and replacing ``/PATH_TO_YOUR_QSUB/`` with the result.
+   The ``Qsub_path`` parameter can be determined by executing the following command and replacing ``/PATH_TO_YOUR_QSUB/`` with the result.
 
-    .. code-block:: bash
+   .. code-block:: bash
 
         dirname `which qsub`
 
-    You can do the editting with any text editor of your liking.
+   You can do the editting with any text editor of your liking.
 
+   .. warning::
+      **If running on a standalone computer**, add an ``Executor: Local`` to your ``Global_params`` section::
 
-    .. .. warning::  Don't forget to save the file when you done!
+        Global_params:
+            Executor:      Local
 
 #. Execute the following command to tell **NeatSeq-Flow** where the base conda installation is located:
 
-    .. code-block:: bash
+   .. code-block:: bash
 
         export CONDA_BASE=$(conda info --root)
 
 #. Execute **NeatSeq-Flow** to create the workflow scripts:
 
-    .. note:: The three samples used in this example workflow are **SRR453031**, **SRR453032** and **SRR453033** from *Staphylococcus aureus* subsp. aureus Genome Sequencing project (BioProject **PRJNA157545**). The *Staphylococcus aureus* **GCF_000284535.1** genome assembly was used as reference genome.
+   .. note:: The three samples used in this example workflow are **SRR453031**, **SRR453032** and **SRR453033** from *Staphylococcus aureus* subsp. aureus Genome Sequencing project (BioProject **PRJNA157545**). The *Staphylococcus aureus* **GCF_000284535.1** genome assembly was used as reference genome.
 
-    To save run-time and space, the raw sample files contain only the first 500,000 lines each.
+   To save run-time and space, the raw sample files contain only the first 500,000 lines each.
 
-    In the command line type:
+   In the command line type:
 
-    .. code-block:: bash
+   .. code-block:: bash
 
         neatseq_flow.py                                                             \
             --sample_file $CONDA_PREFIX/TUTORIAL/Sample_sets/Samples_conda.nsfs     \
             --param_file  $CONDA_PREFIX/TUTORIAL/Example_WF_conda_env.yaml          \
             --message     "NeatSeq-Flow example WF"
 
-    .. tip:: To use the full raw samples files directly through FTP link in the command line type:
+   .. tip:: To use the full raw samples files directly through FTP link in the command line type:
 
         .. code-block:: bash
 
@@ -218,7 +225,7 @@ Run **NeatSeq-Flow**
                 --param_file  $CONDA_PREFIX/TUTORIAL/Example_WF_conda_from_ftp.yaml          \
                 --message     "NeatSeq-Flow example WF using ftp"
 
-    .. note::  If **NeatSeq-Flow** says :``Finished successfully....`` it is OK to move on.
+   .. note::  If **NeatSeq-Flow** says :``Finished successfully....`` it is OK to move on.
 
 
 Execute the Example Workflow
@@ -283,17 +290,17 @@ Download the **NeatSeq-Flow** repositories from github
 
 #. First, create a directory for the tutorial:
 
-    .. code-block:: bash
+   .. code-block:: bash
 
         mkdir neatseq-flow-tutorial
         cd neatseq-flow-tutorial
    
 #. The following commands will download the repositories you will need for this tutorial:
 
-    #. The main **NeatSeq-Flow** repository.
-    #. The tutorial datasets and workflow repository.
+   #. The main **NeatSeq-Flow** repository.
+   #. The tutorial datasets and workflow repository.
 
-    .. code-block:: bash
+   .. code-block:: bash
 
       git clone https://github.com/bioinfo-core-BGU/neatseq-flow.git
       git clone https://github.com/bioinfo-core-BGU/neatseq-flow-tutorial.git
@@ -301,9 +308,9 @@ Download the **NeatSeq-Flow** repositories from github
 
 #. Finally, create a directory for the **NeatSeq-Flow** project, and copy the tutorial parameter and sample files into it:
 
-    .. _copying_files:
+   .. _copying_files:
 
-    .. code-block:: bash
+   .. code-block:: bash
 
         mkdir Example_WF
         cd Example_WF
@@ -315,30 +322,39 @@ Preparing the workflow parameter file
 
 Edit the example Workflow parameter file to suit your cluster.
 
-    .. code-block:: bash
+   .. code-block:: bash
 
         nano  Example_WF.yaml
 
-    .. .. note::  **Don't forget to save the file when you done!**
+   .. .. note::  **Don't forget to save the file when you done!**
 
 
 #. Global parameters section:
-    
-    Edit the global params section, particularly the following two lines::
+
+   .. warning::
+      The following instructions are for executing the workflow on an SGE computer cluster. To run it on a standalone computer, add an ``Executor: Local`` to your ``Global_params`` section::
+
+        Global_params:
+            Executor:      Local.
+
+   Edit the global params section, particularly the following two lines::
 
         Global_params:
             Qsub_path:      /PATH_TO_YOUR_QSUB/
             Qsub_q:         NAME_OF_YOUR_QUEUE.q
 
-    The ``Qsub_path`` parameter can be determined by executing the following command and replacing ``/PATH_TO_YOUR_QSUB/`` with the result.
+   The ``Qsub_path`` parameter can be determined by executing the following command and replacing ``/PATH_TO_YOUR_QSUB/`` with the result.
 
         .. code-block:: bash
             
             dirname `which qsub`
+
+
+
     
 #. Variables section:
     
-    Edit the definitions in the variables section (add the **FULL PATHs** for all required programs)::
+   Edit the definitions in the variables section (add the **FULL PATHs** for all required programs)::
 
         Vars:
             Programs:
@@ -352,10 +368,10 @@ Edit the example Workflow parameter file to suit your cluster.
                 samtools:           /FULL_PATH_TO/samtools_Executable
                 multiqc:            /FULL_PATH_TO/multiqc_Executable
 
-    .. Note:: Please notice that ``Trimmomatic`` takes two parameters. The location of the executable (``{Vars.Programs.Trimmomatic.Bin}``) and the location of the Adapters file (``{Vars.Programs.Trimmomatic.Adapters}``)
+   .. Note:: Please notice that ``Trimmomatic`` takes two parameters. The location of the executable (``{Vars.Programs.Trimmomatic.Bin}``) and the location of the Adapters file (``{Vars.Programs.Trimmomatic.Adapters}``)
 
-Run **NeatSeq-Flow**
-~~~~~~~~~~~~~~~~~~~~~~
+Run **NeatSeq-Flow** Script Generator
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. note:: The three samples used in this example workflow are **SRR453031**, **SRR453032** and **SRR453033** from *Staphylococcus aureus* subsp. aureus Genome Sequencing project (BioProject **PRJNA157545**). The *Staphylococcus aureus* **GCF_000284535.1** genome assembly was used as reference genome.
 
