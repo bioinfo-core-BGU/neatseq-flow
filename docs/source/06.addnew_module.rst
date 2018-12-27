@@ -2,7 +2,7 @@
 
 
 ====================================================
-For the Programmer - Adding Modules
+Adding New Modules
 ====================================================
 
 .. include:: links.rst
@@ -27,7 +27,9 @@ In order to incorporate in a wrokflow programs which do not yet have modules, on
 
 1. **Use the generic module**
 
-   This method is preferable for quickly getting a working workflow without the need to create a new module for the program. However, the generic modules are more complicated to use and are therefore not accessible to non-programmers. Also, when using a generic module, the workflow file contains execution parameters which distract the user from the structure of the main flow of information, making it more difficult to comprehend and evaluate the workflow.
+   This method is preferable for quickly getting a working workflow without the need to create a new module for the program. However, when using the generic module, the workflow file contains execution parameters which distract the user from the structure of the main flow of information, making the workflow less comprehensible.
+
+.. However, the generic modules are more complicated to use and are therefore not accessible to non-programmers. Also, when using a generic module, the workflow file contains execution parameters which distract the user from the structure of the main flow of information, making it more difficult to comprehend and evaluate the workflow.
 
 2. **Creating new modules**
 

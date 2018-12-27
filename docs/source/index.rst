@@ -27,7 +27,7 @@
         :align: left
 
    * DESeq visual report
-   * GATK workflow
+   * `GATK workflow <https://neatseq-flow.readthedocs.io/projects/neatseq-flow-modules/en/latest/Workflow_docs/GATK_workflow.html>`_.
    * `QIIME2 workflow <https://github.com/bioinfo-core-BGU/neatseq-flow>`_.
 
 .. topic:: Important links
