@@ -6,6 +6,8 @@ Installation Guide (Command Line)
 
 **Author:** Menachem Sklarz
 
+This guide is for users wishing to use NeatSeq-Flow through the Linux command line.
+
 .. contents:: Page Contents:
    :depth: 2
    :local:
@@ -27,9 +29,9 @@ NeatSeq-Flow can be installed in one of two ways:
 
 **Conda** allows easy installation of NeatSeq-Flow in one go. For selected workflows, as well as for the NeatSeq-Flow tutorials, we also provide entire Conda environments which include NeatSeq-Flow with all necessary analysis programs.
 
-Users wishing to install NeatSeq-Flow with conda need miniconda2.
+.. Users wishing to install NeatSeq-Flow with conda need miniconda2.
 
-For users wishing to install NeatSeq-Flow without conda, the requirements are: git; pip; pyyaml and bunch python packages; and the specific analysis programs needed for the desired workflow.
+.. For users wishing to install NeatSeq-Flow without conda, the requirements are: git; pip; pyyaml and bunch python packages; and the specific analysis programs needed for the desired workflow.
 
    
 .. _install_with_conda:

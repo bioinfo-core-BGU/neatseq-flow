@@ -14,7 +14,7 @@ Parameter and sample file definition
 Introduction
 ==============
 
-Following is a description of the parameter ans sample files which are required in order to execute **NeatSeq-Flow**.
+Following is a description of the parameter and sample files which are required in order to execute **NeatSeq-Flow**.
 
 The files can be created either using the **NeatSeq-Flow** |GUI| or in a text editor, such as `Notepad++ <https://notepad-plus-plus.org/>`_.
 

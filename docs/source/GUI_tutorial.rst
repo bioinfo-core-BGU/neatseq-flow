@@ -6,6 +6,11 @@ NeatSeq-Flow Tutorial (GUI)
 
 **Author:** Liron Levin
 
+This tutorial is for users wishing to use NeatSeq-Flow through its Graphical User Interface.
+
+Typically, the installation of both NeatSeq-Flow and its GUI is done on a Linux operating system.
+It is then possible to use the GUI from a Windows computer through a Windows X server such as MobaXterm.
+
 **In this Tutorial we will:**
 
 -  `Install Conda`_
@@ -21,7 +26,8 @@ NeatSeq-Flow Tutorial (GUI)
 Prerequisites
 --------------
 
-For installing the GUI, you will need to have ``git`` installed as well as a graphical backend, such as firefox.
+- The computer where the GUI is installed needs to have a web browser, preferably FireFox.
+- To use the GUI from another computer having a Windows operating system, that computer needs to have a Windows X server, e.g. MobaXterm.
 
 Install Conda
 -------------
@@ -36,6 +42,12 @@ Install Conda
    **During conda’s installation: type *yes* to add conda to the PATH**
 
    For different operating system go to `minionda downloads page <https://conda.io/miniconda.html>`_
+
+   If you do not have git installed, install it now with conda:
+
+       .. code-block:: bash
+
+            conda install -c anaconda git
 
 Install NeatSeq-Flow
 --------------------

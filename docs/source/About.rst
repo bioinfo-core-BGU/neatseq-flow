@@ -13,7 +13,7 @@ About NeatSeq-Flow
    :local:
    :backlinks: top
 
-NeatSeq-Flow is a platform for modular design and execution of bioinformatics workflow on a local computer or, preferably, computer cluster.
+NeatSeq-Flow is a platform for modular design and execution of bioinformatics workflows on a local computer or, preferably, computer cluster.
 The platform has a command-line interface as well as a fully functional graphical user interface (GUI), both used locally without the need to connect to remote servers.
 Analysis programs comprising a workflow can be anything executable from the Linux command-line, either publicly available or in-house programs.
 Ready-to-use workflows are available for common Bioinformatics analyses such as assembly & annotation, RNA-Seq, ChIP-Seq, variant calling, metagenomics and genomic epidemiology.

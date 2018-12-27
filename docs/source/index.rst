@@ -28,7 +28,7 @@
 
    * DESeq visual report
    * `GATK workflow <https://neatseq-flow.readthedocs.io/projects/neatseq-flow-modules/en/latest/Workflow_docs/GATK_workflow.html>`_
-   * `QIIME2 workflow <https://github.com/bioinfo-core-BGU/neatseq-flow>`_
+   * `QIIME2 workflow <https://neatseq-flow.readthedocs.io/projects/neatseq-flow-modules/en/latest/Workflow_docs/QIIME2_workflow.html>`_
 
 .. topic:: Important links
 
@@ -44,14 +44,14 @@
 What is **NeatSeq-Flow**?
 --------------------------
 
-NeatSeq-Flow is a platform for modular design and execution of bioinformatics workflow on a local computer or, preferably, computer cluster.
+NeatSeq-Flow is a platform for modular design and execution of bioinformatics workflows on a local computer or, preferably, computer cluster.
 The platform has a command-line interface as well as a fully functional graphical user interface (GUI), both used locally without the need to connect to remote servers.
 Analysis programs comprising a workflow can be anything executable from the Linux command-line, either publicly available or in-house programs.
 Ready-to-use workflows are available for common Bioinformatics analyses such as assembly & annotation, RNA-Seq, ChIP-Seq, variant calling, metagenomics and genomic epidemiology.
 Creation and sharing of new workflows is easy and intuitive, without need for programming knowledge.
 NeatSeq-Flow is general-purpose and may easily be adjusted to work on different types of analyses other than high-throughput sequencing.
 
-NeatSeq-Flow is fully accessible to non-programmers, without compromising power, flexibility and efficiency. The user only have to specify the location of input files and the workflow design, and need not bother with the location of intermediate and final files, nor with transferring files between workflow steps. Workflow execution is fully parallelized on the cluster, and progress can be inspected through NeatSeq-Flow “terminal monitor”. All workflow components and their order of execution are stored in one file, which together with the shell scripts produced by NeatSeq-Flow comprise a complete documentation of the workflow and enable future execution of the exact same workflow or modifications thereof.
+NeatSeq-Flow is fully accessible to non-programmers, without compromising power, flexibility and efficiency. The user only has to specify the location of input files and the workflow design, and need not bother with the location of intermediate and final files, nor with transferring files between workflow steps. Workflow execution is fully parallelized on the cluster, and progress can be inspected through NeatSeq-Flow “terminal monitor”. All workflow steps, parameters and order of execution are stored in one file, which together with the shell scripts produced by NeatSeq-Flow comprise a complete documentation of the workflow and enable future execution of the exact same workflow or modifications thereof.
 
 :ref:`Read more about NeatSeq-Flow <about_neatseq_flow>`.
 
@@ -87,10 +87,9 @@ Contact Us
 | Email: `sklarz@bgu.ac.il <mailto:sklarz@bgu.ac.il?subject=Inquiry\ about\ NeatSeq-Flow>`_
 
 
-.. Detailed documentation
-.. -----------------------
 
-Further Information
+
+Web Site Contents:
 -------------------
 
 .. toctree::

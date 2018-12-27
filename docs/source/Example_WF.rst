@@ -8,7 +8,9 @@ NeatSeq-Flow Tutorial (Command Line)
 
 **Author:** Liron Levin
 
-This tutorial describes how to create and execute the workflow described in the **NeatSeq-Flow** manuscript
+This tutorial is for users wishing to use NeatSeq-Flow through the Linux command line.
+
+It describes how to create and execute the workflow described in the **NeatSeq-Flow** manuscript
 (`Article on BioRXiv <https://www.biorxiv.org/content/early/2018/12/18/173005>`_).
 
 .. contents:: Page Contents:
@@ -25,14 +27,15 @@ This tutorial describes how to create and execute the workflow described in the 
 Short Description
 --------------------
 
-The example workflow performs:
+The example workflow receives FASTQ files and performs:
 
-* Quality testing and trimming of raw reads (paired or single).
+* Quality testing and trimming of the raw sequence reads (paired- or single-end).
 * Alignment (“mapping”) of the reads to a reference genome using two different programs.
-* Sorting the samples' bam files as final results.
+* Sorting the samples' BAM files as final results.
 * Creation of a report on reads and mapping quality.
 
-The workflow is a classical starting point for a bacterial sequencing analysis workflow, of which additional steps can be implemented such as de-novo assembly, variant calling etc.
+The input files in this tutorial are whole genome sequenced bacteria, and the resulting BAM files may be used for subsequent variant calling and other analyses.
+
 
 **The example workflow is distributed as part of NeatSeq-Flow for quick testing.**
 
@@ -114,6 +117,12 @@ For that you will need:
 * The :download:`NeatSeq-Flow CONDA installer <_static/NeatSeq_Flow_Tutorial_Install.yaml>`.
 
 .. Attention:: This tutorial assumes `conda` is installed and on the search path. If it is not, append the `conda` path to all `conda`, `activate` and `deactivate` commands below.
+
+.. Important::    **If you do not have git installed**, please install it with the following command:
+
+       .. code-block:: bash
+
+            conda install -c anaconda git
 
 
 To install, perform the following steps:
