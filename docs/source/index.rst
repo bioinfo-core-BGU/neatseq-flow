@@ -56,7 +56,7 @@ NeatSeq-Flow is fully accessible to non-programmers, without compromising power,
 :ref:`Read more about NeatSeq-Flow <about_neatseq_flow>`.
 
 
-Available Modules ans Workflows
+Available Modules and Workflows
 -------------------------------
 
 | NeatSeq-Flow comes with a basic set of modules, marked `here <https://neatseq-flow.readthedocs.io/projects/neatseq-flow-modules/en/latest/#neatseq-flow-modules>`_ with an asterisk (*).
