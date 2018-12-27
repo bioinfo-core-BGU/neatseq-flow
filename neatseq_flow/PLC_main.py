@@ -90,6 +90,7 @@ class NeatSeqFlow(object):
                 sys.exit("You passed multiple mapping_files in the sample_file.")
             else:
                 # If mapping file passed via sample file, transfer into grouping_file and remove from sample data
+                sys.stderr.write("Mapping file passed via samples file!")
                 mapping_file = self.sample_data["project_data"]["mapping_file"][0]
                 del self.sample_data["project_data"]["mapping_file"]
         # Reading grouping file
