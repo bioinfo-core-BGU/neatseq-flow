@@ -103,8 +103,8 @@ class Step(object):
                     level = dir_generator.next()
                     # level is a tuple with: (current dir. [list of dirs],[list of files])
                 except StopIteration:
-                    sys.stderr.write("WARNING: Module path %s seems to be empty! Possibly issue with permissions..." % \
-                                     module_path)
+                    sys.stderr.write("WARNING: Module path {mod_path} seems to be empty! Possibly issue with "
+                                     "permissions...\n".format(mod_path=module_path))
                 while mod_t + ".py" not in level[2] or "__init__.py" not in level[2]:
                     # Repeat while expected filename is NOT in current dir contents (=level[2]. see above)
                     #   and while __init__.py is not in current dir (avoid finding modules in non-active dirs)
@@ -139,7 +139,7 @@ class Step(object):
         try:
             level = dir_generator.next()           # level is a tuple with: (current dir. [list of dirs],[list of files])
         except StopIteration:
-            sys.stderr.write("WARNING: Module path %s seems to be empty! Possibly issue with permissions..." % self.Cwd)
+            sys.stderr.write("WARNING: Module path %s seems to be empty! Possibly issue with permissions...\n" % self.Cwd)
 
         while(mod_t + ".py" not in level[2]):     # Repeat while expected filename is NOT in current dir contents (=level[2]. see above)
             try:
@@ -168,12 +168,13 @@ class Step(object):
         return retval, module_loc
 
     @classmethod
-    def determine_sample_types(cls, sample_data):
+    def determine_sample_types(cls, sample, sample_data):
         """
 
         :param sample_data:
         :return: List of sample types
         """
+
 
         # Prepare holder for type:
         sample_type = list()
@@ -184,9 +185,15 @@ class Step(object):
         if "Forward" in sample_data and "Reverse" in sample_data:
             sample_type.append("PE")
         if "Forward" in sample_data and "Reverse" not in sample_data:
-            sys.exit("You have only Forward for sample %s. Can't proceed!" % sample)
+            # sys.exit("You have only Forward for sample %s. Can't proceed!" % sample)
+            sys.stderr.write("You have only Forward for sample %s. Converting to 'Single'!\n" % sample)
+            sample_data["Single"] = sample_data["Forward"]
+            del(sample_data["Forward"])
         if "Reverse" in sample_data and "Forward" not in sample_data:
-            sys.exit("You have only Reverse for sample %s. Can't proceed!" % sample)
+            # sys.exit("You have only Reverse for sample %s. Can't proceed!" % sample)
+            sys.stderr.write("You have only Reverse for sample %s. Converting to 'Single'!\n" % sample)
+            sample_data["Single"] = sample_data["Reverse"]
+            del (sample_data["Reverse"])
         if "fastq.S" in sample_data:
             # Only one type of file: SE
             sample_type.append("SE")

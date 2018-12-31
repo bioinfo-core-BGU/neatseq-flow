@@ -90,7 +90,7 @@ class NeatSeqFlow(object):
                 sys.exit("You passed multiple mapping_files in the sample_file.")
             else:
                 # If mapping file passed via sample file, transfer into grouping_file and remove from sample data
-                sys.stderr.write("Mapping file passed via samples file!")
+                sys.stderr.write("Mapping file passed via samples file!\n")
                 mapping_file = self.sample_data["project_data"]["mapping_file"][0]
                 del self.sample_data["project_data"]["mapping_file"]
         # Reading grouping file
@@ -104,7 +104,7 @@ class NeatSeqFlow(object):
                     raise
             # Merge sample_data with mapping_data:
             if set(mapping_data.keys()) - set(self.sample_data["samples"]):
-                sys.stderr.write("Extra samples in grouping data!")
+                sys.stderr.write("Extra samples in grouping data!\n")
             for sample in self.sample_data["samples"]:
                 if sample not in mapping_data:
                     sys.exit("sample {smp} does no exist in grouping data".format(smp=sample))
@@ -571,7 +571,7 @@ class NeatSeqFlow(object):
                 if self.pipe_data["verbose"]:
                     sys.stderr.write("ATTENTION: Adding conda default additional modules path (%s). "
                                      "If it is different, please add manually to 'module_path' "
-                                     "in 'Global_params'." % conda_module_path)
+                                     "in 'Global_params'.\n" % conda_module_path)
                 if "module_path" in self.param_data["Global"]:
                     if conda_module_path not in self.param_data["Global"]["module_path"]:
                         self.param_data["Global"]["module_path"].append(conda_module_path)
@@ -584,7 +584,7 @@ class NeatSeqFlow(object):
 
         for sample in self.sample_data["samples"]:
             # Using Step class method for determining sample type:
-            self.sample_data[sample]["type"] = Step.determine_sample_types(self.sample_data[sample])
+            self.sample_data[sample]["type"] = Step.determine_sample_types(sample, self.sample_data[sample])
 
     def create_kill_scripts_dir(self):
     

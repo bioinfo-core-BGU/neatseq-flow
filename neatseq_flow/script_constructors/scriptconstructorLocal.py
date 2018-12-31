@@ -31,7 +31,8 @@ job_limit={job_limit}
 
 wait_limit() {{
     while : ; do
-        numrun=$(grep -c '\sPID\s'  $run_index);
+        # Count active (PID), child-level (merge..merge1..sample..runid) jobs
+        numrun=$(grep  '\sPID\s' $run_index | grep -P ".*\.\..*\.\..*\.\." | wc -l);
         maxrun=$(sed -ne "s/limit=\([0-9]*\).*/\\1/p" $job_limit);
         sleeptime=$(sed -ne "s/.*sleep=\([0-9]*\).*/\\1/p" $job_limit);
         [[ $numrun -ge $maxrun ]] || break;
@@ -40,6 +41,8 @@ wait_limit() {{
 }}
 """.format(job_limit=pipe_data["job_limit"])
 #        numrun=$(awk 'BEGIN {{jobsc=0}} /^\w/ {{jobsc=jobsc+1}} END {{print jobsc}}' $run_index);
+#        numrun=$(grep -c '\sPID\s'  $run_index);
+
 
         return script
 

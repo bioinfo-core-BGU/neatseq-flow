@@ -44,6 +44,12 @@ Install and execute NeatSeq-Flow **with Conda**
 
 #. Install `Miniconda`_ (for python version 2.7).
 
+   job_limit.. Important::    **If you do not have git installed**, please install it with the following command:
+
+       .. code-block:: bash
+
+            conda install -c anaconda git
+
 #. Download the **NeatSeq-Flow** |conda_env| using `curl` or `wget`:
 
    .. code-block:: bash
@@ -58,7 +64,13 @@ Install and execute NeatSeq-Flow **with Conda**
 
    .. code-block:: bash
 
-      conda-env create -f NeatSeq_Flow_conda_env.yaml
+      conda  env create -f NeatSeq_Flow_conda_env.yaml
+
+   .. Note:: For some versions of conda, you might have to replace ``conda env`` with ``conda-env``. If the command above does not work, try the following command:
+
+        .. code-block:: bash
+
+            conda-env create -f  NeatSeq_Flow_Tutorial_Install.yaml
 
 #. Activate the environment:
 
