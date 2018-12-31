@@ -23,23 +23,23 @@ Adding New Modules
 Introduction
 ================
 
-In order to incorporate in a wrokflow programs which do not yet have modules, one can proceed in two ways:
+In order to incorporate in a wrokflow analysis programs which do not yet have modules, one can proceed in two ways:
 
 1. **Use the generic module**
 
-   This method is preferable for quickly getting a working workflow without the need to create a new module for the program. However, when using the generic module, the workflow file contains execution parameters which distract the user from the structure of the main flow of information, making the workflow less comprehensible.
+   This method is preferable for quickly getting a working workflow without the need to create a new module for the program. However, it requires the specification of several additional parameters in the workflow design step, and is less recommended for programs that are planned to be re-used many times, in different scenarios, in the future.  
 
-.. However, the generic modules are more complicated to use and are therefore not accessible to non-programmers. Also, when using a generic module, the workflow file contains execution parameters which distract the user from the structure of the main flow of information, making it more difficult to comprehend and evaluate the workflow.
+   
+2. **Create a new module**
 
-2. **Creating new modules**
-
-   Creating modules is quite easy. Still, please make sure a module does not already exist for the program you want to run before creating a new module.
-
-   It is our hope that a community of users will provide access to a wide range of modules, making the process of developing new workflows more straightforward for non-programmers.
+   Creating modules is quite easy, and requires only basic Python programming knowledge. Still, please make sure a module does not already exist for the program you want to run before creating a new module.
+   
+   It is our hope that the community of users will provide access to a wide range of modules, making the process of developing new workflows more straightforward for non-programmers.
 
    This section provides detailed instructions for writing modules. The idea is to use the ``sample_data`` dictionary for input and output files while leaving as many of the other parameters as possible to the user. This will enable as much flexibility as possible while relieving the user of the need to track input and output files.
-
-
+   
+.. Note:: It is recommended to go over the :ref:`how_neatseqflow_works` page before writing new modules.
+   
 
 Steps in writing **NeatSeq-Flow** modules
 ===========================================

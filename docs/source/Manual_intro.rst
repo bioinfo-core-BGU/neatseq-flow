@@ -1,15 +1,17 @@
-=============================
-**NeatSeq-Flow** Manual
-=============================
+============
+Introduction
+============
 
 .. include:: links.rst
 
 **Author:** Menachem Sklarz
 
-Introduction
-==============
+.. contents:: Page Contents:
+   :depth: 2
+   :local:
+   :backlinks: top
 
-The following pages provide a detailed description of **NeatSeq-Flow** usage.
+The following sections provide a detailed description of **NeatSeq-Flow** usage.
 
 **NeatSeq-Flow** is executed in 3 steps:
 
@@ -24,15 +26,3 @@ In the script generation step, NeatSeq-Flow creates a set of directories in the 
 NeatSeq-Flow's "Terminal Monitor" enables tracking the execution process in real time, and reports on execution errors immediately when they occur. The monitor, too, is descibed in the pages below.
 
 NeatSeq-Flow can be used in two ways: with the GUI or from the command line. The pages in this section describe usage of both methods.
-
-Manual Pages
-==============
-
-.. toctree::
-   :maxdepth: 1
-
-   02a.FileDefinition
-   02b.execution
-   03.output
-   07.monitor
-

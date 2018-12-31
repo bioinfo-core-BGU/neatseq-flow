@@ -101,8 +101,8 @@ Web Site Contents:
    :maxdepth: 1
    :caption: Getting Started: Install and Try
 
-   GUI_tutorial
-   Example_WF
+   Tutorial_GUI
+   Tutorial_CL
 
 .. toctree::
    :maxdepth: 1
@@ -115,9 +115,9 @@ Web Site Contents:
    :maxdepth: 1
    :caption: Detailed Documentation
 
-   Manual
-   01.How_NSF_works
-   06.addnew_module
+   User_Manual
+   Repository_links
+   Add_new_modules
 ..   03.output
 ..   07.monitor
 

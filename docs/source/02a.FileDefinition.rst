@@ -1,6 +1,6 @@
-=========================================
-Parameter and sample file definition
-=========================================
+==========================================
+Specifying workflow design and input files
+==========================================
 
 .. include:: links.rst
 
@@ -14,9 +14,13 @@ Parameter and sample file definition
 Introduction
 ==============
 
+The workflow design information and the specification of input files are written to *parameter* and *sample* files, respectively.
+
 Following is a description of the parameter and sample files which are required in order to execute **NeatSeq-Flow**.
 
-The files can be created either using the **NeatSeq-Flow** |GUI| or in a text editor, such as `Notepad++ <https://notepad-plus-plus.org/>`_.
+The parameter file is stored in YAML format and the sample file in a tab-delimited format.
+
+The files can be created either through the **NeatSeq-Flow** |GUI| or by using a text editor, such as `Notepad++ <https://notepad-plus-plus.org/>`_.
 
 .. _parameter_file_definition:
 
@@ -25,7 +29,7 @@ Parameter file definition
 
 .. Tip:: **The parameter file is rarely created from scratch**. Take an existing parameter file defined for the analysis you require and modify it to suit your SGE cluster and specific requirements.
 
-The parameter file is a YAML file which must include a :ref:`global_params` section and a :ref:`step_wise_parameters` section. It may also include a :ref:`parameters_variables` section. All sections are described below:
+The parameter file must include a :ref:`global_params` section and a :ref:`step_wise_parameters` section. It may also include a :ref:`parameters_variables` section. All sections are described below:
 
 .. _global_params:
 

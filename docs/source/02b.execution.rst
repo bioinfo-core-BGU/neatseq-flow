@@ -1,5 +1,5 @@
 ==========================
-Executing **NeatSeq-Flow**
+Executing NeatSeq-Flow
 ==========================
 
 .. include:: links.rst

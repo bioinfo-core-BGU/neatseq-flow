@@ -44,7 +44,7 @@ Install and execute NeatSeq-Flow **with Conda**
 
 #. Install `Miniconda`_ (for python version 2.7).
 
-   job_limit.. Important::    **If you do not have git installed**, please install it with the following command:
+.. Important::    **If you do not have git installed**, please install it with the following command:
 
        .. code-block:: bash
 
