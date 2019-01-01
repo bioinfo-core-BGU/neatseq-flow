@@ -82,6 +82,9 @@ log_echo() {{
         maxvmem="-";
     fi
 
+    if [ $6 == 'ND' ]; then
+        $6=$$
+    fi        
 
     echo -e $(date '+%d/%m/%Y %H:%M:%S')'\\t'$7'\\t'$1'\\t'$2'\\t'$3'\\t'$4'\\t'$5'\\t'$6'\\t'$maxvmem'\\t[0;32mOK[m' >> {log_file};
 
@@ -255,7 +258,7 @@ done
 # Import helper functions
 . {helper_funcs}
 
-# If not in SGE context, set JOB_ID to PID
+# If not in SGE context, set JOB_ID to ND
 if [ -z "$JOB_ID" ]; then JOB_ID="ND"; fi
 
 # Trap various signals. SIGUSR2 is passed by qdel when -notify is passes

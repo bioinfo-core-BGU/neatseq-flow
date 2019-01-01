@@ -35,7 +35,7 @@ class ScriptConstructorSGE(ScriptConstructor):
             maxvmem=$({qstat_path} -j $6 | grep maxvmem | cut -d = -f 6);
         else
             maxvmem="NA";
-        fi        """.format(qstat_path=pipe_data["qsub_params"]["qstat_path"])
+        fi""".format(qstat_path=pipe_data["qsub_params"]["qstat_path"])
         script = re.sub("## maxvmem calc entry point", maxvmem_cmd, script)
 
         # Add job_limit function:
@@ -131,7 +131,7 @@ if ($?JOB_ID) then
     # Adding line to log file:  Date    Step    Host
     echo `date '+%%d/%%m/%%Y %%H:%%M:%%S'`'\\t%(type)s\\t%(step)s\\t%(stepname)s\\t%(stepID)s\\t%(level)s\\t'$HOSTNAME'\\t'$JOB_ID'\\t'`%(qstat_path)s -j $JOB_ID | grep maxvmem | cut -d = -f 6`'\\t%(status)s' >> %(file)s
 else
-    echo `date '+%%d/%%m/%%Y %%H:%%M:%%S'`'\\t%(type)s\\t%(step)s\\t%(stepname)s\\t%(stepID)s\\t%(level)s\\t'$HOSTNAME'\\t'$JOB_ID'\\t-\\t%(status)s' >> %(file)s
+    echo `date '+%%d/%%m/%%Y %%H:%%M:%%S'`'\\t%(type)s\\t%(step)s\\t%(stepname)s\\t%(stepID)s\\t%(level)s\\t'$HOSTNAME'\\t'$$'\\t-\\t%(status)s' >> %(file)s
 endif
 ####
 """ % log_cols_dict
