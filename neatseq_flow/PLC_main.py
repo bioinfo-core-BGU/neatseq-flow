@@ -263,10 +263,13 @@ class NeatSeqFlow(object):
             # sys.exit()
             self.cleanup()
             return
-            
+
         # Make main script:
         self.make_main_pipeline_script()
-        
+
+        # Make main scripts for tags:
+        self.make_tag_steps_script()
+
         # Make the qalter script:
         self.create_qalter_script()
         
@@ -502,6 +505,53 @@ class NeatSeqFlow(object):
                 # (see del_type and move_type for examples of modules that don't...)
                 if not step_n.skip_scripts:
                     pipe_fh.write(step_n.get_main_command())
+
+    def make_tag_steps_script(self):
+            """ Create the pipline script for tag steps
+            """
+
+            # Getting unique list of tags
+            tag_list = list()
+            for step in self.step_list:
+                tag_list.extend(step.get_step_tag())
+            tag_list = list(set(tag_list))
+
+            # Not doing anything if no tags defined. Default behaviour.
+            if not any (tag_list):
+                return
+
+            tags_script_dir = self.pipe_data["scripts_dir"] + "tags_scripts" + os.sep
+            if not os.path.exists(tags_script_dir):
+                os.mkdir(tags_script_dir)
+
+            for tag in [tag for tag in tag_list if tag]:  # Only not False tags
+                script_fn = "{script_dir}{tag}{ext}".format(script_dir=tags_script_dir,
+                                                            tag=tag,
+                                                            ext=".sh")
+                print script_fn
+                with open(script_fn, "w") as tag_fh:
+                    # Writing header :)
+                    tag_fh.write("""
+\n\n
+# This is the executable script for tag {tag}
+# It was created on {date} by NeatSeq-Flow version {version}
+# See http://neatseq-flow.readthedocs.io/en/latest/
+
+# Import helper functions
+. {helper_funcs}
+
+""".format(date=time.strftime("%d/%m/%Y %H:%M:%S"),
+           version=__version__,
+           tag=tag,
+           helper_funcs=self.pipe_data["helper_funcs"]))
+
+                    # For each step, write the qsub command created by get_qsub_command() method:
+                    for step_n in self.step_list:
+                        # Add the line only for modules that produce scripts
+                        # (see del_type and move_type for examples of modules that don't...)
+                        if not step_n.skip_scripts:
+                            if tag in step_n.get_step_tag():
+                                tag_fh.write(step_n.get_main_command())
 
     def make_step_type_instance(self,step_name):
         """ Create and return a class of the type defined in step_type

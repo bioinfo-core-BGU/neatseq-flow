@@ -1625,3 +1625,17 @@ Sample slots:
 
     def get_provenance(self):
         return self.provenance
+
+
+    def get_step_tag(self):
+        """ Returns the step tag, if one was defined"""
+
+        if "tag" in self.params:
+            if isinstance(self.params["tag"], list):
+                raise AssertionExcept("Duplicate tagts defined. At the moment, only one tag permitted per step")
+                # return self.params["tag"]
+            else:
+                return [self.params["tag"]]
+        else:
+            return [False]
+
