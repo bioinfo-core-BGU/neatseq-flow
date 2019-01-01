@@ -11,3 +11,5 @@ Generic module
 
 .. automodule:: neatseq_flow.step_classes.Generic_module.Generic
 
+.. automodule:: neatseq_flow.step_classes.miscellaneous.pipe_generic
+
