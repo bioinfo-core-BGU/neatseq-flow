@@ -128,6 +128,17 @@ run_index="{run_index}"
 
 echo "Running job: " $qsubname
 
+module=awk 'BEGIN {{FS="\\.\\.";}} {{print $1}}' <<< $qsubname
+instance=awk 'BEGIN {{FS="\\.\\.";}} {{print $2}}' <<< $qsubname
+awkNF=awk 'BEGIN {{FS="\\.\\.";}} {{print NF}}' <<< $qsubname
+if [ awkNF > 3 ] then;
+    scrpt_type="low";
+else
+    scrpt_type="high";
+fi
+
+log_echo $module $instance $qsubname low $HOSTNAME $$ KILLED
+
 # script_path=$(grep $qsubname $script_index | cut -f 2 )
 
 script_path=$(awk -v qsname="$qsubname" '$0 ~ qsname".*" {{print $2}}' $script_index)
