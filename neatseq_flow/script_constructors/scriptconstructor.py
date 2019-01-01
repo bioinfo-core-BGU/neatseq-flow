@@ -131,8 +131,8 @@ echo "Running job: " $qsubname
 # Setting trap
 trap_with_arg func_trap $module $instance $qsubname Queue $HOSTNAME $$ SIGUSR2 ERR INT TERM
 
-module=awk 'BEGIN {{FS="\\.\\.";}} {{print $1}}' <<< $qsubname
-instance=awk 'BEGIN {{FS="\\.\\.";}} {{print $2}}' <<< $qsubname
+module=$(awk 'BEGIN {{FS="\\.\\.";}} {{print $1}}' <<< $qsubname)
+instance=$(awk 'BEGIN {{FS="\\.\\.";}} {{print $2}}' <<< $qsubname)
 
 log_echo $module $instance $qsubname Queue $HOSTNAME $$ Started
 
