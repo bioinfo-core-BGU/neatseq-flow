@@ -256,7 +256,7 @@ done
 . {helper_funcs}
 
 # If not in SGE context, set JOB_ID to PID
-if [ -z "$JOB_ID" ]; then JOB_ID=$$; fi
+if [ -z "$JOB_ID" ]; then JOB_ID="ND"; fi
 
 # Trap various signals. SIGUSR2 is passed by qdel when -notify is passes
 trap_with_arg func_trap {step} {stepname} {stepID} {level} $HOSTNAME $JOB_ID SIGUSR2 ERR INT TERM

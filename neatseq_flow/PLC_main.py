@@ -736,7 +736,7 @@ Pipeline {run_code} logfile:
                     logf.write("Message: No message passed for this pipeline\n")
     
                 logf.write("""
-Timestamp\tEvent\tModule\tInstance\tJob name\tLevel\tHost\tjob_id\tMax mem\tStatus
+Timestamp\tEvent\tModule\tInstance\tJob name\tLevel\tHost\tJob ID\tMax mem\tStatus
 """)
 
         # Set file name for storing list of pipeline versions:
