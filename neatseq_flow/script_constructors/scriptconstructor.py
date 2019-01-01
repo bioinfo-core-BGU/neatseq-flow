@@ -34,7 +34,7 @@ trap_with_arg() {{
     # $5: level
     # $6: hostname
     # $7: jobid
-
+    
     args="$1 $2 $3 $4 $5 $6 $7"
     shift 7
     for sig ; do
@@ -49,13 +49,9 @@ func_trap() {{
     # $4: level
     # $5: hostname
     # $6: jobid
-    # $7: sig
-
-    if [ ! $6 == 'ND' ]; then
-        maxvmem=$({qstat_path} -j $6 | grep maxvmem | cut -d = -f 6);
-    else
-        maxvmem="NA";
-    fi
+    # $8: sig
+    
+    ## maxvmem calc entry point
 
     if [ $7 == 'ERR' ]; then err_code='ERROR'; fi
     if [ $7 == 'INT' ]; then err_code='TERMINATED'; fi
@@ -63,7 +59,7 @@ func_trap() {{
     if [ $7 == 'SIGUSR2' ]; then err_code='TERMINATED'; fi
 
 
-    echo -e $(date '+%d/%m/%Y %H:%M:%S')'\\tFinished\\t'$1'\\t'$2'\\t'$3'\\t'$4'\\t'$5'\\t'$maxvmem'\\t[0;31m'$err_code'[m' >> {log_file}; 
+    echo -e $(date '+%d/%m/%Y %H:%M:%S')'\\tFinished\\t'$1'\\t'$2'\\t'$3'\\t'$4'\\t'$5'\\t'$6'\\t'$maxvmem'\\t[0;31m'$err_code'[m' >> {log_file}; 
 
     ## locksed command entry point
     exit 1;
@@ -78,18 +74,16 @@ log_echo() {{
     # $6: jobid
     # $7: type (Started/Finished)
 
-    if [ ! $6 == 'ND' ]; then
-        if [ $7 == 'Finished' ]; then
-            maxvmem=$({qstat_path} -j $6 | grep maxvmem | cut -d = -f 6);
-        else    
-            maxvmem="-"
-        fi
+    
+    if [ $7 == 'Finished' ]; then
+        ## maxvmem calc entry point
+
     else
-        maxvmem="NA";
+        maxvmem="-";
     fi
 
 
-    echo -e $(date '+%d/%m/%Y %H:%M:%S')'\\t'$7'\\t'$1'\\t'$2'\\t'$3'\\t'$4'\\t'$5'\\t'$maxvmem'\\t[0;32mOK[m' >> {log_file};
+    echo -e $(date '+%d/%m/%Y %H:%M:%S')'\\t'$7'\\t'$1'\\t'$2'\\t'$3'\\t'$4'\\t'$5'\\t'$6'\\t'$maxvmem'\\t[0;32mOK[m' >> {log_file};
 
 }}
 
@@ -261,8 +255,8 @@ done
 # Import helper functions
 . {helper_funcs}
 
-# If not in SGE context, set JOB_ID to ND
-if [ -z "$JOB_ID" ]; then JOB_ID="ND"; fi
+# If not in SGE context, set JOB_ID to PID
+if [ -z "$JOB_ID" ]; then JOB_ID=$$; fi
 
 # Trap various signals. SIGUSR2 is passed by qdel when -notify is passes
 trap_with_arg func_trap {step} {stepname} {stepID} {level} $HOSTNAME $JOB_ID SIGUSR2 ERR INT TERM
@@ -279,49 +273,7 @@ trap_with_arg func_trap {step} {stepname} {stepID} {level} $HOSTNAME $JOB_ID SIG
 
         return script
 
-    def get_log_lines(self, state = "Started", status = "\033[0;32mOK\033[m"):
-        """ Create logging lines. Added before and after script to return start and end times
-            If bash, adding at beginning of script also lines for error trapping
-        """
 
-        log_cols_dict = {"type"       : state,
-                         "step"       : self.step,
-                         "stepname"   : self.name,
-                         "stepID"     : self.script_id,
-                         "qstat_path" : self.pipe_data["qsub_params"]["qstat_path"],
-                         "level"      : self.level,
-                         "status"     : status,
-                         "file"       : self.pipe_data["log_file"]}
-        
-        if self.shell == "csh":
-        
-            script = """
-if ($?JOB_ID) then 
-	# Adding line to log file:  Date    Step    Host
-	echo `date '+%%d/%%m/%%Y %%H:%%M:%%S'`'\\t%(type)s\\t%(step)s\\t%(stepname)s\\t%(stepID)s\\t%(level)s\\t'$HOSTNAME'\\t'`%(qstat_path)s -j $JOB_ID | grep maxvmem | cut -d = -f 6`'\\t%(status)s' >> %(file)s
-else
-	echo `date '+%%d/%%m/%%Y %%H:%%M:%%S'`'\\t%(type)s\\t%(step)s\\t%(stepname)s\\t%(stepID)s\\t%(level)s\\t'$HOSTNAME'\\t-\\t%(status)s' >> %(file)s
-endif
-####
-""" % log_cols_dict
-
-        elif self.shell == "bash":
-
-            script = """
-# Adding line to log file
-log_echo {step} {stepname} {stepID} {level} $HOSTNAME $JOB_ID {type}
-
-""".format(**log_cols_dict)
-
-        else:
-            script = ""
-
-            if self.pipe_data["verbose"]:
-                sys.stderr.write("shell not recognized. Not creating log writing lines in scripts.\n")
-        
-        return script
-        
-        
 
     def get_set_options_line(self, type = "set"):
         """ Adds line for activating and deactivating certain bash options

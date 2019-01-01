@@ -25,7 +25,18 @@ class ScriptConstructorSGE(ScriptConstructor):
         """
         script = super(ScriptConstructorSGE, cls).get_helper_script(pipe_data)
 
+        # Add locksed command. For SGE, just remove
         script = re.sub("## locksed command entry point", r"", script)
+
+        # Add maxvmem calculation command:
+        # $6 is the job_id!
+        maxvmem_cmd = """
+        if [ ! $6 == 'ND' ]; then
+            maxvmem=$({qstat_path} -j $6 | grep maxvmem | cut -d = -f 6);
+        else
+            maxvmem="NA";
+        fi        """
+        script = re.sub("## maxvmem calc entry point", maxvmem_cmd, script)
 
         # Add job_limit function:
         if "job_limit" in pipe_data:
@@ -92,11 +103,56 @@ qsub {script_path}
         qsub_stdout =  "#$ -o %s" % self.pipe_data["stdout_dir"]
         # qsub_queue =   "#$ -q %s" % self.params["qsub_params"]["queue"]
 
-        return "\n".join([qsub_shell,
-                          qsub_name,
-                          qsub_stderr,
-                          qsub_stdout,
-                          qsub_holdjids]).replace("\n\n","\n")
+        script_header = "\n".join([qsub_shell,
+                                   qsub_name,
+                                   qsub_stderr,
+                                   qsub_stdout,
+                                   qsub_holdjids]).replace("\n\n","\n")
+        return script_header
+
+    def get_log_lines(self, state="Started", status="\033[0;32mOK\033[m"):
+        """ Create logging lines. Added before and after script to return start and end times
+                If bash, adding at beginning of script also lines for error trapping
+        """
+
+        log_cols_dict = {"type": state,
+                     "step": self.step,
+                     "stepname": self.name,
+                     "stepID": self.script_id,
+                     "qstat_path": self.pipe_data["qsub_params"]["qstat_path"],
+                     "level": self.level,
+                     "status": status,
+                     "file": self.pipe_data["log_file"]}
+
+        if self.shell == "csh":
+
+                script = """
+if ($?JOB_ID) then 
+    # Adding line to log file:  Date    Step    Host
+    echo `date '+%%d/%%m/%%Y %%H:%%M:%%S'`'\\t%(type)s\\t%(step)s\\t%(stepname)s\\t%(stepID)s\\t%(level)s\\t'$HOSTNAME'\\t'$JOB_ID'\\t'`%(qstat_path)s -j $JOB_ID | grep maxvmem | cut -d = -f 6`'\\t%(status)s' >> %(file)s
+else
+    echo `date '+%%d/%%m/%%Y %%H:%%M:%%S'`'\\t%(type)s\\t%(step)s\\t%(stepname)s\\t%(stepID)s\\t%(level)s\\t'$HOSTNAME'\\t'$JOB_ID'\\t-\\t%(status)s' >> %(file)s
+endif
+####
+""" % log_cols_dict
+
+        elif self.shell == "bash":
+
+            script = """
+# Adding line to log file
+log_echo {step} {stepname} {stepID} {level} $HOSTNAME $JOB_ID {type}
+
+""".format(**log_cols_dict)
+
+        else:
+            script = ""
+
+            if self.pipe_data["verbose"]:
+                sys.stderr.write("shell not recognized. Not creating log writing lines in scripts.\n")
+
+        return script
+
+
 
 # ----------------------------------------------------------------------------------
 # HighScriptConstructorSGE definition
