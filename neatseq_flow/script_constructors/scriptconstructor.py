@@ -128,18 +128,13 @@ run_index="{run_index}"
 
 echo "Running job: " $qsubname
 
+# Setting trap
+trap_with_arg func_trap $module $instance $qsubname Queue $HOSTNAME $$ SIGUSR2 ERR INT TERM
+
 module=awk 'BEGIN {{FS="\\.\\.";}} {{print $1}}' <<< $qsubname
 instance=awk 'BEGIN {{FS="\\.\\.";}} {{print $2}}' <<< $qsubname
-awkNF=awk 'BEGIN {{FS="\\.\\.";}} {{print NF}}' <<< $qsubname
-if [ awkNF > 3 ] then;
-    scrpt_type="low";
-else
-    scrpt_type="high";
-fi
 
-log_echo $module $instance $qsubname low $HOSTNAME $$ KILLED
-
-# script_path=$(grep $qsubname $script_index | cut -f 2 )
+log_echo $module $instance $qsubname Queue $HOSTNAME $$ Started
 
 script_path=$(awk -v qsname="$qsubname" '$0 ~ qsname".*" {{print $2}}' $script_index)
 
@@ -164,11 +159,13 @@ do
     if [ -f {run_index}.killall ]; then
         echo -e $run_index ".killall file created. Stopping all waiting jobs. \\nMake sure you delete the file before re-running!"
         locksed "s:\($qsubname\).*:# \\1\\tkilled:" $run_index
+        kill $$;
         exit 1;
     fi
     if [ ! -f {run_index} ]; then
         echo $run_index " file deleted. Stopping all waiting jobs"
         locksed "s:\($qsubname\).*:# \\1\\tkilled:" $run_index
+        kill $$;
         exit 1;
     fi
 
@@ -180,6 +177,7 @@ do
     # Is there overlap between 'running' and 'hold_jids'?
     overlap=0
     result=""
+
     for item1 in "${{hold_jids[@]}}"; do
         for item2 in "${{running[@]}}"; do
             if [[ $item1 = $item2 ]]; then
