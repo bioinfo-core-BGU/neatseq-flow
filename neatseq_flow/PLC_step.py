@@ -231,7 +231,11 @@ class Step(object):
         # Storing reference to main pipeline object:
         self.main_pl_obj = caller
 
+        # The following will be used to separate elements in the jid names.
+        # If you change this, you have to change it in scriptconstructor, in the lines
+        # beginning with module= and instance=, according to awk regular expression definitions!
         self.jid_name_sep = ".."
+
 
         self.use_provenance = True
         # -----------------------------
