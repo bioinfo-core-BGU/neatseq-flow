@@ -31,8 +31,8 @@ class ScriptConstructorSGE(ScriptConstructor):
         # Add maxvmem calculation command:
         # $6 is the job_id!
         maxvmem_cmd = """
-        if [ ! $6 == 'ND' ]; then
-            maxvmem=$({qstat_path} -j $6 | grep maxvmem | cut -d = -f 6);
+        if [ ! $jobid == 'ND' ]; then
+            maxvmem=$({qstat_path} -j $jobid | grep maxvmem | cut -d = -f 6);
         else
             maxvmem="NA";
         fi""".format(qstat_path=pipe_data["qsub_params"]["qstat_path"])

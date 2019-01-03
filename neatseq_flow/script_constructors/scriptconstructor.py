@@ -73,6 +73,7 @@ log_echo() {{
     # $5: hostname
     # $6: jobid
     # $7: type (Started/Finished)
+    jobid=$6
 
     
     if [ $7 == 'Finished' ]; then
@@ -82,11 +83,11 @@ log_echo() {{
         maxvmem="-";
     fi
 
-    if [ $6 == 'ND' ]; then
-        $6=$$
+    if [ $jobid == 'ND' ]; then
+        jobid=$$
     fi        
 
-    echo -e $(date '+%d/%m/%Y %H:%M:%S')'\\t'$7'\\t'$1'\\t'$2'\\t'$3'\\t'$4'\\t'$5'\\t'$6'\\t'$maxvmem'\\t[0;32mOK[m' >> {log_file};
+    echo -e $(date '+%d/%m/%Y %H:%M:%S')'\\t'$7'\\t'$1'\\t'$2'\\t'$3'\\t'$4'\\t'$5'\\t'$jobid'\\t'$maxvmem'\\t[0;32mOK[m' >> {log_file};
 
 }}
 
