@@ -50,7 +50,8 @@ func_trap() {{
     # $5: hostname
     # $6: jobid
     # $8: sig
-    
+    jobid=$6
+
     ## maxvmem calc entry point
 
     if [ $7 == 'ERR' ]; then err_code='ERROR'; fi
@@ -58,6 +59,9 @@ func_trap() {{
     if [ $7 == 'TERM' ]; then err_code='TERMINATED'; fi
     if [ $7 == 'SIGUSR2' ]; then err_code='TERMINATED'; fi
 
+    if [ $jobid == 'ND' ]; then
+        jobid=$$
+    fi        
 
     echo -e $(date '+%d/%m/%Y %H:%M:%S')'\\tFinished\\t'$1'\\t'$2'\\t'$3'\\t'$4'\\t'$5'\\t'$6'\\t'$maxvmem'\\t[0;31m'$err_code'[m' >> {log_file}; 
 
