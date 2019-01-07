@@ -140,7 +140,7 @@ To install, perform the following steps:
 
    .. code-block:: bash
 
-        curl http://neatseq-flow.readthedocs.io/en/latest/extra/NeatSeq_Flow_Tutorial_Install.yaml > NeatSeq_Flow_Tutorial_Install.yaml
+        curl -L  http://neatseq-flow.readthedocs.io/en/latest/extra/NeatSeq_Flow_Tutorial_Install.yaml > NeatSeq_Flow_Tutorial_Install.yaml
 
 #. Install the **NeatSeq-Flow** environment
    The following commands will install **NeatSeq-Flow** and all the required modules and programs.
