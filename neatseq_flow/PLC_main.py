@@ -528,7 +528,6 @@ class NeatSeqFlow(object):
                 script_fn = "{script_dir}{tag}{ext}".format(script_dir=tags_script_dir,
                                                             tag=tag,
                                                             ext=".sh")
-                print script_fn
                 with open(script_fn, "w") as tag_fh:
                     # Writing header :)
                     tag_fh.write("""
