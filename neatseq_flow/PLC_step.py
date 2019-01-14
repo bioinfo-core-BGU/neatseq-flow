@@ -1452,40 +1452,8 @@ Sample slots:
                 # print self.params["conda"]
                 self.params["conda"] = manage_conda_params(self.params["conda"])
                 # print self.params["conda"]
-#                 sys.exit()
-#
-#                 if not self.params["conda"]["path"]: # == None:  # Path is empty (None or "", take from $CONDA_PREFIX
-#                     # 1. If CONDA_BASE defined, use it
-#                     # 2. If CONDA_PREFIX defined, compute CONDA_BASE from `conda info --root`
-#                     # 3. Fail
-#                     if "CONDA_BASE" in os.environ:
-#                         self.params["conda"]["path"] = os.environ["CONDA_BASE"]
-#                         if "env" not in self.params["conda"] or not self.params["conda"]["env"]: ##==None:
-#                             raise AssertionExcept("'conda: path' is empty, taking from CONDA_BASE. Failed because no 'env' was passed. When using CONDA_BASE, you must supply an environment name with 'conda: env'",step=self.get_step_name())
-#
-#                     else:
-#                         raise AssertionExcept("""'conda' 'path' is empty, but no CONDA_BASE is defined.
-# Make sure you are in an active conda environment, and that you executed the following command:
-# > {start_col}export CONDA_BASE=$(conda info --root){end_col}
-# """.format(start_col='\033[93m',end_col='\033[0m'),step = self.get_step_name())
-#
-#
-#
-#                 if "env" not in self.params["conda"] or not self.params["conda"]["env"]:# == None:
-#                     # if self.pipe_data["conda"]["env"]:
-#                         # self.write_warning("'env' is empty. Using global 'env'")
-#                     try:
-#                         self.params["conda"]["env"] = self.pipe_data["conda"]["env"]
-#                     except KeyError:
-#                         raise AssertionExcept("You must supply an 'env' in conda params.", step=self.get_step_name())
-#                     else:
-#                         self.write_warning("'env' is empty. Using global 'env'")
-#                     # re_env = re.search("envs/(\S+)", self.params["conda"]["path"])
-#                     # try:
-#                         # self.params["conda"]["env"] = re_env.group(1)
-#                     # except:
-#                         # raise AssertionExcept("Bad conda env path. Make sure it ends with 'envs/ENV_NAME'", step=self.get_step_name())
-                
+                # sys.exit()
+
                 # Add bin at end of path
                 self.params["conda"]["path"] = os.path.join(self.params["conda"]["path"],"bin")    
 
@@ -1630,7 +1598,6 @@ Sample slots:
     def get_provenance(self):
         return self.provenance
 
-
     def get_step_tag(self):
         """ Returns the step tag, if one was defined"""
 
@@ -1638,8 +1605,16 @@ Sample slots:
             if isinstance(self.params["tag"], list):
                 raise AssertionExcept("Duplicate tagts defined. At the moment, only one tag permitted per step")
                 # return self.params["tag"]
+            elif self.params["tag"] is None:  # This is to stop an instance from inheriting tag
+                return [False]
             else:
                 return [self.params["tag"]]
+        # If tag is defined in one of bases, use it (first found, first use. In future, enable lists of tags...
+        elif any(["tag" in base_step.params for base_step in self.get_base_step_list()]):  # One of bases has a tag:
+            for base_step in self.get_base_step_list():
+                if "tag" in base_step.params:
+                    self.params["tag"] = base_step.params["tag"]
+                    return [self.params["tag"]]
         else:
             return [False]
 

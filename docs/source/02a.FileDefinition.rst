@@ -179,6 +179,7 @@ Required parameters for each step
     1. If the program executed by the module is on the search PATH of all the nodes in the queue, you can just pass the program name without the full path. This is not usually recommended.
     2. If the program requires a specific version of python or Rscript, you can append those before the actual path, *e.g.* ``/path/to/python /path/to/executable``
     3. Sometimes, modules can require a path to a directory rather than to an executable. See, *e.g.*, module ``UCSC_BW_wig``.
+    4. Some modules, such as ``manage_types`` do not use the ``script_path`` parameter. For these modules, you must include an empty ``script_path``, as it is a required parameter.
 
 .. _additional_parameters:
 
@@ -187,10 +188,17 @@ Additional parameters
 
 Other parameters you can set for each step to control the execution of the step scripts:
 
+``tag``
+    Set a tag for the instance. All instances downstream to the tagged instance will have the same tag. The scripts created by all instances with the same tag can be executed at once using the tag master-script created in directory ``scripts/tags_scripts``.
+
+.. Tip::
+    #. If an instance has multiple bases, the tag of the first tagged base will be used.
+    #. To stop an instance from getting its base's tag, set an empty ``tag:`` parameter.
+
 ``setenv``
     Set various environment variables for the duration of script execution. This is useful when the software executed by the script requires setting specific environment variables which you do not want to set globally on all nodes.
 
-.. Note:: For ``bash`` scripts, ``export`` will be used instead of ``setenv``.
+.. Note:: For ``bash`` scripts, ``export`` will automatically be used instead of ``setenv``.
 
 ``precode``
     Additional code to be added before the actual script, such as unsetting variables and what not. Rarely used.

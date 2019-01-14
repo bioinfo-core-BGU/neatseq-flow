@@ -24,21 +24,16 @@ def make_interpol_func(variables_bunch):
         if isinstance(atom, str):
 
             m = var_re.search(atom)
-            
-            
-            #if m:
-            #    print "Atom: {atom} of type {type}; Match: {match}".format(atom=atom, type=type(atom),match=m.group(1))
-            #    print eval("loc_variables_bunch.%s" % m.group(1))
-                # sys.exit()
+
             # While a match exists:
             while (m):
                 # print "in here: %s\n" % atom
                 # print "loc_variables_bunch.%s\n" % m.group(1)
-                
                 # print "Atom: " + atom
                 try:
                     # Replace the matched variable with something from variables_bunch
-                    repl_str = eval("loc_variables_bunch.%s" % m.group(1))
+                    # Also converting to str, in case value is int or float
+                    repl_str = str(eval("loc_variables_bunch.%s" % m.group(1)))
                     if repl_str==None:
                         repl_str = ""
 
@@ -47,17 +42,14 @@ def make_interpol_func(variables_bunch):
                     # If not found, raise exception
                     raise Exception("Unrecognised variable '%s'" % m.group(1), "Variables")
                 except TypeError:
-                    raise Exception("A 'TypeError' exception has occured. This may happen when variables are left empty. Make sure all your variables have values. ", "Variables")
-                    # print "---> %s <-----\n" % m.group(1)
-                    # pass
+                    raise Exception("A 'TypeError' exception has occured. This may happen when variables are left "
+                                    "empty. Make sure all your variables have values. ", "Variables")
                 m = var_re.search(atom)
-
 
         return atom
 
     return interpol_atom
-    
-   
+
 def walk(node, variables_bunch, callback):
         
     if isinstance(node,dict):
@@ -99,7 +91,6 @@ def walk(node, variables_bunch, callback):
     
 def test_vars(node):
 
-    
     if isinstance(node,dict):
         for key in node.keys():
             if re.search("[^a-zA-Z0-9_]",key):
@@ -112,7 +103,7 @@ def test_vars(node):
             test_vars(node[key])
     elif isinstance(node,list):
         raise Exception("ERROR: Please don't use lists in variables section!", "Variables")
-    elif isinstance(node,str):
+    elif type(node) in [str,int,float]:
         pass
     elif node==None:
         # raise Exception("It seems you have an empty variable!" % key, "Variables")
