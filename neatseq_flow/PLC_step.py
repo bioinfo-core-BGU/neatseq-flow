@@ -575,7 +575,7 @@ Dependencies: {depends}""".format(name=self.name,
                         self.write_warning("There is a difference from %s in key %s\n" % (other_step_name, k))
             else:
                 sample_data[k] = deepcopy(other_sample_data[k])
-        
+
         return sample_data
 
     def set_sample_data(self, sample_data = None):
@@ -604,11 +604,13 @@ Dependencies: {depends}""".format(name=self.name,
                 self.sample_data = self.sample_data_merge(self.get_sample_data(),
                                                           base_step.get_sample_data(),
                                                           base_step.get_step_name())
+
                 if self.use_provenance:
                     self.provenance = self.sample_data_merge(self.get_provenance(),
                                                              base_step.get_provenance(),
                                                              base_step.get_step_name())
                     self.sample_data_original = deepcopy(self.sample_data)
+
 
         # This part is experimental and not 100% complete. Changes will probably occur in the future.
         # 1. Convert "exclude_sample_list" to "sample_list":
@@ -626,13 +628,15 @@ Dependencies: {depends}""".format(name=self.name,
                 raise AssertionExcept("'all_samples' is no longer supported as valsue for 'sample_list'."
                                       "Use a secondary base to import old samples")
             # 2b. For sample list, stash the new sample list
-            else:
+            elif isinstance(self.params["sample_list"], list):
                 if list(set(self.params["sample_list"]) - set(self.pipe_data["samples"])):
                     raise AssertionExcept("'sample_list' includes samples not defined in sample data! ({bad})".
                                           format(bad=", ".join(set(self.params["sample_list"]) -
                                                                set(self.pipe_data["samples"]))),
                                           step=self.get_step_name())
                 self.stash_sample_list(self.params["sample_list"])
+            else:   # It's a dict!
+                self.stash_sample_list(self.get_sample_list_by_category(self.params["sample_list"]))
 
         # Trying running step specific sample initiation script:
         try:
@@ -1481,7 +1485,7 @@ Sample slots:
     def get_category_levels(self, category):
         """
 
-        :param category:
+        :param: category
         :return: List of levels in category
         """
         try:
@@ -1489,6 +1493,7 @@ Sample slots:
                          for sample
                          in self.sample_data["samples"]})
         except KeyError:
+            pp(self.sample_data)
             raise AssertionExcept("Category {cat} not defined for all samples".format(cat=category))
 
     def get_samples_in_category_level(self, category, cat_level):
@@ -1610,11 +1615,57 @@ Sample slots:
             else:
                 return [self.params["tag"]]
         # If tag is defined in one of bases, use it (first found, first use. In future, enable lists of tags...
-        elif any(["tag" in base_step.params for base_step in self.get_base_step_list()]):  # One of bases has a tag:
+        elif self.get_base_step_list() is not None and \
+                any(["tag" in base_step.params
+                     for base_step
+                     in self.get_base_step_list()]):  # One of bases has a tag:
             for base_step in self.get_base_step_list():
                 if "tag" in base_step.params:
                     self.params["tag"] = base_step.params["tag"]
                     return [self.params["tag"]]
         else:
             return [False]
+
+    def get_sample_list_by_category(self, sample_dict):
+
+        if "category" not in sample_dict:
+            raise AssertionExcept("You must include a 'category' in sample_list, if passing a dict!")
+
+        if type(sample_dict["category"]) not in [str, int]:
+            raise AssertionExcept("Category must be a single value, not a list etc.")
+
+        # Check all samples have grouping data
+        bad_samples = [sample
+                       for sample
+                       in self.sample_data["samples"]
+                       if "grouping" not in self.sample_data[sample]]
+        if bad_samples:
+            raise AssertionExcept("For some reason, sample '{smp}' does not have "
+                                  "grouping data".format(smp=", ".join(bad_samples)))
+        # Check category is in all samples
+        bad_samples = [sample
+                       for sample
+                       in self.sample_data["samples"]
+                       if sample_dict["category"] not in self.sample_data[sample]["grouping"]]
+        if bad_samples:
+            raise AssertionExcept(
+                "Sample '{smp}' does not have '{cat}' category".format(smp=", ".join(bad_samples),
+                                                                       cat=sample_dict["category"]))
+
+        if type(sample_dict["levels"]) not in [str,list]:
+            raise AssertionExcept("In sample_list, level must be a string or a list of strings.")
+        # Check all levels exist in category
+        if not all(
+                map(lambda level: level in self.get_category_levels(sample_dict["category"]), sample_dict["levels"])):
+            bad_levels = ", ".join([level for level in sample_dict["levels"] if
+                                    level not in self.get_category_levels(sample_dict["category"])])
+            raise AssertionExcept("Level '{lev}' is not defined for "
+                                  "category '{cat}'".format(lev=bad_levels,
+                                                            cat=sample_dict["category"]))
+        # Create new sample list:
+        samples = list()
+        for level in sample_dict["levels"]:
+            samples.extend(self.get_samples_in_category_level(sample_dict["category"], level))
+
+        return samples
 
