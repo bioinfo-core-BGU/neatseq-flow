@@ -21,7 +21,7 @@ from pprint import pprint as pp
 from datetime import datetime
 from collections import OrderedDict
 
-from modules.parse_sample_data import parse_sample_file,parse_mapping_file
+from modules.parse_sample_data import parse_sample_file,parse_grouping_file
 from modules.parse_param_data import parse_param_file
 
 from PLC_step import Step, AssertionExcept
@@ -34,7 +34,7 @@ class NeatSeqFlow(object):
     def __init__(self,
                  sample_file,
                  param_file,
-                 mapping_file=None,
+                 grouping_file=None,
                  home_dir = None,
                  message = None,
                  runid = None,
@@ -78,25 +78,26 @@ class NeatSeqFlow(object):
         except:
             raise
 
-        try:
-            self.sample_data["project_data"]["mapping_file"]
-        except KeyError:
-            # No mapping_file or no project_data
-            pass
-        else:  # Mapping file exists in project data
-            if mapping_file:
-                sys.exit("You passed both --mapping via CLI and 'mapping_file' in the sample_file.")
-            if len(self.sample_data["project_data"]["mapping_file"]) >1:
-                sys.exit("You passed multiple mapping_files in the sample_file.")
+        if "grouping_file" in self.sample_data["project_data"]:
+            if grouping_file:
+                sys.exit("You passed both --mapping via CLI and 'grouping_file' in the sample_file.")
+            if len(self.sample_data["project_data"]["grouping_file"]) >1:
+                sys.exit("You passed multiple grouping_files in the sample_file.")
             else:
                 # If mapping file passed via sample file, transfer into grouping_file and remove from sample data
                 sys.stderr.write("Mapping file passed via samples file!\n")
-                mapping_file = self.sample_data["project_data"]["mapping_file"][0]
-                del self.sample_data["project_data"]["mapping_file"]
+                grouping_file = self.sample_data["project_data"]["grouping_file"][0]
+                del self.sample_data["project_data"]["grouping_file"]
         # Reading grouping file
-        if mapping_file:
+        if grouping_file:
+            if isinstance(grouping_file,list):
+                if len(grouping_file)>1:
+                    sys.exit("Please pass only one grouping file")
+                else:
+                    grouping_file=grouping_file[0]
+
             try:
-                mapping_data = parse_mapping_file(mapping_file)
+                mapping_data = parse_grouping_file(grouping_file)
             except Exception as raisedex:
                 if raisedex.args[0] == "Issues in grouping":
                     sys.exit(raisedex.args[1])
