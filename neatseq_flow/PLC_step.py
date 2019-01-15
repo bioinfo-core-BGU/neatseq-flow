@@ -1652,8 +1652,12 @@ Sample slots:
                 "Sample '{smp}' does not have '{cat}' category".format(smp=", ".join(bad_samples),
                                                                        cat=sample_dict["category"]))
 
+        if "levels" not in sample_dict:
+            raise AssertionExcept("In sample_list, you must include a 'levels' slot with the required level(s).")
         if type(sample_dict["levels"]) not in [str,list]:
             raise AssertionExcept("In sample_list, level must be a string or a list of strings.")
+        if type(sample_dict["levels"]) == str:
+            sample_dict["levels"] = [sample_dict["levels"]]
         # Check all levels exist in category
         if not all(
                 map(lambda level: level in self.get_category_levels(sample_dict["category"]), sample_dict["levels"])):
