@@ -207,9 +207,9 @@ done
 
         return script
 
-        # ----------------------------------------------------------------
-        # Instance methods
-        # ----------------------------------------------------------------
+# ----------------------------------------------------------------
+# Instance methods
+# ----------------------------------------------------------------
 
     def __init__(self, **kwargs):#step, name, number, shell, params, pipe_data, kill_obj=None):
         """ Create a script constructor with name(i.e. 'qsub_name') and script path

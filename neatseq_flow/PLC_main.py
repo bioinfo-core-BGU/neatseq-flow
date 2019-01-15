@@ -709,6 +709,15 @@ class NeatSeqFlow(object):
             print "Make sure the script constructor defines class method 'get_helper_script()'"
             raise
 
+        try:
+            utilities_script = scriptclass.get_utilities_script(self.pipe_data)
+            if utilities_script:
+                with open(self.pipe_data["scripts_dir"] + "96.utilities.sh", "w") as script_fh:
+                    script_fh.write(utilities_script)
+        except:
+            pass
+
+
     def create_log_file(self):
         """ Create a initialize the log file.
         """

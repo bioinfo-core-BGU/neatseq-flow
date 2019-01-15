@@ -63,6 +63,18 @@ wait_limit() {{
 
         return None
 
+    @classmethod
+    def get_utilities_script(cls, pipe_data):
+        return """
+function show_PL_jobs { 
+    currid=$(tail -n1  logs/version_list.txt)
+    qstat -j *$currid | grep -e job_number -e submission_time -e owner -e cwd -e job_name -e script_file -e ================
+}
+
+export -f show_PL_jobs 
+        
+        """
+
     def get_command(self):
         """ Return the command for executing this script
         """
