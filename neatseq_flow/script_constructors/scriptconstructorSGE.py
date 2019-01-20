@@ -74,9 +74,17 @@ function show_PL_jobs {
 
 # Show tail of current log file
 function tail_curr_log {
-    currid=$(tail -n1  logs/version_list.txt | xargs)
+    if [ -z $1 ] 
+    then
+        n=5
+    else
+        n=$1
+    fi
+    
+    currid=$(tail -n1  logs/version_list.txt | xargs | cut -f1 -d" ")
+
     log_file="logs/log_$currid.txt"
-    tail $log_file
+    tail -n $n $log_file
 }        
 """
 
