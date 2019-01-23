@@ -129,8 +129,8 @@ class Step_MODULENAME(Step):
         # Put the output file/s in the sample_data dictionary
         # If output file is standard format, put in suitable slot. 
         # If not, you can invent a slot for it, in a sensible way.
-        self.sample_data[sample]["OUTPUT_FILE_TYPE1"] = sample_dir + self.sample_data["Title"] + "_MODULE_SUFFIX"
-        self.sample_data[sample]["OUTPUT_FILE_TYPE2"] = ...
+        self.sample_data["project_data"]["OUTPUT_FILE_TYPE1"] = sample_dir + self.sample_data["Title"] + "_MODULE_SUFFIX"
+        self.sample_data["project_data"]["OUTPUT_FILE_TYPE2"] = ...
         # Mark file for md5 stamping in log files:
         # Repeat for each file created by the module that you wish to stamp
         self.stamp_file(self.sample_data["project_data"]["OUTPUT_FILE_TYPE1"])
