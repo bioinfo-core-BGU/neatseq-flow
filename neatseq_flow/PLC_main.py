@@ -6,7 +6,7 @@ Actual work is done by calling other class types: PLCStep and PLCName
 """
 
 __author__ = "Menachem Sklarz"
-__version__ = "1.2.0"
+__version__ = "1.5.0"
 
 
 import os

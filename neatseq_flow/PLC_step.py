@@ -19,7 +19,7 @@ from pprint import pprint as pp
 from modules.parse_param_data import manage_conda_params
 
 __author__ = "Menachem Sklarz"
-__version__ = "1.2.0"
+__version__ = "1.5.0"
 
 
 
