@@ -1202,17 +1202,18 @@ Sample slots:
                 if isinstance(self.params["redir_params"][key],list):
                     self.write_warning("Passed %s twice as redirected parameter!" % key)
                     for keyval in self.params["redir_params"][key]:
-                        redir_param_script += "{key}{sep}{val} \\\n\t".\
-                            format(key=key,
-                                   val=keyval if keyval is not None else "",
-                                   sep=self.arg_separator)
+                        redir_param_script += "{key_sep_val} \\\n\t". \
+                            format(key_sep_val=self.arg_separator.join([str(key_val)
+                                                                        for key_val
+                                                                        in [key, keyval]
+                                                                        if key_val is not None]))
+
                 else:
-                    redir_param_script += "{key}{sep}{val} \\\n\t".\
-                            format(key=key,
-                                   val=self.params["redir_params"][key]
-                                       if self.params["redir_params"][key] is not None
-                                       else "",
-                                   sep=self.arg_separator)
+                    redir_param_script += "{key_sep_val} \\\n\t".\
+                            format(key_sep_val=self.arg_separator.join([str(key_val)
+                                                                        for key_val
+                                                                        in [key,self.params["redir_params"][key]]
+                                                                        if key_val is not None]))
 
         return redir_param_script
 
