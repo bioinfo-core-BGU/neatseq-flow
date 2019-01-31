@@ -349,7 +349,13 @@ source {activate_path} {environ}
         
         return script
         
-        
+    def get_rm_intermediate_line(self):
+        """
+
+        :return:
+        """
+        return("rm -rf {dir}*\n".format(dir=self.master.base_dir))
+
     def write_command(self, command):
     
         self.filehandle.write(command)

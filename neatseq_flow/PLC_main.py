@@ -273,7 +273,10 @@ class NeatSeqFlow(object):
 
         # Make the qalter script:
         self.create_qalter_script()
-        
+
+        # Make intermediate removal script
+        self.create_rm_intermediate_script()
+
         # Make js graphical representation (maybe add parameter to not include this feature?)
         sys.stdout.write("Making workflow plots...\n")
         self.create_js_graphic()
@@ -1326,3 +1329,15 @@ saveWidget(myviz,file = "%(out_file_name)s",selfcontained = F)
         """
         self.global_sample_data = {step:{} for step in self.get_step_names()}
         return self.global_sample_data
+
+    def create_rm_intermediate_script(self):
+        """
+        Create script 95.remove_intermediates.sh and add code for removal of interemediate files
+        The code is obtained by each step depending on whether the ``intermediate`` flag was included in the parameters
+        :return:
+        """
+        # Make script file
+        # For each step, call the removal command
+        with open(self.pipe_data["scripts_dir"] + "95.remove_intermediates.sh", "w") as script_fh:
+            for instance in self.step_list:
+                script_fh.writelines(instance.get_rm_intermediate_line())

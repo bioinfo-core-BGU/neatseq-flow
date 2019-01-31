@@ -1374,49 +1374,49 @@ Sample slots:
         self.stamped_files.append(filename)
         
         
-    def register_stamped_files(self,qsub_name):
-        """
-        """
-        
-        script = "######\n# Registering files with md5sum:\n"
-
-        # Bash needs the -e flag to render \t as tabs.
-        if self.shell=="csh":
-            echo_cmd = "echo"
-        elif self.shell=="bash":
-            echo_cmd = "echo -e"
-        else:
-            pass
-
-        for filename in self.stamped_files:
-            script += """
-{echo_cmd} `date '+%%d/%%m/%%Y %%H:%%M:%%S'` '\\t{step}\\t{stepname}\\t{stepID}\\t' `md5sum {filename}` >> {file}
-""".format(echo_cmd=echo_cmd,
-           filename=filename,
-           step= self.get_step_step(),
-           stepname=self.get_step_name(),
-           stepID=qsub_name,
-           file=self.pipe_data["registration_file"])
-        
-        script += "#############\n\n"
-            
-        return script
-
-    def register_files(self, qsub_name):
-        """
-        """
-        
-        script = ""
-        if self.stamped_files:
-            script += self.register_stamped_files(qsub_name)
-            
-        # if self.stamped_dirs:
-            # script += self.register_files_in_dir(qsub_name)
-            
-        self.stamped_files = list()
-        # self.stamped_dirs  = list()
-
-        return script
+#     def register_stamped_files(self,qsub_name):
+#         """
+#         """
+#
+#         script = "######\n# Registering files with md5sum:\n"
+#
+#         # Bash needs the -e flag to render \t as tabs.
+#         if self.shell=="csh":
+#             echo_cmd = "echo"
+#         elif self.shell=="bash":
+#             echo_cmd = "echo -e"
+#         else:
+#             pass
+#
+#         for filename in self.stamped_files:
+#             script += """
+# {echo_cmd} `date '+%%d/%%m/%%Y %%H:%%M:%%S'` '\\t{step}\\t{stepname}\\t{stepID}\\t' `md5sum {filename}` >> {file}
+# """.format(echo_cmd=echo_cmd,
+#            filename=filename,
+#            step= self.get_step_step(),
+#            stepname=self.get_step_name(),
+#            stepID=qsub_name,
+#            file=self.pipe_data["registration_file"])
+#
+#         script += "#############\n\n"
+#
+#         return script
+#
+#     def register_files(self, qsub_name):
+#         """
+#         """
+#
+#         script = ""
+#         if self.stamped_files:
+#             script += self.register_stamped_files(qsub_name)
+#
+#         # if self.stamped_dirs:
+#             # script += self.register_files_in_dir(qsub_name)
+#
+#         self.stamped_files = list()
+#         # self.stamped_dirs  = list()
+#
+#         return script
         
         
         
@@ -1674,3 +1674,13 @@ Sample slots:
 
         return samples
 
+    def get_rm_intermediate_line(self):
+        """
+
+        :return: line to be added to intermediates removal script
+        """
+
+        if "intermediate" in self.params:
+            return(self.main_script_obj.get_rm_intermediate_line())
+        else:
+            return("")

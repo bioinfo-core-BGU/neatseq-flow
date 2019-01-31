@@ -195,6 +195,9 @@ Other parameters you can set for each step to control the execution of the step 
     #. If an instance has multiple bases, the tag of the first tagged base will be used.
     #. To stop an instance from getting its base's tag, set an empty ``tag:`` parameter.
 
+``intermediate``
+    Will add a line to script ``scripts/95.remove_intermediates.sh`` for deleting the results of this step. If the data produced by this step is not required in the long term, add this flag and when you are done with the project, you can execute ``scripts/95.remove_intermediates.sh`` to remove all intermediate files.
+
 ``setenv``
     Set various environment variables for the duration of script execution. This is useful when the software executed by the script requires setting specific environment variables which you do not want to set globally on all nodes.
 
