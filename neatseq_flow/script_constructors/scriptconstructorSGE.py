@@ -68,7 +68,7 @@ wait_limit() {{
         return """
 # Show active jobs
 function show_PL_jobs { 
-    currid=$(tail -n1  logs/version_list.txt)
+    currid=$(tail -n1  logs/version_list.txt | xargs | cut -f1)
     qstat -j *$currid | grep -e job_number -e submission_time -e owner -e cwd -e job_name -e "jid_predecessor_list:" -e script_file -e ================
 }
 
@@ -81,11 +81,22 @@ function tail_curr_log {
         n=$1
     fi
     
-    currid=$(tail -n1  logs/version_list.txt | xargs | cut -f1 -d" ")
+    currid=$(tail -n1  logs/version_list.txt | xargs | cut -f1)
 
     log_file="logs/log_$currid.txt"
     tail -n $n $log_file
 }        
+
+function kill_all_PL_jobs {
+    currid=$(tail -n1  logs/version_list.txt | xargs | cut -f1)
+    qstat -j *$currid \\
+        | grep -e job_number \\
+        | cut -f2 -d ":" \\
+        | while read jid; \\
+          do qdel $jid; \\
+          done
+
+}
 """
 
     def get_command(self):
