@@ -552,6 +552,18 @@ Dependencies: {depends}""".format(name=self.name,
                for stepname
                in self.get_depend_list()}
 
+    def get_base_base_dir(self, base_n):
+        """
+        Returns the base_dir for step base_n. base_n must be a base of current step!
+        :param base_n:
+        :return: the base_dir for step base_n.
+        """
+        if base_n not in self.get_depend_list():
+            raise AssertionExcept("No base '{base}' defined!".format(base=base_n))
+        else:
+            return self.main_pl_obj.step_list[self.main_pl_obj.step_list_index.index(base_n)].base_dir
+
+
     def sample_data_merge(self, sample_data, other_sample_data, other_step_name):
         """ Merge a different sample_data dict into this step's sample_data
             Used for cyclic sungrebe - basing a step on more than one base.
