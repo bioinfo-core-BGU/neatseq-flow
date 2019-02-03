@@ -552,7 +552,7 @@ Dependencies: {depends}""".format(name=self.name,
                for stepname
                in self.get_depend_list()}
 
-    def get_base_base_dir(self, base_n):
+    def get_base_instance(self, base_n):
         """
         Returns the base_dir for step base_n. base_n must be a base of current step!
         :param base_n:
@@ -561,7 +561,7 @@ Dependencies: {depends}""".format(name=self.name,
         if base_n not in self.get_depend_list():
             raise AssertionExcept("No base '{base}' defined!".format(base=base_n))
         else:
-            return self.main_pl_obj.step_list[self.main_pl_obj.step_list_index.index(base_n)].base_dir
+            return self.main_pl_obj.step_list[self.main_pl_obj.step_list_index.index(base_n)]
 
 
     def sample_data_merge(self, sample_data, other_sample_data, other_step_name):
