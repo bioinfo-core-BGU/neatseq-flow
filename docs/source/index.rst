@@ -20,13 +20,14 @@
 .. sidebar:: **What's new**...
 
 
-   * Improved GUI
+   * `It is now possible to run NeatSeq-Flow also on Windows and Mac <https://github.com/bioinfo-core-BGU/NeatSeq-Flow-Using-Docker>`_
+   * Improved GUI (press on the image)
 
      .. figure:: https://raw.githubusercontent.com/bioinfo-core-BGU/NeatSeq-Flow-GUI/master/doc/Static_GUI.png
         :target: https://raw.githubusercontent.com/bioinfo-core-BGU/NeatSeq-Flow-GUI/master/doc/NeatSeq-Flow-GUI.gif
         :align: left
 
-   * DESeq visual report
+   * `Visual report for differential expression (DESeq2), clustering and functional analyses <https://github.com/bioinfo-core-BGU/NeatSeq-Flow_Workflows/blob/master/DeSeq_Workflow/Tutorial.md>`_
    * `GATK workflow <https://neatseq-flow.readthedocs.io/projects/neatseq-flow-modules/en/latest/Workflow_docs/GATK_workflow.html>`_
    * `QIIME2 workflow <https://neatseq-flow.readthedocs.io/projects/neatseq-flow-modules/en/latest/Workflow_docs/QIIME2_workflow.html>`_
 
@@ -34,8 +35,8 @@
 
 
    * :ref:`Quick start: install and try NeatSeq-Flow <gui_tutorial>`
-   * GitHub: `NeatSeq-Flow <https://github.com/bioinfo-core-BGU/neatseq-flow>`_.
-   * GitHub: `NeatSeq-Flow GUI <https://github.com/bioinfo-core-BGU/NeatSeq-Flow-GUI>`_.
+   * GitHub: `NeatSeq-Flow <https://github.com/bioinfo-core-BGU/neatseq-flow>`_
+   * GitHub: `NeatSeq-Flow GUI <https://github.com/bioinfo-core-BGU/NeatSeq-Flow-GUI>`_
    * `A short movie demonstrating the GUI <https://raw.githubusercontent.com/bioinfo-core-BGU/NeatSeq-Flow-GUI/master/doc/NeatSeq-Flow-GUI.gif>`_
    * `Module and Workflow repository <http://neatseq-flow.readthedocs.io/projects/neatseq-flow-modules/en/latest/>`_
    * `Article on BioRXiv <https://www.biorxiv.org/content/early/2018/12/18/173005>`_
