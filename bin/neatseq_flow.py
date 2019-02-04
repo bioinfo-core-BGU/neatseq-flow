@@ -38,8 +38,8 @@ parser.add_argument("-s", "--sample_file", help="Location of sample file, in cla
 parser.add_argument("-p", "--param_file", help="Location of parameter file. Can be a comma-separated list - all will "
                                                "be used as one. Alternatively, -p can be passed many times with "
                                                "different param files", action="append")
-parser.add_argument("-g", "--mapping", help="Location of grouping file. A tab-separated table describing the samples "
-                                             "and their proeprties.", action="append")
+parser.add_argument("-g", "--mapping", help="Location of grouping (or mapping) file. A tab-separated table describing "
+                                            "the samples and their properties.", action="append")
 parser.add_argument("-d", "--home_dir", help="Location of workflow. Default is currect directory", default=os.getcwd())
 parser.add_argument("-m", "--message", help="A message describing the workflow", default="")
 parser.add_argument("-r", "--runid", help="Don't create new run ID. Use this one.", default="")

@@ -41,6 +41,35 @@ NeatSeq-Flow can be installed in one of two ways:
 .. _GUI_install_with_conda:
 
 
+Install NeatSeq-Flow GUI **with installation script**
+=================================================================
+
+You can install NeatSeq-Flow and all it's dependencies in one go with a provided bash script.
+
+The script performs the following:
+
+* Miniconda installation
+* ``git`` installation
+* NeatSeq-Flow conda environment creation
+* NeatSeq-Flow GUI conda environment creation
+
+**Temporary installation**
+   Everything will be installed in a directory called ``NeatSeq_Flow_install``. **To uninstall NeatSeq-Flow**, just delete the directory.
+
+   .. code-block:: bash
+
+           wget http://neatseq-flow.readthedocs.io/en/latest/extra/NeatSeq_Flow_install_script.sh
+           bash NeatSeq_Flow_install_script.sh temp
+
+**Permanent installation**
+   Miniconda will be installed in the default location. If it already exists, the installed version will be used.
+
+   .. code-block:: bash
+
+           wget http://neatseq-flow.readthedocs.io/en/latest/extra/NeatSeq_Flow_install_script.sh
+           bash NeatSeq_Flow_install_script.sh perm
+
+
 Install and execute NeatSeq-Flow GUI **with Conda**
 ===================================================
 
