@@ -190,7 +190,7 @@ Configure the Used Variables in the Work-Flow
 Load a Work-Flow Parameter File
 -------------------------------
 
-1. **Load a Sample file:**
+1. **Load a Parameter file:**
 
    .. figure:: https://raw.githubusercontent.com/bioinfo-core-BGU/NeatSeq-Flow-GUI/master/doc/Load_WorkFlow_parameter_file.gif
       :target: https://raw.githubusercontent.com/bioinfo-core-BGU/NeatSeq-Flow-GUI/master/doc/Load_WorkFlow_parameter_file.gif

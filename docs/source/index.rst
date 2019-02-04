@@ -20,7 +20,8 @@
 .. sidebar:: **What's new**...
 
 
-   * Improved GUI
+   * `It is now possible to run NeatSeq-Flow also on Windows and Mac <https://github.com/bioinfo-core-BGU/NeatSeq-Flow-Using-Docker>`_
+   * Improved GUI (press on the image)
 
      .. figure:: https://raw.githubusercontent.com/bioinfo-core-BGU/NeatSeq-Flow-GUI/master/doc/Static_GUI.png
         :target: https://raw.githubusercontent.com/bioinfo-core-BGU/NeatSeq-Flow-GUI/master/doc/NeatSeq-Flow-GUI.gif
