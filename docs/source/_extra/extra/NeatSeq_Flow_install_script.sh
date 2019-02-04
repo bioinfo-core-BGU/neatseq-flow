@@ -55,20 +55,32 @@ conda env create --force -f NeatSeq_Flow_conda_env.yaml
 wget https://raw.githubusercontent.com/bioinfo-core-BGU/NeatSeq-Flow-GUI/master/NeatSeq_Flow_GUI_installer.yaml
 conda env create --force -f NeatSeq_Flow_GUI_installer.yaml
 
-echo -e "To use the GUI, run the following commands:\n-------------------"
-echo -e '    PATH="'$PREFIX':$PATH"'
-echo -e '    source activate NeatSeq_Flow_GUI\n\n'
-echo -e 'Then, enter the GUI with the following command:'
-echo -e '    NeatSeq_Flow_GUI.py\n\n'
-echo -e "If you get the following or similar message when executing the GUI..."
-echo -e '\tCould not detect a suitable backend...'
-echo -e "...you need to either install a graphical backend or use NeatSeq-Flow's command-line version, as follows:\n\n"
+cat << CONTINUE
+Successfuly installed....
 
-echo -e "To use the NeatSeq-Flow without the GUI:\n-------------------"
-echo -e '    PATH="'$PREFIX':$PATH"'
-echo -e '    source activate NeatSeq_Flow'
-echo -e 'Then, get usage for NeatSeq-Flow with the following command:'
-echo -e '    neatseq_flow.py --help\n\n'
+To use the GUI, run the following commands:
+
+    PATH="$PATH"
+    source activate NeatSeq_Flow_GUI
+
+Then, enter the GUI with the following command:
+
+    NeatSeq_Flow_GUI.py
+
+If you get the following or similar message when executing the GUI...
+    'Could not detect a suitable backend...'
+...you need to either install a graphical backend or use NeatSeq-Flow's command-line version, as follows:
+
+To use the NeatSeq-Flow without the GUI:
+
+    PATH="$PATH"
+    source activate NeatSeq_Flow
+
+Then, get usage for NeatSeq-Flow with the following command:
+    neatseq_flow.py --help
+
+
+CONTINUE
 
 if [[ $1 =~ ^te ]]; then
     cd -
