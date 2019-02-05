@@ -473,5 +473,6 @@ Make sure you are in an active conda environment, and that you executed the foll
             conda_params["env"] = os.environ['CONDA_DEFAULT_ENV']
         else:
             raise Exception("'conda' 'env' is empty, but there is no active environment. Please activate "
-                            "the environment and try again", "parameters")
+                            "the environment and try again. Alternatively, set the CONDA_DEFAULT_ENV environment "
+                            "variable to the name of the conda environment to use", "parameters")
     return conda_params

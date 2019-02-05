@@ -616,7 +616,6 @@ class NeatSeqFlow(object):
     def define_conda_params(self):
         """ If conda params are required, define them:
         """
-        
         if "conda" in self.param_data["Global"]:
             # 1. Add the conda parameters to pipe_data
             self.pipe_data["conda"] = self.param_data["Global"]["conda"]
