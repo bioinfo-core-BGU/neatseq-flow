@@ -144,6 +144,11 @@ def get_param_data_YAML(filelines):
 
                 # 2. Dealing with 'node'
                 # Converting node to list if it is not one already
+                # If 'nodes' was used, convert it to 'node', i.e. accept nodes typo...
+                if "nodes" in yamlname_params["qsub_params"]:
+                    yamlname_params["qsub_params"]["node"] = yamlname_params["qsub_params"]["nodes"]
+                    del yamlname_params["qsub_params"]["nodes"]
+
                 if "node" in yamlname_params["qsub_params"]:
                     if isinstance(yamlname_params["qsub_params"]["node"], str):
                         yamlname_params["qsub_params"]["node"] = re.split("[\, ]*",yamlname_params["qsub_params"]["node"])
@@ -311,7 +316,10 @@ def param_data_testing_step_wise(param_data):
                         param_data[step][name][param]['queue'] = param_data[step][name][param]['-q']
                         # Delete '-q'
                         del param_data[step][name][param]['-q']
-                        
+
+                    if "nodes" in param_data[step][name][param]:
+                        param_data[step][name][param]["node"] = param_data[step][name][param]["nodes"]
+                        del param_data[step][name][param]["nodes"]
                     if "node" in param_data[step][name][param]:
                         if not isinstance(param_data[step][name][param]["node"],list):
                             print name
