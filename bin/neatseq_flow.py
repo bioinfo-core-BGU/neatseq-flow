@@ -38,7 +38,7 @@ parser.add_argument("-s", "--sample_file", help="Location of sample file, in cla
 parser.add_argument("-p", "--param_file", help="Location of parameter file. Can be a comma-separated list - all will "
                                                "be used as one. Alternatively, -p can be passed many times with "
                                                "different param files", action="append")
-parser.add_argument("-g", "--mapping", help="Location of grouping (or mapping) file. A tab-separated table describing "
+parser.add_argument("-g", "--mapping", help="Location of mapping (or grouping) file. A tab-separated table describing "
                                             "the samples and their properties.", action="append")
 parser.add_argument("-d", "--home_dir", help="Location of workflow. Default is currect directory", default=os.getcwd())
 parser.add_argument("-m", "--message", help="A message describing the workflow", default="")
@@ -67,12 +67,12 @@ if args.sample_file is None or args.param_file is None:
     
 if args.clean:
     # if args.home_dir != os.getcwd():
-    text = raw_input("Are you sure you want to delete the workflow in {home_dir}? ('yes' to approve) > ".format(home_dir = args.home_dir))
+    text = raw_input("Are you sure you want to delete the workflow in {home_dir}?\n('yes' to approve) > ".format(home_dir = args.home_dir))
 
     if not text.lower() == "yes":
         sys.exit()
     if args.clean_all:
-        text = raw_input("Are you sure you want to delete '{data}'?  ('yes' to approve) > ".format(data=os.sep.join([args.home_dir, "data"])))
+        text = raw_input("Are you sure you want to delete '{data}'?\n('yes' to approve) > ".format(data=os.sep.join([args.home_dir, "data"])))
         if os.path.isdir(os.sep.join([args.home_dir, "data"])):
             if text.lower() == "yes":
                 shutil.rmtree(os.sep.join([args.home_dir, "data"]))
@@ -96,7 +96,7 @@ args.param_file = ",".join(args.param_file)
 
 NeatSeqFlow(sample_file   = args.sample_file,
             param_file    = args.param_file,
-            mapping_file  = args.mapping,
+            grouping_file = args.grouping,
             home_dir      = args.home_dir,
             message       = args.message,
             runid         = args.runid,

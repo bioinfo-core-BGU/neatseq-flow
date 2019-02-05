@@ -164,10 +164,15 @@ def get_param_data_YAML(filelines):
                     yamlname_params["sample_list"] = re.split("[\, ]*", yamlname_params["sample_list"])
                 elif isinstance(yamlname_params["sample_list"], list):
                     pass
+                elif isinstance(yamlname_params["sample_list"], dict):
+                    # Allowing dict for category-wise sample specification
+                    pass
                 else:
                     raise AssertionExcept("sample_list must be string or list!")
-                # Remove empty strings:
-                yamlname_params["sample_list"] = filter(lambda x: x != "", yamlname_params["sample_list"])
+
+                # Remove empty and duplicate strings:
+                if isinstance(yamlname_params["sample_list"], list):
+                    yamlname_params["sample_list"] = list(set(filter(lambda x: x != "", yamlname_params["sample_list"])))
 
             endparams[param_dict[yamlname]["module"]][yamlname] = yamlname_params
         return endparams

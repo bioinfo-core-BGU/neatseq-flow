@@ -231,7 +231,11 @@ class Step(object):
         # Storing reference to main pipeline object:
         self.main_pl_obj = caller
 
+        # The following will be used to separate elements in the jid names.
+        # If you change this, you have to change it in scriptconstructor, in the lines
+        # beginning with module= and instance=, according to awk regular expression definitions!
         self.jid_name_sep = ".."
+
 
         self.use_provenance = True
         # -----------------------------
@@ -548,6 +552,18 @@ Dependencies: {depends}""".format(name=self.name,
                for stepname
                in self.get_depend_list()}
 
+    def get_base_instance(self, base_n):
+        """
+        Returns the base_dir for step base_n. base_n must be a base of current step!
+        :param base_n:
+        :return: the base_dir for step base_n.
+        """
+        if base_n not in self.get_depend_list():
+            raise AssertionExcept("No base '{base}' defined!".format(base=base_n))
+        else:
+            return self.main_pl_obj.step_list[self.main_pl_obj.step_list_index.index(base_n)]
+
+
     def sample_data_merge(self, sample_data, other_sample_data, other_step_name):
         """ Merge a different sample_data dict into this step's sample_data
             Used for cyclic sungrebe - basing a step on more than one base.
@@ -571,7 +587,7 @@ Dependencies: {depends}""".format(name=self.name,
                         self.write_warning("There is a difference from %s in key %s\n" % (other_step_name, k))
             else:
                 sample_data[k] = deepcopy(other_sample_data[k])
-        
+
         return sample_data
 
     def set_sample_data(self, sample_data = None):
@@ -600,11 +616,13 @@ Dependencies: {depends}""".format(name=self.name,
                 self.sample_data = self.sample_data_merge(self.get_sample_data(),
                                                           base_step.get_sample_data(),
                                                           base_step.get_step_name())
+
                 if self.use_provenance:
                     self.provenance = self.sample_data_merge(self.get_provenance(),
                                                              base_step.get_provenance(),
                                                              base_step.get_step_name())
                     self.sample_data_original = deepcopy(self.sample_data)
+
 
         # This part is experimental and not 100% complete. Changes will probably occur in the future.
         # 1. Convert "exclude_sample_list" to "sample_list":
@@ -622,13 +640,15 @@ Dependencies: {depends}""".format(name=self.name,
                 raise AssertionExcept("'all_samples' is no longer supported as valsue for 'sample_list'."
                                       "Use a secondary base to import old samples")
             # 2b. For sample list, stash the new sample list
-            else:
+            elif isinstance(self.params["sample_list"], list):
                 if list(set(self.params["sample_list"]) - set(self.pipe_data["samples"])):
                     raise AssertionExcept("'sample_list' includes samples not defined in sample data! ({bad})".
                                           format(bad=", ".join(set(self.params["sample_list"]) -
                                                                set(self.pipe_data["samples"]))),
                                           step=self.get_step_name())
                 self.stash_sample_list(self.params["sample_list"])
+            else:   # It's a dict!
+                self.stash_sample_list(self.get_sample_list_by_category(self.params["sample_list"]))
 
         # Trying running step specific sample initiation script:
         try:
@@ -1194,17 +1214,18 @@ Sample slots:
                 if isinstance(self.params["redir_params"][key],list):
                     self.write_warning("Passed %s twice as redirected parameter!" % key)
                     for keyval in self.params["redir_params"][key]:
-                        redir_param_script += "{key}{sep}{val} \\\n\t".\
-                            format(key=key,
-                                   val=keyval if keyval is not None else "",
-                                   sep=self.arg_separator)
+                        redir_param_script += "{key_sep_val} \\\n\t". \
+                            format(key_sep_val=self.arg_separator.join([str(key_val)
+                                                                        for key_val
+                                                                        in [key, keyval]
+                                                                        if key_val is not None]))
+
                 else:
-                    redir_param_script += "{key}{sep}{val} \\\n\t".\
-                            format(key=key,
-                                   val=self.params["redir_params"][key]
-                                       if self.params["redir_params"][key] is not None
-                                       else "",
-                                   sep=self.arg_separator)
+                    redir_param_script += "{key_sep_val} \\\n\t".\
+                            format(key_sep_val=self.arg_separator.join([str(key_val)
+                                                                        for key_val
+                                                                        in [key,self.params["redir_params"][key]]
+                                                                        if key_val is not None]))
 
         return redir_param_script
 
@@ -1365,49 +1386,49 @@ Sample slots:
         self.stamped_files.append(filename)
         
         
-    def register_stamped_files(self,qsub_name):
-        """
-        """
-        
-        script = "######\n# Registering files with md5sum:\n"
-
-        # Bash needs the -e flag to render \t as tabs.
-        if self.shell=="csh":
-            echo_cmd = "echo"
-        elif self.shell=="bash":
-            echo_cmd = "echo -e"
-        else:
-            pass
-
-        for filename in self.stamped_files:
-            script += """
-{echo_cmd} `date '+%%d/%%m/%%Y %%H:%%M:%%S'` '\\t{step}\\t{stepname}\\t{stepID}\\t' `md5sum {filename}` >> {file}
-""".format(echo_cmd=echo_cmd,
-           filename=filename,
-           step= self.get_step_step(),
-           stepname=self.get_step_name(),
-           stepID=qsub_name,
-           file=self.pipe_data["registration_file"])
-        
-        script += "#############\n\n"
-            
-        return script
-
-    def register_files(self, qsub_name):
-        """
-        """
-        
-        script = ""
-        if self.stamped_files:
-            script += self.register_stamped_files(qsub_name)
-            
-        # if self.stamped_dirs:
-            # script += self.register_files_in_dir(qsub_name)
-            
-        self.stamped_files = list()
-        # self.stamped_dirs  = list()
-
-        return script
+#     def register_stamped_files(self,qsub_name):
+#         """
+#         """
+#
+#         script = "######\n# Registering files with md5sum:\n"
+#
+#         # Bash needs the -e flag to render \t as tabs.
+#         if self.shell=="csh":
+#             echo_cmd = "echo"
+#         elif self.shell=="bash":
+#             echo_cmd = "echo -e"
+#         else:
+#             pass
+#
+#         for filename in self.stamped_files:
+#             script += """
+# {echo_cmd} `date '+%%d/%%m/%%Y %%H:%%M:%%S'` '\\t{step}\\t{stepname}\\t{stepID}\\t' `md5sum {filename}` >> {file}
+# """.format(echo_cmd=echo_cmd,
+#            filename=filename,
+#            step= self.get_step_step(),
+#            stepname=self.get_step_name(),
+#            stepID=qsub_name,
+#            file=self.pipe_data["registration_file"])
+#
+#         script += "#############\n\n"
+#
+#         return script
+#
+#     def register_files(self, qsub_name):
+#         """
+#         """
+#
+#         script = ""
+#         if self.stamped_files:
+#             script += self.register_stamped_files(qsub_name)
+#
+#         # if self.stamped_dirs:
+#             # script += self.register_files_in_dir(qsub_name)
+#
+#         self.stamped_files = list()
+#         # self.stamped_dirs  = list()
+#
+#         return script
         
         
         
@@ -1448,40 +1469,8 @@ Sample slots:
                 # print self.params["conda"]
                 self.params["conda"] = manage_conda_params(self.params["conda"])
                 # print self.params["conda"]
-#                 sys.exit()
-#
-#                 if not self.params["conda"]["path"]: # == None:  # Path is empty (None or "", take from $CONDA_PREFIX
-#                     # 1. If CONDA_BASE defined, use it
-#                     # 2. If CONDA_PREFIX defined, compute CONDA_BASE from `conda info --root`
-#                     # 3. Fail
-#                     if "CONDA_BASE" in os.environ:
-#                         self.params["conda"]["path"] = os.environ["CONDA_BASE"]
-#                         if "env" not in self.params["conda"] or not self.params["conda"]["env"]: ##==None:
-#                             raise AssertionExcept("'conda: path' is empty, taking from CONDA_BASE. Failed because no 'env' was passed. When using CONDA_BASE, you must supply an environment name with 'conda: env'",step=self.get_step_name())
-#
-#                     else:
-#                         raise AssertionExcept("""'conda' 'path' is empty, but no CONDA_BASE is defined.
-# Make sure you are in an active conda environment, and that you executed the following command:
-# > {start_col}export CONDA_BASE=$(conda info --root){end_col}
-# """.format(start_col='\033[93m',end_col='\033[0m'),step = self.get_step_name())
-#
-#
-#
-#                 if "env" not in self.params["conda"] or not self.params["conda"]["env"]:# == None:
-#                     # if self.pipe_data["conda"]["env"]:
-#                         # self.write_warning("'env' is empty. Using global 'env'")
-#                     try:
-#                         self.params["conda"]["env"] = self.pipe_data["conda"]["env"]
-#                     except KeyError:
-#                         raise AssertionExcept("You must supply an 'env' in conda params.", step=self.get_step_name())
-#                     else:
-#                         self.write_warning("'env' is empty. Using global 'env'")
-#                     # re_env = re.search("envs/(\S+)", self.params["conda"]["path"])
-#                     # try:
-#                         # self.params["conda"]["env"] = re_env.group(1)
-#                     # except:
-#                         # raise AssertionExcept("Bad conda env path. Make sure it ends with 'envs/ENV_NAME'", step=self.get_step_name())
-                
+                # sys.exit()
+
                 # Add bin at end of path
                 self.params["conda"]["path"] = os.path.join(self.params["conda"]["path"],"bin")    
 
@@ -1509,7 +1498,7 @@ Sample slots:
     def get_category_levels(self, category):
         """
 
-        :param category:
+        :param: category
         :return: List of levels in category
         """
         try:
@@ -1517,6 +1506,7 @@ Sample slots:
                          for sample
                          in self.sample_data["samples"]})
         except KeyError:
+            pp(self.sample_data)
             raise AssertionExcept("Category {cat} not defined for all samples".format(cat=category))
 
     def get_samples_in_category_level(self, category, cat_level):
@@ -1625,3 +1615,84 @@ Sample slots:
 
     def get_provenance(self):
         return self.provenance
+
+    def get_step_tag(self):
+        """ Returns the step tag, if one was defined"""
+
+        if "tag" in self.params:
+            if isinstance(self.params["tag"], list):
+                raise AssertionExcept("Duplicate tagts defined. At the moment, only one tag permitted per step")
+                # return self.params["tag"]
+            elif self.params["tag"] is None:  # This is to stop an instance from inheriting tag
+                return [False]
+            else:
+                return [self.params["tag"]]
+        # If tag is defined in one of bases, use it (first found, first use. In future, enable lists of tags...
+        elif self.get_base_step_list() is not None and \
+                any(["tag" in base_step.params
+                     for base_step
+                     in self.get_base_step_list()]):  # One of bases has a tag:
+            for base_step in self.get_base_step_list():
+                if "tag" in base_step.params:
+                    self.params["tag"] = base_step.params["tag"]
+                    return [self.params["tag"]]
+        else:
+            return [False]
+
+    def get_sample_list_by_category(self, sample_dict):
+
+        if "category" not in sample_dict:
+            raise AssertionExcept("You must include a 'category' in sample_list, if passing a dict!")
+
+        if type(sample_dict["category"]) not in [str, int]:
+            raise AssertionExcept("Category must be a single value, not a list etc.")
+
+        # Check all samples have grouping data
+        bad_samples = [sample
+                       for sample
+                       in self.sample_data["samples"]
+                       if "grouping" not in self.sample_data[sample]]
+        if bad_samples:
+            raise AssertionExcept("For some reason, sample '{smp}' does not have "
+                                  "grouping data".format(smp=", ".join(bad_samples)))
+        # Check category is in all samples
+        bad_samples = [sample
+                       for sample
+                       in self.sample_data["samples"]
+                       if sample_dict["category"] not in self.sample_data[sample]["grouping"]]
+        if bad_samples:
+            raise AssertionExcept(
+                "Sample '{smp}' does not have '{cat}' category".format(smp=", ".join(bad_samples),
+                                                                       cat=sample_dict["category"]))
+
+        if "levels" not in sample_dict:
+            raise AssertionExcept("In sample_list, you must include a 'levels' slot with the required level(s).")
+        if type(sample_dict["levels"]) not in [str,list]:
+            raise AssertionExcept("In sample_list, level must be a string or a list of strings.")
+        if type(sample_dict["levels"]) == str:
+            sample_dict["levels"] = [sample_dict["levels"]]
+        # Check all levels exist in category
+        if not all(
+                map(lambda level: level in self.get_category_levels(sample_dict["category"]), sample_dict["levels"])):
+            bad_levels = ", ".join([level for level in sample_dict["levels"] if
+                                    level not in self.get_category_levels(sample_dict["category"])])
+            raise AssertionExcept("Level '{lev}' is not defined for "
+                                  "category '{cat}'".format(lev=bad_levels,
+                                                            cat=sample_dict["category"]))
+        # Create new sample list:
+        samples = list()
+        for level in sample_dict["levels"]:
+            samples.extend(self.get_samples_in_category_level(sample_dict["category"], level))
+
+        return samples
+
+    def get_rm_intermediate_line(self):
+        """
+
+        :return: line to be added to intermediates removal script
+        """
+
+        if "intermediate" in self.params:
+            return(self.main_script_obj.get_rm_intermediate_line())
+        else:
+            return("")

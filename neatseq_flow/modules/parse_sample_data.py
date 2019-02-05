@@ -495,20 +495,20 @@ def get_full_path(path):
     return path
 
 
-def parse_mapping_file(mapping_file):
+def parse_grouping_file(grouping_file):
     """
     Converts a tab-separated grouping (or mapping) file into a ditcionary format which can then be merged
     into sample_data
-    :param mapping_file: A path to the grouping file
+    :param grouping_file: A path to the grouping file
     :return: mapping_data in by-sample dictionary format
     """
-    mapping_file = os.path.realpath(os.path.expanduser(mapping_file))
+    grouping_file = os.path.realpath(os.path.expanduser(grouping_file))
 
-    if not os.path.isfile(mapping_file):
-        # sys.exit("Grouping file {file} does not exist.\n".format(file=mapping_file))
-        raise Exception("Issues in grouping", "Grouping file {file} does not exist.Unidentified extension in source\n".format(file=mapping_file))
+    if not os.path.isfile(grouping_file):
+        # sys.exit("Grouping file {file} does not exist.\n".format(file=grouping_file))
+        raise Exception("Issues in grouping", "Grouping file {file} does not exist.Unidentified extension in source\n".format(file=grouping_file))
 
-    with open(mapping_file) as csvfile:
+    with open(grouping_file) as csvfile:
         file_conts = csvfile.readlines()
 
     # Convert SampleID at line start to lower case

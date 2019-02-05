@@ -23,6 +23,7 @@ class ScriptConstructorLocal(ScriptConstructor):
         """
         script = super(ScriptConstructorLocal, cls).get_helper_script(pipe_data)
         script = re.sub("## locksed command entry point", r"""locksed  "s:^\\($3\\).*:# \\1\\t$err_code:" $run_index""", script)
+        script = re.sub("## maxvmem calc entry point", 'maxvmem="-";', script)
 
         # Add job_limit function:
         if "job_limit" in pipe_data:
@@ -118,7 +119,79 @@ bash {nsf_exec} {script_id} 1> {stdout} 2> {stderr} & \n\n""".\
             qsub_header += "#$ -hold_jid %s " % ",".join(self.master.dependency_jid_list)
 
             
-        return qsub_header  
+        return qsub_header
+
+    def get_log_lines(self, state="Started", status="\033[0;32mOK\033[m"):
+        """ Create logging lines. Added before and after script to return start and end times
+            If bash, adding at beginning of script also lines for error trapping
+        """
+
+        log_cols_dict = {"type": state,
+                         "step": self.step,
+                         "stepname": self.name,
+                         "stepID": self.script_id,
+                         "qstat_path": self.pipe_data["qsub_params"]["qstat_path"],
+                         "level": self.level,
+                         "status": status,
+                         "file": self.pipe_data["log_file"]}
+
+        if self.shell == "csh":
+
+            script = """
+echo `date '+%%d/%%m/%%Y %%H:%%M:%%S'`'\\t%(type)s\\t%(step)s\\t%(stepname)s\\t%(stepID)s\\t%(level)s\\t'$HOSTNAME'\\t$$\\t-\\t%(status)s' >> %(file)s
+####
+""" % log_cols_dict
+
+        elif self.shell == "bash":
+
+            script = """
+# Adding line to log file
+log_echo {step} {stepname} {stepID} {level} $HOSTNAME $$ {type}
+
+""".format(**log_cols_dict)
+
+        else:
+            script = ""
+
+            if self.pipe_data["verbose"]:
+                sys.stderr.write("shell not recognized. Not creating log writing lines in scripts.\n")
+
+        return script
+
+
+
+    def get_trap_line(self):
+        """
+        """
+
+        if self.shell=="csh":
+            # Trap lines not defined for csh shell
+            # This will happen for new module creators. Not exiting nicely...
+            script = ""
+            if self.pipe_data["verbose"]:
+                sys.stderr.write("Error trapping not defined for csh scripts. Consider using bash instead.\n")
+
+        elif self.shell == "bash":
+            script = """
+# Import helper functions
+. {helper_funcs}
+
+# Trap various signals. SIGUSR2 is passed by qdel when -notify is passes
+trap_with_arg func_trap {step} {stepname} {stepID} {level} $HOSTNAME $$ SIGUSR2 ERR INT TERM
+            """.format(step       = self.step,
+                       stepname   = self.name,
+                       stepID     = self.script_id,
+                       helper_funcs = self.pipe_data["helper_funcs"],
+                       level      = self.level)
+
+        else:
+            script = ""
+            if self.pipe_data["verbose"]:
+                sys.stderr.write("shell not recognized. Not creating error trapping lines.\n")
+
+        return script
+
+
 
 # ----------------------------------------------------------------------------------
 # HighScriptConstructorLocal defintion

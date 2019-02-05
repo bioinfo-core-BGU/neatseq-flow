@@ -21,7 +21,7 @@ from pprint import pprint as pp
 from datetime import datetime
 from collections import OrderedDict
 
-from modules.parse_sample_data import parse_sample_file,parse_mapping_file
+from modules.parse_sample_data import parse_sample_file,parse_grouping_file
 from modules.parse_param_data import parse_param_file
 
 from PLC_step import Step, AssertionExcept
@@ -34,7 +34,7 @@ class NeatSeqFlow(object):
     def __init__(self,
                  sample_file,
                  param_file,
-                 mapping_file=None,
+                 grouping_file=None,
                  home_dir = None,
                  message = None,
                  runid = None,
@@ -78,25 +78,26 @@ class NeatSeqFlow(object):
         except:
             raise
 
-        try:
-            self.sample_data["project_data"]["mapping_file"]
-        except KeyError:
-            # No mapping_file or no project_data
-            pass
-        else:  # Mapping file exists in project data
-            if mapping_file:
-                sys.exit("You passed both --mapping via CLI and 'mapping_file' in the sample_file.")
-            if len(self.sample_data["project_data"]["mapping_file"]) >1:
-                sys.exit("You passed multiple mapping_files in the sample_file.")
+        if "grouping_file" in self.sample_data["project_data"]:
+            if grouping_file:
+                sys.exit("You passed both --mapping via CLI and 'grouping_file' in the sample_file.")
+            if len(self.sample_data["project_data"]["grouping_file"]) >1:
+                sys.exit("You passed multiple grouping_files in the sample_file.")
             else:
                 # If mapping file passed via sample file, transfer into grouping_file and remove from sample data
                 sys.stderr.write("Mapping file passed via samples file!\n")
-                mapping_file = self.sample_data["project_data"]["mapping_file"][0]
-                del self.sample_data["project_data"]["mapping_file"]
+                grouping_file = self.sample_data["project_data"]["grouping_file"][0]
+                del self.sample_data["project_data"]["grouping_file"]
         # Reading grouping file
-        if mapping_file:
+        if grouping_file:
+            if isinstance(grouping_file,list):
+                if len(grouping_file)>1:
+                    sys.exit("Please pass only one grouping file")
+                else:
+                    grouping_file=grouping_file[0]
+
             try:
-                mapping_data = parse_mapping_file(mapping_file)
+                mapping_data = parse_grouping_file(grouping_file)
             except Exception as raisedex:
                 if raisedex.args[0] == "Issues in grouping":
                     sys.exit(raisedex.args[1])
@@ -263,13 +264,19 @@ class NeatSeqFlow(object):
             # sys.exit()
             self.cleanup()
             return
-            
+
         # Make main script:
         self.make_main_pipeline_script()
-        
+
+        # Make main scripts for tags:
+        self.make_tag_steps_script()
+
         # Make the qalter script:
         self.create_qalter_script()
-        
+
+        # Make intermediate removal script
+        self.create_rm_intermediate_script()
+
         # Make js graphical representation (maybe add parameter to not include this feature?)
         sys.stdout.write("Making workflow plots...\n")
         self.create_js_graphic()
@@ -485,6 +492,13 @@ class NeatSeqFlow(object):
             # Writing header :)
             pipe_fh.write("""
 \n\n
+# _____   __              _____ ________                      ________________                  
+# ___  | / /_____ ______ ___  /___  ___/_____ ______ _        ___  ____/___  /______ ___      __
+# __   |/ / _  _ \_  __ `/_  __/_____ \ _  _ \_  __ `/__________  /_    __  / _  __ \__ | /| / /
+# _  /|  /  /  __// /_/ / / /_  ____/ / /  __// /_/ / _/_____/_  __/    _  /  / /_/ /__ |/ |/ / 
+# /_/ |_/   \___/ \__,_/  \__/  /____/  \___/ \__, /          /_/       /_/   \____/ ____/|__/  
+                                              /_/                                             
+
 # This is the main executable script of this pipeline
 # It was created on {date} by NeatSeq-Flow version {version}
 # See http://neatseq-flow.readthedocs.io/en/latest/
@@ -502,6 +516,52 @@ class NeatSeqFlow(object):
                 # (see del_type and move_type for examples of modules that don't...)
                 if not step_n.skip_scripts:
                     pipe_fh.write(step_n.get_main_command())
+
+    def make_tag_steps_script(self):
+            """ Create the pipline script for tag steps
+            """
+
+            # Getting unique list of tags
+            tag_list = list()
+            for step in self.step_list:
+                tag_list.extend(step.get_step_tag())
+            tag_list = list(set(tag_list))
+
+            # Not doing anything if no tags defined. Default behaviour.
+            if not any (tag_list):
+                return
+
+            tags_script_dir = self.pipe_data["scripts_dir"] + "tags_scripts" + os.sep
+            if not os.path.exists(tags_script_dir):
+                os.mkdir(tags_script_dir)
+
+            for tag in [tag for tag in tag_list if tag]:  # Only not False tags
+                script_fn = "{script_dir}{tag}{ext}".format(script_dir=tags_script_dir,
+                                                            tag=tag,
+                                                            ext=".sh")
+                with open(script_fn, "w") as tag_fh:
+                    # Writing header :)
+                    tag_fh.write("""
+\n\n
+# This is the executable script for tag {tag}
+# It was created on {date} by NeatSeq-Flow version {version}
+# See http://neatseq-flow.readthedocs.io/en/latest/
+
+# Import helper functions
+. {helper_funcs}
+
+""".format(date=time.strftime("%d/%m/%Y %H:%M:%S"),
+           version=__version__,
+           tag=tag,
+           helper_funcs=self.pipe_data["helper_funcs"]))
+
+                    # For each step, write the qsub command created by get_qsub_command() method:
+                    for step_n in self.step_list:
+                        # Add the line only for modules that produce scripts
+                        # (see del_type and move_type for examples of modules that don't...)
+                        if not step_n.skip_scripts:
+                            if tag in step_n.get_step_tag():
+                                tag_fh.write(step_n.get_main_command())
 
     def make_step_type_instance(self,step_name):
         """ Create and return a class of the type defined in step_type
@@ -659,6 +719,15 @@ class NeatSeqFlow(object):
             print "Make sure the script constructor defines class method 'get_helper_script()'"
             raise
 
+        try:
+            utilities_script = scriptclass.get_utilities_script(self.pipe_data)
+            if utilities_script:
+                with open(self.pipe_data["scripts_dir"] + "96.utilities.sh", "w") as script_fh:
+                    script_fh.write(utilities_script)
+        except:
+            pass
+
+
     def create_log_file(self):
         """ Create a initialize the log file.
         """
@@ -686,7 +755,7 @@ Pipeline {run_code} logfile:
                     logf.write("Message: No message passed for this pipeline\n")
     
                 logf.write("""
-Timestamp\tEvent\tModule\tInstance\tJob name\tLevel\tHost\tMax mem\tStatus
+Timestamp\tEvent\tModule\tInstance\tJob name\tLevel\tHost\tJob ID\tMax mem\tStatus
 """)
 
         # Set file name for storing list of pipeline versions:
@@ -1260,3 +1329,15 @@ saveWidget(myviz,file = "%(out_file_name)s",selfcontained = F)
         """
         self.global_sample_data = {step:{} for step in self.get_step_names()}
         return self.global_sample_data
+
+    def create_rm_intermediate_script(self):
+        """
+        Create script 95.remove_intermediates.sh and add code for removal of interemediate files
+        The code is obtained by each step depending on whether the ``intermediate`` flag was included in the parameters
+        :return:
+        """
+        # Make script file
+        # For each step, call the removal command
+        with open(self.pipe_data["scripts_dir"] + "95.remove_intermediates.sh", "w") as script_fh:
+            for instance in self.step_list:
+                script_fh.writelines(instance.get_rm_intermediate_line())
