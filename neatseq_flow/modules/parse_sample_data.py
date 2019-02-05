@@ -8,10 +8,10 @@ __version__ = "1.5.0"
 
 
 import os, sys
-from urlparse import urlparse
+from urllib.parse import urlparse
 
 import csv 
-from StringIO import StringIO
+from io import StringIO
 
 from pprint import pprint as pp
 import re
@@ -54,7 +54,7 @@ def check_newlines(filelines):
     # Assert that the list of lines containing "\r" charaters is empty.
     lines_with_CRs = [line for line in filelines if re.search("\r",line)]
     if lines_with_CRs:
-        print "The sample and parameter files must not contain carriage returns. Convert newlines to UNIX style!\n"
+        print("The sample and parameter files must not contain carriage returns. Convert newlines to UNIX style!\n")
         raise Exception("Issues in samples", "samples")
 
 
@@ -105,8 +105,8 @@ def guess_sample_data_format(filelines):
     # This can contain parameter file stuff as well, when they are merged!
     myset = {re.split("\s+", line, maxsplit=1)[0] for line in filelines}
     # Changing to lower case:
-    myset = set(map(lambda x: x.lower(), myset))
-    recognized_file_types = set(map(lambda x: x.lower(), RECOGNIZED_FILE_TYPES))
+    myset = set([x.lower() for x in myset])
+    recognized_file_types = set([x.lower() for x in RECOGNIZED_FILE_TYPES])
     
     # pp(set(recognized_file_types))
     # Check if one of the following words exists in the set by checking the intersection of the sets:
@@ -163,7 +163,7 @@ def get_classic_sample_data(filelines):
                       in filelines
                       if re.split("\s+", line, maxsplit=1)[0]=="Sample_Control"]
     if Sample_Control:
-        controls = parse_sample_control_data(Sample_Control,sample_names=sample_data.keys())
+        controls = parse_sample_control_data(Sample_Control,sample_names=list(sample_data.keys()))
         
     # Add a list of sample names to sample_data
     sample_data["samples"] = sorted(sample_data.keys())
@@ -193,7 +193,7 @@ def parse_classic_sample_data(lines):
                     [re.split("\s+", line, maxsplit=1) for line in lines] \
             if direction==alldirect] for alldirect in {"Forward","Reverse","Single"}}
     # Remove empty lists 
-    reads = {direct:files for direct,files in reads.iteritems() if files != []}
+    reads = {direct:files for direct,files in reads.items() if files != []}
     
 
     # Create dict for storing full sequences, e.g. genomes and proteins. Will be searching for 'Nucleotide' and 'Protein' keywords
@@ -205,7 +205,7 @@ def parse_classic_sample_data(lines):
                     [re.split("\s+", line, maxsplit=1) for line in lines] \
             if direction==alldirect] for alldirect in {"Nucleotide","Protein"}}
     # Remove empty lists 
-    fasta = {direct:files for direct,files in fasta.iteritems() if files != []}
+    fasta = {direct:files for direct,files in fasta.items() if files != []}
     # Put these files in a separate entry in the reads structure called "fasta"
     if fasta:
         sample_x_data.update(fasta)
@@ -215,15 +215,15 @@ def parse_classic_sample_data(lines):
                     [re.split("\s+", line, maxsplit=1) for line in lines] \
             if direction==alldirect] for alldirect in ALIGNMENT_FILE_TYPES}
     # Remove empty lists 
-    bam_sam = {direct:files for direct,files in bam_sam.iteritems() if files != []}
+    bam_sam = {direct:files for direct,files in bam_sam.items() if files != []}
     
     # Complain if more or less than 1 REFERENCE was passed:
     if(bam_sam):    # Do the following only if BAM/SAM files were passed:
         if "REFERENCE" not in bam_sam:
-            print "No reference passed with SAM and BAM files..."
+            print("No reference passed with SAM and BAM files...")
             raise Exception("Issue in sample file")
         if len(bam_sam["REFERENCE"]) > 1:
-            print "You tried passing more than one REFERENCE with SAM and BAM files..."
+            print("You tried passing more than one REFERENCE with SAM and BAM files...")
             raise Exception("Issue in sample file")
         
         sample_x_data.update(bam_sam)
@@ -233,7 +233,7 @@ def parse_classic_sample_data(lines):
                     [re.split("\s+", line, maxsplit=1) for line in lines] \
             if direction==alldirect] for alldirect in VARIANT_FILE_TYPES}
     # Remove empty lists 
-    vcf_files = {direct:files for direct,files in vcf_files.iteritems() if files != []}
+    vcf_files = {direct:files for direct,files in vcf_files.items() if files != []}
     
     # Complain if more or less than 1 REFERENCE was passed:
     if(vcf_files):    # Do the following only if BAM/SAM files were passed:
@@ -280,14 +280,14 @@ def check_sample_constancy(sample_data):
     ext_types = set()
     for sample in sample_data["samples"]:      # Getting list of samples out of samples_hash
 
-        for direction in sample_data[sample].keys():
+        for direction in list(sample_data[sample].keys()):
             # Get a list of file extensions (chars to the RHS of the last period in the filename)
             # extensions = list(set([os.path.splitext(fn)[1] for fn in sample_data[sample][type][direction]]))
-            extensions = map(lambda fn: os.path.splitext(fn)[1], sample_data[sample][direction])
+            extensions = [os.path.splitext(fn)[1] for fn in sample_data[sample][direction]]
             # Convert file extension to 'zip' or 'regular', depending on the extension:
             # Keep only unique values (using set: {}) and adding to ext_types
             #{"zip" if ext in ZIPPED_EXTENSIONS else "regular" for ext in extensions}
-            ext_types = ext_types | set(map(lambda ext: "zip" if ext in ZIPPED_EXTENSIONS else "regular", extensions))
+            ext_types = ext_types | set(["zip" if ext in ZIPPED_EXTENSIONS else "regular" for ext in extensions])
         
     if len(ext_types) > 1:
         sys.exit("At the moment, you can't mix zipped and unzipped files!")
@@ -330,7 +330,7 @@ def get_tabular_sample_data(filelines):
         
     # Get Sample_Control data for ChIP-seq samples:
     if "ChIP_data" in raw_data:
-        sample_data["Controls"] = parse_sample_control_data(raw_data["ChIP_data"],sample_names=sample_data.keys())
+        sample_data["Controls"] = parse_sample_control_data(raw_data["ChIP_data"],sample_names=list(sample_data.keys()))
         
     # Add project title sample_data
     sample_data["Title"] = raw_data["Title"]
@@ -376,7 +376,7 @@ def get_tabular_sample_data_lines(filelines):
     if head_ind:  # A line beginning with '#SampleID' exists.
 
         # Range of lines to keep: from header index till first blank line
-        lines_range = range(head_ind[0],min([ind for ind in blank_ind if ind>head_ind[0]]))
+        lines_range = list(range(head_ind[0],min([ind for ind in blank_ind if ind>head_ind[0]])))
 
         # Read CSV data with csv package. Store in return_results
         linedata = StringIO("\n".join(remove_comments([filelines[i] for i in lines_range])))
@@ -390,7 +390,7 @@ def get_tabular_sample_data_lines(filelines):
     if head_ind:  # A line beginning with '#Type' exists.
     
         # Range of lines to keep: from header index till first blank line
-        lines_range = range(head_ind[0],min([ind for ind in blank_ind if ind>head_ind[0]]))
+        lines_range = list(range(head_ind[0],min([ind for ind in blank_ind if ind>head_ind[0]])))
 
         linedata = StringIO("\n".join(remove_comments([filelines[i] for i in lines_range])))
         reader = csv.reader(linedata, dialect='excel-tab')
@@ -420,7 +420,7 @@ def parse_tabular_sample_data(sample_lines):
         # line_data = re.split("\s+", line)
 
         # print line_data[1]
-        if line[0] in sample_x_dict.keys():
+        if line[0] in list(sample_x_dict.keys()):
             # If type exists, append path to list
             # sample_x_dict[line[0]].append(get_full_path(line[1]))
             sample_x_dict[line[0]].append(line[1])
@@ -445,7 +445,7 @@ def parse_tabular_project_data(proj_lines):
         # line_data = re.split("\s+", line)
 
         # print line_data[1]
-        if line[0] in sample_x_dict.keys():
+        if line[0] in list(sample_x_dict.keys()):
             # If type exists, append path to list
             # sample_x_dict[line[0]].append(get_full_path(line[1]))
             sample_x_dict[line[0]].append(line[1])

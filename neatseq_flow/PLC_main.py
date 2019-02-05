@@ -21,10 +21,10 @@ from pprint import pprint as pp
 from datetime import datetime
 from collections import OrderedDict
 
-from modules.parse_sample_data import parse_sample_file,parse_grouping_file
-from modules.parse_param_data import parse_param_file
+from .modules.parse_sample_data import parse_sample_file,parse_grouping_file
+from .modules.parse_param_data import parse_param_file
 
-from PLC_step import Step, AssertionExcept
+from .PLC_step import Step, AssertionExcept
 
 
 class NeatSeqFlow(object):
@@ -115,10 +115,10 @@ class NeatSeqFlow(object):
             sys.stdout.write("Finding modules...\n")
             sys.stdout.flush()
             module_list = self.find_modules()
-            print "Modules available in the supplied module_paths:\n------------------------------\n"
-            print "\n".join(["- {mod} ({dirs})".format(mod=module,dirs=",".join(list(set(module_list[module]))))
+            print("Modules available in the supplied module_paths:\n------------------------------\n")
+            print("\n".join(["- {mod} ({dirs})".format(mod=module,dirs=",".join(list(set(module_list[module]))))
                              for module #,dir_list
-                             in sorted(module_list)])
+                             in sorted(module_list)]))
 
             return
 
@@ -145,7 +145,7 @@ class NeatSeqFlow(object):
         self.pipe_data["home_dir"] = os.path.realpath(self.pipe_data["home_dir"])
 
         # Store message:
-        assert message is None or isinstance(message, basestring), "Message must be text or 'None'."
+        assert message is None or isinstance(message, str), "Message must be text or 'None'."
         self.pipe_data["message"] = message
 
         # Store list of sample names in pipe_data
@@ -184,9 +184,9 @@ class NeatSeqFlow(object):
         else:
             self.run_code = datetime.now().strftime("%Y%m%d%H%M%S")  # (Is always used as a string)
         self.pipe_data["run_code"] = self.run_code
-        if "Default_wait" in self.param_data["Global"].keys():
+        if "Default_wait" in list(self.param_data["Global"].keys()):
             self.pipe_data["Default_wait"] = self.param_data["Global"]["Default_wait"]
-        if "job_limit" in self.param_data["Global"].keys():
+        if "job_limit" in list(self.param_data["Global"].keys()):
             self.pipe_data["job_limit"] = self.param_data["Global"]["job_limit"]
 
         self.manage_qsub_params()
@@ -257,8 +257,8 @@ class NeatSeqFlow(object):
             self.build_scripts()
             
         except AssertionExcept as assertErr:
-            print assertErr.get_error_str()
-            print "An error has occurred. See comment above.\nPrinting current JSON and exiting\n"
+            print(assertErr.get_error_str())
+            print("An error has occurred. See comment above.\nPrinting current JSON and exiting\n")
             with open(self.pipe_data["objects_dir"]+"WorkflowData.json", "w") as json_fh:
                 json_fh.write(self.get_json_encoding())
             # sys.exit()
@@ -308,13 +308,13 @@ class NeatSeqFlow(object):
         # Store default queue. Not relevant for all Executors. seen to in parse_param_data()
         self.pipe_data["qsub_params"]["queue"] = self.param_data["Global"]["Qsub_q"]
 
-        if "Qsub_nodes" in self.param_data["Global"].keys():
+        if "Qsub_nodes" in list(self.param_data["Global"].keys()):
             self.pipe_data["qsub_params"]["node"] = list(set(self.param_data["Global"]["Qsub_nodes"]))
         else:
             self.pipe_data["qsub_params"]["node"] = None
 
         # If Qsub_opts is defined by user in global params, copy into pipe_data:
-        self.pipe_data["qsub_params"]["opts"] = self.param_data["Global"]["Qsub_opts"] if "Qsub_opts" in self.param_data["Global"].keys() else {}
+        self.pipe_data["qsub_params"]["opts"] = self.param_data["Global"]["Qsub_opts"] if "Qsub_opts" in list(self.param_data["Global"].keys()) else {}
 
     # Handlers
     def get_param_data(self):
@@ -331,12 +331,12 @@ class NeatSeqFlow(object):
         """ return a list of step types required 
         """
         
-        return self.param_data["Step"].keys()
+        return list(self.param_data["Step"].keys())
 
     def get_step_names(self):
         """ return a list of step names (=step instances)
         """
-        return self.name_index.keys()
+        return list(self.name_index.keys())
         pass
 
     def get_names_index(self):
@@ -347,7 +347,7 @@ class NeatSeqFlow(object):
         """
         self.name_index = dict()
         for step in self.param_data["Step"]:
-            for name in self.param_data["Step"][step].keys():
+            for name in list(self.param_data["Step"][step].keys()):
                 self.name_index[name] = step
 
         return self.name_index
@@ -387,7 +387,7 @@ class NeatSeqFlow(object):
         # Get the base list for each step.
         self.depend_dict = {name:deepcopy(step_data[self.name_index[name]][name]["base"])
                                 if self.name_index[name] != "merge"
-                                else [""] for name in self.name_index.keys()}
+                                else [""] for name in list(self.name_index.keys())}
         return self.depend_dict
 
     def expand_depends(self):
@@ -399,22 +399,22 @@ class NeatSeqFlow(object):
         self.make_depends_dict()
 
         # Convert from dict of lists to dict of sets:
-        depend_dict = {key:set(value) for key,value in self.depend_dict.iteritems()}
+        depend_dict = {key:set(value) for key,value in self.depend_dict.items()}
         new_depend_dict = deepcopy(depend_dict)
 
         while True:
             temp_dd = deepcopy(new_depend_dict)
-            for key in temp_dd.keys():
+            for key in list(temp_dd.keys()):
                 for substep in temp_dd[key]:
                     if substep:
                         new_depend_dict[key] = new_depend_dict[key] | (temp_dd[substep] - set([""]))
-            if all(map(lambda x: temp_dd[x] == new_depend_dict[x], new_depend_dict.keys())):
+            if all([temp_dd[x] == new_depend_dict[x] for x in list(new_depend_dict.keys())]):
                 break
         new_depend_dict = {key:list(value) if value!={''} else list()
                            for key,value
-                           in new_depend_dict.iteritems()}
+                           in new_depend_dict.items()}
 
-        looping_steps = [k for k,v in new_depend_dict.iteritems() if k in v]
+        looping_steps = [k for k,v in new_depend_dict.items() if k in v]
         if looping_steps:
             sys.exit("There seems to be a cycle in the workflow design. "
                      "Check dependencies of steps: {offenders}".format(offenders=", ".join(looping_steps)))
@@ -577,8 +577,8 @@ class NeatSeqFlow(object):
             StepClass = getattr(importlib.import_module(step_module_loc), 'Step_'+step_type)
             # exec "from %s import %s as StepClass" % (step_module_loc,'Step_' + step_type)
         except ImportError:
-            print "An error has occurred loading module %s.\n" % step_module_loc
-            print "CMD: from %s import %s as StepClass\n" % (step_module_loc,'Step_' + step_type)
+            print("An error has occurred loading module %s.\n" % step_module_loc)
+            print("CMD: from %s import %s as StepClass\n" % (step_module_loc,'Step_' + step_type))
             raise
 
         # Run constructor:
@@ -592,8 +592,8 @@ class NeatSeqFlow(object):
 
             return new_step
         except AssertionExcept as assertErr:
-            print assertErr.get_error_str()
-            print("An error has occurred in step initialization (type: %s). See comment above.\n" % step_type)
+            print(assertErr.get_error_str())
+            print(("An error has occurred in step initialization (type: %s). See comment above.\n" % step_type))
             self.cleanup()
             sys.exit()
 
@@ -608,7 +608,7 @@ class NeatSeqFlow(object):
              "SLURM" : "squeue",
              "Local" : ""}
         qstat_cmd = qstat_cmd_dict[self.param_data["Global"]["Executor"]]
-        if "Qsub_path" in self.param_data["Global"].keys():
+        if "Qsub_path" in list(self.param_data["Global"].keys()):
             self.pipe_data["qsub_params"]["qstat_path"] = os.sep.join([self.param_data["Global"]["Qsub_path"].rstrip(os.sep),qstat_cmd])
         else:
             self.pipe_data["qsub_params"]["qstat_path"] = qstat_cmd
@@ -715,7 +715,7 @@ class NeatSeqFlow(object):
             with open(self.pipe_data["helper_funcs"], "w") as script_fh:
                 script_fh.write(helper_script)
         except:
-            print "Make sure the script constructor defines class method 'get_helper_script()'"
+            print("Make sure the script constructor defines class method 'get_helper_script()'")
             raise
 
         try:
@@ -1032,7 +1032,7 @@ library(reshape2); library(googleVis); args <- commandArgs(trailingOnly =T);log_
                 nodes_list.append(step.get_step_name())
                 nodes_list_step.append(step.get_step_step())
             # Storing color for step type:
-            if step.get_step_step() not in step_colors_index.keys():
+            if step.get_step_step() not in list(step_colors_index.keys()):
                 step_colors_index[step.get_step_step()] = colors[color_counter]
                 color_counter = (color_counter+1) % len(colors)
                 
@@ -1045,7 +1045,7 @@ library(reshape2); library(googleVis); args <- commandArgs(trailingOnly =T);log_
                         nodes_list.append(base_step.get_step_name())
                         nodes_list_step.append(base_step.get_step_step())
                     # Storing color for step type:
-                    if base_step.get_step_step() not in step_colors_index.keys():
+                    if base_step.get_step_step() not in list(step_colors_index.keys()):
                         step_colors_index[base_step.get_step_step()] = colors[color_counter]
                         color_counter = (color_counter+1) % len(colors)
 
@@ -1125,8 +1125,8 @@ saveWidget(myviz,file = "%(out_file_name)s",selfcontained = F)
             def walkerr(err):
                 """ Helper function for os.walk below. Catches errors during walking and reports on them.
                 """
-                print "WARNING: Error while searching for modules:"
-                print  err
+                print("WARNING: Error while searching for modules:")
+                print(err)
 
             # module_list is a dictionary, where module name is the key and the value is a list of dirs in which the
             # module exists.
@@ -1149,7 +1149,7 @@ saveWidget(myviz,file = "%(out_file_name)s",selfcontained = F)
         """
         
         assert isinstance(step_params, OrderedDict), "step_params must be of OrderedDict type"
-        assert all(map(lambda x: x in step_params, ["module","base","script_path"])), "The step params must include module, base and script_path"
+        assert all([x in step_params for x in ["module","base","script_path"]]), "The step params must include module, base and script_path"
         assert isinstance(step_name, str), "step_name must be string"
         # Making a step name index (dict of form {step_name:step_type})
         # Storing in self.name_index
@@ -1188,8 +1188,8 @@ saveWidget(myviz,file = "%(out_file_name)s",selfcontained = F)
             self.build_scripts()
             
         except AssertionExcept as assertErr:
-            print assertErr.get_error_str()
-            print "An error has occurred. See comment above.\nPrinting current JSON and exiting\n"
+            print(assertErr.get_error_str())
+            print("An error has occurred. See comment above.\nPrinting current JSON and exiting\n")
             with open(self.pipe_data["objects_dir"]+"WorkflowData.json", "w") as json_fh:
                 json_fh.write(self.get_json_encoding())
             # sys.exit()
@@ -1245,7 +1245,7 @@ saveWidget(myviz,file = "%(out_file_name)s",selfcontained = F)
             #     script_fh.write(helper_script)
         except:
 
-            print "Make sure the script constructor defines class method 'get_helper_script()'"
+            print("Make sure the script constructor defines class method 'get_helper_script()'")
             raise
 
     def create_run_index_cleaning_script(self):
@@ -1307,10 +1307,10 @@ saveWidget(myviz,file = "%(out_file_name)s",selfcontained = F)
                     glob_name_inst2 = instance2.get_glob_name()
 
                     if qsub_name_glob(glob_name_inst1,glob_name_inst2):
-                        print "* Instance '{inst1}' name is a prefix of instance '{inst2}' name, and both are from " \
+                        print("* Instance '{inst1}' name is a prefix of instance '{inst2}' name, and both are from " \
                               "the same module. This can cause cyclic dependencies! " \
                               "Please modify '{inst1}' to avoid this.\n".format(inst1=instance1.get_step_name(),
-                                                                                inst2=instance2.get_step_name())
+                                                                                inst2=instance2.get_step_name()))
                         issues = True
                     else:
                         pass

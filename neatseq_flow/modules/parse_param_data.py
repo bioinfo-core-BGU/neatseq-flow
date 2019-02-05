@@ -14,6 +14,7 @@ from collections import OrderedDict
 
 ######################## From here: https://gist.github.com/pypt/94d747fe5180851196eb
 from yaml.constructor import ConstructorError
+from functools import reduce
 
 try:
     # from yaml import CLoader as Loader
@@ -54,7 +55,7 @@ def parse_param_file(filename):
         return get_param_data_YAML(file_conts)
         # pp(get_param_data_YAML(file_conts))
         
-    except ConstructorError, exc:
+    except ConstructorError as exc:
         error_comm = ""
         if hasattr(exc, 'problem_mark'):
             mark = exc.problem_mark
@@ -62,11 +63,11 @@ def parse_param_file(filename):
                                                                        c=mark.column+1,
                                                                        snippet=mark.get_snippet())
         raise Exception("{error}\nPossible duplicate value passed".format(error=error_comm), "parameters")
-    except yaml.YAMLError, exc:
+    except yaml.YAMLError as exc:
         if hasattr(exc, 'problem_mark'):
             mark = exc.problem_mark
-            print "Error position: (%s:%s)" % (mark.line+1, mark.column+1)
-            print mark.get_snippet()
+            print("Error position: (%s:%s)" % (mark.line+1, mark.column+1))
+            print(mark.get_snippet())
         
         # Comment out the following line to enable classic param file format.
         # Not recommended.
@@ -122,7 +123,7 @@ def get_param_data_YAML(filelines):
             yamlname_params = param_dict[yamlname]
         
             # Converting "redirects" to "redir_params" for backwards compatibility...
-            if "redirects" in yamlname_params.keys():
+            if "redirects" in list(yamlname_params.keys()):
                 yamlname_params["redir_params"] = \
                     yamlname_params.pop("redirects")
             else:   # Add empty redir_params.
@@ -132,10 +133,10 @@ def get_param_data_YAML(filelines):
             yamlname_params["redir_params"] = \
                 {str(key):value \
                 for (key,value) \
-                in yamlname_params["redir_params"].items()}
+                in list(yamlname_params["redir_params"].items())}
 
             # Converting base to list if it is not one already
-            if "base" in yamlname_params.keys() and not isinstance(yamlname_params["base"],list):
+            if "base" in list(yamlname_params.keys()) and not isinstance(yamlname_params["base"],list):
                 yamlname_params["base"] = [yamlname_params["base"]]
 
             if "qsub_params" in yamlname_params:
@@ -158,7 +159,7 @@ def get_param_data_YAML(filelines):
                 params2mv = list(set(yamlname_params["qsub_params"]) - {"node", "queue", "-q"})
                 yamlname_params["qsub_params"]["opts"] = {key: (val if val is not None else '')
                                                           for key, val
-                                                          in yamlname_params["qsub_params"].iteritems()
+                                                          in yamlname_params["qsub_params"].items()
                                                           if key in params2mv}
                 for param in params2mv:
                     del yamlname_params["qsub_params"][param]
@@ -177,7 +178,7 @@ def get_param_data_YAML(filelines):
 
                 # Remove empty and duplicate strings:
                 if isinstance(yamlname_params["sample_list"], list):
-                    yamlname_params["sample_list"] = list(set(filter(lambda x: x != "", yamlname_params["sample_list"])))
+                    yamlname_params["sample_list"] = list(set([x for x in yamlname_params["sample_list"] if x != ""]))
 
             endparams[param_dict[yamlname]["module"]][yamlname] = yamlname_params
         return endparams
@@ -195,14 +196,14 @@ def get_param_data_YAML(filelines):
 
     # yaml.safe_dump(yaml_params)
     # sys.exit()
-    usr_step_order = yaml_params["Step_params"].keys()
+    usr_step_order = list(yaml_params["Step_params"].keys())
     
     # If there is a Variables section, interpolate any appearance of the variables in the params
-    if "Vars" in yaml_params.keys():
+    if "Vars" in list(yaml_params.keys()):
         
         # Prepare the bunch for variable interpolation:
         from bunch import Bunch 
-        from var_interpol_defs import make_interpol_func, walk, test_vars
+        from .var_interpol_defs import make_interpol_func, walk, test_vars
         
         test_vars(yaml_params["Vars"])
 
@@ -256,7 +257,7 @@ def param_data_testing_global(param_data):
     # The following 'Executors' do NOT require a queue to be passed:
     no_queue_required = "SLURM Local".split(" ")
     # No default queue is defined:
-    if "Qsub_q" not in param_data.keys():
+    if "Qsub_q" not in list(param_data.keys()):
         if param_data["Executor"] in no_queue_required:# and "Qsub_q" not in param_data.keys():
             param_data["Qsub_q"] = ""
         else:
@@ -268,9 +269,9 @@ def param_data_testing_global(param_data):
     if param_data["Executor"] not in SUPPORTED_EXECUTORS:
         issue_warning += "Executor %s not defined.\n" % param_data["Executor"]
 
-    if "Qsub_opts" in param_data.keys():
+    if "Qsub_opts" in list(param_data.keys()):
         # Checking no automatically set qsub parameters are defined by user
-        if any(map(lambda x: x in param_data["Qsub_opts"],NOT_PASSABLE_EXECUTOR_PARAMS)):
+        if any([x in param_data["Qsub_opts"] for x in NOT_PASSABLE_EXECUTOR_PARAMS]):
             issue_warning += "Automatically set qsub parameters defined (one of %s)\n" % (", ".join(NOT_PASSABLE_EXECUTOR_PARAMS))
 
     if issue_warning=="":
@@ -286,7 +287,7 @@ def param_data_testing_step_wise(param_data):
     issue_count = 1
     # List of all step names:
 
-    names = reduce(lambda x, y: x+y, [param_data[step].keys() for step in param_data.keys()])
+    names = reduce(lambda x, y: x+y, [list(param_data[step].keys()) for step in list(param_data.keys())])
 
     if len(set([nam for nam in names if names.count(nam) > 1])) > 0:
         
@@ -294,9 +295,9 @@ def param_data_testing_step_wise(param_data):
         issue_count += 1
         
     # If one of parameter values is a list, create warning - multiple definitions of a param
-    for step in param_data.keys():
-        for name in param_data[step].keys():
-            for param in param_data[step][name].keys():
+    for step in list(param_data.keys()):
+        for name in list(param_data[step].keys()):
+            for param in list(param_data[step][name].keys()):
                 # Checking that no parameter except "base" is a list:
                 # if param not in STEP_PARAMS_MULTIPLE_V and isinstance(param_data[step][name][param],list):
                 if param in STEP_PARAMS_SINGLE_VALUE and isinstance(param_data[step][name][param],list):
@@ -304,7 +305,7 @@ def param_data_testing_step_wise(param_data):
                     issue_count += 1
                 if param == "qsub_params":
                     # Check that 'queue' and '-q' are strings and are not both specified
-                    if all(map(lambda x: x in param_data[step][name][param],["queue","-q"])):
+                    if all([x in param_data[step][name][param] for x in ["queue","-q"]]):
                         issue_warning += "%s. Both '-q' and 'queue' defined in step %s (name %s)\n" % (issue_count,step,name)
                     if "queue" in param_data[step][name][param]:
                         if not isinstance(param_data[step][name][param]["queue"],str):
@@ -322,23 +323,23 @@ def param_data_testing_step_wise(param_data):
                         del param_data[step][name][param]["nodes"]
                     if "node" in param_data[step][name][param]:
                         if not isinstance(param_data[step][name][param]["node"],list):
-                            print name
-                            print param_data[step][name][param]["node"]
+                            print(name)
+                            print(param_data[step][name][param]["node"])
                             issue_warning += "%s. 'node' must be a string or a list in step %s (name %s)\n" % (issue_count,step,name)
                     # Checking no automatically set qsub parameters are defined by user
-                    if any(map(lambda x: x in param_data[step][name][param]["opts"],NOT_PASSABLE_EXECUTOR_PARAMS)):
+                    if any([x in param_data[step][name][param]["opts"] for x in NOT_PASSABLE_EXECUTOR_PARAMS]):
                         issue_warning += "{issuenum}. Automatically set qsub parameters defined (one of {params}) " \
                                          "in step {step} (name {name})\n".format(issuenum=issue_count,
                                                                                  step=step,name=name,
                                                                                  params=", ".join(NOT_PASSABLE_EXECUTOR_PARAMS))
 
     # Test that all steps have base steps and that the base steps are defined
-    for step in param_data.keys():
+    for step in list(param_data.keys()):
         if step=="merge":
             next
         else:
-            for name in param_data[step].keys():
-                if "base" not in param_data[step][name].keys():
+            for name in list(param_data[step].keys()):
+                if "base" not in list(param_data[step][name].keys()):
                     issue_warning += "%s. No base defined for step %s\n" % (issue_count,name)
                     issue_count += 1
                 else:
@@ -362,10 +363,10 @@ def test_and_modify_global_params(global_params):
     if "Executor" not in global_params:
         global_params["Executor"] = "SGE"
     # Testing executor is one of defined types:
-    if global_params["Executor"] not in SUPPORTED_EXECUTORS.keys():
-        print "Executor {executor} is not one of " \
+    if global_params["Executor"] not in list(SUPPORTED_EXECUTORS.keys()):
+        print("Executor {executor} is not one of " \
               "the defined executors: {executor_list}".format(executor=global_params["Executor"],
-                                                              executor_list=", ".join(SUPPORTED_EXECUTORS.keys()))
+                                                              executor_list=", ".join(list(SUPPORTED_EXECUTORS.keys()))))
         raise Exception("Issues in parameters", "parameters")
 
     # # This should not be done this way, but couldn't think of a better way.
@@ -388,7 +389,7 @@ def test_and_modify_global_params(global_params):
         elif isinstance(global_params["Qsub_opts"], dict):
             global_params["Qsub_opts"] = {key:(val if val!=None else "")
                                           for key,val
-                                          in global_params["Qsub_opts"].iteritems()}
+                                          in global_params["Qsub_opts"].items()}
         else:
             sys.exit("'Qsub_opts' in undefined format.")
            
@@ -402,8 +403,8 @@ def test_and_modify_global_params(global_params):
             raise Exception("Unrecognised 'module_path' format. 'module_path' in 'Global_params' "
                             "must be a single path or a list. \n", "parameters")
 
-        bad_paths = filter(lambda x: not os.path.isdir(x), global_params["module_path"])
-        good_paths = filter(lambda x: os.path.isdir(x), global_params["module_path"])
+        bad_paths = [x for x in global_params["module_path"] if not os.path.isdir(x)]
+        good_paths = [x for x in global_params["module_path"] if os.path.isdir(x)]
         if bad_paths:
             sys.stderr.write("WARNING: The following module paths do not exist and will be "
                              "removed from search path: {badpaths}\n".format(badpaths=", ".join(bad_paths)))

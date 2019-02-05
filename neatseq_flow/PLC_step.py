@@ -16,7 +16,7 @@ import json
 
 from copy import *
 from pprint import pprint as pp
-from modules.parse_param_data import manage_conda_params
+from .modules.parse_param_data import manage_conda_params
 
 __author__ = "Menachem Sklarz"
 __version__ = "1.5.0"
@@ -77,8 +77,8 @@ class Step(object):
         def walkerr(err):
             """ Helper function for os.walk below. Catches errors during walking and reports on them.
             """
-            print "WARNING: Error while searching for modules:"
-            print err
+            print("WARNING: Error while searching for modules:")
+            print(err)
 
         # Searching module paths passed by user in parameter file:
         if "module_path" in param_data["Global"]:
@@ -100,7 +100,7 @@ class Step(object):
                 # Each .next call on this generator
                 # returns a level tuple as follows:
                 try:
-                    level = dir_generator.next()
+                    level = next(dir_generator)
                     # level is a tuple with: (current dir. [list of dirs],[list of files])
                 except StopIteration:
                     sys.stderr.write("WARNING: Module path {mod_path} seems to be empty! Possibly issue with "
@@ -109,7 +109,7 @@ class Step(object):
                     # Repeat while expected filename is NOT in current dir contents (=level[2]. see above)
                     #   and while __init__.py is not in current dir (avoid finding modules in non-active dirs)
                     try:
-                        level = dir_generator.next()    # Try getting another level    
+                        level = next(dir_generator)    # Try getting another level    
                     except StopIteration:
                         # print "Step %s not found in path %s." % (mod_t,module_path)
                         break # Leave while without executing "else"
@@ -137,13 +137,13 @@ class Step(object):
         mod_t = step
         dir_generator = os.walk(cls.Cwd, onerror = walkerr)     # Each .next call on this generator returns a level tuple as follows:
         try:
-            level = dir_generator.next()           # level is a tuple with: (current dir. [list of dirs],[list of files])
+            level = next(dir_generator)           # level is a tuple with: (current dir. [list of dirs],[list of files])
         except StopIteration:
             sys.stderr.write("WARNING: Module path %s seems to be empty! Possibly issue with permissions...\n" % self.Cwd)
 
         while(mod_t + ".py" not in level[2]):     # Repeat while expected filename is NOT in current dir contents (=level[2]. see above)
             try:
-                level = dir_generator.next()    # Try getting another level    
+                level = next(dir_generator)    # Try getting another level    
             except StopIteration:
                 sys.exit("Step %s not found in regular path or user defined paths." % mod_t)
         
@@ -296,7 +296,7 @@ class Step(object):
         try:
             self.step_specific_init()
         except AssertionExcept as assertErr:
-            print "step_specific_init"
+            print("step_specific_init")
             assertErr.set_step_name(self.get_step_name())
             # print assertErr.get_error_str()
             raise assertErr 
@@ -396,7 +396,7 @@ Dependencies: {depends}""".format(name=self.name,
         # Check the base step is a valid Step object:
         # assert isinstance(base_step,Step) or base_step==None
 
-        if base_step_list != [] and not all(map(lambda x: isinstance(x,Step), base_step_list)):
+        if base_step_list != [] and not all([isinstance(x,Step) for x in base_step_list]):
             raise AssertionExcept("Invalid base list\n", step = self.get_step_name())
         
         try:
@@ -570,7 +570,7 @@ Dependencies: {depends}""".format(name=self.name,
         """
         # new_smpdt = deepcopy(smpdt)
 
-        for k, v in other_sample_data.iteritems():
+        for k, v in other_sample_data.items():
             # print smpdt
             # print "\n\n"
             if (k in sample_data):
@@ -1077,7 +1077,7 @@ Dependencies: {depends}""".format(name=self.name,
             self.update_provenance()
 
         if "stop_and_show" in self.params:
-            print self.get_stop_and_show_message()
+            print(self.get_stop_and_show_message())
             raise AssertionExcept("Showed. Now stopping. "
                                   "To continue, remove the 'stop_and_show' tag from %s" % self.get_step_name())
 
@@ -1095,7 +1095,7 @@ Project: {title}
                                                    format(key=key,
                                                           prov="->".join(self.provenance["project_data"][key]))
                                                     for key
-                                                    in self.sample_data["project_data"].keys()])
+                                                    in list(self.sample_data["project_data"].keys())])
                 except KeyError:
                     # print "~~~~~~~~~~~~~~~~ %s ~~~~~" % self.get_step_name()
                     # print self.sample_data["project_data"].keys()
@@ -1107,7 +1107,7 @@ Project: {title}
                 # Creating string of project data not including provenance
                 project_slots_text = "\n".join(["- " + key
                                                 for key
-                                                in self.sample_data["project_data"].keys()])
+                                                in list(self.sample_data["project_data"].keys())])
 
 
             message = message + """
@@ -1127,7 +1127,7 @@ Project slots:
                              in all_samples}
                 uniq_sample_lists = [[sample
                                          for sample
-                                         in prov_dict.keys()
+                                         in list(prov_dict.keys())
                                          if prov_dict[sample] == prov]
                                   for prov
                                   in uniq_prov_list]
@@ -1149,7 +1149,7 @@ Project slots:
                 # Creating string of (first) sample data not including provenance
                 sample_slots_text = "\n".join("- "+key
                                               for key
-                                              in self.sample_data[self.sample_data["samples"][0]].keys())
+                                              in list(self.sample_data[self.sample_data["samples"][0]].keys()))
 
             message = message + """
 Samples:
@@ -1209,7 +1209,7 @@ Sample slots:
 
         redir_param_script = ""
         if "redir_params" in self.params:
-            for key in self.params["redir_params"].keys():
+            for key in list(self.params["redir_params"].keys()):
                 # The following permits the user to pass two values for the same redirected parameter:
                 if isinstance(self.params["redir_params"][key],list):
                     self.write_warning("Passed %s twice as redirected parameter!" % key)
@@ -1236,10 +1236,10 @@ Sample slots:
         # Add "env" line, if it exists:
         # New version
 
-        if "precode" in self.params.keys():         # Add optional code
+        if "precode" in list(self.params.keys()):         # Add optional code
             script_const += "%s \n" % self.params["precode"]
 
-        if "setenv" in self.params.keys():         # Add optional environmental variables.
+        if "setenv" in list(self.params.keys()):         # Add optional environmental variables.
             if not isinstance(self.params["setenv"], list):
                 self.params["setenv"] = [self.params["setenv"]]
             for setenv in self.params["setenv"]:         # Add optional environmental variables.
@@ -1252,7 +1252,7 @@ Sample slots:
             script_const += "\n\n"
                 
         # Old version (kept for backwards compatibility. Not recommended):
-        if "env" in self.params.keys():         # Add optional environmental variables.
+        if "env" in list(self.params.keys()):         # Add optional environmental variables.
             script_const += "env %s \\\n\t" % self.params["env"]
         return script_const
 
@@ -1320,7 +1320,7 @@ Sample slots:
             This can be useful when a lot of IO to the shared disk is detrimental
         """
         # If "local" is set, will do all IO to local folder and then copy everything to self.base_dir
-        if "local" in self.params.keys():
+        if "local" in list(self.params.keys()):
             assert self.params["local"], "In step %s: You must supply a local destination when requesting 'local' in parameters" % self.name
             local_dir = "".join([os.sep,
                                 self.params["local"].strip(os.sep),
@@ -1340,7 +1340,7 @@ Sample slots:
     def local_finish(self,use_dir,base_dir):
         """
         """
-        if "local" in self.params.keys():
+        if "local" in list(self.params.keys()):
             self.script += "# Adding lines moving local execution to final destination:\n" 
             self.script += " ".join(["cp -prf ", use_dir + "*", base_dir,"\n\n"])
             self.script += "".join(["rm -rf ", use_dir,"\n\n"])
@@ -1463,7 +1463,7 @@ Sample slots:
                     self.params["conda"] = deepcopy(t1)
                           
                 # Warn if extra parameters passed in conda params
-                if filter(lambda x: x not in ["path","env"],self.params["conda"].keys()):
+                if [x for x in list(self.params["conda"].keys()) if x not in ["path","env"]]:
                     self.write_warning("You provided extra 'conda' parameters. They will be ignored!")
                 
                 # print self.params["conda"]
@@ -1546,11 +1546,11 @@ Sample slots:
             # print "sample -->", sample
             all_keys = list()
             if sample in self.provenance:
-                all_keys = itertools.chain(all_keys,self.provenance[sample].keys())
+                all_keys = itertools.chain(all_keys,list(self.provenance[sample].keys()))
             else:
                 self.provenance[sample] = dict()
             if sample in self.sample_data:
-                all_keys = itertools.chain(all_keys,self.sample_data[sample].keys())
+                all_keys = itertools.chain(all_keys,list(self.sample_data[sample].keys()))
             for key in all_keys:
                 self.provenance[sample][key] = [">"+self.get_step_name()]
         # Samples removed in current step
@@ -1561,9 +1561,9 @@ Sample slots:
             # print "sample -->", sample
             all_keys = list()
             if sample in self.provenance:
-                all_keys = itertools.chain(all_keys,self.provenance[sample].keys())
+                all_keys = itertools.chain(all_keys,list(self.provenance[sample].keys()))
             if sample in self.sample_data:
-                all_keys = itertools.chain(all_keys,self.sample_data_original[sample].keys())
+                all_keys = itertools.chain(all_keys,list(self.sample_data_original[sample].keys()))
             for key in all_keys:
                 self.provenance[sample][key].append(self.get_step_name()+"|")
 
@@ -1582,11 +1582,11 @@ Sample slots:
         for sample in sample_and_proj_list:
             all_keys = list()
             if sample in self.provenance:
-                all_keys = itertools.chain(all_keys,self.provenance[sample].keys())
+                all_keys = itertools.chain(all_keys,list(self.provenance[sample].keys()))
             if sample in self.sample_data:
-                all_keys = itertools.chain(all_keys,self.sample_data[sample].keys())
+                all_keys = itertools.chain(all_keys,list(self.sample_data[sample].keys()))
             if sample in self.sample_data_original:
-                all_keys = itertools.chain(all_keys,self.sample_data_original[sample].keys())
+                all_keys = itertools.chain(all_keys,list(self.sample_data_original[sample].keys()))
             # Gey unique keys!
             all_keys = list(set(all_keys))
 
@@ -1673,7 +1673,7 @@ Sample slots:
             sample_dict["levels"] = [sample_dict["levels"]]
         # Check all levels exist in category
         if not all(
-                map(lambda level: level in self.get_category_levels(sample_dict["category"]), sample_dict["levels"])):
+                [level in self.get_category_levels(sample_dict["category"]) for level in sample_dict["levels"]]):
             bad_levels = ", ".join([level for level in sample_dict["levels"] if
                                     level not in self.get_category_levels(sample_dict["category"])])
             raise AssertionExcept("Level '{lev}' is not defined for "

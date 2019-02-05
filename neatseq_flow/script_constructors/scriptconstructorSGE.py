@@ -12,7 +12,7 @@ __author__ = "Menachem Sklarz"
 __version__ = "1.5.0"
 
 
-from scriptconstructor import *
+from .scriptconstructor import *
 
 
 class ScriptConstructorSGE(ScriptConstructor):
@@ -104,7 +104,7 @@ function kill_all_PL_jobs {
         """
         script = ""
 
-        if "slow_release" in self.params.keys():
+        if "slow_release" in list(self.params.keys()):
             sys.exit("Slow release no longer supported. Use 'job_limit'")
         else:
             script = """\
@@ -130,7 +130,7 @@ qsub {script_path}
             # qsub_holdjids = "#$ -hold_jid %s " % ",".join(self.master.dependency_jid_list)
             # New style: Using globs:
             qsub_holdjids = "#$ -hold_jid {hold_jid_list}".format(
-                hold_jid_list=",".join(map(lambda x: '"%s"' % x, self.master.dependency_glob_jid_list)))
+                hold_jid_list=",".join(['"%s"' % x for x in self.master.dependency_glob_jid_list]))
         else:
             qsub_holdjids = ""
 
@@ -209,7 +209,7 @@ class HighScriptConstructorSGE(ScriptConstructorSGE,HighScriptConstructor):
 
         return "qalter \\\n\t-hold_jid {glob_jid_list} \\\n\t{script_id}\n\n".format(
             # Comma separated list of double-quote enclosed glob jids:
-            glob_jid_list=",".join(map(lambda x: '"%s"' % x, self.master.dependency_glob_jid_list)),
+            glob_jid_list=",".join(['"%s"' % x for x in self.master.dependency_glob_jid_list]),
             script_id=self.script_id)
 
     def get_script_header(self, **kwargs):
@@ -253,7 +253,7 @@ class HighScriptConstructorSGE(ScriptConstructorSGE,HighScriptConstructor):
 
         job_limit = ""
 
-        if "job_limit" in self.pipe_data.keys():
+        if "job_limit" in list(self.pipe_data.keys()):
             job_limit = """
 # Sleeping while jobs exceed limit
 wait_limit
@@ -279,7 +279,7 @@ echo running {script_id}
 
         job_limit = ""
 
-        if "job_limit" in self.pipe_data.keys():
+        if "job_limit" in list(self.pipe_data.keys()):
             job_limit = """
 # Sleeping while jobs exceed limit
 wait_limit

@@ -253,7 +253,7 @@ done
         self.filehandle.close()
     
     def __str__(self):
-        print "%s - %s - %s" % (self.step , self.name , self.shell)
+        print("%s - %s - %s" % (self.step , self.name , self.shell))
 
 
     def get_trap_line(self):

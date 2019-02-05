@@ -12,7 +12,7 @@ __author__ = "Menachem Sklarz"
 __version__ = "1.5.0"
 
 
-from scriptconstructor import *
+from .scriptconstructor import *
 
 
 class ScriptConstructorLocal(ScriptConstructor):
@@ -86,7 +86,7 @@ sed -i -E -e 's/^([^#][^[[:space:]]+).*/# \\1/g' -e 's/^(# [^[[:space:]]+).*/\\1
         
         script = ""
 
-        if "slow_release" in self.params.keys():
+        if "slow_release" in list(self.params.keys()):
             sys.exit("Slow release no longer supported. Use 'job_limit'")
         else:
             script += """\
@@ -221,7 +221,7 @@ class HighScriptConstructorLocal(ScriptConstructorLocal,HighScriptConstructor):
 
         job_limit = ""
 
-        if "job_limit" in self.pipe_data.keys():
+        if "job_limit" in list(self.pipe_data.keys()):
             job_limit = """\
 # Sleeping while jobs exceed limit
 wait_limit
@@ -253,7 +253,7 @@ sleep {sleep_time}
 
         job_limit = ""
 
-        if "job_limit" in self.pipe_data.keys():
+        if "job_limit" in list(self.pipe_data.keys()):
             job_limit = """\
 # Sleeping while jobs exceed limit
 wait_limit

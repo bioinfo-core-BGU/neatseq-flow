@@ -23,7 +23,7 @@ sys.path.pop(0)
 # Append neatseq_flow path to list (when using installed version, will find it before getting to this search path)
 # Problem that might arrise: When trying to run a local copy when it is installed in site-packages/
 sys.path.append(os.path.realpath(os.path.expanduser(os.path.dirname(os.path.abspath(__file__))+os.sep+"..")))
-from neatseq_flow.PLC_main import NeatSeqFlow
+from .neatseq_flow.PLC_main import NeatSeqFlow
 
 # Parse arguments:
 parser = argparse.ArgumentParser(description="""
@@ -54,30 +54,30 @@ args = parser.parse_args()
 
 
 if args.version:
-    print "NeatSeq-Flow version %s" % __version__
-    print "Installation location: %s" % os.path.dirname(os.path.realpath(__file__))
+    print("NeatSeq-Flow version %s" % __version__)
+    print("Installation location: %s" % os.path.dirname(os.path.realpath(__file__)))
     sys.exit()
 
     
 if args.sample_file is None or args.param_file is None:
-    print "Please supply sample and parameter files...\n"
+    print("Please supply sample and parameter files...\n")
     parser.print_help()
     sys.exit()
 
     
 if args.clean:
     # if args.home_dir != os.getcwd():
-    text = raw_input("Are you sure you want to delete the workflow in {home_dir}?\n('yes' to approve) > ".format(home_dir = args.home_dir))
+    text = input("Are you sure you want to delete the workflow in {home_dir}?\n('yes' to approve) > ".format(home_dir = args.home_dir))
 
     if not text.lower() == "yes":
         sys.exit()
     if args.clean_all:
-        text = raw_input("Are you sure you want to delete '{data}'?\n('yes' to approve) > ".format(data=os.sep.join([args.home_dir, "data"])))
+        text = input("Are you sure you want to delete '{data}'?\n('yes' to approve) > ".format(data=os.sep.join([args.home_dir, "data"])))
         if os.path.isdir(os.sep.join([args.home_dir, "data"])):
             if text.lower() == "yes":
                 shutil.rmtree(os.sep.join([args.home_dir, "data"]))
             else:
-                print "Not removing 'data'"
+                print("Not removing 'data'")
     for wfdir in ["backups", "logs", "objects", "scripts", "stderr", "stdout"]:
         if os.path.isdir(os.sep.join([args.home_dir, wfdir])):
             shutil.rmtree(os.sep.join([args.home_dir, wfdir]))
@@ -88,7 +88,7 @@ else:
     
 # Checking that sample_file and param_file were passed:
 if args.sample_file is None or args.param_file is None:
-    print "Don't forget to pass sample and parameter files with the -s and -p flags.\n", parser.print_help()
+    print("Don't forget to pass sample and parameter files with the -s and -p flags.\n", parser.print_help())
 
 # Converting list of parameter files into comma-separated list. This is deciphered by the neatseq_flow class.
 args.param_file = ",".join(args.param_file)

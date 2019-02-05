@@ -54,10 +54,10 @@ def walk(node, variables_bunch, callback):
         
     if isinstance(node,dict):
         # Special case: The dict is actually a variable wrongly interpreted by the YAML parser as a dict!
-        if len(node.keys()) == 1 and node.values()==[None] and re.match("Vars\.([\w\.]+?)",node.keys()[0]):
-            node = callback("{%s}" % node.keys()[0])
+        if len(list(node.keys())) == 1 and list(node.values())==[None] and re.match("Vars\.([\w\.]+?)",list(node.keys())[0]):
+            node = callback("{%s}" % list(node.keys())[0])
         else:
-            for key, item in node.items():
+            for key, item in list(node.items()):
                 if isinstance(item, collections.Iterable):
                     node[key] = walk(item, variables_bunch, callback)
                 elif isinstance(item, str):
@@ -92,7 +92,7 @@ def walk(node, variables_bunch, callback):
 def test_vars(node):
 
     if isinstance(node,dict):
-        for key in node.keys():
+        for key in list(node.keys()):
             if re.search("[^a-zA-Z0-9_]",key):
                 raise Exception("Please use only alphanumeric symbols and underscore in variables (%s)" % key, "Variables")
             if re.search("^[0-9]",key):
