@@ -36,6 +36,7 @@ class ScriptConstructorSGE(ScriptConstructor):
         else
             maxvmem="NA";
         fi""".format(qstat_path=pipe_data["qsub_params"]["qstat_path"])
+        maxvmem_cmd = re.escape(maxvmem_cmd)
         script = re.sub("## maxvmem calc entry point", maxvmem_cmd, script)
 
         # Add job_limit function:

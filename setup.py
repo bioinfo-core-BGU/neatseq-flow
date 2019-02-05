@@ -24,7 +24,7 @@ setup(
                             ('NeatSeq-Flow-Workflows/Sample_sets',['Workflows/PE_tabular.nsfs'])],
     install_requires    = [
                         "pyyaml >= 3.12",
-                        "bunch == 1.0.1",
+                        "munch >= 1.0.1",
                         "pandas"],
     classifiers         = [
                           'Development Status :: 4 - Beta',

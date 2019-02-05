@@ -202,12 +202,12 @@ def get_param_data_YAML(filelines):
     if "Vars" in list(yaml_params.keys()):
         
         # Prepare the bunch for variable interpolation:
-        from bunch import Bunch 
+        from munch import Munch
         from .var_interpol_defs import make_interpol_func, walk, test_vars
         
         test_vars(yaml_params["Vars"])
 
-        variables_bunch = Bunch.fromDict({"Vars":yaml_params["Vars"]})
+        variables_bunch = Munch.fromDict({"Vars":yaml_params["Vars"]})
         # print variables_bunch
         f_interpol = make_interpol_func(variables_bunch)
 
