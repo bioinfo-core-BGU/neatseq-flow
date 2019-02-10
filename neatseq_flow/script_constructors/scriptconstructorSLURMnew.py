@@ -15,13 +15,13 @@ __version__ = "1.5.0"
 from .scriptconstructor import *
 
 
-class ScriptConstructorSLURM(ScriptConstructor):
+class ScriptConstructorSLURMnew(ScriptConstructor):
 
     @classmethod
     def get_helper_script(cls, pipe_data):
         """ Returns the code for the helper script
         """
-        script = super(ScriptConstructorSLURM, cls).get_helper_script(pipe_data)
+        script = super(ScriptConstructorSLURMnew, cls).get_helper_script(pipe_data)
         script = re.sub("## locksed command entry point", r"""locksed  "s:^\\($3\\).*:# \\1\\t$err_code:" $run_index""", script)
 
         # Add job_limit function:
@@ -46,7 +46,7 @@ wait_limit() {{
     def get_exec_script(cls, pipe_data):
         """ Not used for SGE. Returning None"""
 
-        script = super(ScriptConstructorSLURM, cls).get_exec_script(pipe_data)
+        script = super(ScriptConstructorSLURMnew, cls).get_exec_script(pipe_data)
 
         script += """\
 jobid=$(sbatch $script_path | cut -d " " -f 4)
@@ -107,7 +107,7 @@ bash {nsf_exec} {script_id} &\n\n""".format(script_id = self.script_id,
         if  self.params["qsub_params"]["queue"]:
             qsub_header +=   "#SBATCH --partition %s\n" % self.params["qsub_params"]["queue"]
         if self.master.dependency_jid_list:
-            qsub_header += "#$ -hold_jid {hjids}\n".format(hjids=",".join(self.master.dependency_jid_list))
+            qsub_header += "#$ -hold_jid {hjids}\n".format(hjids=",".join(self.master.dependency_glob_jid_list))
 
         return qsub_header
 
@@ -155,10 +155,10 @@ log_echo {step} {stepname} {stepID} {level} $HOSTNAME $JOB_ID $$ {type}
 
 
 # ----------------------------------------------------------------------------------
-# HighScriptConstructorSLURM defintion
+# HighScriptConstructorSLURMnew defintion
 # ----------------------------------------------------------------------------------
 
-class HighScriptConstructorSLURM(ScriptConstructorSLURM,HighScriptConstructor):
+class HighScriptConstructorSLURMnew(ScriptConstructorSLURMnew,HighScriptConstructor):
     """
     """
 
@@ -167,7 +167,7 @@ class HighScriptConstructorSLURM(ScriptConstructorSLURM,HighScriptConstructor):
             Is called for high level, low level and wrapper scripts
         """
 
-        general_header = super(HighScriptConstructorSLURM, self).get_script_header(**kwargs)
+        general_header = super(HighScriptConstructorSLURMnew, self).get_script_header(**kwargs)
 
         only_low_lev_params  = ["-pe"]
         compulsory_high_lev_params = {}
@@ -194,7 +194,7 @@ class HighScriptConstructorSLURM(ScriptConstructorSLURM,HighScriptConstructor):
             spec_qsub_name is the qsub name without the run code (see caller)
         """
         
-        command = super(HighScriptConstructorSLURM, self).get_command()
+        command = super(HighScriptConstructorSLURMnew, self).get_command()
 
         job_limit = ""
 
@@ -256,7 +256,7 @@ sleep {sleep_time}
         """
     
         # Get general postamble
-        postamble = super(HighScriptConstructorSLURM, self).get_script_postamble()
+        postamble = super(HighScriptConstructorSLURMnew, self).get_script_postamble()
 
         # Add sed command:
         script = """\
@@ -281,20 +281,33 @@ locksed  "s:^\({script_id}\).*:# \\1\\tdone:" {run_index}
         return script
 
 # ----------------------------------------------------------------------------------
-# LowScriptConstructorSLURM definition
+# LowScriptConstructorSLURMnew definition
 # ----------------------------------------------------------------------------------
 
 
-class LowScriptConstructorSLURM(ScriptConstructorSLURM,LowScriptConstructor):
+class LowScriptConstructorSLURMnew(ScriptConstructorSLURMnew,LowScriptConstructor):
     """
     """
+
+    def __init__(self, **kwargs):
+        """
+        Create script for executing and holding actual script file
+        """
+
+        super(LowScriptConstructorSLURMnew, self).__init__(**kwargs)
+
+        slurm_script_path = self.script_path+".slurm.sh"
+        self.filehandle_slurm = open(slurm_script_path, "w")
+
+    def __del__(self):
+        self.filehandle_slurm.close()
 
     def get_script_header(self, **kwargs):
         """ Make the first few lines for the scripts
             Is called for high level, low level and wrapper scripts
         """
 
-        general_header = super(LowScriptConstructorSLURM, self).get_script_header(**kwargs)
+        general_header = super(LowScriptConstructorSLURMnew, self).get_script_header(**kwargs)
 
         only_low_lev_params  = ["-pe"]
         compulsory_high_lev_params = {"-V":""}
@@ -325,7 +338,7 @@ class LowScriptConstructorSLURM(ScriptConstructorSLURM,LowScriptConstructor):
         # if "level" not in kwargs:
         #     kwargs["level"] = "low"
 
-        super(LowScriptConstructorSLURM, self).write_script()
+        super(LowScriptConstructorSLURMnew, self).write_script()
     # script,
     #                                                     dependency_jid_list,
     #                                                     stamped_files,
@@ -341,12 +354,31 @@ locksed  "s:^\({script_id}\).*:# \\1\\tdone:" {run_index}
 """.format(run_index = self.pipe_data["run_index"],
            script_id = self.script_id))
 
+        slurm_cmd = r"""
+# Run script on hold
+jobid=$(sbatch -H {script_path} | grep -P -o "\d+")
+
+# Get list of depends-on jids
+hold_jids=$(grep '#$ -hold_jid' $script_path | cut -f 3 -d " ")
+set -f                     # avoid globbing (expansion of *).
+# Convert into array:
+hold_jids=(${{hold_jids//,/ }})
+# echo ${{array[*]}}
+
+# Set up dependencies and release:
+scontrol update JobId=$jobid Dependency=afterany:11
+scontrol release $jobid
+
+        """.format(script_path=self.script_path)
+        self.filehandle_slurm.write(slurm_cmd)
+        print("in here")
+
 # ----------------------------------------------------------------------------------
-# KillScriptConstructorSLURM defintion
+# KillScriptConstructorSLURMnew defintion
 # ----------------------------------------------------------------------------------
 
 
-class KillScriptConstructorSLURM(ScriptConstructorSLURM,KillScriptConstructor):
+class KillScriptConstructorSLURMnew(ScriptConstructorSLURMnew,KillScriptConstructor):
 
     @classmethod
     def get_main_preamble(cls, run_index):

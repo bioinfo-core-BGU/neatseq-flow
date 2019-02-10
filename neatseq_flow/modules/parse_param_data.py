@@ -31,6 +31,7 @@ SUPPORTED_EXECUTORS = \
     {"SGE": "-N -e -o -q -hold_jid".split(" "),
      "QSUB": "-N -e -o -q -hold_jid".split(" "),
      "SLURM": "-e -o -hold_jid --error --output -J --job-name -p --partition -w".split(" "),
+     "SLURMnew": "-e -o -hold_jid --error --output -J --job-name -p --partition -w".split(" "),
      "Local": ""}
 
 def parse_param_file(filename):

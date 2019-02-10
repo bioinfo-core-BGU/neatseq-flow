@@ -606,6 +606,7 @@ class NeatSeqFlow(object):
             {"SGE" : "qstat",
              "QSUB" : "qstat",
              "SLURM" : "squeue",
+             "SLURMnew" : "squeue",
              "Local" : ""}
         qstat_cmd = qstat_cmd_dict[self.param_data["Global"]["Executor"]]
         if "Qsub_path" in list(self.param_data["Global"].keys()):

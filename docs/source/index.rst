@@ -117,6 +117,7 @@ Web Site Contents:
    :caption: Detailed Documentation
 
    User_Manual
+   cheat_sheet
    Repository_links
    Add_new_modules
 ..   03.output
