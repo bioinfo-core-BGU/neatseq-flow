@@ -35,8 +35,8 @@ class ScriptConstructorSGE(ScriptConstructor):
             maxvmem=$({qstat_path} -j $jobid | grep maxvmem | cut -d = -f 6);
         else
             maxvmem="NA";
-        fi""".format(qstat_path=pipe_data["qsub_params"]["qstat_path"])
-        maxvmem_cmd = re.escape(maxvmem_cmd)
+        fi""".format(qstat_path=re.escape(pipe_data["qsub_params"]["qstat_path"]))
+
         script = re.sub("## maxvmem calc entry point", maxvmem_cmd, script)
 
         # Add job_limit function:
