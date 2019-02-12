@@ -560,7 +560,7 @@ sed -i -e 's:^{kill_cmd}$:#&:' {qdel_file}\n""".format(kill_cmd = re.escape(kill
         #              **kwargs):
         """ Assembles the scripts to writes to file
         """
-        print("in here")
+
         script = "\n".join([
             self.get_script_preamble(),  #dependency_jid_list
             self.get_trap_line(),
