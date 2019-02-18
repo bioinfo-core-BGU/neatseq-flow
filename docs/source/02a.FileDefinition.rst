@@ -225,13 +225,25 @@ Other parameters you can set for each step to control the execution of the step 
     Defines whether to use sample-wise files or project-wise files. Check per-module documentation for whether and how this parameter is defined (see, *e.g.*, the ``blast`` module).
 
 ``sample_list``
-    This is an experimental feature. A yaml list or a comma-separated list of samples on which to execute the module. Scripts will be created only for the samples in the list. This selection will be valid for all instances based on this instance.
+    Limit this step to a subset of the samples. Scripts will be created only for the samples in the list. This selection will be valid for all instances based on this instance.
+
+    The sample list can be expressed in two ways:
+
+    * A yaml list or a comma-separated list of sample names::
+
+        sample_list: [sample1, sample2]
+
+    * A category and level(s) from a mapping file::
+
+        sample_list:
+            category:  Category1
+            levels:     [level1,level2]
 
     For using all but a subset of samples, use ``exclude_sample_list`` instead of ``sample_list``.
     
 .. Tip:: A use case could be when you want to run a step with different parameters for different sample subsets. Both versions of the instance should inherit from a common ``base`` and the downstream step can inherit both versions, thus all samples will have all files, created with different parameters.
 
-.. Attention:: The ``all_samples`` value for ``sample_list`` is no longer supported. To return to a wider sample list, add a second base which contains the version of the rest of the samples which you need. In short, intelligent inheriting replaces sample list management. You can also use ``manage_types`` to remove files that should not be inherited.
+.. Tip:: To return to a wider sample list, add a second base which contains the version of the rest of the samples which you need.
 
 
 ``conda``

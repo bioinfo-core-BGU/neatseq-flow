@@ -122,7 +122,7 @@ Install and execute NeatSeq-Flow without Conda
 
    .. code-block:: bash
 
-       git clone https://github.com/bioinfo-core-BGU/neatseq-flow.git
+       git clone https://github.com/bioinfo-core-BGU/neatseq-flow3.git
 
 #. You may have to install two `python` dependencies: `yaml` and `bunch`. This can be done with:
 
@@ -134,13 +134,13 @@ Install and execute NeatSeq-Flow without Conda
 
    .. code-block:: bash
 
-       git clone https://github.com/bioinfo-core-BGU/neatseq-flow-modules.git
+       git clone https://github.com/bioinfo-core-BGU/neatseq-flow3-modules.git
     
 
 .. Note:: You can also download the repository code from the following links:
 
-   * Main **NeatSeq-Flow** source code: https://github.com/bioinfo-core-BGU/neatseq-flow/archive/master.zip
-   * Module and workflow repository: https://github.com/bioinfo-core-BGU/neatseq-flow-modules/archive/master.zip
+   * Main **NeatSeq-Flow** source code: https://github.com/bioinfo-core-BGU/neatseq-flow3/archive/master.zip
+   * Module and workflow repository: https://github.com/bioinfo-core-BGU/neatseq-flow3-modules/archive/master.zip
 
 .. _Execution_section:
 

@@ -22,7 +22,7 @@
 
 
 .. |github|         replace:: `GitHub`_
-.. _github: https://github.com/bioinfo-core-BGU/neatseq-flow
+.. _github: https://github.com/bioinfo-core-BGU/neatseq-flow3
 
 
 .. |GUI|         replace:: `GUI`_
