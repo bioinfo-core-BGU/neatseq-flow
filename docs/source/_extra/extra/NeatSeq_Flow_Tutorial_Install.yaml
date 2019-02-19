@@ -21,6 +21,6 @@ dependencies:
   - bowtie2
   #Neatseq_Flow
   - pip:
-    - git+https://github.com/bioinfo-core-BGU/neatseq-flow.git
+    - git+https://github.com/bioinfo-core-BGU/neatseq-flow3.git
     - git+https://github.com/bioinfo-core-BGU/neatseq-flow-tutorial.git
-    - git+https://github.com/bioinfo-core-BGU/neatseq-flow-modules.git
+    - git+https://github.com/bioinfo-core-BGU/neatseq-flow3-modules.git

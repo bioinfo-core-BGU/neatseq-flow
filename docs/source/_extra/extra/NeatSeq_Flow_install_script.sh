@@ -12,10 +12,17 @@ If 'permanent' is passed, installation of Miniconda is done in the default locat
 "
 set -eu
 
+
 if [ $# == 0 ]; then
     echo -e $USAGE
     exit
 fi
+
+if [[ "$1" == "-h" || "$1" == "--help" ]]; then
+    echo -e $USAGE
+    exit
+fi
+
 
 if [[ $1 =~ ^te ]]; then
     # Make a directory for conda installation
@@ -35,6 +42,8 @@ elif [[ $1 =~ ^pe ]]; then
         # Download and execute conda installer into current directory:
         wget https://repo.continuum.io/miniconda/Miniconda2-latest-Linux-x86_64.sh
         sh Miniconda2-latest-Linux-x86_64.sh -b -f
+        echo "Adding miniconda to path in .bashrc"
+        echo export PATH=\"$PREFIX:\$PATH\" >> $HOME/.bashrc
     fi
 
 else
@@ -47,8 +56,11 @@ PATH="$PREFIX:$PATH"
 # Install git
 conda install -y -c anaconda git
 
+
 # Get NeatSeq_Flow installer and create environment:
-wget http://neatseq-flow.readthedocs.io/en/latest/extra/NeatSeq_Flow_conda_env.yaml
+# wget http://neatseq-flow.readthedocs.io/en/latest/extra/NeatSeq_Flow_conda_env.yaml
+# TODO: Change to readthedocs location when hooked to neatseq-flow3!!!
+wget https://raw.githubusercontent.com/bioinfo-core-BGU/neatseq-flow3/devel/docs/source/_extra/extra/NeatSeq_Flow_conda_env.yaml
 conda env create --force -f NeatSeq_Flow_conda_env.yaml
 
 # Get NeatSeq_Flow_GUI installer and create environment:
@@ -60,7 +72,6 @@ Successfuly installed....
 
 To use the GUI, run the following commands:
 
-    PATH="$PATH"
     source activate NeatSeq_Flow_GUI
 
 Then, enter the GUI with the following command:
@@ -73,7 +84,6 @@ If you get the following or similar message when executing the GUI...
 
 To use the NeatSeq-Flow without the GUI:
 
-    PATH="$PATH"
     source activate NeatSeq_Flow
 
 Then, get usage for NeatSeq-Flow with the following command:
