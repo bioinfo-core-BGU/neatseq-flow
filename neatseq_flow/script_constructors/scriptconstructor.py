@@ -344,7 +344,7 @@ trap_with_arg func_trap {step} {stepname} {stepID} {level} $HOSTNAME $JOB_ID SIG
 # Adding environment activation/deactivation command:
 
 while :; do
-    if $(source {activate_path} {environ}); then
+    if source {activate_path} {environ}; then
         break
     else
         sleep 2
