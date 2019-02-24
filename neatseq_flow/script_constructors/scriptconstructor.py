@@ -343,13 +343,12 @@ trap_with_arg func_trap {step} {stepname} {stepID} {level} $HOSTNAME $JOB_ID SIG
         script = """
 # Adding environment activation/deactivation command:
 
-RC=1
-while [[ $RC -ne 0 && $i -lt 50 ]]; do
-    i=$(($i+1))
-    source {activate_path} {environ}
-    RC=$?; sleep 2
+while :; do
+    if $(source {activate_path} {environ}); then
+        break
+    else
+        sleep 2
 done
-
 
 """.format(activate_path = activate_path,
              environ = environ if type == "activate" else "") 
