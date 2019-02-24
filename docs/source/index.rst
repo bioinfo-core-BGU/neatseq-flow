@@ -109,6 +109,7 @@ Web Site Contents:
    :maxdepth: 1
    :caption: Installation Details
 
+   Installation_guide
    Installation_guide_GUI
    Installation_guide_CL
    

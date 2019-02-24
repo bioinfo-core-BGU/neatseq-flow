@@ -38,7 +38,7 @@ NeatSeq-Flow can be installed in one of two ways:
 .. For accessing NeatSeq-Flow GUI from Windows, it is recommended to install a Windows X server such as MobaXterm.
    
 
-.. _GUI_install_with_conda:
+.. _install_with_script:
 
 
 Install NeatSeq-Flow **with installation script**
@@ -71,6 +71,7 @@ The script performs the following:
            wget http://neatseq-flow.readthedocs.io/en/latest/extra/NeatSeq_Flow_install_script.sh
            bash NeatSeq_Flow_install_script.sh perm
 
+.. _install_with_conda:
 
 Install and execute NeatSeq-Flow **with Conda**
 ===================================================
@@ -167,9 +168,9 @@ Install **NeatSeq-Flow**
 
 
 
-.. _GUI_install_no_conda:
+.. _install_no_conda:
 
-Install and execute NeatSeq-Flow GUI without Conda
+Install and execute NeatSeq-Flow without Conda
 ===============================================================
 
 First, install **NeatSeq-Flow** as described :ref:`here <install_main_no_conda>`.
@@ -177,30 +178,64 @@ First, install **NeatSeq-Flow** as described :ref:`here <install_main_no_conda>`
 Then, make sure you have these programs installed:
 
 - git
+- pip
 - python = 3.6.5
-- wxpython
+- wxpython [#f2]_
 - pyyaml
 - munch
-- pandas
-- Flexx
-- A web-browser (Preferably firefox)
+- pandas [#f2]_
+- Flexx [#f2]_
+- A web-browser (Preferably firefox) [#f2]_
 
 **Now, install the GUI**:
 
-1. Clone the github repository of the GUI:
+#. Clone the package from github:
+
+   .. code-block:: bash
+
+       git clone https://github.com/bioinfo-core-BGU/neatseq-flow3.git
+
+#. You may have to install the dependencies. This can be done with:
+
+   .. code-block:: bash
+
+       pip install wxpython pyyaml munch pandas Flexx
+
+#. Clone the package of modules from github:
+
+   .. code-block:: bash
+
+       git clone https://github.com/bioinfo-core-BGU/neatseq-flow3-modules.git
+
+
+#. Clone the github repository of the GUI:
 
    .. code-block:: bash
    
         git clone https://github.com/bioinfo-core-BGU/NeatSeq-Flow-GUI.git
 
-2. Execute the GUI:
+#. Execute the GUI:
 
    .. code-block:: bash
 
         python3 NeatSeq-Flow-GUI/bin/NeatSeq_Flow_GUI.py
+
+#. Alternatively, execute the CLI version of NeatSeq-Flow:
+
+    Create a new directory anywhere, `cd` into it and execute the following commands (``$NSF_main`` is the directory where **NeatSeq-Flow** is installed):
+
+   .. code-block:: bash
+
+       python $NSF_main/bin/neatseq_flow.py                         \
+           --sample_file $NSF_main/Workflows/Sample_sets/PE_tabular.nsfs    \
+           --param_file  $NSF_main/Workflows/mapping.yaml       \
+           --message     "My first NeatSeq-Flow WF"
+
+
 
 To use the GUI from another computer having a Windows operating system, use a Windows X server such as MobaXterm.
 
 .. rubric:: Footnotes
 
 .. [#f1] Not including the web-browser
+.. [#f2] Required for the GUI only
