@@ -348,6 +348,7 @@ while :; do
         break
     else
         sleep 2
+    fi
 done
 
 """.format(activate_path = activate_path,
