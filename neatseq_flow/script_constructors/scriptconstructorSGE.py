@@ -30,12 +30,15 @@ class ScriptConstructorSGE(ScriptConstructor):
 
         # Add maxvmem calculation command:
         # $6 is the job_id!
+
         maxvmem_cmd = """
         if [ ! $jobid == 'ND' ]; then
             maxvmem=$({qstat_path} -j $jobid | grep maxvmem | cut -d = -f 6);
         else
             maxvmem="NA";
-        fi""".format(qstat_path=re.escape(pipe_data["qsub_params"]["qstat_path"]))
+        fi""".format(qstat_path=pipe_data["qsub_params"]["qstat_path"]   # If os=linux, no need to escape
+                                    if(os.sep == '/')
+                                    else re.escape(pipe_data["qsub_params"]["qstat_path"])) # if os=windows, have to escape '\' in path!
 
         script = re.sub("## maxvmem calc entry point", maxvmem_cmd, script)
 

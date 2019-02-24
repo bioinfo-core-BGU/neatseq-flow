@@ -60,35 +60,33 @@ conda install -y -c anaconda git
 # Get NeatSeq_Flow installer and create environment:
 # wget http://neatseq-flow.readthedocs.io/en/latest/extra/NeatSeq_Flow_conda_env.yaml
 # TODO: Change to readthedocs location when hooked to neatseq-flow3!!!
-wget https://raw.githubusercontent.com/bioinfo-core-BGU/neatseq-flow3/devel/docs/source/_extra/extra/NeatSeq_Flow_conda_env.yaml
+wget https://raw.githubusercontent.com/bioinfo-core-BGU/neatseq-flow3/master/docs/source/_extra/extra/NeatSeq_Flow_conda_env.yaml
 conda env create --force -f NeatSeq_Flow_conda_env.yaml
 
-# Get NeatSeq_Flow_GUI installer and create environment:
-wget https://raw.githubusercontent.com/bioinfo-core-BGU/NeatSeq-Flow-GUI/master/NeatSeq_Flow_GUI_installer.yaml
-conda env create --force -f NeatSeq_Flow_GUI_installer.yaml
+## Get NeatSeq_Flow_GUI installer and create environment:
+#wget https://raw.githubusercontent.com/bioinfo-core-BGU/NeatSeq-Flow-GUI/master/NeatSeq_Flow_GUI_installer.yaml
+#conda env create --force -f NeatSeq_Flow_GUI_installer.yaml
 
 cat << CONTINUE
 Successfuly installed....
 
-To use the GUI, run the following commands:
+Activate the environment with:
 
-    source activate NeatSeq_Flow_GUI
+source activate NeatSeq_Flow
 
-Then, enter the GUI with the following command:
+Enter the GUI with:
 
-    NeatSeq_Flow_GUI.py
+NeatSeq_Flow_GUI.py
 
 If you get the following or similar message when executing the GUI...
     'Could not detect a suitable backend...'
 ...you need to either install a graphical backend or use NeatSeq-Flow's command-line version, as follows:
 
-To use the NeatSeq-Flow without the GUI:
+neatseq_flow.py --help
 
-    source activate NeatSeq_Flow
+To deactivate the environment:
 
-Then, get usage for NeatSeq-Flow with the following command:
-    neatseq_flow.py --help
-
+source deactivate
 
 CONTINUE
 

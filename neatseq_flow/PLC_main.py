@@ -7,7 +7,7 @@ Actual work is done by calling other class types: PLCStep and PLCName
 
 __author__ = "Menachem Sklarz"
 __version__ = "1.5.0"
-
+__python__ = "python3.6"
 
 import os
 import sys
@@ -623,7 +623,8 @@ class NeatSeqFlow(object):
         # If inside active conda environment (CONDA_PREFIX defined), 
         #   search for additional module dir and add to search path
         if "CONDA_PREFIX" in os.environ:
-            conda_module_path = os.path.join(os.environ["CONDA_PREFIX"], "lib/python2.7/site-packages/neatseq_flow_modules")
+            conda_module_path = os.path.join(os.environ["CONDA_PREFIX"],
+                                             "lib/{python}/site-packages/neatseq_flow_modules".format(python=__python__))
             if not os.path.isdir(conda_module_path):
                 if self.pipe_data["verbose"]:
                     sys.stderr.write("WARNING: conda default additional modules path (%s) does not exist!\n" % conda_module_path)
