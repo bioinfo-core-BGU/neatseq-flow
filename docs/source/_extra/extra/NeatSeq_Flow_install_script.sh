@@ -28,13 +28,15 @@ if [[ $1 =~ ^te ]]; then
     # Make a directory for conda installation
     mkdir NeatSeq_Flow_install; cd NeatSeq_Flow_install;
     # Download and execute conda installer into current directory:
-    wget https://repo.continuum.io/miniconda/Miniconda2-latest-Linux-x86_64.sh
+    wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh
     CURRENT_DIR=$(readlink -f .)
-    sh Miniconda2-latest-Linux-x86_64.sh -b -f -p $CURRENT_DIR
+    sh Miniconda3-latest-Linux-x86_64.sh -b -f -p $CURRENT_DIR
     PREFIX="$CURRENT_DIR/bin"
+    CONDA_DIR=$CURRENT_DIR
 elif [[ $1 =~ ^pe ]]; then
     # Add current directory to path
-    PREFIX="$HOME/miniconda2/bin"
+    PREFIX="$HOME/miniconda3/bin"
+    CONDA_DIR="$HOME/miniconda3"
 
     if [[ -d $PREFIX ]]; then
         echo -e "miniconda already installed in " $PREFIX ". Using existing installation."
@@ -61,37 +63,61 @@ conda install -y -c anaconda git
 # wget http://neatseq-flow.readthedocs.io/en/latest/extra/NeatSeq_Flow_conda_env.yaml
 # TODO: Change to readthedocs location when hooked to neatseq-flow3!!!
 wget https://raw.githubusercontent.com/bioinfo-core-BGU/neatseq-flow3/master/docs/source/_extra/extra/NeatSeq_Flow_conda_env.yaml
-conda env create --force -f NeatSeq_Flow_conda_env.yaml
+conda env create --force -p $CONDA_DIR/envs/NeatSeq_Flow -f NeatSeq_Flow_conda_env.yaml
 
 ## Get NeatSeq_Flow_GUI installer and create environment:
 #wget https://raw.githubusercontent.com/bioinfo-core-BGU/NeatSeq-Flow-GUI/master/NeatSeq_Flow_GUI_installer.yaml
 #conda env create --force -f NeatSeq_Flow_GUI_installer.yaml
 
-cat << CONTINUE
-Successfuly installed....
 
-Activate the environment with:
+cat << CONTINUE1
+# Successfuly installed....
+CONTINUE1
 
-source activate NeatSeq_Flow
+if [[ $1 =~ ^te ]]; then
 
-Enter the GUI with:
+cat << CONTINUE2
+# Add conda to path with:
+
+PATH="$PREFIX:\$PATH"
+
+# You have to do this each time you want to restart the environment
+CONTINUE2
+
+fi
+
+cat << CONTINUE3
+
+# Activate the environment with:
+
+source activate $CONDA_DIR/envs/NeatSeq_Flow
+
+# Enter the GUI with:
 
 NeatSeq_Flow_GUI.py
 
-If you get the following or similar message when executing the GUI...
-    'Could not detect a suitable backend...'
-...you need to either install a graphical backend or use NeatSeq-Flow's command-line version, as follows:
+# If you get the following or similar message when executing the GUI...
+#     'Could not detect a suitable backend...'
+# ...you need to either install a graphical backend or use NeatSeq-Flow's command-line version, as follows:
 
 neatseq_flow.py --help
 
-To deactivate the environment:
+# To deactivate the environment:
 
-source deactivate
+conda deactivate
 
-CONTINUE
+CONTINUE3
 
 if [[ $1 =~ ^te ]]; then
-    cd -
+
+cat << CONTINUE4
+# To remove the installation:
+
+rm -rf $CURRENT_DIR/
+
+CONTINUE4
+
+cd -
 fi
 
 

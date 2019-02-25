@@ -52,24 +52,69 @@ The script performs the following:
 * ``git`` installation
 * NeatSeq-Flow conda environment creation
 
+Installing
+~~~~~~~~~~~~~
 
 **Temporary installation**
    Everything will be installed in a directory called ``NeatSeq_Flow_install``. **To uninstall NeatSeq-Flow**, just delete the directory.
 
    .. code-block:: bash
 
-           wget http://neatseq-flow.readthedocs.io/en/latest/extra/NeatSeq_Flow_install_script.sh
+           wget http://neatseq-flow3.readthedocs.io/en/latest/extra/NeatSeq_Flow_install_script.sh
            bash NeatSeq_Flow_install_script.sh temp
 
 **Permanent installation**
    Miniconda will be installed in the default location. If it already exists, the installed version will be used.
 
-   The NeatSeq-Flow environment will be created in the default conda environments directory.
+   The NeatSeq-Flow environment will be created in the default conda environments directory ("$HOME/miniconda3/envs").
 
    .. code-block:: bash
 
            wget http://neatseq-flow.readthedocs.io/en/latest/extra/NeatSeq_Flow_install_script.sh
            bash NeatSeq_Flow_install_script.sh perm
+
+Running **NeatSeq-Flow**
+--------------------------
+
+#. Activate the NeatSeq_Flow conda environment:
+
+    .. code-block:: bash
+
+        bash
+        source activate NeatSeq_Flow
+
+#. Execute the following command to tell **NeatSeq-Flow** where the base conda installation is located:
+
+   .. code-block:: bash
+
+      export CONDA_BASE=$(conda info --root)
+
+#. Make a directory for your project and change into it:
+
+   .. code-block:: bash
+
+      mkdir first_neatseq_flow_proj; cd first_neatseq_flow_proj
+
+#. Run NeatSeq_Flow_GUI:
+
+    .. code-block:: bash
+
+        NeatSeq_Flow_GUI.py
+
+#. Alternatively, run NeatSeq_Flow command-line version:
+
+   .. code-block:: bash
+
+      neatseq_flow.py \
+         --sample_file $CONDA_PREFIX/NeatSeq-Flow-Workflows/Sample_sets/PE_tabular.nsfs \
+         --param_file $CONDA_PREFIX/NeatSeq-Flow-Workflows/mapping.yaml \
+         --message "My first NeatSeq-Flow WF using conda"
+
+#. When done, deactivate the environment:
+
+   .. code-block:: bash
+
+      source deactivate
 
 .. _install_with_conda:
 
@@ -120,6 +165,9 @@ Install **NeatSeq-Flow**
    .. code-block:: bash
 
         conda env create -n NeatSeq_Flow -f NeatSeq_Flow_conda_env.yaml
+
+Running **NeatSeq-Flow**
+--------------------------
 
 #. Activate the NeatSeq_Flow conda environment:
 
