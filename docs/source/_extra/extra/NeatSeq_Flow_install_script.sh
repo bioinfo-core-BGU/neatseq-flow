@@ -42,8 +42,8 @@ elif [[ $1 =~ ^pe ]]; then
         echo -e "miniconda already installed in " $PREFIX ". Using existing installation."
     else
         # Download and execute conda installer into current directory:
-        wget https://repo.continuum.io/miniconda/Miniconda2-latest-Linux-x86_64.sh
-        sh Miniconda2-latest-Linux-x86_64.sh -b -f
+        wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh
+        sh Miniconda3-latest-Linux-x86_64.sh -b -f
         echo "Adding miniconda to path in .bashrc"
         echo export PATH=\"$PREFIX:\$PATH\" >> $HOME/.bashrc
     fi
@@ -70,23 +70,23 @@ conda env create --force -p $CONDA_DIR/envs/NeatSeq_Flow -f NeatSeq_Flow_conda_e
 #conda env create --force -f NeatSeq_Flow_GUI_installer.yaml
 
 
-cat << CONTINUE1
+cat << CONTINUE
 # Successfuly installed....
-CONTINUE1
+CONTINUE
 
 if [[ $1 =~ ^te ]]; then
 
-cat << CONTINUE2
+cat << CONTINUE
 # Add conda to path with:
 
 PATH="$PREFIX:\$PATH"
 
 # You have to do this each time you want to restart the environment
-CONTINUE2
+CONTINUE
 
 fi
 
-cat << CONTINUE3
+cat << CONTINUE
 
 # Activate the environment with:
 
@@ -106,16 +106,16 @@ neatseq_flow.py --help
 
 conda deactivate
 
-CONTINUE3
+CONTINUE
 
 if [[ $1 =~ ^te ]]; then
 
-cat << CONTINUE4
+cat << CONTINUE
 # To remove the installation:
 
 rm -rf $CURRENT_DIR/
 
-CONTINUE4
+CONTINUE
 
 cd -
 fi
