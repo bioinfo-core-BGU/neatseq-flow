@@ -102,16 +102,17 @@ Web Site Contents:
    :maxdepth: 1
    :caption: Getting Started: Install and Try
 
-   Tutorial_GUI
-   Tutorial_CL
+   Tutorial
+..   Tutorial_GUI
+..   Tutorial_CL
 
 .. toctree::
    :maxdepth: 1
-   :caption: Installation Details
+   :caption: Installation
 
    Installation_guide
-   Installation_guide_GUI
-   Installation_guide_CL
+..   Installation_guide_GUI
+..   Installation_guide_CL
    
 .. toctree::
    :maxdepth: 1

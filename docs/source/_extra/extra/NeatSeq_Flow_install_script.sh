@@ -60,9 +60,7 @@ conda install -y -c anaconda git
 
 
 # Get NeatSeq_Flow installer and create environment:
-# wget http://neatseq-flow.readthedocs.io/en/latest/extra/NeatSeq_Flow_conda_env.yaml
-# TODO: Change to readthedocs location when hooked to neatseq-flow3!!!
-wget https://raw.githubusercontent.com/bioinfo-core-BGU/neatseq-flow3/master/docs/source/_extra/extra/NeatSeq_Flow_conda_env.yaml
+wget http://neatseq-flow3.readthedocs.io/en/latest/extra/NeatSeq_Flow_conda_env.yaml
 conda env create --force -p $CONDA_DIR/envs/NeatSeq_Flow -f NeatSeq_Flow_conda_env.yaml
 
 ## Get NeatSeq_Flow_GUI installer and create environment:
@@ -72,18 +70,19 @@ conda env create --force -p $CONDA_DIR/envs/NeatSeq_Flow -f NeatSeq_Flow_conda_e
 
 cat << CONTINUE
 # Successfuly installed....
+
+# Add conda to path with:
+PATH="$PREFIX:\$PATH"
 CONTINUE
 
 if [[ $1 =~ ^te ]]; then
-
 cat << CONTINUE
-# Add conda to path with:
-
-PATH="$PREFIX:\$PATH"
-
 # You have to do this each time you want to restart the environment
 CONTINUE
-
+else
+cat << CONTINUE
+# Next time you start bash, the PATH will be set automatically.
+CONTINUE
 fi
 
 cat << CONTINUE
