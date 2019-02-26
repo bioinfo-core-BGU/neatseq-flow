@@ -70,7 +70,7 @@ def parse_sample_file(filename):
 
         if not os.path.isfile(filename):
             sys.exit("Sample file %s does not exist.\n" % filename)
-        with open(filename) as fileh:
+        with open(filename, encoding='utf-8') as fileh:
             file_conts += fileh.readlines()
                 
     check_newlines(file_conts)
@@ -508,7 +508,7 @@ def parse_grouping_file(grouping_file):
         # sys.exit("Grouping file {file} does not exist.\n".format(file=grouping_file))
         raise Exception("Issues in grouping", "Grouping file {file} does not exist.Unidentified extension in source\n".format(file=grouping_file))
 
-    with open(grouping_file) as csvfile:
+    with open(grouping_file, encoding='utf-8') as csvfile:
         file_conts = csvfile.readlines()
 
     # Convert SampleID at line start to lower case

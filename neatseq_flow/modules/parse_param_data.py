@@ -54,7 +54,7 @@ def parse_param_file(filename):
         if not os.path.isfile(filename):
             sys.exit("Parameter file %s does not exist.\n" % filename)
 
-        with open(filename) as fileh:
+        with open(filename, encoding='utf-8') as fileh:
             file_conts += fileh.readlines()
            
     check_newlines(file_conts)
@@ -202,8 +202,6 @@ def get_param_data_YAML(filelines):
 
     yaml_params = ordered_load("\n".join(filelines),Loader=Loader)
 
-    # yaml.safe_dump(yaml_params)
-    # sys.exit()
     usr_step_order = list(yaml_params["Step_params"].keys())
     
     # If there is a Variables section, interpolate any appearance of the variables in the params
@@ -214,7 +212,6 @@ def get_param_data_YAML(filelines):
         from .var_interpol_defs import make_interpol_func, walk, test_vars
         
         test_vars(yaml_params["Vars"])
-
         variables_bunch = Munch.fromDict({"Vars":yaml_params["Vars"]})
         # print variables_bunch
         f_interpol = make_interpol_func(variables_bunch)
@@ -222,7 +219,7 @@ def get_param_data_YAML(filelines):
         # Actual code to run when 'Vars' exists:
         # Walk over params dict and interpolate strings:
 
-        yaml_params = walk(yaml_params, variables_bunch, callback= f_interpol)
+        yaml_params = walk(node=yaml_params,variables_bunch=variables_bunch, callback= f_interpol)
 
     param_data = dict()
 
@@ -385,14 +382,10 @@ def test_and_modify_global_params(global_params):
     # Convert Qsub_opts into a list of options (split by ' -' with look-ahead...)
     if "Qsub_opts" in global_params:
         if isinstance(global_params["Qsub_opts"], str):
-            global_params["Qsub_opts"] = dict((re.split("\s+",elem,1)+[""])[0:2]
-                                              for elem
-                                              in re.split("\s+(?=-)",global_params["Qsub_opts"]))
+            global_params["Qsub_opts"] = dict((re.split("\s+",elem,1)+[""])[0:2] for elem in re.split("\s+(?=-)",global_params["Qsub_opts"]))
             # global_params["Qsub_opts"] = re.split(" (?=-)",global_params["Qsub_opts"])
         elif isinstance(global_params["Qsub_opts"], list):
-            global_params["Qsub_opts"] = dict((re.split("\s+",elem,1)+[""])[0:2]
-                                              for elem
-                                              in global_params["Qsub_opts"])
+            global_params["Qsub_opts"] = dict((re.split("\s+",elem,1)+[""])[0:2] for elem in global_params["Qsub_opts"])
         # If defined as a dict, change all 'None' values to empty strings
         elif isinstance(global_params["Qsub_opts"], dict):
             global_params["Qsub_opts"] = {key:(val if val!=None else "")
@@ -463,8 +456,7 @@ def manage_conda_params(conda_params):
             raise Exception(
                 "If one of conda 'path' and 'env' are empty, you need to have an active environment, with "
                 "$CONDA_PREFIX defined", "parameters")
-
-    if not conda_params["path"]:
+    if not conda_params["path"] or conda_params["path"]=='None':
         if "CONDA_BASE" in os.environ:
             conda_params["path"] = os.environ["CONDA_BASE"]
         else:
