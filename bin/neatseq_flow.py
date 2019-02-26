@@ -7,7 +7,7 @@ This script inits the 'NeatSeq-Flow' class that does all the script creating
 """
 
 __author__ = "Menachem Sklarz"
-__version__ = "1.1.0"
+__version__ = "1.6.0"
 
 
 __affiliation__ = "Bioinformatics Core Unit, NIBN, Ben Gurion University"

@@ -6,7 +6,7 @@ Actual work is done by calling other class types: PLCStep and PLCName
 """
 
 __author__ = "Menachem Sklarz"
-__version__ = "1.5.0"
+__version__ = "1.6.0"
 __python__ = "python3.6"
 
 import os
@@ -774,10 +774,15 @@ Timestamp\tEvent\tModule\tInstance\tJob name\tLevel\tHost\tJob ID\tMax mem\tStat
 
         # Set run_index filename in pipe_data
         # Used for flagging active jobs.
-        # self.pipe_data["run_index"] = "".join([self.pipe_data["objects_dir"], "run_index_" ,  self.pipe_data["run_code"] , ".txt"])
         self.pipe_data["run_index"] = "".join([self.pipe_data["objects_dir"], "run_index" ,  ".txt"])
         # Clearing file:
         open(self.pipe_data["run_index"], "w").close()
+
+        # Set depend_index filename in pipe_data
+        # Used for flagging active jobs.
+        self.pipe_data["depend_index"] = "".join([self.pipe_data["objects_dir"], "depend_index", ".txt"])
+        # Clearing file:
+        open(self.pipe_data["depend_index"], "w").close()
 
     def create_registration_file(self):
         """
@@ -1070,33 +1075,38 @@ library(reshape2); library(googleVis); args <- commandArgs(trailingOnly =T);log_
        
         Gviz_text =  """
 # Check if required packages are installed:
-if(!(all(c("DiagrammeR","htmlwidgets") %%in%% installed.packages()))) {
-    cat("'DiagrammeR' and 'htmlwidgets' are not installed.\nYou must install them for this script to work!\nInstall by running the following commands:\ninstall.packages('DiagrammeR')\ninstall.packages('htmlwidgets')")
-}
+if(!(all(c("DiagrammeR","htmlwidgets") %%in%% installed.packages()))) {{
+    cat("'DiagrammeR' and 'htmlwidgets' are not installed.
+    You must install them for this script to work!
+    Install by running the following commands:
+        install.packages('DiagrammeR')
+        install.packages('htmlwidgets')")
+}}
 library(DiagrammeR)
 library(htmlwidgets)        
         
         
 myviz <- grViz("
-digraph a_nice_graph {
+digraph a_nice_graph {{
       
 # node definitions with substituted label text
 node [shape = egg, style = filled, fontname = Helvetica]
-%(nodes_p)s
+{nodes_p}
 
 # edge definitions with the node IDs
-%(links_p)s
-}
+{links_p}
+}}
 
-%(foot_p)s
+{foot_p}
 ")
 
-saveWidget(myviz,file = "%(out_file_name)s",selfcontained = F)
+saveWidget(myviz,file = "{out_file_name}",selfcontained = F, title="{title}")
       
-""" % { "nodes_p" : nodes_part,
-        "links_p" : links_part,
-        "foot_p"  : footnote_part,
-        "out_file_name" : self.pipe_data["objects_dir"] + "WorkflowGraph.html"}
+""".format(nodes_p = nodes_part,
+           links_p = links_part,
+           foot_p = footnote_part,
+           out_file_name = self.pipe_data["objects_dir"] + "WorkflowGraph.html",
+           title = self.sample_data["Title"])
         
         with open(self.pipe_data["objects_dir"] + "diagrammer.R" , "w") as diagrammer:
             diagrammer.write(Gviz_text)

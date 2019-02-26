@@ -7,7 +7,7 @@ from ..PLC_step import AssertionExcept
 from pprint import pprint as pp
 
 __author__ = "Menachem Sklarz"
-__version__ = "1.5.0"
+__version__ = "1.6.0"
 
 
 class ScriptConstructor(object):
@@ -343,13 +343,7 @@ trap_with_arg func_trap {step} {stepname} {stepID} {level} $HOSTNAME $JOB_ID SIG
         script = """
 # Adding environment activation/deactivation command:
 
-while :; do
-    if source {activate_path} {environ}; then
-        break
-    else
-        sleep 2
-    fi
-done
+while :; do if source {activate_path} {environ}; then break; else sleep 2; fi; done;
 
 """.format(activate_path = activate_path,
              environ = environ if type == "activate" else "") 

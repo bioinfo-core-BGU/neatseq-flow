@@ -4,7 +4,7 @@
 """
 
 __author__ = "Menachem Sklarz"
-__version__ = "1.5.0"
+__version__ = "1.6.0"
 
 
 import os, sys, re, yaml
@@ -33,6 +33,13 @@ SUPPORTED_EXECUTORS = \
      "SLURM": "-e -o -hold_jid --error --output -J --job-name -p --partition -w".split(" "),
      "SLURMnew": "-e -o -hold_jid --error --output -J --job-name -p --partition -w".split(" "),
      "Local": ""}
+
+EXECUTORS_Q_INFO = \
+    {"SGE": "qstat",
+     "QSUB": "qstat",
+     "SLURM": "squeue",
+     "SLURMnew": "squeue",
+     "Local": "-"}
 
 def parse_param_file(filename):
     """Parses a file from filename
@@ -423,33 +430,21 @@ def test_and_modify_global_params(global_params):
         else:
             raise Exception("Unrecognised 'Qsub_nodes' format. 'Qsub_nodes' in 'Global_params' "
                             "must be a single path or a list. \n", "parameters")
+    if "Qsub_path" in global_params:
+        if not global_params["Qsub_path"]:
+            raise Exception("'Qsub_path' can't be left empty.\nDetermine with:\n\twhich {qprog} | "
+                            "sed -e 's/\/{qprog}$//g'".format(qprog=EXECUTORS_Q_INFO[global_params["Executor"]]),
+                            "parameters")
+        if not isinstance(global_params["Qsub_path"],str):
+            raise Exception("Unrecognised 'Qsub_path' format. It must be a string", "parameters")
+    else:
+        pass
+    # sys.exit("")
+
     # Checking conda params are sensible:
     if "conda" in global_params:
-        # print global_params["conda"]
         global_params["conda"] = manage_conda_params(global_params["conda"])
-        # print global_params["conda"]
 
-        # sys.exit()
-        # if "path" not in global_params["conda"]:   # or "env" not in global_params["conda"]:
-        #     raise Exception("When using 'conda', you must supply a 'path' to the environment to use.\n"
-        #                     "Leave 'path:' empty if you want it to be taken from $CONDA_PREFIX\n", "parameters")
-        # if global_params["conda"]["path"] is None:  # Path is empty, take from $CONDA_PREFIX
-        #     if "CONDA_PREFIX" in os.environ:
-        #         global_params["conda"]["path"] = os.environ["CONDA_PREFIX"]
-        #
-        #     else:
-        #         raise Exception("'conda' 'path' is empty, but no CONDA_PREFIX is defined. "
-        #                         "Make sure you are in an active conda environment.")
-        #
-        # if "env" not in global_params["conda"]:
-        #     if global_params["conda"]["env"] is None:
-        #         try:
-        #             global_params["conda"]["env"] = os.environ['CONDA_DEFAULT_ENV']
-        #         except KeyError:
-        #             raise Exception("When using 'conda', you must supply an 'env' containing the "
-        #                             "name of the environment to use, or run NeatSeq-Flow from inside an active "
-        #                             "CONDA environment.\n", "parameters")
-        #
     return global_params
 
 def manage_conda_params(conda_params):

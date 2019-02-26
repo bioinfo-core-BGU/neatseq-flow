@@ -119,9 +119,9 @@ Web Site Contents:
    :caption: Detailed Documentation
 
    User_Manual
-   cheat_sheet
    Repository_links
    Add_new_modules
+..   cheat_sheet
 ..   03.output
 ..   07.monitor
 

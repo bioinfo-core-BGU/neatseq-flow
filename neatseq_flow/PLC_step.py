@@ -19,7 +19,7 @@ from pprint import pprint as pp
 from .modules.parse_param_data import manage_conda_params
 
 __author__ = "Menachem Sklarz"
-__version__ = "1.5.0"
+__version__ = "1.6.0"
 
 
 
@@ -785,6 +785,9 @@ Dependencies: {depends}""".format(name=self.name,
         return self.glob_jid_list
 
     def get_glob_name(self):
+        """ Creates the globbed format of jobs for this step.
+            Using this in the dependency list will make a job wait for all scripts of this step.
+        """
 
         return "{step}{sep}{name}{sep}*{runid}".format(step=self.get_step_step(),
                                                        name=self.get_step_name(),
@@ -842,6 +845,9 @@ Dependencies: {depends}""".format(name=self.name,
         self.dependency_jid_list = self.preliminary_jids + self.dependency_jid_list
         self.dependency_glob_jid_list = self.preliminary_jids + self.get_dependency_glob_jid_list()
 
+        # Add dependency to depend_index.txt:
+        self.add_depend_index_entry()
+
         # Request low-level script construction from LowScriptConstructor:
         self.child_script_obj.write_script()
 
@@ -859,6 +865,116 @@ Dependencies: {depends}""".format(name=self.name,
         
         self.child_script_obj.__del__()
 
+    def create_preliminary_script(self):
+        """ Create a script that will run before all other low level scripts commence
+
+        """
+        # Creating script. If 'create_spec_preliminary_script' is not defined or returns nothing,
+        # return from here without doing anything
+        self.script = ""
+        try:
+            self.create_spec_preliminary_script()
+        except AttributeError:
+            return
+
+        if not self.script.strip():  # If script is empty, do not create a wrapper function
+            return
+
+        self.spec_script_name = self.jid_name_sep.join([self.step, self.name, "preliminary"])
+
+        getChildClass = self.import_ScriptConstructor(level="low")
+        # Create ScriptConstructor for low level script.
+        self.prelim_script_obj = \
+            getChildClass(master=self)
+
+        # Get dependency jid list and add preliminary jids if exist
+        # (if not, is an empty list and will not affect the outcome)
+        self.dependency_jid_list = self.get_dependency_jid_list()
+        self.dependency_glob_jid_list = self.get_dependency_glob_jid_list()
+
+        self.prelim_script_obj.write_script()
+
+        # Clear stamped files list
+        self.stamped_files = list()
+
+        self.main_script_obj.write_command(self.main_script_obj.get_child_command(self.prelim_script_obj))
+
+        # This is here because I want to use jid_list to make wrapping_up script dependent on this step's
+        # main low-level scripts
+        # Explantion: get_jid_list() was used above (line 'qsub_header...') to make the wrapping_up script dependent
+        # on the other scripts created by the step. Now that that is done, the following line adds this step to the
+        # jid_list, so that subsequent steps are dependent on the wrapping up script as well.
+        # (I hope this makes it clear...)
+        self.add_jid_to_jid_list(self.prelim_script_obj.script_id)
+
+        # Add the preliminary jid to the list of preliminary jids.
+        self.preliminary_jids.append(self.prelim_script_obj.script_id)
+
+        # Adding to qsub_names_dict:
+        self.qsub_names_dict["low_qsubs"].append(self.prelim_script_obj.script_id)
+
+        # Adding job name and path to script and run indices
+        self.add_job_script_run_indices(self.prelim_script_obj)
+
+        self.prelim_script_obj.__del__()
+
+    def create_wrapping_up_script(self):
+        """ Create a script that will run once all other low level scripts terminate
+            Ideal place for putting testing and agglomeration procedures.
+        """
+
+        # Creating script. If 'create_spec_wrapping_up_script' is not defined or returns nothing,
+        # return from here without doing anything
+        self.script = ""
+        try:
+            self.create_spec_wrapping_up_script()
+        except AttributeError:
+            return
+
+        if not self.script.strip():  # If script is empty, do not create a wrapper function
+            return
+
+        self.spec_script_name = self.jid_name_sep.join([self.step, self.name, "wrapping_up"])
+
+        getChildClass = self.import_ScriptConstructor(level="low")
+
+        # Create ScriptConstructor for low level script.
+        self.wrap_script_obj = getChildClass(master=self)
+
+        # Get dependency jid list and add preliminary jids if exist
+        # (if not, is an empty list and will not affect the outcome)
+        #    Also, add all jids of current step, as this script is to run only after all previous steps have completed.
+        self.dependency_jid_list = self.preliminary_jids + self.get_jid_list() + self.get_dependency_jid_list()
+        self.dependency_glob_jid_list = self.preliminary_jids + \
+                                        self.get_glob_jid_list() + \
+                                        self.get_dependency_glob_jid_list()
+        # Removing parent name from wrapping_up dependencies
+        self.dependency_jid_list.remove(self.main_script_obj.script_id)
+
+        # sys.exit(self.spec_qsub_name)
+        self.wrap_script_obj.write_script()
+
+        # Clear stamped files list
+        self.stamped_files = list()
+
+        self.main_script_obj.write_command(self.main_script_obj.get_child_command(self.wrap_script_obj))
+
+        # This is here because I want to use jid_list to make wrapping_up script dependent on this step's
+        # main low-level scripts
+        # Explantion: get_jid_list() was used above (line 'qsub_header...') to make the wrapping_up script dependent
+        # on the other scripts created by the step. Now that that is done, the following line adds this step to the
+        # jid_list, so that subsequent steps are dependent on the wrapping up script as well.
+        # (I hope this makes it clear...)
+        self.add_jid_to_jid_list(self.wrap_script_obj.script_id)
+
+        # Adding to qsub_names_dict:
+        self.qsub_names_dict["low_qsubs"].append(self.wrap_script_obj.script_id)
+
+        # Adding job name and path to script and run indices
+        self.add_job_script_run_indices(self.wrap_script_obj)
+        self.wrap_script_obj.__del__()
+
+
     def add_job_script_run_indices(self, script_obj):
         """ Add current script to script_index and run_index files
         """
@@ -870,7 +986,19 @@ Dependencies: {depends}""".format(name=self.name,
                 script_fh.write("\n----\n")
             script_fh.write("# {qsub_name}\n".format(qsub_name   = script_obj.script_id))
         
-        
+    def add_depend_index_entry(self):
+        """
+
+        :return:
+        """
+
+        pass
+        with open(self.pipe_data["depend_index"], "a") as script_fh:
+            for jid in self.dependency_glob_jid_list:
+                script_fh.write("{depend_jid}\t{my_jid}\n".format(my_jid= self.child_script_obj.script_id,
+                                                                  depend_jid= jid))
+
+
     def create_scripts_dir(self):
         """ Create a dir for storing the step scripts.
         """
@@ -926,115 +1054,6 @@ Dependencies: {depends}""".format(name=self.name,
 
         # self.main_script_obj.write_command(self.main_script_obj.get_script_postamble())
         self.main_script_obj.close_script()
-
-    def create_preliminary_script(self):
-        """ Create a script that will run before all other low level scripts commence
-
-        """
-        # Creating script. If 'create_spec_preliminary_script' is not defined or returns nothing,
-        # return from here without doing anything
-        self.script = ""
-        try:
-            self.create_spec_preliminary_script()
-        except AttributeError:
-            return 
-
-        if not self.script.strip():                 # If script is empty, do not create a wrapper function
-            return
-
-        self.spec_script_name = self.jid_name_sep.join([self.step, self.name, "preliminary"])
-
-        getChildClass = self.import_ScriptConstructor(level="low")
-        # Create ScriptConstructor for low level script.
-        self.prelim_script_obj = \
-            getChildClass(master=self)
-
-        # Get dependency jid list and add preliminary jids if exist
-        # (if not, is an empty list and will not affect the outcome)
-        self.dependency_jid_list = self.get_dependency_jid_list()
-        self.dependency_glob_jid_list = self.get_dependency_glob_jid_list()
-
-        self.prelim_script_obj.write_script()
-
-        # Clear stamped files list
-        self.stamped_files = list()
-                
-        self.main_script_obj.write_command(self.main_script_obj.get_child_command(self.prelim_script_obj))
-
-        # This is here because I want to use jid_list to make wrapping_up script dependent on this step's
-        # main low-level scripts
-        # Explantion: get_jid_list() was used above (line 'qsub_header...') to make the wrapping_up script dependent
-        # on the other scripts created by the step. Now that that is done, the following line adds this step to the
-        # jid_list, so that subsequent steps are dependent on the wrapping up script as well.
-        # (I hope this makes it clear...)
-        self.add_jid_to_jid_list(self.prelim_script_obj.script_id)
-
-        # Add the preliminary jid to the list of preliminary jids.  
-        self.preliminary_jids.append(self.prelim_script_obj.script_id)
-
-        # Adding to qsub_names_dict:
-        self.qsub_names_dict["low_qsubs"].append(self.prelim_script_obj.script_id)
-
-        # Adding job name and path to script and run indices
-        self.add_job_script_run_indices(self.prelim_script_obj)
-
-        self.prelim_script_obj.__del__()
-        
-    def create_wrapping_up_script(self):
-        """ Create a script that will run once all other low level scripts terminate
-            Ideal place for putting testing and agglomeration procedures.
-        """
-
-        # Creating script. If 'create_spec_wrapping_up_script' is not defined or returns nothing,
-        # return from here without doing anything
-        self.script = ""
-        try:
-            self.create_spec_wrapping_up_script()
-        except AttributeError:
-            return 
-
-        if not self.script.strip():                 # If script is empty, do not create a wrapper function
-            return 
-
-        self.spec_script_name = self.jid_name_sep.join([self.step,self.name,"wrapping_up"])
-
-        getChildClass = self.import_ScriptConstructor(level="low")
-
-        # Create ScriptConstructor for low level script.
-        self.wrap_script_obj = getChildClass(master=self)
-
-        # Get dependency jid list and add preliminary jids if exist
-        # (if not, is an empty list and will not affect the outcome)
-        #    Also, add all jids of current step, as this script is to run only after all previous steps have completed.
-        self.dependency_jid_list = self.preliminary_jids + self.get_jid_list() + self.get_dependency_jid_list()
-        self.dependency_glob_jid_list = self.preliminary_jids + \
-                                        self.get_glob_jid_list() + \
-                                        self.get_dependency_glob_jid_list()
-        # Removing parent name from wrapping_up dependencies
-        self.dependency_jid_list.remove(self.main_script_obj.script_id)
-
-        # sys.exit(self.spec_qsub_name)
-        self.wrap_script_obj.write_script()
-
-        # Clear stamped files list
-        self.stamped_files = list()
-        
-        self.main_script_obj.write_command(self.main_script_obj.get_child_command(self.wrap_script_obj))
-
-        # This is here because I want to use jid_list to make wrapping_up script dependent on this step's
-        # main low-level scripts
-        # Explantion: get_jid_list() was used above (line 'qsub_header...') to make the wrapping_up script dependent
-        # on the other scripts created by the step. Now that that is done, the following line adds this step to the
-        # jid_list, so that subsequent steps are dependent on the wrapping up script as well.
-        # (I hope this makes it clear...)
-        self.add_jid_to_jid_list(self.wrap_script_obj.script_id)
-
-        # Adding to qsub_names_dict:
-        self.qsub_names_dict["low_qsubs"].append(self.wrap_script_obj.script_id)
-
-        # Adding job name and path to script and run indices
-        self.add_job_script_run_indices(self.wrap_script_obj)
-        self.wrap_script_obj.__del__()
 
     def create_all_scripts(self):
         """ Contains code to be done after build_scripts()

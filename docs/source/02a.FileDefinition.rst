@@ -66,6 +66,12 @@ All global parameters are set within a ``Global_params`` block in YAML format.
 
         dirname `which qsub`
 
+    For SLURM:
+
+    .. code-block:: bash
+
+        dirname `which sbatch`
+
 
 ``Default_wait``
     The time, in seconds, to wait for jobs to enter the queue before terminating the step-level script. Must be an integer. The default is 10, which is usually a good value to start with. If downstream jobs seem to be sent for execution before earlier jobs have terminated, increase this value.
@@ -89,6 +95,8 @@ All global parameters are set within a ``Global_params`` block in YAML format.
     
     ``path``
         The path to the environment you want to use. **If left empty, and a ``conda`` environment is active, NeatSeq-Flow will use the path to the active environment**.
+
+        If your
         
     ``env``
         The name of the environment to use. If absent or left empty, **NeatSeq-Flow** will extract the name from the ``path`` parameter. 

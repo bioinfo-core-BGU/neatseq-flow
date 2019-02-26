@@ -87,7 +87,7 @@ Help message:
 
 
 __author__ = "Liron Levin"
-__version__ = "1.3"
+__version__ = "1.6.0"
 
 
 __affiliation__ = "Bioinformatics Core Unit, NIBN, Ben Gurion University"

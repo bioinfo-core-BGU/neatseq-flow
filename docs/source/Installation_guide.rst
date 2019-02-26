@@ -60,8 +60,7 @@ Installing
 
    .. code-block:: bash
 
-           wget http://neatseq-flow3.readthedocs.io/en/latest/extra/NeatSeq_Flow_install_script.sh
-           bash NeatSeq_Flow_install_script.sh temp
+      curl -sl https://raw.githubusercontent.com/bioinfo-core-BGU/neatseq-flow3/master/docs/source/_extra/extra/NeatSeq_Flow_install_script.sh | bash -s -- temp
 
 **Permanent installation**
    Miniconda will be installed in the default location. If it already exists, the installed version will be used.
@@ -70,8 +69,7 @@ Installing
 
    .. code-block:: bash
 
-           wget http://neatseq-flow.readthedocs.io/en/latest/extra/NeatSeq_Flow_install_script.sh
-           bash NeatSeq_Flow_install_script.sh perm
+      curl -sl https://raw.githubusercontent.com/bioinfo-core-BGU/neatseq-flow3/master/docs/source/_extra/extra/NeatSeq_Flow_install_script.sh | bash -s -- perm
 
 Running **NeatSeq-Flow**
 --------------------------
