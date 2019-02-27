@@ -95,25 +95,12 @@ Web Site Contents:
 
 .. toctree::
    :maxdepth: 1
+   :caption: First steps
 
-   About  
-
-.. toctree::
-   :maxdepth: 1
-   :caption: Getting Started: Install and Try
-
+   About
    Tutorial
-..   Tutorial_GUI
-..   Tutorial_CL
-
-.. toctree::
-   :maxdepth: 1
-   :caption: Installation
-
    Installation_guide
-..   Installation_guide_GUI
-..   Installation_guide_CL
-   
+
 .. toctree::
    :maxdepth: 1
    :caption: Detailed Documentation
@@ -126,3 +113,21 @@ Web Site Contents:
 ..   07.monitor
 
 .. sphinx-build -b html source build
+
+
+
+.. .. toctree::
+..    :maxdepth: 1
+..    :caption: Getting Started: Install and Try
+..
+..    Tutorial
+.. ..   Tutorial_GUI
+.. ..   Tutorial_CL
+..
+.. .. toctree::
+..    :maxdepth: 1
+..    :caption: Installation
+..
+..    Installation_guide
+.. ..   Installation_guide_GUI
+.. ..   Installation_guide_CL

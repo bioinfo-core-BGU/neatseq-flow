@@ -23,25 +23,21 @@ However, the workflow design and script generation steps can be run on any opera
 
 NeatSeq-Flow GUI is also installed on the Linux computer/cluster, but it is possible to access it from a Windows computer through a Windows X server.
 
-NeatSeq-Flow can be installed in one of two ways:
+NeatSeq-Flow can be installed in one of the following ways:
 
-#. Installation using an **installation script** (recommended)
-#. Installation using **Conda**
-#. Installation without Conda.
+#. :ref:`install_with_script` (recommended)
+#. :ref:`install_with_conda`
+#. :ref:`install_no_conda`
 
-**Conda** allows easy installation of NeatSeq-Flow in one go. For selected workflows, as well as for the NeatSeq-Flow tutorials, we also provide entire Conda environments which include NeatSeq-Flow with all necessary analysis programs.
 
-.. Users wishing to install NeatSeq-Flow with conda need miniconda2.
+**Conda** allows easy installation of NeatSeq-Flow in one go. For selected workflows, as well as for the NeatSeq-Flow tutorial, we also provide entire Conda environments which include NeatSeq-Flow with all necessary analysis programs (see `NeatSeq-Flow Workflows <https://neatseq-flow3.readthedocs.io/projects/neatseq-flow3-modules/en/latest/#neatseq-flow-workflows>`_.
 
-.. For users wishing to install NeatSeq-Flow without conda, the requirements are: git; pip; pyyaml and bunch python packages; and the specific analysis programs needed for the desired workflow.
 
-.. For accessing NeatSeq-Flow GUI from Windows, it is recommended to install a Windows X server such as MobaXterm.
-   
 
 .. _install_with_script:
 
 
-Install NeatSeq-Flow **with installation script**
+Install NeatSeq-Flow with **installation script**
 =================================================================
 
 You can install NeatSeq-Flow and all it's dependencies in one go with a provided bash script.
@@ -53,7 +49,7 @@ The script performs the following:
 * NeatSeq-Flow conda environment creation
 
 Installing
-~~~~~~~~~~~~~
+--------------
 
 **Temporary installation**
    Everything will be installed in a directory called ``NeatSeq_Flow_install``. **To uninstall NeatSeq-Flow**, just delete the directory.
@@ -74,39 +70,27 @@ Installing
 Running **NeatSeq-Flow**
 --------------------------
 
-#. Activate the NeatSeq_Flow conda environment:
+Follow the instructions given by the installation script when complete. Briefly:
 
-    .. code-block:: bash
-
-        bash
-        source activate NeatSeq_Flow
-
-#. Execute the following command to tell **NeatSeq-Flow** where the base conda installation is located:
+#. Add conda to the PATH (copy-paste the command from the terminal)
+#. Activate the environment and tell **NeatSeq-Flow** where the base conda installation is located:
 
    .. code-block:: bash
 
+      source activate NeatSeq_Flow
       export CONDA_BASE=$(conda info --root)
-
-#. Make a directory for your project and change into it:
-
-   .. code-block:: bash
-
-      mkdir first_neatseq_flow_proj; cd first_neatseq_flow_proj
 
 #. Run NeatSeq_Flow_GUI:
 
-    .. code-block:: bash
+   .. code-block:: bash
 
-        NeatSeq_Flow_GUI.py
+      NeatSeq_Flow_GUI.py
 
 #. Alternatively, run NeatSeq_Flow command-line version:
 
    .. code-block:: bash
 
-      neatseq_flow.py \
-         --sample_file $CONDA_PREFIX/NeatSeq-Flow-Workflows/Sample_sets/PE_tabular.nsfs \
-         --param_file $CONDA_PREFIX/NeatSeq-Flow-Workflows/mapping.yaml \
-         --message "My first NeatSeq-Flow WF using conda"
+      neatseq_flow.py --help
 
 #. When done, deactivate the environment:
 
@@ -198,7 +182,7 @@ Running **NeatSeq-Flow**
 
       neatseq_flow.py \
          --sample_file $CONDA_PREFIX/NeatSeq-Flow-Workflows/Sample_sets/PE_tabular.nsfs \
-         --param_file $CONDA_PREFIX/NeatSeq-Flow-Workflows/mapping.yaml \
+         --param_file $CONDA_PREFIX/NeatSeq-Flow-Workflows/RNA_seq_Trinity.yaml \
          --message "My first NeatSeq-Flow WF using conda"
 
 #. When done, deactivate the environment:
@@ -210,8 +194,6 @@ Running **NeatSeq-Flow**
 .. Note:: You don't need to have the environment activated in order to execute the scripts!
 
 .. Attention:: See the |tutorial| for a full example of how to use **NeatSeq-Flow**
-
-
 
 
 .. _install_no_conda:

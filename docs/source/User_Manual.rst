@@ -14,4 +14,4 @@ NeatSeq-Flow User Manual
    03.output
    07.monitor
    01.How_NSF_works
-
+   cheat_sheet

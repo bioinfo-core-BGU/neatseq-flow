@@ -24,3 +24,4 @@ venv/
 workflows_devel/
 docs/build/**
 *.mine/
+_themes/

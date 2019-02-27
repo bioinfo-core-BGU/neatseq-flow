@@ -20,7 +20,7 @@ setup(
                             'bin/neatseq_flow.py'],
                             # 'etc/activate.d/env_vars.sh',
                             # 'etc/deactivate.d/env_vars.sh'],
-    data_files          = [('NeatSeq-Flow-Workflows',['Workflows/mapping.yaml']),
+    data_files          = [('NeatSeq-Flow-Workflows',['Workflows/RNA_seq_Trinity.yaml']),
                             ('NeatSeq-Flow-Workflows/Sample_sets',['Workflows/PE_tabular.nsfs'])],
     install_requires    = [
                         "pyyaml >= 3.12",

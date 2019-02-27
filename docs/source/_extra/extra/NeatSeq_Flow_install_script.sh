@@ -72,16 +72,19 @@ cat << CONTINUE
 # Successfuly installed....
 
 # Add conda to path with:
+
 PATH="$PREFIX:\$PATH"
 CONTINUE
 
 if [[ $1 =~ ^te ]]; then
 cat << CONTINUE
 # You have to do this each time you want to restart the environment
+
 CONTINUE
 else
 cat << CONTINUE
 # Next time you start bash, the PATH will be set automatically.
+
 CONTINUE
 fi
 

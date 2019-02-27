@@ -42,6 +42,9 @@ Several SGE and other parameters can be set globally so that all scripts use the
 
 All global parameters are set within a ``Global_params`` block in YAML format.
 
+``Executor``
+    Define the cluster manager to use. Options are ``SGE`` (default), ``SLURM`` or ``Local``. The *SLURM* and *Local* support are in Beta development stage.
+
 ``Qsub_q``
     Defines the default queue to send the jobs to (this is the value passed to ``qsub`` with the ``-q`` parameter).
     

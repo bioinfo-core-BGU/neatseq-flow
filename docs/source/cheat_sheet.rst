@@ -11,6 +11,9 @@ NeatSeq-Flow Cheat-Sheet
    :local:
    :backlinks: top
 
+.. .. sectnum::
+
+
 Files
 ==============
 
