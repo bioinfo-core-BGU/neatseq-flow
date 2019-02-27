@@ -4,78 +4,75 @@
 
 [![Documentation Status](https://readthedocs.org/projects/neatseq-flow/badge/?version=latest)](http://neatseq-flow.readthedocs.io/en/latest/?badge=latest)
 
-
-# What is NeatSeq-Flow and why use it?
-
-* A bioinformatics workflow (WF) is a series of computer programs called sequentially, sometimes on hundreds or even thousands of samples.
-* NeatSeq-flow creates human readable and self explanatory shell scripts for execution on computer grids. 
-* The hyrachically-organised scripts are then executed by running a master-script.
-* The main benefits in using NeatSeq-flow are:
-	* the user has full control over the WF execution;
-	* the cluster job scheduler ensures correct execution order and enforces dependencies;
-	* simple, cross-platform installation; 
-	* scripts and output files are neatly organized;
-	* utilization of cluster parallelization capabilities;
-	* documentation, version control as well as time & memory usage reports and 
-	* adding modules and expanding existing WFs requires only basic python skills.
-
-
-# Brief description
-
-* NeatSeq-Flow is a cross-platform, easy-to-install, no-dependency python package.
-* It creates workflow scripts for high throughput sequencing data, which are executed automatically on a computer cluster, fully under control of the user.
-* The cluster job scheduler controls execution order.
-* NeatSeq-Flow:
-	* creates a directory structure for tidy storing of shell scripts and workflow outputs;
-	* utilizes cluster parallelization capabilities;
-	* is easily expandable with new modules;
-	* records information about files produced by the scripts and
-	* provides documentation, version control and time & memory usage reports.
-
-
+# Background
 
 **[See full documentation on RTD.](http://NeatSeq-Flow.readthedocs.io/en/latest/)**
 
+## Brief description
+
+* NeatSeq-Flow is a platform for modular design and execution of bioinformatics workflows on a local computer or, preferably, computer cluster. 
+* The platform has a command-line interface as well as a fully functional graphical user interface (GUI), both used locally without the need to connect to remote servers. 
+* Analysis programs comprising a workflow can be anything executable from the Linux command-line, either publicly available or in-house programs. 
+* Ready-to-use workflows are available for common Bioinformatics analyses such as assembly & annotation, RNA-Seq, ChIP-Seq, variant calling, metagenomics and genomic epidemiology. 
+* Creation and sharing of new workflows is easy and intuitive, without need for programming knowledge. 
+* NeatSeq-Flow is general-purpose and may easily be adjusted to work on different types of analyses other than high-throughput sequencing.
+
+
+## The main benefits in using NeatSeq-Flow
+
+* Simple, cross-platform installation.
+* All workflow components and parameters, as well as their order of execution (a.k.a workflow design), are specified in a single file which may be prepared by the user either manually (YAML format) or through the GUI. This, together with the shell scripts produced by NeatSeq-Flow and additional NeatSeq-Flow summary files, comprise a complete documentation of the executed workflow and enable future execution of the exact same workflow or modifications thereof.
+* The user is relieved from the need to know or manage the locations of intermediate or final files, or to transfer files between workflow steps. Workflow output file locations are determined by NeatSeq-Flow such that they are neatly organized in an intuitive directory structure.
+* NeatSeq-Flow’s “Terminal Monitor” shows script execution in real time, and reports on execution errors immediately when they occur, thus facilitating user control on the workflow.
+* The platform can accommodate workflows of any degree of complexity, and efficiently executes them in a parallelized manner on the user’s computer cluster.
+* Through an intuitive GUI, NeatSeq-Flow is fully accessible to non-programmers, without compromising power, flexibility and efficiency.
+* Users can easily create complex workflows from a variety of high-throughput sequencing applications made available by NeatSeq-Flow as independent modules. In addition, a generic module enables direct incorporation of applications without pre-built modules.
+* Advanced users can run NeatSeq-Flow through the command-line, and create their own modules using a provided template and only basic Python commands.
+* The modules and workflows are designed to be easily shared. In addition, the support for usage of CONDA environments enables easy portability and sharing of entire working environment for workflow execution.
+
+
+
+
 # Installation & Execution
 
-## Installing with `conda`
+## Quick start
 
-Check out the documentation on readthedocs for [quick and easy installation with `conda`](http://neatseq-flow.readthedocs.io/en/latest/00.getting_started.html#install-and-execute-with-conda). 
-
-There is also a [Tutorial](http://neatseq-flow.readthedocs.io/en/latest/Example_WF.html) which shows how to configure NeatSeq-Flow for your cluster.
+Check out the [Tutorial](http://neatseq-flow3.readthedocs.io/en/latest/Example_WF.html) .
 
 ## Installing NeatSeq-Flow
 
-The easiest way to install is by cloning the github repository:
+The easiest way to install is with the installation script (The following instructions are for **temporary installation**. [See here](https://neatseq-flow3.readthedocs.io/en/latest/Installation_guide.html#installing) for details)
 
-	git clone https://github.com/bioinfo-core-BGU/neatseq-flow.git
+Everything will be installed in a directory called `NeatSeq_Flow_install`. To uninstall NeatSeq-Flow, just delete the directory.
 
-## Installing dependencies
+    curl -sl https://raw.githubusercontent.com/bioinfo-core-BGU/neatseq-flow3/master/docs/source/_extra/extra/NeatSeq_Flow_install_script.sh | bash -s -- temp
 
-NeatSeq-Flow requires the following non-standard python libraries: `yaml` and `bunch`. 
-
-Installing them is performed with:
-
-	pip install pyyaml bunch
-
-If you are using your own installation of python, located at `/path/to/python-2.7/`, use the following:
-
-	/path/to/python-2.7/bin/pip install                \
-       --install-option="--prefix=/path/to/python-2.7" \
-       pyyaml bunch
  
 ## Executing NeatSeq-Flow
 
-Execution is then done as follows:
+1. Activate the environment
 
-	mkdir workflow_dirs
-	python neatseq-flow/bin/neatseq_flow.py         \
-		-s neatseq-flow/Workflows/PE.nsfs           \
-		-p neatseq-flow/Workflows/mapping.yaml      \
-		-m "My first NeatSeq_Flow mapping workflow" \
-		-d workflow_dirs/
+        PATH="$PWD/NeatSeq_Flow_install/bin:$PATH"
+        source activate NeatSeq_Flow
+        export CONDA_BASE=$(conda info --root)
 
-Check out `workflow_dirs` for the workflow directories and scripts.
+1. Run the graphical user interface:
+
+        NeatSeq_Flow_GUI.py
+
+1. Alternatively, run NeatSeq_Flow command-line version:
+
+        neatseq_flow.py --help
+
+
+# Additional repositories
+
+The installation process described above installs the following three NeatSeq-Flow repositories:
+
+1. [The main NeatSeq-Flow repository](https://github.com/bioinfo-core-BGU/neatseq-flow3)
+1. [NeatSeq-Flow's GUI repository](https://github.com/bioinfo-core-BGU/NeatSeq-Flow-GUI)
+1. [NeatSeq-Flow's module repository](https://github.com/bioinfo-core-BGU/neatseq-flow3-modules)
+
 
 # Customers
 
