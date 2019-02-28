@@ -24,20 +24,23 @@ def make_interpol_func(variables_bunch):
         if isinstance(atom, str):
 
             m = var_re.search(atom)
+            if not m:  # No variables match the atom
+                return atom
 
             # While a match exists:
             while (m):
-                # print "in here: %s\n" % atom
-                # print "loc_variables_bunch.%s\n" % m.group(1)
-                # print "Atom: " + atom
+
                 try:
                     # Replace the matched variable with something from variables_bunch
                     # Also converting to str, in case value is int or float
-                    repl_str = str(eval("loc_variables_bunch.%s" % m.group(1)))
-                    if repl_str==None:
+                    repl_str = eval("loc_variables_bunch.%s" % m.group(1))
+                    if repl_str is not None:
+                        repl_str = str(repl_str)
+                    else:
                         repl_str = ""
 
                     atom = var_re.sub(repl_str,atom,count=1)
+
                 except AttributeError:
                     # If not found, raise exception
                     raise Exception("Unrecognised variable '%s'" % m.group(1), "Variables")
@@ -45,13 +48,15 @@ def make_interpol_func(variables_bunch):
                     raise Exception("A 'TypeError' exception has occured. This may happen when variables are left "
                                     "empty. Make sure all your variables have values. ", "Variables")
                 m = var_re.search(atom)
+        if not atom:  # No variables match the atom
+            return None
 
         return atom
 
     return interpol_atom
 
 def walk(node, variables_bunch, callback):
-        
+
     if isinstance(node,dict):
         # Special case: The dict is actually a variable wrongly interpreted by the YAML parser as a dict!
         if len(list(node.keys())) == 1 and list(node.values())==[None] and re.match("Vars\.([\w\.]+?)",list(node.keys())[0]):
@@ -79,9 +84,6 @@ def walk(node, variables_bunch, callback):
     else:
         # print "in 3\n"
         if isinstance(node, str):
-            # print "Node: \n\n'%s'\n\n" % node
-
-            # node = interpol_atom(node, variables_bunch)
             node = callback(node)
         else:
             pass

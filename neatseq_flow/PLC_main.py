@@ -78,6 +78,7 @@ class NeatSeqFlow(object):
         except:
             raise
 
+
         if "grouping_file" in self.sample_data["project_data"]:
             if grouping_file:
                 sys.exit("You passed both --mapping via CLI and 'grouping_file' in the sample_file.")

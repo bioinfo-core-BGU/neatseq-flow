@@ -11,28 +11,28 @@ NeatSeq-Flow Cheat-Sheet
    :local:
    :backlinks: top
 
-.. .. sectnum::
 
-
+-------------
 Files
-==============
+-------------
 
 Sample file
-------------
+============
 
 Passed to NeatSeq-Flow with the ``-s`` argument.
 
 Includes four sections:
 
+
 Title
-~~~~~~~~~~~~~~~
+-----------
 
 A title for the project::
 
    Title	Project_title
 
 Project file information
-~~~~~~~~~~~~~~~~~~~~~~~~~~~
+------------------------------
 
 Two tab-separated columns:
 
@@ -45,7 +45,7 @@ Two tab-separated columns:
    Nucleotide	/path/to/genome.fasta
 
 Samples file information
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+---------------------------
 
 Three tab-separated columns:
 
@@ -63,7 +63,7 @@ Additional columns will be ignored::
 
 
 ChIP-seq
-~~~~~~~~~~~~~~~
+-----------------
 
 Define ChIP and Control ('input') pairs::
 
@@ -73,16 +73,16 @@ Define ChIP and Control ('input') pairs::
 
 
 Parameter file
----------------
+===================
 
 Passed to NeatSeq-Flow with the ``-p`` argument.
 
 YAML-formatted file with the following three sections.
 
-The ``Vars`` section is recommended but not compulsory.
+.. Tip:: The ``Vars`` section is recommended but not compulsory.
 
 Global parameters section
-~~~~~~~~~~~~~~~~~~~~~~~~~~~
+------------------------------
 
 .. csv-table:: Global parameters
    :header: "Parameter", "Description"
@@ -94,11 +94,30 @@ Global parameters section
    "Qsub_path","The full path to qsub. Obtain by running ``which qsub`` (default: qsub is in path)"
    "Default_wait","Default: 10. Leave as is"
    "module_path","List of paths to repositories of additional modules."
-   "job_limit","Path to a file, defining parameters for limiting number of concurrent jobs, with the following line
-      limit=1000 sleep=60"
+   "job_limit","Path to a file, defining parameters for limiting number of concurrent jobs, with the following line::
+                  limit=1000 sleep=60"
    "conda","``path`` and ``env``, defining the path to the environment you want to use and its name."
 
+.. Attention:: The default executor is SGE. For SLURM, ``sbatch`` is used instead of ``qsub``, *e.g.*  ``Qsub_nodes`` defines the nodes to be used by sbatch.
 
+
+.. list-table:: Frozen Delights!
+   :widths: 15 10 30
+   :header-rows: 1
+
+   * - Treat
+     - Quantity
+     - Description
+   * - Albatross
+     - 2.99
+     - On a stick!
+   * - Crunchy Frog
+     - 1.49
+     - If we took the bones out, it wouldn't be |
+         crunchy, now would it?
+   * - Gannet Ripple
+     - 1.99
+     - On a stick!
 
 Vars section
 ~~~~~~~~~~~~~~~~~~~

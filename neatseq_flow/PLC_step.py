@@ -1104,7 +1104,16 @@ Dependencies: {depends}""".format(name=self.name,
 
         message = """\
 Project: {title}
---------------""".format(title=self.sample_data["Title"])
+--------------
+
+Step name: {name}
+Step module: {step}
+Module path: {path}        
+
+""".format(title=self.sample_data["Title"],
+                         name=self.get_step_name(),
+                         step=self.get_step_step(),
+                         path=self.path)
 
         if "project_data" in self.sample_data:  # If no project data exists, skip this
             if self.use_provenance:

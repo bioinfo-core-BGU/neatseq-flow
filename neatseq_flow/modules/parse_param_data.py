@@ -221,6 +221,7 @@ def get_param_data_YAML(filelines):
 
         yaml_params = walk(node=yaml_params,variables_bunch=variables_bunch, callback= f_interpol)
 
+
     param_data = dict()
 
     # Extract global parameter dict from lines:

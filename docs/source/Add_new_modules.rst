@@ -68,7 +68,6 @@ Things to modify in the actual code
 #. In ``create_spec_preliminary_script()`` you create the code for a script that will be run before all other step scripts are executed. If not defined or returns nothing, it will be ignored (i.e. you can set it to ``pass``). This is useful if you need to prepare a database, for example, before the other scripts use it.
 #. In ``create_spec_wrapping_up_script()`` you create the code for a script that will be run after all other step scripts are executed. If not defined or returns nothing, it will be ignored (i.e. you can set it to "pass"). This is the place to call ``make_sample_file_index()`` to create an index of the files produced in this step; and to call a script that takes the index file and does some kind of data agglomeration.
 #. It is highly recommended to create an instance-scope list of the redirected parameters that the user should **not** pass because they are dealt with by your module. The list should be called ``self.auto_redirs`` and you should place it directly after the class definition line (*i.e.* the line beginning with ``class Step_...``). After instance creation, the list is checked by **NeatSeq-Flow** to make sure the user did not pass forbidden parameters.
-#. You should set a list called ``self.auto_redirs`` with a list of the redirected parameters that the user should **not** pass because they are dealt with by your module. Set the list directly after the class definition line (*i.e.* the line beginning with ``class Step_...``). After instance creation, the list is checked by **NeatSeq-Flow** to make sure the user did not pass forbidden parameters.
 
 .. Tip::
     Most Linux programs separate flags and arguments with a space, *e.g.* ``head -n 20``, and this is the default behaviour for **NeatSeq-Flow**. However, some programs require a different separator, such as ``=``, for example the PICARD suite. If your module wraps such a program, set ``self.arg_separator`` to the separator symbol, *e.g.*::
@@ -127,6 +126,7 @@ Instructions for ``build_scripts()`` function
             output_filename = sample_dir + sample + ".output.bam"
             self.script += "-o {outp} \n\n".format(outp=output_filename)
 
+       .. Tip:: Function ``self.make_folder_for_sample(sample)`` will return ``self.base_dir`` if ``sample`` is set to ``"project_data"``.
 
 - Place the output file somewhere in the ``sample_data`` structure. `e.g.`:
 
@@ -185,7 +185,7 @@ Instructions for ``build_scripts()`` function
 
         self.local_finish(use_dir,sample_dir)
         
-    **Note that the above procedure enables the user to decide whether to run locally by adding the ``local`` parameter to the step parameter block in the parameter file!**
+    **Note:** The procedure above **enables the user to decide** whether to run locally by adding the ``local`` parameter to the step parameter block in the parameter file!
 
 
 
@@ -206,13 +206,12 @@ In **NeatSeq-Flow**, assertions are managed with the ``AssertionExcept`` excepti
 #. Optional: The sample name, in case the condition failed for a particular sample (e.g. a particular sample does not have a BAM file defined.)
 
 A typical condition testing code snippet:
+
 .. code-block:: python
 
     for sample in self.sample_data["samples"]:
-        if not CONDITION:
-            raise AssertionExcept("INFORMATIVE error message\n", sample)
-
-.. note:: The reason for using ``if not CONDITION`` rather than ``if CONDITION`` is that the condition is a condition for success rather than for failure, which is more intuitive (for me at least)
+        if CONDITION:
+            raise AssertionExcept(comment = "INFORMATIVE error message\n", sample = sample)
 
 If you only want to warn the user about a certain issue, rather than failing, you can induce **NeatSeq-Flow** to produce a warning message with the same format as an ``AssertionExcept`` message, as follows:
 
@@ -220,9 +219,9 @@ If you only want to warn the user about a certain issue, rather than failing, yo
 
     for sample in self.sample_data["samples"]:
         if CONDITION:
-            self.write_warning("Warning message.\n", sample)
+            self.write_warning(warning = "Warning message.\n", sample = sample, admonition = "WARNING")
 
 .. note:: As for ``AssertionExcept``, the ``sample`` argument is optional.
 
-
+.. Tip:: When calling ``AssertionExcept`` and ``self.write_warning``, setting ``sample`` to ``"project_data"`` will have the same effect as not passing ``sample``. See the
 
