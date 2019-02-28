@@ -1,0 +1,301 @@
+
+Description: |
+    A pipeline for basic RNA-seq analysis using Trinity
+    ---------------------------------------------------
+    
+    The workflow is built to run Trinity's sample data, which consists of stranded, paired-end reads. You should modify the workflow steps to suit your data.
+    
+    The workflow assembles a transcriptome with ``Trinity`` and then runs ``align_and_estimate_abundance.pl`` and ``abundance_estimates_to_matrix.pl`` to map the reads to the trascriptome and create normalized counts tables. The tables are used to select a representative transcript per gene, by expression.
+    
+    Finally, the workflow uses Trinotate to annotate the resulting transcriptome.
+    
+    
+    Steps:
+    ------
+    1.	Importing and QC
+        1.	Merge: Concatenating the read files into single files per direction
+        2.	FastQC_Merge, Trimmo, FastQC_Trimmo and MultiQC: QC on the reads: FastQC and trimmomatic. Depending on the quality of the reads, trimmomatic` might not be required.
+    2.	Trinity
+        1.	Trinity_tags: Adding tags required by trinity to the read titles (/1 and /2 for F and R. See Running-Trinity. [2]
+        2.	Trinity_assembl: Running Trinity. In this workflow, Trinity is executed on a single computer. Trinity can be configured to run on a cluster. The configuration file is set in the SGE_Trinity_conf variable in the Vars section. [3]
+        3.	Trinity_Map: Mapping of the reads is performed with trinity_mapping module.
+        4.	Trinity_Map_Stats: Creating statistical tables is performed with trinity_statisticsmodule.
+        5.	Rep_transcript: Uses filter_low_expr_transcripts.pl to keep only a single transcript per gene.
+        6.	BUSCO: Run BUSCO on the transcripts file. See `Preparatory steps`_ above for setting up BUSCO in the parameter file.
+    3.	Trinotate
+        1.	Split_Fasta: Splits the fasta file of transcripts for parallelization.
+        From this step onwards, analysis is performed on subsets of the transcriptome. Recombining the results is done in step Trino_merge_tables.
+        2.	Trino_blastx_sprot: Runs blastx against swissprot with the transcript sequences.
+        3.	Trino_Transdecode: Finds coding sequences in the transcripts and produces predicted protein sequences.
+        4.	Trino_blastp_sprot: Runs blastp against swissprot with the translated transcript sequences.
+        5.	Trino_hmmscan1: Runs hmmscan against PFAM-A database with the translated transcript sequences.
+        6.	Trino_rnammer: Runs RNAMMER to predict rRNA sequences in the transcripts.
+            Note: RNAMMER has to be set up in a special way. See here: https://github.com/Trinotate/Trinotate.github.io/wiki/Software-installation-and-data-required#rnammer-free-academic-download.
+        7.	Trino_merge_tables: Merges the tables produced in the previous steps for the transcript subsamples.
+        8.	Trino_Trinotate1: Read the tables and produce the final annotation file.
+
+
+    
+Global_params:
+    Default_wait: 10
+    Qsub_opts:  -V -cwd -notify
+    Qsub_path:  /storage/SGE6U8/bin/lx24-amd64/qstat
+    Qsub_q:     bioinfo.q
+    conda:
+        path:   {Vars.conda.base}
+        env:    {Vars.conda.env}
+    module_path:            ../neatseq_flow_modules
+
+    
+Vars:
+    conda:
+        base: /gpfs0/bioinfo/users/sklarz/qiime2-moving-pictures-tutorial/NSF/NeatSeq_Flow_install
+        env: RNA_trinity
+    paths:
+        multiqc:            multiqc
+        fastqc:             fastqc
+        trimmomatic:        trimmomatic
+        Trinity:            Trinity  
+        get_Trinity_gene_to_trans_map: get_Trinity_gene_to_trans_map.pl
+        trinity_scripts:    ""
+        BUSCO:              run_BUSCO.py
+        BUSCO_cfg:          /path/to/BUSCO/config.ini
+        # -------- Trinotate
+        TransDecoder:       TransDecoder
+        Trinotate:          Trinotate
+        hmmscan:            hmmscan
+        blastx:             blastx
+        blastp:             blastp
+        blastn:             blastn        
+    databases:
+        BUSCO:              http://busco.ezlab.org/v2/datasets/eukaryota_odb9.tar.gz
+        trinotate:
+            sprot:          $PWD/Trinotate_dbs/uniprot_sprot.pep
+            pfam:           $PWD/Trinotate_dbs/Pfam-A.hmm
+            sqlitedb:       $PWD/Trinotate_dbs/trino_test.sqlite
+    cluster_params:
+        pe:                 shared
+    split_fasta_n:          2           # In how many parallel chunks should Trinotate run?
+
+Step_params:
+    # -------------------- Part 1: Merging and QC
+    # Copy and concatenate files into data directory:
+    Merge:
+        module:             merge
+        script_path:        
+        tag:                QC
+    # FastQC on the files
+    FastQC_Merge:
+        module:         fastqc_html
+        base:           Merge
+        script_path:    {Vars.paths.fastqc}
+        setenv:         'PERL5LIB=""'
+        qsub_params:
+            -pe:        '{Vars.cluster_params.pe} 15'
+        redirects:
+            --threads:  15
+    # Trim with trimmomatic if required
+    Trimmo:
+        module:         trimmo
+        base:           Merge
+        script_path:    '{Vars.paths.trimmomatic}'
+        qsub_params:
+            -pe:        '{Vars.cluster_params.pe} 20'
+        todo:           LEADING:20 TRAILING:20
+        redirects:
+            -threads:   20
+    # FastQC on the trimmed files
+    FastQC_Trimmo:
+        module:         fastqc_html
+        base:           Trimmo
+        script_path:    {Vars.paths.fastqc}
+        setenv:         'PERL5LIB=""'
+        qsub_params:
+            -pe:        '{Vars.cluster_params.pe}  15'
+        redirects:
+            --threads:  15
+    # Summary of file quality before and after trimming
+    MultiQC:
+        module:         Multiqc
+        base:
+            - FastQC_Trimmo
+            - FastQC_Merge
+        script_path:    {Vars.paths.multiqc}
+
+    # -------------------- Part 2: Assembly and statisctical analysis
+    # Add trinity tags to reads
+    Trinity_tags:
+        module:             add_trinity_tags
+        base:               Trimmo
+        script_path: 
+        tag:                Trinity
+        # For the files supplied by trinity, this step is not required. 
+        # Included for completeness. You can skip this step by uncommenting the next line
+        # SKIP:             
+    # Assemble the reads with Trinity. THIS STEP CAN TAKE A LONG TIME!
+    Trinity_assembl:
+        module:             trinity
+        base:               Trinity_tags
+        script_path:        '{Vars.paths.Trinity}'
+        qsub_params:
+            -pe:            '{Vars.cluster_params.pe} 20'
+        scope:              project
+        setenv:             PERL5LIB=""
+        get_Trinity_gene_to_trans_map:  '{Vars.paths.trinity_scripts}get_Trinity_gene_to_trans_map.pl'
+        redirects:
+            --seqType:          fq
+            --min_kmer_cov:     2
+            --max_memory:       10G
+            --SS_lib_type:      RF 
+            # --full_cleanup:
+
+    # Map the reads to the assembly
+    Trinity_Map:
+        module:             trinity_mapping
+        base:               Trinity_assembl
+        script_path:        '{Vars.paths.trinity_scripts}align_and_estimate_abundance.pl'
+        scope:              project
+        setenv:             'PERL5LIB=""'  #PATH "{Vars.paths.bowtie2}:{Vars.paths.RSEM}:{Vars.paths.samtools}:$PATH"
+        redirects:
+            --est_method:   RSEM
+            --aln_method:   bowtie2
+            # --output_prefix:        # Pass to add output_prefix. This is for older versions of trinity...
+            --trinity_mode:
+            --coordsort_bam:
+            --seqType:      fq
+    # Count reads per transcript with RSEM
+    Trinity_Map_Stats:
+        module:             trinity_statistics
+        base:               Trinity_Map
+        script_path:        '{Vars.paths.trinity_scripts}abundance_estimates_to_matrix.pl'
+        setenv:             'PERL5LIB=""'
+        # use_isoforms:          # use isoforms results. Remove to use genes results
+        scope:              project
+        redirects:
+            --est_method:   RSEM
+            # --gene_trans_map:   
+        # stop_and_show:
+
+    # Keep the most highly expressed transcript per gene - Representative transcript
+    Rep_transcript:                   # Name of this step
+        module:             Generic             # Name of module
+        base:               Trinity_Map_Stats
+        script_path:        '{Vars.paths.trinity_scripts}filter_low_expr_transcripts.pl'
+        setenv:             'PERL5LIB=""'
+        scope:              project
+        shell:              bash
+        inputs:                     # The inputs for this module
+            --matrix:                    # Input argument, could be also 'empty#'
+                scope:      project
+                File_Type:  isoform.norm_counts
+            --transcripts:
+                scope:      project
+                File_Type:  fasta.nucl
+            --gene_to_trans_map:
+                scope:      project
+                File_Type:  gene_trans_map
+        outputs:
+            '>':
+                File_Type:   fasta.nucl
+                suffix:      .filter_low_expr.fasta       # A suffix for this output argument file name
+        redirects:
+            --highest_iso_only:
+
+    # Quality test the assembly with BUSCO
+    BUSCO:
+        module:             BUSCO
+        base:               Rep_transcript
+        script_path:        {Vars.paths.BUSCO} 
+        scope:              project
+        setenv:             'BUSCO_CONFIG_FILE={Vars.paths.BUSCO_cfg}'
+        get_lineage:        {Vars.databases.BUSCO}
+        redirects:
+            --mode:         transcriptome
+            --cpu:          20
+            --force:
+            --restart:
+        qsub_params:
+            -pe:            '{Vars.cluster_params.pe} 20'
+            
+
+# -------------------- Part 2: Annotate with Trinotate:
+
+    # Splitting into 4 parts, for parallelization. Increase number for faster analysis. 
+    Split_Fasta:
+        module:             split_fasta
+        base:               Rep_transcript
+        script_path:
+        tag:                Trinotate
+        scope:              project
+        type:               nucl
+        subsample_num:      {Vars.split_fasta_n}
+
+    Trino_blastx_sprot:
+        module:             blast_new
+        base:               Split_Fasta
+        script_path:        '{Vars.paths.blastx}'
+        query:              sample
+        db:                 {Vars.databases.trinotate.sprot}
+        querytype:          nucl
+        redirects:
+            -max_target_seqs: 1
+            -num_threads:   1
+            -outfmt:        6
+    Trino_Transdecode:
+        module:             TransDecoder
+        base:               Split_Fasta
+        script_path:        "{Vars.paths.TransDecoder}.LongOrfs"
+        setenv:         'PERL5LIB=""'
+        scope:              sample
+    Trino_blastp_sprot:
+        module:             blast_new
+        base:               Trino_Transdecode
+        script_path:        {Vars.paths.blastp}
+        query:              sample
+        db:                 {Vars.databases.trinotate.sprot}
+        querytype:          prot
+        redirects:
+            -max_target_seqs: 1
+            -num_threads:   1
+            -outfmt:        6
+    Trino_hmmscan1:
+        module:             hmmscan
+        base:               Trino_Transdecode
+        script_path:        {Vars.paths.hmmscan}
+        scope:              sample
+        type:               prot
+        output_type:        domtblout  # one of tblout (parseable table of per-sequence hits to file), domtblout (parseable table of per-domain hits to file) and pfamtblout (table of hits and domains in Pfam format)
+        hmmdb:              {Vars.databases.trinotate.pfam}
+        qsub_params:
+            -q:             bioinfo.q
+        redirects:
+            --cpu:          1
+
+    Trino_rnammer:
+        module:             RnammerTranscriptome
+        base:               Split_Fasta
+        script_path:        /gpfs0/bioinfo/apps/Trinity/Trinotate-v3.1.1/util/rnammer_support/RnammerTranscriptome.pl #{Vars.paths.hmmscan}
+        scope:              sample
+        redirects:
+            --path_to_rnammer:  /gpfs0/bioinfo/apps/RNAMMER/RNAMMER_v1.2/rnammer
+    
+    Trino_merge_tables:
+        module:             merge_table
+        base:               [Trino_blastp_sprot,Trino_blastx_sprot,Trino_rnammer,Trino_hmmscan1]
+        script_path:        
+        type:               [blast.prot,blast.nucl,transcripts.fasta.nucl,fasta.prot,rnammer,hmmscan.prot]
+        header:             [0,0,0,0,0,5]
+        ext:                [out, out, fna, faa, out, hmm.out]
+        # stop_and_show:
+
+    Trino_Trinotate1:
+        module:             Trinotate
+        base:               
+            - Trino_merge_tables
+            - Rep_transcript
+        script_path:        {Vars.paths.Trinotate}
+        scope:              project
+        setenv:             'PERL5LIB=""'
+        sqlitedb:           {Vars.databases.trinotate.sqlitedb}
+        cp_sqlitedb:        
+
