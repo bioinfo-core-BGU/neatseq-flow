@@ -311,7 +311,7 @@ Download the **NeatSeq-Flow** repositories from github
 
    .. code-block:: bash
 
-      git clone https://github.com/bioinfo-core-BGU/neatseq-flow3.git
+      git clone https://github.com/bioinfo-core-BGU/neatseq-flow.git
       git clone https://github.com/bioinfo-core-BGU/neatseq-flow-tutorial.git
 
 

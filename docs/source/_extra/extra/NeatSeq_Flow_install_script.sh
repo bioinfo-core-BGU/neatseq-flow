@@ -60,7 +60,7 @@ conda install -y -c anaconda git
 
 
 # Get NeatSeq_Flow installer and create environment:
-wget http://neatseq-flow3.readthedocs.io/en/latest/extra/NeatSeq_Flow_conda_env.yaml
+wget http://neatseq-flow.readthedocs.io/en/latest/extra/NeatSeq_Flow_conda_env.yaml
 conda env create --force -p $CONDA_DIR/envs/NeatSeq_Flow -f NeatSeq_Flow_conda_env.yaml
 
 ## Get NeatSeq_Flow_GUI installer and create environment:

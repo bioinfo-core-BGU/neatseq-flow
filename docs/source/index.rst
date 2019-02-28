@@ -35,10 +35,10 @@
 
 
    * :ref:`Quick start: install and try NeatSeq-Flow <gui_tutorial>`
-   * GitHub: `NeatSeq-Flow <https://github.com/bioinfo-core-BGU/neatseq-flow3>`_
+   * GitHub: `NeatSeq-Flow <https://github.com/bioinfo-core-BGU/neatseq-flow>`_
    * GitHub: `NeatSeq-Flow GUI <https://github.com/bioinfo-core-BGU/NeatSeq-Flow-GUI>`_
    * `A short movie demonstrating the GUI <https://raw.githubusercontent.com/bioinfo-core-BGU/NeatSeq-Flow-GUI/master/doc/NeatSeq-Flow-GUI.gif>`_
-   * `Module and Workflow repository <http://neatseq-flow3.readthedocs.io/projects/neatseq-flow3-modules/en/latest/>`_
+   * `Module and Workflow repository <http://neatseq-flow.readthedocs.io/projects/neatseq-flow-modules/en/latest/>`_
    * `Article on BioRXiv <https://www.biorxiv.org/content/early/2018/12/18/173005>`_
    * `Contact <mailto:sklarz@bgu.ac.il?subject=Inquiry\ about\ NeatSeq-Flow>`_
 

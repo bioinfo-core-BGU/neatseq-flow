@@ -37,15 +37,15 @@
 
 ## Quick start
 
-Check out the [Tutorial](http://neatseq-flow3.readthedocs.io/en/latest/Example_WF.html) .
+Check out the [Tutorial](http://neatseq-flow.readthedocs.io/en/latest/Example_WF.html) .
 
 ## Installing NeatSeq-Flow
 
-The easiest way to install is with the installation script (The following instructions are for **temporary installation**. [See here](https://neatseq-flow3.readthedocs.io/en/latest/Installation_guide.html#installing) for details)
+The easiest way to install is with the installation script (The following instructions are for **temporary installation**. [See here](https://neatseq-flow.readthedocs.io/en/latest/Installation_guide.html#installing) for details)
 
 Everything will be installed in a directory called `NeatSeq_Flow_install`. To uninstall NeatSeq-Flow, just delete the directory.
 
-    curl -sl https://raw.githubusercontent.com/bioinfo-core-BGU/neatseq-flow3/master/docs/source/_extra/extra/NeatSeq_Flow_install_script.sh | bash -s -- temp
+    curl -sl https://raw.githubusercontent.com/bioinfo-core-BGU/neatseq-flow/master/docs/source/_extra/extra/NeatSeq_Flow_install_script.sh | bash -s -- temp
 
  
 ## Executing NeatSeq-Flow
@@ -69,9 +69,9 @@ Everything will be installed in a directory called `NeatSeq_Flow_install`. To un
 
 The installation process described above installs the following three NeatSeq-Flow repositories:
 
-1. [The main NeatSeq-Flow repository](https://github.com/bioinfo-core-BGU/neatseq-flow3)
+1. [The main NeatSeq-Flow repository](https://github.com/bioinfo-core-BGU/neatseq-flow)
 1. [NeatSeq-Flow's GUI repository](https://github.com/bioinfo-core-BGU/NeatSeq-Flow-GUI)
-1. [NeatSeq-Flow's module repository](https://github.com/bioinfo-core-BGU/neatseq-flow3-modules)
+1. [NeatSeq-Flow's module repository](https://github.com/bioinfo-core-BGU/neatseq-flow-modules)
 
 
 # Customers

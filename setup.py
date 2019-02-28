@@ -12,7 +12,7 @@ setup(
     description         = 'Package for creation of workflow scripts for execution on computer clusters',
     license             = 'Creative Commons Attribution-Noncommercial-Share Alike license',
     long_description    =  open('README').read(),
-    download_url        = 'https://github.com/bioinfo-core-BGU/neatseq-flow3.git',
+    download_url        = 'https://github.com/bioinfo-core-BGU/neatseq-flow.git',
     platforms           = ["POSIX","Windows"],
     packages            = find_packages(),
     include_package_data= True,  # See  MANIFEST.in

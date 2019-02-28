@@ -30,7 +30,7 @@ NeatSeq-Flow can be installed in one of the following ways:
 #. :ref:`install_no_conda`
 
 
-**Conda** allows easy installation of NeatSeq-Flow in one go. For selected workflows, as well as for the NeatSeq-Flow tutorial, we also provide entire Conda environments which include NeatSeq-Flow with all necessary analysis programs (see `NeatSeq-Flow Workflows <https://neatseq-flow3.readthedocs.io/projects/neatseq-flow3-modules/en/latest/#neatseq-flow-workflows>`_.
+**Conda** allows easy installation of NeatSeq-Flow in one go. For selected workflows, as well as for the NeatSeq-Flow tutorial, we also provide entire Conda environments which include NeatSeq-Flow with all necessary analysis programs (see `NeatSeq-Flow Workflows <https://neatseq-flow.readthedocs.io/projects/neatseq-flow-modules/en/latest/#neatseq-flow-workflows>`_.
 
 
 
@@ -56,7 +56,7 @@ Installing
 
    .. code-block:: bash
 
-      curl -sl https://raw.githubusercontent.com/bioinfo-core-BGU/neatseq-flow3/master/docs/source/_extra/extra/NeatSeq_Flow_install_script.sh | bash -s -- temp
+      curl -sl https://raw.githubusercontent.com/bioinfo-core-BGU/neatseq-flow/master/docs/source/_extra/extra/NeatSeq_Flow_install_script.sh | bash -s -- temp
 
 **Permanent installation**
    Miniconda will be installed in the default location. If it already exists, the installed version will be used.
@@ -65,7 +65,7 @@ Installing
 
    .. code-block:: bash
 
-      curl -sl https://raw.githubusercontent.com/bioinfo-core-BGU/neatseq-flow3/master/docs/source/_extra/extra/NeatSeq_Flow_install_script.sh | bash -s -- perm
+      curl -sl https://raw.githubusercontent.com/bioinfo-core-BGU/neatseq-flow/master/docs/source/_extra/extra/NeatSeq_Flow_install_script.sh | bash -s -- perm
 
 Running **NeatSeq-Flow**
 --------------------------
@@ -221,7 +221,7 @@ Then, make sure you have these programs installed:
 
    .. code-block:: bash
 
-       git clone https://github.com/bioinfo-core-BGU/neatseq-flow3.git
+       git clone https://github.com/bioinfo-core-BGU/neatseq-flow.git
 
 #. You may have to install the dependencies. This can be done with:
 
@@ -233,7 +233,7 @@ Then, make sure you have these programs installed:
 
    .. code-block:: bash
 
-       git clone https://github.com/bioinfo-core-BGU/neatseq-flow3-modules.git
+       git clone https://github.com/bioinfo-core-BGU/neatseq-flow-modules.git
 
 
 #. Clone the github repository of the GUI:
