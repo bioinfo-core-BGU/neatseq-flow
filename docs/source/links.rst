@@ -6,9 +6,13 @@
 .. _conda: https://conda.io/docs
 .. _GUI tutorial: https://github.com/bioinfo-core-BGU/NeatSeq-Flow-GUI/blob/master/Tutorial.md
 
-.. |sample_template|    replace:: :download:`sample template <_static/NeatSeqFlow_ModuleTemplate_Sample.py>`
-.. |project_template|   replace:: :download:`project template <_static/NeatSeqFlow_ModuleTemplate_Project.py>`
+.. .. |sample_template|    replace:: :download:`sample template <_static/NeatSeqFlow_ModuleTemplate_Sample.py>`
+.. .. |project_template|   replace:: :download:`project template <_static/NeatSeqFlow_ModuleTemplate_Project.py>`
+.. |sample_template|    replace:: :download:`sample template <https://raw.githubusercontent.com/bioinfo-core-BGU/neatseq-flow3/master/docs/source/_extra/extra/NeatSeqFlow_ModuleTemplate_Sample.py>`
+.. |project_template|   replace:: :download:`project template <https://raw.githubusercontent.com/bioinfo-core-BGU/neatseq-flow3/master/docs/source/_extra/extra/NeatSeqFlow_ModuleTemplate_Project.py>`
 .. |conda_env|          replace:: :download:`conda environment file <_static/NeatSeq_Flow_conda_env.yaml>`
+
+
 
 .. |conda|          replace:: :ref:`install_with_conda`
 .. |tutorial|       replace:: :ref:`tutorial`

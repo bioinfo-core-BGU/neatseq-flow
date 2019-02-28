@@ -574,7 +574,7 @@ sed -i -e 's:^{kill_cmd}$:#&:' {qdel_file}\n""".format(kill_cmd = re.escape(kill
             self.test_executed(state="Stop"),
             self.get_stamped_file_register(),
             self.get_set_options_line(type = "unset"),
-            self.get_activate_lines(type = "deactivate"),
+            # self.get_activate_lines(type = "deactivate"),
             self.get_kill_line(state = "Stop"),
             self.get_log_lines(state = "Finished")])
 
