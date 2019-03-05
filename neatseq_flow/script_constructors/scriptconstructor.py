@@ -15,6 +15,36 @@ class ScriptConstructor(object):
     """
 
     @classmethod
+    def run_failed_steps(cls, pipe_data):
+        """
+        TODO:
+        Not used yet. Is intended to enable rerunning of failed steps.
+        Stages:
+        1. awk: extract failed or unfinished jobs from log file
+        2. while: extract qsub commands from main script
+        3. Find downstream dependencies in pipe_data["dependency_index"]; extract commands from main script
+
+        :return:
+        """
+
+        cmd = """
+awk '{  if(NR<=9) {next}; 
+        if($3=="Started" && $11 ~ "OK") {jobs[$6]=$5;}
+        if($3=="Finished" && $11 ~ "OK") {delete jobs[$6]}
+    }
+    END {
+        for (key in jobs) { 
+            print jobs[key]
+        } 
+    
+    }' {log_file} \
+    | while read step; do \
+        grep {main}; \
+    done
+        """.format(log_file=pipe_data["log_file"],
+                   main=pipe_data["scripts_dir"] + "00.workflow.commands.sh")
+
+    @classmethod
     def get_helper_script(cls, pipe_data):
         """ Returns the code for the helper script
             Note. The line with '## locksed command entry point' should be dealt with in inheriting classes.

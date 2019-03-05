@@ -213,6 +213,9 @@ class NeatSeqFlow(object):
         # Create script for cleaning up run_index file:
         self.create_run_index_cleaning_script()
 
+        # Create reverse dependency index
+        self.create_reverse_depends_file()
+
         # Create file with functions for trapping error:
         self.create_bash_helper_funcs()
 
@@ -427,7 +430,7 @@ class NeatSeqFlow(object):
             for name in self.param_data["Step"][step]:
                 self.param_data["Step"][step][name]["depend_list"] = self.depend_dict[name]
 
-        return self.depend_dict 
+        return self.depend_dict
 
     def sort_step_list(self):
         """ This function sorts the step list
@@ -780,7 +783,6 @@ Timestamp\tEvent\tModule\tInstance\tJob name\tLevel\tHost\tJob ID\tMax mem\tStat
         open(self.pipe_data["run_index"], "w").close()
 
         # Set depend_index filename in pipe_data
-        # Used for flagging active jobs.
         self.pipe_data["depend_index"] = "".join([self.pipe_data["objects_dir"], "depend_index", ".txt"])
         # Clearing file:
         open(self.pipe_data["depend_index"], "w").close()
@@ -796,7 +798,25 @@ Timestamp\tEvent\tModule\tInstance\tJob name\tLevel\tHost\tJob ID\tMax mem\tStat
                 regist_f.write("""# Registration of files created in this pipeline:
 Date\tStep\tName\tScript\tFile\tmd5sum\n
 """)
-              
+
+
+    def create_reverse_depends_file(self):
+        """
+
+        :return:
+        """
+
+        # Set script_index filename in pipe_data
+        # Used for connecting qsub_names with script paths and more
+        self.pipe_data["dependency_index"] = "".join([self.pipe_data["objects_dir"], "dependency_index_",
+                                                      self.pipe_data["run_code"] ,
+                                                      ".txt"])
+
+        with open(self.pipe_data["dependency_index"], "w") as depends_f:
+            for step_i in self.depend_dict:
+                for depend_i in self.depend_dict[step_i]:
+                    depends_f.write("\t".join([depend_i, step_i])+"\n")
+
     def get_dict_encoding(self):
         """ Returns a dict representation of the pipeline.
         """
