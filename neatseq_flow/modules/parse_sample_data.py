@@ -57,7 +57,6 @@ def check_newlines(filelines):
         print("The sample and parameter files must not contain carriage returns. Convert newlines to UNIX style!\n")
         raise Exception("Issues in samples", "samples")
 
-
 def parse_sample_file(filename):
     """Parses a file from filename
     """
@@ -93,8 +92,6 @@ def get_sample_data(filelines):
         return get_tabular_sample_data(filelines)
     else:
         sys.exit("There is a problem with the sample file format. Make sure all lines begin with keywords.")
-        
-    
 
 def guess_sample_data_format(filelines):
     """Guess the format of sample data. Could be tsv (preferable but not defined yet) or old pipeline format
@@ -121,133 +118,6 @@ def guess_sample_data_format(filelines):
     else:
         sys.exit("Unknown sample file format. Make sure you have a 'Title' line in the sample file.")
     
-    
-
-def get_classic_sample_data(filelines):
-    """
-    Get sample data from filelines
-    """
-    
-    # Helper function. Converts sample line into sample name while removing trailing spaces and converting internal spaces into underscores.
-    def get_sample_name(sample_name):
-        return re.sub("\s+","_",re.split("\s+", sample_name.strip(), maxsplit=1)[1])
-
-    # Extract sample-related lines from filelines:
-    filelines = get_classic_sample_data_lines(filelines)
-    # Get list of tuples: (index, sample name) where "index" is the line in filelines holding the sample name line
-    sample_index = [(ind,get_sample_name(line))
-                    for ind,line
-                    in list(enumerate(filelines))
-                    if re.split("\s+", line, maxsplit=1)[0]=="Sample"]
-    
-    
-    # Get project title:
-    title = get_project_title(filelines)
-    
-    
-    # Indexes of samples in lines
-    indexes = [ind for (ind,smp) in sample_index]
-    # Indexes of ends of samples in lines
-    indexes_end = [ind-1 for ind in indexes[1:]]
-    indexes_end.extend([len(filelines)-1])
-    sample_data = dict()
-    for (i,j,smp) in zip(indexes,indexes_end,sample_index):
-        # print "i+1: %d j: %d smp: %s" % (i+1,j,smp[1])
-        # Put parse_classic_sample_data into dictionary
-        sample_data[smp[1]] = parse_classic_sample_data(filelines[(i+1):(j+1)])
-    
-
-    # Get Sample_Control data for ChIP-seq samples:
-    Sample_Control = [re.split("\s+", line, maxsplit=1)[1]
-                      for line
-                      in filelines
-                      if re.split("\s+", line, maxsplit=1)[0]=="Sample_Control"]
-    if Sample_Control:
-        controls = parse_sample_control_data(Sample_Control,sample_names=list(sample_data.keys()))
-        
-    # Add a list of sample names to sample_data
-    sample_data["samples"] = sorted(sample_data.keys())
-
-    # Add project title sample_data
-    sample_data["Title"] = title
-    
-    if Sample_Control:
-        sample_data["Controls"] = controls 
-    
-    return sample_data
-
-
-def parse_classic_sample_data(lines):
-    """
-    Given lines for one sample, return a dictionary holding the data for that sample:
-    """
-    sample_x_data = dict()
-    #===========================================================================
-    # # Create dict with lists of files for each possible direction 
-    # reads = {alldirect:[(filename) for (direction,filename) in \
-    #                 [re.split("\s+", line, maxsplit=1) for line in lines] \
-    #         if direction==alldirect] for alldirect in {"Forward","Reverse","Single"}}
-    #===========================================================================
-    # Create dict with lists of files for each possible direction 
-    reads = {alldirect:[get_full_path(filename) for (direction,filename) in \
-                    [re.split("\s+", line, maxsplit=1) for line in lines] \
-            if direction==alldirect] for alldirect in {"Forward","Reverse","Single"}}
-    # Remove empty lists 
-    reads = {direct:files for direct,files in reads.items() if files != []}
-    
-
-    # Create dict for storing full sequences, e.g. genomes and proteins. Will be searching for 'Nucleotide' and 'Protein' keywords
-    if reads:
-        sample_x_data.update(reads)
-    
-    ## Read fasta files:
-    fasta = {alldirect:[get_full_path(filename) for (direction,filename) in \
-                    [re.split("\s+", line, maxsplit=1) for line in lines] \
-            if direction==alldirect] for alldirect in {"Nucleotide","Protein"}}
-    # Remove empty lists 
-    fasta = {direct:files for direct,files in fasta.items() if files != []}
-    # Put these files in a separate entry in the reads structure called "fasta"
-    if fasta:
-        sample_x_data.update(fasta)
-    
-    ## Read BAM/SAM files:
-    bam_sam = {alldirect:[get_full_path(filename) for (direction,filename) in \
-                    [re.split("\s+", line, maxsplit=1) for line in lines] \
-            if direction==alldirect] for alldirect in ALIGNMENT_FILE_TYPES}
-    # Remove empty lists 
-    bam_sam = {direct:files for direct,files in bam_sam.items() if files != []}
-    
-    # Complain if more or less than 1 REFERENCE was passed:
-    if(bam_sam):    # Do the following only if BAM/SAM files were passed:
-        if "REFERENCE" not in bam_sam:
-            print("No reference passed with SAM and BAM files...")
-            raise Exception("Issue in sample file")
-        if len(bam_sam["REFERENCE"]) > 1:
-            print("You tried passing more than one REFERENCE with SAM and BAM files...")
-            raise Exception("Issue in sample file")
-        
-        sample_x_data.update(bam_sam)
-    
-    ## Read vcf files:
-    vcf_files = {alldirect:[get_full_path(filename) for (direction,filename) in \
-                    [re.split("\s+", line, maxsplit=1) for line in lines] \
-            if direction==alldirect] for alldirect in VARIANT_FILE_TYPES}
-    # Remove empty lists 
-    vcf_files = {direct:files for direct,files in vcf_files.items() if files != []}
-    
-    # Complain if more or less than 1 REFERENCE was passed:
-    if(vcf_files):    # Do the following only if BAM/SAM files were passed:
-        sample_x_data.update(vcf_files)
-
-    return sample_x_data
-    
-def get_classic_sample_data_lines(filelines):
-    """ Get sample data from "Classic" sample data file, i.e. pipeline format
-        Is recognized by the words "Sample","Forward","Reverse","Single" as line prefixes
-    """
-    filelines = remove_comments(filelines)
-    return [line for line in filelines if re.split("\s+", line, maxsplit=1)[0] in GLOBAL_SAMPLE_LIST]
-    
 def parse_sample_control_data(Sample_Control, sample_names):
     """ Parse lines containing sample-control relationships for ChIP-seq protocols
     """
@@ -259,38 +129,12 @@ def parse_sample_control_data(Sample_Control, sample_names):
     # Extract and return data
     return {item.split(":")[0]:item.split(":")[1] for item in Sample_Control}
 
-
-    
-
 def check_file_name(filename):
     """ Check wether a filename is legitimate
         The exact tests will be defined and updated periodically...
     """
     
     pass
-    
-
-def check_sample_constancy(sample_data):
-    """ Checks that all sample files are either zipped or unzipped.
-        Uses file extensions for determination. 
-        zipped file extensions are stored in global param ZIPPED_EXTENSIONS
-    """
-    
-    # For each file type in each sample, get a list of extension types:
-    ext_types = set()
-    for sample in sample_data["samples"]:      # Getting list of samples out of samples_hash
-
-        for direction in list(sample_data[sample].keys()):
-            # Get a list of file extensions (chars to the RHS of the last period in the filename)
-            # extensions = list(set([os.path.splitext(fn)[1] for fn in sample_data[sample][type][direction]]))
-            extensions = [os.path.splitext(fn)[1] for fn in sample_data[sample][direction]]
-            # Convert file extension to 'zip' or 'regular', depending on the extension:
-            # Keep only unique values (using set: {}) and adding to ext_types
-            #{"zip" if ext in ZIPPED_EXTENSIONS else "regular" for ext in extensions}
-            ext_types = ext_types | set(["zip" if ext in ZIPPED_EXTENSIONS else "regular" for ext in extensions])
-        
-    if len(ext_types) > 1:
-        sys.exit("At the moment, you can't mix zipped and unzipped files!")
 
 def get_tabular_sample_data(filelines):
     """
@@ -359,9 +203,15 @@ def get_tabular_sample_data_lines(filelines):
     # Read CSV data with csv package. Store in return_results
     linedata = StringIO("\n".join(title_line)) #("\n".join([line[1] for line in title_line])))
     reader = csv.reader(linedata, dialect='excel-tab')
-    return_results["Title"] = [row[1] for row in reader][0]  # Get first element, 2nd (index 1) column:
+    title = [row[1] for row in reader][0]  # Get first element, 2nd (index 1) column:
+    # Removing trailing spaces and converting whitespace to underscore
+    if re.search("\s+", title):
+        # print "in here"
+        title = title.strip()
+        title = re.sub("\s+", "_", title)
+        sys.stderr.write("The title contains white spaces. Converting to underscores. (%s)\n" % title)
+    return_results["Title"] = title
 
-    
     # Looking for contiguous blocks beginning with #SampleID and #Type.
     # First, getting index of blank lines:
     blank_ind = [ind for (ind,param_l) in list(enumerate(filelines)) if re.match("^\s+$", param_l)]
@@ -460,40 +310,17 @@ def parse_tabular_project_data(proj_lines):
 
     return sample_x_dict
 
-def get_project_title(filelines):
-    """ Extract the project title from the file lines
-    """
-    
-    # Get lines with titles:
-    title = [re.split("\s+", line, maxsplit=1)[1] for line in filelines if re.split("\s+", line, maxsplit=1)[0]=="Title"]
-    if title==[]:
-        sys.exit("The sample file does not contain a 'Title' line!\n")
-    if len(title) > 1:
-        sys.stderr.write("The sample file contains more than one 'Title' line! USING THE FIRST ONE (%s)\n" % title[0])
-
-    # Removing trailing spaces and converting whitespace to underscore
-    if re.search("\s+", title[0]):
-        # print "in here"
-        title[0] = title[0].strip()
-        title[0] = re.sub("\s+", "_", title[0])
-        sys.stderr.write("The title contains white spaces. Converting to underscores. (%s)\n" % title[0])
-  
-    return title[0]
-    
-    
-    
-def get_full_path(path):
-    """ Creates a full path from the given path. This is done in one of two ways:
-        1. If it is a URL, IDENTIFIED BY THE PROTOCOL (or scheme): leave it unchanged
-        2. Otherwise: use expanduser and abspath on the path IF IT IS NOT ABSOLUTE ALREADY
-    """
-    
-    url = urlparse(path)
-    if not url.scheme:   # Regular path
-        if not os.path.isabs(path):
-            return os.path.abspath(os.path.expanduser(path)) 
-    return path
-
+# def get_full_path(path):
+#     """ Creates a full path from the given path. This is done in one of two ways:
+#         1. If it is a URL, IDENTIFIED BY THE PROTOCOL (or scheme): leave it unchanged
+#         2. Otherwise: use expanduser and abspath on the path IF IT IS NOT ABSOLUTE ALREADY
+#     """
+#
+#     url = urlparse(path)
+#     if not url.scheme:   # Regular path
+#         if not os.path.isabs(path):
+#             return os.path.abspath(os.path.expanduser(path))
+#     return path
 
 def parse_grouping_file(grouping_file):
     """
