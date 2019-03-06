@@ -89,28 +89,29 @@ Global parameters section
 
    * - Parameter
      - Description
-   * - Executor
+   * - ``Executor``
      - SGE, Local or SLURM. (Default: SGE)
-   * - Qsub_q
+   * - ``Qsub_q``
      - The cluster queue (or *partition*) to use. Default value for *qsub* ``–q`` parameter. **Required**
-   * - Qsub_nodes
+   * - ``Qsub_nodes``
      - Default nodes on which to execute jobs (Default: All nodes in queue)
-   * - Qsub_opts
+   * - ``Qsub_opts``
      - Other parameters to pass to qsub
-   * - Qsub_path
+   * - ``Qsub_path``
      - The full path to qsub. Obtain by running ``which qsub`` (default: qsub is in path)
-   * - Default_wait
+   * - ``Default_wait``
      - Default: 10. Leave as is
-   * - module_path
+   * - ``module_path``
      - List of paths to repositories of additional modules. (Must be a **python** directory, containing ``__init__.py``
-   * - job_limit
+   * - ``job_limit``
      - Path to a file, defining parameters for limiting number of concurrent jobs, with the following line::
                      limit=1000 sleep=60
-   * - conda
-     - ``path`` and ``env``, defining the path to the environment you want to use and its name.
+   * - ``conda``
+     - ``path`` and ``env``, defining the path to the environment you want to use and its name. See `conda_param_definition`_.
 
 .. Attention:: The default executor is SGE. For SLURM, ``sbatch`` is used instead of ``qsub``, *e.g.*  ``Qsub_nodes`` defines the nodes to be used by sbatch.
 
+.. Attention:: If NeatSeq-Flow is executed from within a conda environment with both NeatSeq-Flow and it's modules installed, ``module_path`` will automatically include the modules repo. If not, you will have to give the path to the location where the modules were installed.
 
 
 Vars section
@@ -134,11 +135,11 @@ In parameter section:
 
    * - This...
      - Becomes this...
-   * - {Vars.paths.bwa}
+   * - ``{Vars.paths.bwa}``
      - /path/to/bwa
-   * - {Vars.paths.samtools}
+   * - ``{Vars.paths.samtools}``
      - /path/to/samtools
-   * - {Vars.genome}
+   * - ``{Vars.genome}``
      - /path/to/genomeDir
 
 
@@ -297,17 +298,17 @@ Define source and target slots and how to merge the files. Attempts to guess inf
 
    * - Parameter
      - Description
-   * - src
+   * - ``src``
      - source slot.
-   * - trg
+   * - ``trg``
      - target slot
-   * - ext
+   * - ``ext``
      - merged file extension.
-   * - scope
+   * - ``scope``
      - the scope of the file
-   * - script_path
+   * - ``script_path``
      - the code to use for merging, or one of the following values:
-   * - pipe
+   * - ``pipe``
      - a command through which to pipe the file before storing.
 
 
@@ -316,11 +317,11 @@ Define source and target slots and how to merge the files. Attempts to guess inf
 
    * - Value
      - Description
-   * - ..guess..
+   * - ``..guess..``
      - Guess (script_path, trg and ext)
-   * - ..import..
+   * - ``..import..``
      - Do not copy the file, just import it into its slot (only if one file defined for src).
-   * - ..skip..
+   * - ``..skip..``
      - Do not import the file type.
 
 Example::

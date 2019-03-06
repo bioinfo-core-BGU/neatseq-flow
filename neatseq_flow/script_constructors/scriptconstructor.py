@@ -15,34 +15,14 @@ class ScriptConstructor(object):
     """
 
     @classmethod
-    def run_failed_steps(cls, pipe_data):
+    def get_utilities_script(cls, pipe_data):
+
         """
-        TODO:
-        Not used yet. Is intended to enable rerunning of failed steps.
-        Stages:
-        1. awk: extract failed or unfinished jobs from log file
-        2. while: extract qsub commands from main script
-        3. Find downstream dependencies in pipe_data["dependency_index"]; extract commands from main script
 
         :return:
         """
 
-        cmd = """
-awk '{  if(NR<=9) {next}; 
-        if($3=="Started" && $11 ~ "OK") {jobs[$6]=$5;}
-        if($3=="Finished" && $11 ~ "OK") {delete jobs[$6]}
-    }
-    END {
-        for (key in jobs) { 
-            print jobs[key]
-        } 
-    
-    }' {log_file} \
-    | while read step; do \
-        grep {main}; \
-    done
-        """.format(log_file=pipe_data["log_file"],
-                   main=pipe_data["scripts_dir"] + "00.workflow.commands.sh")
+        return ""
 
     @classmethod
     def get_helper_script(cls, pipe_data):
@@ -545,13 +525,13 @@ sed -i -e 's:^{kill_cmd}$:#&:' {qdel_file}\n""".format(kill_cmd = re.escape(kill
 
         for filename in self.master.stamped_files:
             script += """
-%(echo_cmd)s `date '+%%d/%%m/%%Y %%H:%%M:%%S'` '\\t%(step)s\\t%(stepname)s\\t%(stepID)s\\t' `md5sum %(filename)s` >> %(file)s
-""" %      {"echo_cmd" : echo_cmd,
-            "filename" : filename,
-            "step"     : self.step,
-            "stepname" : self.name,
-            "stepID"   : self.script_id,
-            "file"     : self.pipe_data["registration_file"]}
+if [ -e {filename} ]; then {echo_cmd} `date '+%%d/%%m/%%Y %%H:%%M:%%S'` '\\t{step}\\t{stepname}\\t{stepID}\\t' `md5sum {filename}` >> {file}; fi
+""".format(echo_cmd=echo_cmd,
+            filename=filename,
+            step=self.step,
+            stepname=self.name,
+            stepID=self.script_id,
+            file=self.pipe_data["registration_file"])
         
         script += "#############\n\n"
             

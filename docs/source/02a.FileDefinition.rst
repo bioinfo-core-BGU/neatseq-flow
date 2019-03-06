@@ -97,12 +97,14 @@ All global parameters are set within a ``Global_params`` block in YAML format.
     If you want to use a conda environment to execute the scripts, pass this parameter with the following two sub-parameters:
     
     ``path``
-        The path to the environment you want to use. **If left empty, and a ``conda`` environment is active, NeatSeq-Flow will use the path to the active environment**.
+        The path to the environment you want to use. **If left empty**, and a ``conda`` environment is active, NeatSeq-Flow will use the path to the **active environment**. However, you will have to define the base of the conda installation with:
 
-        If your
-        
+        .. code-block:: bash
+
+            export CONDA_BASE=$(conda info --root)
+
     ``env``
-        The name of the environment to use. If absent or left empty, **NeatSeq-Flow** will extract the name from the ``path`` parameter. 
+        The name of the environment to use. If absent or left empty, **NeatSeq-Flow** will extract the name from the ``CONDA_DEFAULT_ENV`` environment variable, which contains the name of the active conda environment.
 
 Following is an example of a global-parameters block::
     
