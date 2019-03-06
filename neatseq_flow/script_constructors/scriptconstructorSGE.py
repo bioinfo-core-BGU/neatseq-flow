@@ -78,7 +78,7 @@ wait_limit() {{
         # 3. Get qsub commands from main script
         # 4. Execute the qsub command
 
-        recover_script = """
+        recover_script = util_script + """
 # Recover a failed execution
 function recover_run {{
     cat {log_file} \\
@@ -109,7 +109,7 @@ function recover_run {{
                    depend_file=pipe_data["dependency_index"],
                    main=pipe_data["scripts_dir"] + "00.workflow.commands.sh")
 
-        return util_script + """
+        return recover_script + """
 # Show active jobs
 function show_PL_jobs { 
     currid=$(tail -n1  logs/version_list.txt | xargs | cut -f1)
