@@ -44,6 +44,9 @@
    * `Article on BioRXiv <https://www.biorxiv.org/content/early/2018/12/18/173005>`_
    * `Contact <mailto:sklarz@bgu.ac.il?subject=Inquiry\ about\ NeatSeq-Flow>`_
 
+.. Attention:: Due to version conflicts, the GUI may temporarily not work. The issue will be solved during the day.
+
+
 What is **NeatSeq-Flow**?
 --------------------------
 
