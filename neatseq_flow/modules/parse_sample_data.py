@@ -123,9 +123,13 @@ def parse_sample_control_data(Sample_Control, sample_names):
     """
     # Check validity of lines:
     for item in Sample_Control:
-        assert item.split(":")[0] in sample_names, "%s in sample-control data is not defined as a sample\n" % item.split(":")[0]
-        assert item.split(":")[1] in sample_names, "%s in sample-control data is not defined as a sample\n" % item.split(":")[1]
-        
+        if item.split(":")[0] not in sample_names:
+            raise Exception("Issues in sample",
+                            "Sample '{sample}' in sample-control data is not defined.".format(sample=item.split(":")[0]))
+        if item.split(":")[1] not in sample_names:
+            raise Exception("Issues in sample",
+                            "Control '{sample}' in sample-control data is not defined.".format(sample=item.split(":")[1]))
+
     # Extract and return data
     return {item.split(":")[0]:item.split(":")[1] for item in Sample_Control}
 

@@ -11,6 +11,7 @@ Using the generic modules
    :local:
    :backlinks: top
 
+Two generic modules are provided to enable including in workflows programs for which no dedicated module exists. Using the modules saves writing dedicated modules and can therefore be utilized by non-programmers as well; however, this comes at a cost of adding clutter to the workflow parameter definition file.
 
 The generic modules, called ``Generic`` and ``Fillout_Generic``, do not contain a definition of input and output file types, therefore the user has to specify the input and output file types in the parameter file.
 

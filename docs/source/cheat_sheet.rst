@@ -13,7 +13,7 @@ NeatSeq-Flow Cheat-Sheet
 
 
 -------------
-Files
+Input Files
 -------------
 
 Sample file
@@ -85,6 +85,7 @@ Global parameters section
 ------------------------------
 
 .. list-table:: Global parameters
+   :widths: auto
    :header-rows: 1
 
    * - Parameter
@@ -107,7 +108,7 @@ Global parameters section
      - Path to a file, defining parameters for limiting number of concurrent jobs, with the following line::
                      limit=1000 sleep=60
    * - ``conda``
-     - ``path`` and ``env``, defining the path to the environment you want to use and its name. See `conda_param_definition`_.
+     - ``path`` and ``env``, defining the path to the environment you want to use and its name (:ref:`see here <conda_param_definition>`).
 
 .. Attention:: The default executor is SGE. For SLURM, ``sbatch`` is used instead of ``qsub``, *e.g.*  ``Qsub_nodes`` defines the nodes to be used by sbatch.
 
@@ -115,7 +116,7 @@ Global parameters section
 
 
 Vars section
-~~~~~~~~~~~~~~~~~~~
+--------------
 
 Replacements to be made in the parameter file. In YAML format. Referred to in other sections by the dot-notification.
 
@@ -145,7 +146,7 @@ In parameter section:
 
 
 Step-wise parameters
-~~~~~~~~~~~~~~~~~~~~~
+-------------------------
 
 A series of YAML blocks, one per workflow step to perform. Each block takes the following form::
 
@@ -157,7 +158,7 @@ A series of YAML blocks, one per workflow step to perform. Each block takes the 
 Types of step parameters:
 
 Required parameters
-*********************
+~~~~~~~~~~~~~~~~~~~~
 
 .. list-table:: Required parameters
    :header-rows: 1
@@ -172,7 +173,7 @@ Required parameters
      - The full path to the script executed by this step.
 
 Cluster parameters
-*********************
+~~~~~~~~~~~~~~~~~~~~~~
 
 Passed in a ``qsub_params`` block.
 
@@ -192,7 +193,7 @@ Passed in a ``qsub_params`` block.
 
 
 Additional parameters
-*********************
+~~~~~~~~~~~~~~~~~~~~~~
 
 .. list-table:: Additional parameters
    :header-rows: 1
@@ -220,7 +221,7 @@ Additional parameters
 
 
 Redirected parameters
-*********************
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Parameters to be redirected to the actual program executed by the step.
 
@@ -228,7 +229,7 @@ Redirected parameters are specified within a ``redirects:`` block. The parameter
 
 
 Sample list
-**************
+~~~~~~~~~~~~~~
 
 The sample list can be expressed in two ways:
 
