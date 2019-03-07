@@ -9,6 +9,7 @@ dependencies:
   - pyyaml=3.12
   - munch=2.3.2
   - pandas=0.23.1
+  - tornado=5.0.2
 # R
   - r-base
   - r-htmlwidgets
@@ -20,6 +21,6 @@ dependencies:
   - pip:
     - git+https://github.com/bioinfo-core-BGU/neatseq-flow.git@master
     - git+https://github.com/bioinfo-core-BGU/neatseq-flow-modules.git@master
-    - git+https://github.com/flexxui/flexx.git
+    - git+https://github.com/levinbgu/flexx.git
     - git+https://github.com/bioinfo-core-BGU/NeatSeq-Flow-GUI.git
 
