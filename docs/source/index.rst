@@ -44,7 +44,7 @@
    * `Article on BioRXiv <https://www.biorxiv.org/content/early/2018/12/18/173005>`_
    * `Contact <mailto:sklarz@bgu.ac.il?subject=Inquiry\ about\ NeatSeq-Flow>`_
 
-.. Attention:: Due to version conflicts, the GUI may temporarily not work. The issue will be solved during the day.
+.. Attention:: Due to version conflicts, the GUI was temporarily out of order. The problem has been solved so if, for some reason, NeatSeq-Flow GUI does not work for you, please try re-installing it.
 
 
 What is **NeatSeq-Flow**?

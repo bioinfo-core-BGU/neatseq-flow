@@ -100,6 +100,7 @@ function recover_run {{
         | while read step; do \\
             grep $step {main} | egrep -v "^#|^echo" | cut -f2 -d" ";
           done \\
+        | sort -u \\
         | while read line; do \\
             echo $line;
             qsub $line; \\

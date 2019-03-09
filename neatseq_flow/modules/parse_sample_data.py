@@ -133,13 +133,6 @@ def parse_sample_control_data(Sample_Control, sample_names):
     # Extract and return data
     return {item.split(":")[0]:item.split(":")[1] for item in Sample_Control}
 
-def check_file_name(filename):
-    """ Check wether a filename is legitimate
-        The exact tests will be defined and updated periodically...
-    """
-    
-    pass
-
 def get_tabular_sample_data(filelines):
     """
     Get sample data from filelines
@@ -202,8 +195,7 @@ def get_tabular_sample_data_lines(filelines):
     # Check there is only one title line (title is a list of length 1)
     if len(title_line)>1:   
         sys.stdout.write("More than 1 Title line defined. Using first: %s\n" % title_line[0])
-    
-    # pp(title_line)
+
     # Read CSV data with csv package. Store in return_results
     linedata = StringIO("\n".join(title_line)) #("\n".join([line[1] for line in title_line])))
     reader = csv.reader(linedata, dialect='excel-tab')
@@ -223,34 +215,41 @@ def get_tabular_sample_data_lines(filelines):
     
     # looking for range begining with "#SampleID" till first blank line:
     # Index of header line:
-    head_ind = [ind
+    head_ind_list = [ind
                 for (ind,param_l)
                 in list(enumerate(filelines))
                 if re.split("\s+", param_l, maxsplit=1)[0].lower() == "#sampleid"]
-    if head_ind:  # A line beginning with '#SampleID' exists.
 
+    # if head_ind:  # A line beginning with '#SampleID' exists.
+    return_results["Sample_data"] = []
+    for head_ind in head_ind_list:
         # Range of lines to keep: from header index till first blank line
-        lines_range = list(range(head_ind[0],min([ind for ind in blank_ind if ind>head_ind[0]])))
-
+        lines_range = list(range(head_ind,min([ind for ind in blank_ind if ind>head_ind])))
         # Read CSV data with csv package. Store in return_results
         linedata = StringIO("\n".join(remove_comments([filelines[i] for i in lines_range])))
         reader = csv.reader(linedata, dialect='excel-tab')
-        return_results["Sample_data"] = [row for row in reader]
+        return_results["Sample_data"].extend([row for row in reader])
 
     # looking for range begining with "#Type" till first blank line:
     # Index of header line:
-    head_ind =  [ind for (ind,param_l) in list(enumerate(filelines)) if re.split("\s+", param_l, maxsplit=1)[0].lower() == "#type"]
-    
-    if head_ind:  # A line beginning with '#Type' exists.
-    
+    head_ind_list = [ind
+                     for (ind,param_l)
+                     in list(enumerate(filelines))
+                     if re.split("\s+", param_l, maxsplit=1)[0].lower() == "#type"]
+
+    # if head_ind:  # A line beginning with '#Type' exists.
+    return_results["Project_data"] = []
+    for head_ind in head_ind_list:
+
         # Range of lines to keep: from header index till first blank line
-        lines_range = list(range(head_ind[0],min([ind for ind in blank_ind if ind>head_ind[0]])))
+        lines_range = list(range(head_ind,min([ind for ind in blank_ind if ind>head_ind])))
 
         linedata = StringIO("\n".join(remove_comments([filelines[i] for i in lines_range])))
         reader = csv.reader(linedata, dialect='excel-tab')
-        return_results["Project_data"] = [row for row in reader]
+        return_results["Project_data"].extend([row for row in reader])
 
-
+    print(return_results["Project_data"])
+    sys.exit()
     # Extract Sample_Control lines:
     sample_control = [line for line in filelines if re.split("\s+", line, maxsplit=1)[0] == "Sample_Control"]
     sample_control = remove_comments(sample_control)
