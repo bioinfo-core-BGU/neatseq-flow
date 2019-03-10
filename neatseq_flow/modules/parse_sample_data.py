@@ -248,8 +248,8 @@ def get_tabular_sample_data_lines(filelines):
         reader = csv.reader(linedata, dialect='excel-tab')
         return_results["Project_data"].extend([row for row in reader])
 
-    print(return_results["Project_data"])
-    sys.exit()
+    # print(return_results["Project_data"])
+    # sys.exit()
     # Extract Sample_Control lines:
     sample_control = [line for line in filelines if re.split("\s+", line, maxsplit=1)[0] == "Sample_Control"]
     sample_control = remove_comments(sample_control)
