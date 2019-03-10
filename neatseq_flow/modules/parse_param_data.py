@@ -379,22 +379,7 @@ def test_and_modify_global_params(global_params):
     # # Setting global SUPPORTED_EXECUTORS according to value of Executor
     global NOT_PASSABLE_EXECUTOR_PARAMS
     NOT_PASSABLE_EXECUTOR_PARAMS = SUPPORTED_EXECUTORS[global_params["Executor"]]
-    
-    # Convert Qsub_opts into a list of options (split by ' -' with look-ahead...)
-    if "Qsub_opts" in global_params:
-        if isinstance(global_params["Qsub_opts"], str):
-            global_params["Qsub_opts"] = dict((re.split("\s+",elem,1)+[""])[0:2] for elem in re.split("\s+(?=-)",global_params["Qsub_opts"]))
-            # global_params["Qsub_opts"] = re.split(" (?=-)",global_params["Qsub_opts"])
-        elif isinstance(global_params["Qsub_opts"], list):
-            global_params["Qsub_opts"] = dict((re.split("\s+",elem,1)+[""])[0:2] for elem in global_params["Qsub_opts"])
-        # If defined as a dict, change all 'None' values to empty strings
-        elif isinstance(global_params["Qsub_opts"], dict):
-            global_params["Qsub_opts"] = {key:(val if val!=None else "")
-                                          for key,val
-                                          in global_params["Qsub_opts"].items()}
-        else:
-            sys.exit("'Qsub_opts' in undefined format.")
-           
+
     # Converting single module_path into single element list
     if "module_path" in global_params:
         if isinstance(global_params["module_path"],str):
@@ -411,7 +396,25 @@ def test_and_modify_global_params(global_params):
             sys.stderr.write("WARNING: The following module paths do not exist and will be "
                              "removed from search path: {badpaths}\n".format(badpaths=", ".join(bad_paths)))
             global_params["module_path"] = good_paths
-        
+
+
+    # Convert Qsub_opts into a list of options (split by ' -' with look-ahead...)
+    if "Qsub_opts" in global_params:
+        if isinstance(global_params["Qsub_opts"], str):
+            global_params["Qsub_opts"] = dict(
+                (re.split("\s+", elem, 1) + [""])[0:2] for elem in re.split("\s+(?=-)", global_params["Qsub_opts"]))
+            # global_params["Qsub_opts"] = re.split(" (?=-)",global_params["Qsub_opts"])
+        elif isinstance(global_params["Qsub_opts"], list):
+            global_params["Qsub_opts"] = dict(
+                (re.split("\s+", elem, 1) + [""])[0:2] for elem in global_params["Qsub_opts"])
+        # If defined as a dict, change all 'None' values to empty strings
+        elif isinstance(global_params["Qsub_opts"], dict):
+            global_params["Qsub_opts"] = {key: (val if val != None else "")
+                                          for key, val
+                                          in global_params["Qsub_opts"].items()}
+        else:
+            sys.exit("'Qsub_opts' in undefined format.")
+
     # Converting single Qsub_nodes into single element list
     if "Qsub_nodes" in global_params:
         if isinstance(global_params["Qsub_nodes"],str):
@@ -426,10 +429,11 @@ def test_and_modify_global_params(global_params):
                             "must be a single path or a list. \n", "parameters")
     if "Qsub_path" in global_params:
         if not global_params["Qsub_path"]:
-            raise Exception("'Qsub_path' can't be left empty.\nDetermine with:\n\twhich {qprog} | "
-                            "sed -e 's/\/{qprog}$//g'".format(qprog=EXECUTORS_Q_INFO[global_params["Executor"]]),
-                            "parameters")
-        if not isinstance(global_params["Qsub_path"],str):
+            global_params["Qsub_path"] = ""
+        #     raise Exception("'Qsub_path' can't be left empty.\nDetermine with:\n\twhich {qprog} | "
+        #                     "sed -e 's/\/{qprog}$//g'".format(qprog=EXECUTORS_Q_INFO[global_params["Executor"]]),
+        #                     "parameters")
+        elif not isinstance(global_params["Qsub_path"],str):
             raise Exception("Unrecognised 'Qsub_path' format. It must be a string", "parameters")
     else:
         pass
