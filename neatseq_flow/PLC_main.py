@@ -233,7 +233,7 @@ class NeatSeqFlow(object):
         self.create_kill_scripts_dir()
 
         # Save name for dependency ensuring script
-        self.pipe_data["depends_script_name"] = self.pipe_data["scripts_dir"] + "98.Ensure_high_depends.csh"
+        self.pipe_data["depends_script_name"] = self.pipe_data["scripts_dir"] + "BB.Ensure_high_depends.csh"
 
         # Create step instances:
         sys.stdout.write("Making step instances...\n")
@@ -712,7 +712,7 @@ class NeatSeqFlow(object):
             In includes functions to be execute for trapping error and SIGUSR2 signals 
         """
         
-        self.pipe_data["helper_funcs"] = self.pipe_data["scripts_dir"] + "97.helper_funcs.sh"
+        self.pipe_data["helper_funcs"] = self.pipe_data["scripts_dir"] + "CC.helper_funcs.sh"
 
         modname = "neatseq_flow.script_constructors.scriptconstructor{executor}".\
             format(executor=self.pipe_data["Executor"])
@@ -730,7 +730,7 @@ class NeatSeqFlow(object):
         try:
             utilities_script = scriptclass.get_utilities_script(self.pipe_data)
             if utilities_script:
-                with open(self.pipe_data["scripts_dir"] + "96.utilities.sh", "w") as script_fh:
+                with open(self.pipe_data["scripts_dir"] + "DD.utilities.sh", "w") as script_fh:
                     script_fh.write(utilities_script)
         except:
             pass
@@ -1373,6 +1373,6 @@ saveWidget(myviz,file = "{out_file_name}",selfcontained = F, title="{title}")
         """
         # Make script file
         # For each step, call the removal command
-        with open(self.pipe_data["scripts_dir"] + "95.remove_intermediates.sh", "w") as script_fh:
+        with open(self.pipe_data["scripts_dir"] + "EE.remove_intermediates.sh", "w") as script_fh:
             for instance in self.step_list:
                 script_fh.writelines(instance.get_rm_intermediate_line())
