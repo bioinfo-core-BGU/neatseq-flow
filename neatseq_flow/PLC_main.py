@@ -1089,13 +1089,15 @@ library(reshape2); library(googleVis); args <- commandArgs(trailingOnly =T);log_
         
         # sys.exit()
         links_part = "\n".join(links_part)
-        nodes_part = "\n".join(["{node_num} [label = '@@{node_num}', fillcolor = {step_col} {skipped}]".format( \
+        nodes_part = "\n".join(["{node_num} [label = '@@{node_num}', fillcolor = {step_col} {skipped}]".format(
                                 node_num = 1+counter,
-                                step_col = "gray" if "SKIP" in self.step_list[self.step_list_index.index(step)].params else step_colors_index[nodes_list_step[counter]], \
-                                skipped  = skipped_props if "SKIP" in self.step_list[self.step_list_index.index(step)].params else "")
-                                    for counter,step in enumerate(nodes_list)])
+                                step_col = "gray" if self.step_list[self.step_list_index.index(step)].skip_scripts
+                                                  else step_colors_index[nodes_list_step[counter]],
+                                skipped=skipped_props if self.step_list[self.step_list_index.index(step)].skip_scripts
+                                                      else "")
+                                for counter,step in enumerate(nodes_list)])
         footnote_part = "\n".join(["[%d]: '%s\\\\n(%s)'" % (1+counter, step, nodes_list_step[counter])
-                                    for counter,step in enumerate(nodes_list)])
+                                   for counter,step in enumerate(nodes_list)])
        
         Gviz_text =  """
 # Check if required packages are installed:

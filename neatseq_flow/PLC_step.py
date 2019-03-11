@@ -283,7 +283,7 @@ class Step(object):
         #    modifications to sample_data are performed in self.step_sample_initiation().
         #    In the step_specific_init() function no changes to sample_data are possible because it is not set yet
         #    at that stage!
-        if "SKIP" in self.params:
+        if "SKIP" in self.params and self.params["SKIP"] is not False:
             self.skip_scripts = True
             self.skip_step_sample_initiation = True
             # This is so that modifications to sample_data requested in
@@ -291,7 +291,7 @@ class Step(object):
         else:
             self.skip_scripts = False   
             self.skip_step_sample_initiation = False
-            
+
         # Catch exceptions of type AssertionExcept raised by the specific initiation code
         try:
             self.step_specific_init()

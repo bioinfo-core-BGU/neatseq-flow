@@ -22,6 +22,12 @@ class ScriptConstructor(object):
         :return:
         """
 
+        # # Steps:
+        # 1. Find failed steps in log file
+        # 2. Find downstream steps in depend_file
+        # 3. Get qsub commands from main script
+        # 4. Execute the qsub command
+
         recover_script = """
 # Recover a failed execution
 function recover_run {{
@@ -42,10 +48,11 @@ function recover_run {{
           done \\
         | sort -u \\
         | while read step; do \\
-            grep $step {main};
+            grep $step {main} | egrep -v "^#|^echo";
           done \\
+        | sort -u \\
         > {recover_script}
-    echo "\\nWritten recovery code to file {recover_script}.\\n\\n" 
+    echo -e "\\nWritten recovery code to file {recover_script}\\n\\n" 
 }}
                 """.format(log_file=pipe_data["log_file"],
                            depend_file=pipe_data["dependency_index"],
