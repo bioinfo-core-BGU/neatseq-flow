@@ -44,7 +44,6 @@ function recover_run {{
         | while read step; do \\
             grep $step {main};
           done \\
-        | sort -u \\
         > {recover_script}
     echo "\\nWritten recovery code to file {recover_script}.\\n\\n" 
 }}
