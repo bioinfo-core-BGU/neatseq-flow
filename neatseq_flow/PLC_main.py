@@ -613,10 +613,13 @@ class NeatSeqFlow(object):
              "SLURMnew" : "squeue",
              "Local" : ""}
         qstat_cmd = qstat_cmd_dict[self.param_data["Global"]["Executor"]]
-        if "Qsub_path" in list(self.param_data["Global"].keys()):
+
+        if "Qsub_path" in self.param_data["Global"] and self.param_data["Global"]["Qsub_path"]:
+            self.param_data["Global"]["Qsub_path"] = self.param_data["Global"]["Qsub_path"].rstrip(qstat_cmd)
             self.pipe_data["qsub_params"]["qstat_path"] = os.sep.join([self.param_data["Global"]["Qsub_path"].rstrip(os.sep),qstat_cmd])
         else:
             self.pipe_data["qsub_params"]["qstat_path"] = qstat_cmd
+
 
     def define_conda_params(self):
         """ If conda params are required, define them:
