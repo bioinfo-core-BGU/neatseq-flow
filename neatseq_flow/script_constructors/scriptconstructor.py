@@ -22,7 +22,38 @@ class ScriptConstructor(object):
         :return:
         """
 
-        return ""
+        recover_script = """
+# Recover a failed execution
+function recover_run {{
+    cat {log_file} \\
+        | awk '{{  if(NR<=9) {{next}}; 
+                    if($3=="Started" && $11 ~ "OK") {{jobs[$6]=$5;}}
+                    if($3=="Finished" && $11 ~ "OK") {{delete jobs[$6]}}
+                }}
+                END {{
+                    for (key in jobs) {{ 
+                        print jobs[key]
+                    }} 
+
+                }}'  \\
+        | while read step; do \\
+            echo $step; \\
+            grep $step {depend_file} | cut -f2; 
+          done \\
+        | sort -u \\
+        | while read step; do \\
+            grep $step {main};
+          done \\
+        | sort -u \\
+        > {recover_script}
+    echo "\\nWritten recovery code to file {recover_script}.\\n\\n" 
+}}
+                """.format(log_file=pipe_data["log_file"],
+                           depend_file=pipe_data["dependency_index"],
+                           main=pipe_data["scripts_dir"] + "00.workflow.commands.sh",
+                           recover_script=pipe_data["scripts_dir"] + "AA.Recovery_script.sh")
+
+        return recover_script
 
     @classmethod
     def get_helper_script(cls, pipe_data):

@@ -78,39 +78,39 @@ wait_limit() {{
         # 3. Get qsub commands from main script
         # 4. Execute the qsub command
 
-        recover_script = util_script + """
-# Recover a failed execution
-function recover_run {{
-    cat {log_file} \\
-        | awk '{{  if(NR<=9) {{next}}; 
-                    if($3=="Started" && $11 ~ "OK") {{jobs[$6]=$5;}}
-                    if($3=="Finished" && $11 ~ "OK") {{delete jobs[$6]}}
-                }}
-                END {{
-                    for (key in jobs) {{ 
-                        print jobs[key]
-                    }} 
-                
-                }}'  \\
-        | while read step; do \\
-            echo $step; \\
-            grep $step {depend_file} | cut -f2; 
-          done \\
-        | sort -u \\
-        | while read step; do \\
-            grep $step {main} | egrep -v "^#|^echo" | cut -f2 -d" ";
-          done \\
-        | sort -u \\
-        | while read line; do \\
-            echo $line;
-            qsub $line; \\
-          done
-}}
-        """.format(log_file=pipe_data["log_file"],
-                   depend_file=pipe_data["dependency_index"],
-                   main=pipe_data["scripts_dir"] + "00.workflow.commands.sh")
+#         recover_script = util_script + """
+# # Recover a failed execution
+# function recover_run {{
+#     cat {log_file} \\
+#         | awk '{{  if(NR<=9) {{next}};
+#                     if($3=="Started" && $11 ~ "OK") {{jobs[$6]=$5;}}
+#                     if($3=="Finished" && $11 ~ "OK") {{delete jobs[$6]}}
+#                 }}
+#                 END {{
+#                     for (key in jobs) {{
+#                         print jobs[key]
+#                     }}
+#
+#                 }}'  \\
+#         | while read step; do \\
+#             echo $step; \\
+#             grep $step {depend_file} | cut -f2;
+#           done \\
+#         | sort -u \\
+#         | while read step; do \\
+#             grep $step {main} | egrep -v "^#|^echo" | cut -f2 -d" ";
+#           done \\
+#         | sort -u \\
+#         | while read line; do \\
+#             echo $line;
+#             qsub $line; \\
+#           done
+# }}
+#         """.format(log_file=pipe_data["log_file"],
+#                    depend_file=pipe_data["dependency_index"],
+#                    main=pipe_data["scripts_dir"] + "00.workflow.commands.sh")
 
-        return recover_script + """
+        return util_script + """
 # Show active jobs
 function show_PL_jobs { 
     currid=$(tail -n1  logs/version_list.txt | xargs | cut -f1)
