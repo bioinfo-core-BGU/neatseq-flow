@@ -530,6 +530,12 @@ Dependencies: {depends}""".format(name=self.name,
         assert isinstance(step_number, int)
         self.step_number = "{:0>2}".format(step_number)
 
+    def get_step_number(self):
+        """ Sets the number of the step in the step list.
+            Is used in naming the scripts, so that they can be sorted with 'll'
+        """
+        return self.step_number
+
     def get_script_name(self):
         return self.main_script_obj.script_name
 

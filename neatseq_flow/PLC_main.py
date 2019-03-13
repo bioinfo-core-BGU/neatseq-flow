@@ -213,9 +213,6 @@ class NeatSeqFlow(object):
         # Create script for cleaning up run_index file:
         self.create_run_index_cleaning_script()
 
-        # Create reverse dependency index
-        self.create_reverse_depends_file()
-
         # Create file with functions for trapping error:
         self.create_bash_helper_funcs()
 
@@ -250,6 +247,9 @@ class NeatSeqFlow(object):
 
         # Storing names index in pipe_data. Could be used by the step instances 
         self.pipe_data["names_index"] = self.get_names_index()
+
+        # Create reverse dependency index
+        self.create_reverse_depends_file()
 
         # Make the qdel script:
         self.create_kill_scripts()
@@ -811,14 +811,25 @@ Date\tStep\tName\tScript\tFile\tmd5sum\n
 
         # Set script_index filename in pipe_data
         # Used for connecting qsub_names with script paths and more
-        self.pipe_data["dependency_index"] = "".join([self.pipe_data["objects_dir"], "dependency_index_",
-                                                      self.pipe_data["run_code"] ,
+        self.pipe_data["dependency_index"] = "".join([self.pipe_data["objects_dir"], "dependency_index",
+                                                      # self.pipe_data["run_code"] ,
                                                       ".txt"])
 
         with open(self.pipe_data["dependency_index"], "w") as depends_f:
             for step_i in self.depend_dict:
                 for depend_i in self.depend_dict[step_i]:
                     depends_f.write("\t".join([depend_i, step_i])+"\n")
+
+        # Creating a step order file. Contains the step number (as appears in script name) and high-level jid name
+        # E.g. merge..merge1..20190313090409
+        self.pipe_data["step_order"] = "".join([self.pipe_data["objects_dir"], "step_order.txt"])
+
+        with open(self.pipe_data["step_order"], "w") as depends_f:
+            for step_i in self.step_list:
+                depends_f.write("{num}\t{name}\n".format(num=step_i.get_step_number(),
+                                                         name=step_i.jid_name_sep.join([step_i.get_step_step(),
+                                                                                        step_i.get_step_name(),
+                                                                                        self.run_code])))
 
     def get_dict_encoding(self):
         """ Returns a dict representation of the pipeline.
