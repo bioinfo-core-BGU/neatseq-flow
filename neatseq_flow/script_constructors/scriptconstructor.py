@@ -21,45 +21,45 @@ class ScriptConstructor(object):
 
         :return:
         """
+#
+#         # # Steps:
+#         # 1. Find failed steps in log file
+#         # 2. Find downstream steps in depend_file
+#         # 3. Get qsub commands from main script
+#         # 4. Execute the qsub command
+#
+#         recover_script = """
+# # Recover a failed execution
+# function recover_run {{
+#     cat {log_file} \\
+#         | awk '{{  if(NR<=9) {{next}};
+#                     if($3=="Started" && $11 ~ "OK") {{jobs[$6]=$5;}}
+#                     if($3=="Finished" && $11 ~ "OK") {{delete jobs[$6]}}
+#                 }}
+#                 END {{
+#                     for (key in jobs) {{
+#                         print jobs[key]
+#                     }}
+#
+#                 }}'  \\
+#         | while read step; do \\
+#             echo $step; \\
+#             grep $step {depend_file} | cut -f2;
+#           done \\
+#         | sort -u \\
+#         | while read step; do \\
+#             grep $step {main} | egrep -v "^#|^echo";
+#           done \\
+#         | sort -u \\
+#         > {recover_script}
+#     echo -e "\\nWritten recovery code to file {recover_script}\\n\\n"
+# }}
+#                 """.format(log_file=pipe_data["log_file"],
+#                            depend_file=pipe_data["dependency_index"],
+#                            main=pipe_data["scripts_dir"] + "00.workflow.commands.sh",
+#                            recover_script=pipe_data["scripts_dir"] + "AA.Recovery_script.sh")
 
-        # # Steps:
-        # 1. Find failed steps in log file
-        # 2. Find downstream steps in depend_file
-        # 3. Get qsub commands from main script
-        # 4. Execute the qsub command
-
-        recover_script = """
-# Recover a failed execution
-function recover_run {{
-    cat {log_file} \\
-        | awk '{{  if(NR<=9) {{next}}; 
-                    if($3=="Started" && $11 ~ "OK") {{jobs[$6]=$5;}}
-                    if($3=="Finished" && $11 ~ "OK") {{delete jobs[$6]}}
-                }}
-                END {{
-                    for (key in jobs) {{ 
-                        print jobs[key]
-                    }} 
-
-                }}'  \\
-        | while read step; do \\
-            echo $step; \\
-            grep $step {depend_file} | cut -f2; 
-          done \\
-        | sort -u \\
-        | while read step; do \\
-            grep $step {main} | egrep -v "^#|^echo";
-          done \\
-        | sort -u \\
-        > {recover_script}
-    echo -e "\\nWritten recovery code to file {recover_script}\\n\\n" 
-}}
-                """.format(log_file=pipe_data["log_file"],
-                           depend_file=pipe_data["dependency_index"],
-                           main=pipe_data["scripts_dir"] + "00.workflow.commands.sh",
-                           recover_script=pipe_data["scripts_dir"] + "AA.Recovery_script.sh")
-
-        return recover_script
+        return ""
 
     @classmethod
     def get_helper_script(cls, pipe_data):

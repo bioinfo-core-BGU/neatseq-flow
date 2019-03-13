@@ -213,6 +213,9 @@ class NeatSeqFlow(object):
         # Create script for cleaning up run_index file:
         self.create_run_index_cleaning_script()
 
+        # Create reverse dependency index
+        self.create_reverse_depends_file()
+
         # Create file with functions for trapping error:
         self.create_bash_helper_funcs()
 
@@ -237,6 +240,12 @@ class NeatSeqFlow(object):
         sys.stdout.flush()
         self.make_step_instances()
 
+        # Makes a step-order file. Is used for real-time sorting opf steps (e.g. recovery script)
+        self.create_step_order_file()
+
+        # Make utilities script (requires step order file)
+        self.create_utilities_script()
+
         # Create a dictionary for storing all step sample data
         self.make_global_sample_data_container()
 
@@ -247,9 +256,6 @@ class NeatSeqFlow(object):
 
         # Storing names index in pipe_data. Could be used by the step instances 
         self.pipe_data["names_index"] = self.get_names_index()
-
-        # Create reverse dependency index
-        self.create_reverse_depends_file()
 
         # Make the qdel script:
         self.create_kill_scripts()
@@ -711,7 +717,6 @@ class NeatSeqFlow(object):
         """ This function creates the 97.helper_funcs.sh script
             In includes functions to be execute for trapping error and SIGUSR2 signals 
         """
-        
         self.pipe_data["helper_funcs"] = self.pipe_data["scripts_dir"] + "CC.helper_funcs.sh"
 
         modname = "neatseq_flow.script_constructors.scriptconstructor{executor}".\
@@ -727,12 +732,23 @@ class NeatSeqFlow(object):
             print("Make sure the script constructor defines class method 'get_helper_script()'")
             raise
 
+    def create_utilities_script(self):
+        """ This function creates the 97.helper_funcs.sh script
+            In includes functions to be execute for trapping error and SIGUSR2 signals
+        """
+
+        modname = "neatseq_flow.script_constructors.scriptconstructor{executor}". \
+            format(executor=self.pipe_data["Executor"])
+        classname = "ScriptConstructor{executor}".format(executor=self.pipe_data["Executor"])
+        scriptclass = getattr(importlib.import_module(modname), classname)
+
         try:
             utilities_script = scriptclass.get_utilities_script(self.pipe_data)
             if utilities_script:
                 with open(self.pipe_data["scripts_dir"] + "DD.utilities.sh", "w") as script_fh:
                     script_fh.write(utilities_script)
         except:
+            raise
             pass
 
 
@@ -819,6 +835,12 @@ Date\tStep\tName\tScript\tFile\tmd5sum\n
             for step_i in self.depend_dict:
                 for depend_i in self.depend_dict[step_i]:
                     depends_f.write("\t".join([depend_i, step_i])+"\n")
+
+    def create_step_order_file(self):
+        """
+
+        :return:
+        """
 
         # Creating a step order file. Contains the step number (as appears in script name) and high-level jid name
         # E.g. merge..merge1..20190313090409

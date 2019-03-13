@@ -18,6 +18,61 @@ from .scriptconstructor import *
 class ScriptConstructorLocal(ScriptConstructor):
 
     @classmethod
+    def get_utilities_script(cls, pipe_data):
+
+        util_script = super(ScriptConstructorLocal, cls).get_utilities_script(pipe_data)
+
+        # # Steps:
+        # - Join the following two files:
+        #   1. Lines to execute from main script:
+        #     a. Find failed steps in log file
+        #     b. Find downstream steps in depend_file
+        #     c. Extract lines from main script
+        #     d. Sort (by script ID)
+        #   2. Step order file, sorted alphabetically by step name
+        # - Sort by script number (column 9 in joined file)
+        # - Reform the commands
+        # - write to recover_script
+
+        recover_script = """
+# Recover a failed execution
+function recover_run {{
+    join -1 3 -2 2 \\
+        <(cat {log_file} \\
+            | awk '{{  if(NR<=9) {{next}};
+                        if($3=="Started" && $11 ~ "OK") {{jobs[$6]=$5;}}
+                        if($3=="Finished" && $11 ~ "OK") {{delete jobs[$6]}}
+                    }}
+                    END {{
+                        for (key in jobs) {{
+                            print jobs[key]
+                        }}
+    
+                    }}'  \\
+            | while read step; do \\
+                echo $step; \\
+                grep $step {depend_file} | cut -f2;
+              done \\
+            | sort -u \\
+            | while read step; do \\
+                grep $step {main} | egrep -v "^#|^echo";
+              done \\
+            | sort -u) \\
+        <(sort -k 2b,2 {step_order} \\
+        | sort -k 9b,9 \\
+        | awk 'BEGIN{{OFS=" "}} {{print $2,$3,$1,$4,$5,$6,$7,$8; print "\\n"}}' \\
+        > {recover_script}
+
+}}
+                """.format(log_file=pipe_data["log_file"],
+                           depend_file=pipe_data["dependency_index"],
+                           main=pipe_data["scripts_dir"] + "00.workflow.commands.sh",
+                           step_order=pipe_data["step_order"],
+                           recover_script=pipe_data["scripts_dir"] + "AA.Recovery_script.sh")
+
+        return util_script + recover_script
+
+    @classmethod
     def get_helper_script(cls, pipe_data):
         """ Returns the code for the helper script
         """
