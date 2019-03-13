@@ -37,6 +37,7 @@ class ScriptConstructorLocal(ScriptConstructor):
         recover_script = """
 # Recover a failed execution
 function recover_run {{
+    echo "echo 'Recovering previous run...\\n'" > {recover_script}
     join -1 3 -2 2 \\
         <(cat {log_file} \\
             | awk '{{  if(NR<=9) {{next}};
@@ -58,10 +59,11 @@ function recover_run {{
                 grep $step {main} | egrep -v "^#|^echo";
               done \\
             | sort -u) \\
-        <(sort -k 2b,2 {step_order} \\
+        <(sort -k 2b,2 {step_order}) \\
         | sort -k 9b,9 \\
         | awk 'BEGIN{{OFS=" "}} {{print $2,$3,$1,$4,$5,$6,$7,$8; print "\\n"}}' \\
-        > {recover_script}
+        >> {recover_script}
+    echo -e "\\nWritten recovery code to file {recover_script}\\n\\n" 
 
 }}
                 """.format(log_file=pipe_data["log_file"],
