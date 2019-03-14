@@ -11,11 +11,14 @@
 
 A module for splitting `fasta` files into parts.
 
-Convenient for parallelizing processes on the cluster. You can take a project wide fasta file (such as a transcriptome), split it into sub-fasta files, and run various processes on the sub-files.
+Convenient for parallelizing processes on the cluster. You can take a project wide fasta file (such as a transcriptome),
+split it into sub-fasta files, and run various processes on the sub-files.
 
 The parts can then be combined with ``merge_table`` module, which can concatenate any type of file.
 
-.. Attention:: This module is not defined on the sample scope, yet. It will only take a project wide fasta and split it into pieces, each one in a new ``subsample``. The original set of samples will be overridden for the rest of the branch. (However, you can get them back by using one of the upstream instances as first base.
+.. Important:: When splitting sample-scope fasta files, the subsamples are stored with a ``source`` category set to the
+    original sample name. You can use this for merging results at the sample scope downstream.
+    See documentation for ``merge_table``.
 
 Requires
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -25,15 +28,23 @@ Requires
     * ``sample_data["project_data"]["fasta.nucl"]``
     * ``sample_data["project_data"]["fasta.prot"]``
 
-    
+* A `fasta` file in one of the following slots (scope = "sample"):
+
+    * ``sample_data[<sample>]["fasta.nucl"]``
+    * ``sample_data[<sample>]["fasta.prot"]``
+
+
+
 
 Output
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 * Puts output files in the following slots:
-        
+
     * ``sample_data[<sample>]["fasta.nucl"]``
     * ``sample_data[<sample>]["fasta.prot"]``
+
+* For sample scope, the original sample list will be overridden with the new sample list.
 
 
 
@@ -128,14 +139,6 @@ class Step_split_fasta(Step):
             # Use the dir it returns as the base_dir for this step.
             use_dir = self.local_start(self.base_dir)
 
-#             self.script = """
-# FASTA={project_fasta}
-# SEQPERFRAG=$[$(grep -c "^>" $FASTA)/$[{subsample_num}-1]]
-# awk -v seqs="$SEQPERFRAG" 'BEGIN {{n_seq=0; file_cnt=1;}} /^>/ {{ if(n_seq%seqs==0){{file=sprintf("{use_dir}subsample%d.fa",file_cnt); file_cnt++; }} print > file; n_seq++; next;}} {{ print > file; }}' < $FASTA
-#
-# """.format(project_fasta = self.sample_data["project_data"][self.params["type"]],
-#             subsample_num = self.params["subsample_num"],
-#             use_dir = use_dir)
 
             self.script = """
 FASTA={project_fasta}
@@ -261,8 +264,7 @@ awk -v nseqs="$NUMSEQS" '
                     # Storing origin of subsample in grouping dict:
                     self.sample_data[subsample]["grouping"] = dict()
                     self.sample_data[subsample]["grouping"]["source"] = sample
-                    self.sample_data[subsample]["type"] = self.determine_sample_types(subsample,
-                                                                                      self.sample_data[subsample])
+                    self.sample_data[subsample]["type"] = self.determine_sample_types(subsample,self.sample_data[subsample])
                     # Stamping file
                     self.stamp_file(self.sample_data[sample][self.params["type"]])
 

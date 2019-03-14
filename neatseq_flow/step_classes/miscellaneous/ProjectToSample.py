@@ -129,7 +129,7 @@ class Step_ProjectToSample(Step):
                                   "name".format(sample_name=self.params["sample_name"]))
 
         if "operation" not in self.params:
-            sys.stderr.write("You did not pass an 'operation' parameter. Assuming it is 'mv'!\n")
+            sys.stderr.write("You did not pass an 'operation' parameter. Assuming it is 'mv'!")
         if not isinstance(self.params["operation"], list):
             self.params["operation"] = re.split(pattern="\s*,\s*", string=self.params["operation"])
         if any([x not in ["mv","cp"] for x in self.params["operation"]]):
@@ -208,8 +208,8 @@ class Step_ProjectToSample(Step):
                 try:
                     self.recover_sample_list()
                 except KeyError:
-                    self.write_warning("ProjectToSample in 'smp2proj' direction called before a 'proj2smp' instance"
-                                     "not recovering sample history!\n")
+                    sys.stderr.write("ProjectToSample in 'smp2proj' direction called before a 'proj2smp' instance"
+                                     "not recovering sample history!")
 
     def create_spec_wrapping_up_script(self):
         """ Add stuff to check and agglomerate the output data

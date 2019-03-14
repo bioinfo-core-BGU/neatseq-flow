@@ -20,14 +20,15 @@ The samtools programs included in the module are the following:
 * ``stats`` Runs stats on the BAM file
 * ``idxstats`` Runs idxstats on the BAM file
 * ``fastq/a`` Converts a BAM or CRAM into either FASTQ or FASTA format depending on the command invoked.
+* ``merge`` Merges sample bam files into single project bam file.
 
 .. Note:: Order of samtools subprogram execution:
 
     The ``samtools`` programs are executed in the order above. It is up to you to have a sensible combination...
 
 
-**Requires**:
-
+Requires
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 * A SAM file in the following location:
 
     * ``sample_data[<sample>]["sam"]`` (for ``scope=sample``)
@@ -38,17 +39,18 @@ The samtools programs included in the module are the following:
     * ``sample_data[<sample>]["bam"]`` (for ``scope=sample``)
     * ``sample_data["bam"]`` (for ``scope=project``)
 
-**Output**:
+Output
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 * Depending on the parameters, will put files in the following locations:
 
     * ``sample_data[<sample>]["bam"]``
-    * ``sample_data[<sample>]["index"]``
+    * ``sample_data[<sample>]["bam.index"]``
     * ``sample_data[<sample>]["unfiltered_bam"]``
     * ``sample_data[<sample>]["unsorted_bam"]``
-    * ``sample_data[<sample>]["flagstat"]``
-    * ``sample_data[<sample>]["stats"]``
-    * ``sample_data[<sample>]["idxstats"]``
+    * ``sample_data[<sample>]["bam.flagstat"]``
+    * ``sample_data[<sample>]["bam.stats"]``
+    * ``sample_data[<sample>]["bam.idxstats"]``
 
 * If ``fastq`` was called, will also create the following files:
 
@@ -64,7 +66,12 @@ The samtools programs included in the module are the following:
 
 
 .. Note:: If ``sample`` is set to ``project``, the above mentioned output files will be created in the project
-    scope, e.g. ``sample_data["stats"]``..
+    scope, e.g. ``sample_data["project_data"]["stats"]``..
+
+.. Note:: If ``merge`` is included, ``scope`` must be ``sample`` and the merged *bam* is located in ``sample_data["project_data"]["stats"]``..
+
+Parameters that can be set
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. csv-table:: Parameters that can be set:
     :header: "Parameter", "Values", "Comments"
@@ -77,6 +84,8 @@ The samtools programs included in the module are the following:
     "stats", "``samtools stats`` parameters", "Adds code for ``samtools stats``"
     "idxstats", "", "Adds code for ``samtools idxstats``"
     "fastq/a", "``samtools fastq/a`` parameters", "Adds code for ``samtools fastq/a``"
+    "merge", "``*e.g.*: -R region``", "Adds code for ``samtools merge``, using the parameters supplied"
+    "region", "", "A region to limit the ``view`` script to."
     "filter_by_tag", "*e.g.*: NM:i:[01]", "Filter BAM by one of the tags. Use an awk-compliant regular expression. In this example, keep only lines where the edit distance is 0 or 1. This is an experimental feature and should be used with caution..."
     "del_sam", "", "Remove SAM file"
     "del_unsorted", "", "Remove unsorted bam file."
@@ -132,6 +141,10 @@ class Step_samtools(Step):
         if "scope" not in self.params:
             self.params["scope"] = "sample"
 
+        for prog in "view sort index flagstat stats idxstats fastq fasta merge".split(" "):
+            if prog in self.params and self.params[prog] is None:
+                self.params[prog] = ""
+
     def step_sample_initiation(self):
         """ A place to do initiation stages following setting of sample_data
         """
@@ -140,6 +153,8 @@ class Step_samtools(Step):
         # or ["project_data"] for project scope
         if self.params["scope"] == "project":
             sample_list = ["project_data"]
+            if "merge" in list(self.params.keys()):
+                raise AssertionExcept("project scope not defined for samtools merge")
         elif self.params["scope"] == "sample":
             sample_list = self.sample_data["samples"]
         else:
@@ -171,7 +186,36 @@ class Step_samtools(Step):
     def create_spec_wrapping_up_script(self):
         """ Add stuff to check and agglomerate the output data
         """
-        pass
+        # -------------- samtools merge ------------------
+        if "merge" in list(self.params.keys()):
+            sample_dir = self.make_folder_for_sample()
+
+            # Name of specific script:
+            self.spec_script_name = self.set_spec_script_name()
+            self.script = ""
+
+            # This line should be left before every new script. It sees to local issues.
+            # Use the dir it returns as the base_dir for this step.
+            use_dir = self.local_start(sample_dir)
+
+            outfile = self.sample_data["Title"] + ".merged.bam"
+
+            self.script += """\
+###########
+# Running samtools merge
+#----------------
+
+{env_path} merge \\{params}
+\t{outfile} \\
+\t{infiles} 
+
+""".format(env_path=self.get_script_env_path(),
+           infiles=" \\\n\t".join([self.sample_data[sample]["bam"] for sample in self.sample_data["samples"]]),
+           params="" if not self.params["merge"] else "\n\t" + self.params["merge"] + " \\",
+           outfile=use_dir + outfile)
+
+            self.sample_data["project_data"]["bam"] = sample_dir + outfile
+            self.stamp_file(self.sample_data["project_data"]["bam"])
 
     def build_scripts(self):
         """ This is the actual script building function
@@ -200,11 +244,11 @@ class Step_samtools(Step):
 
             active_file = self.sample_data[sample][self.file2use]
 
-            filter_suffix = ".filt.bam"
-            sort_suffix = ".srt.bam"
+            filter_suffix = ".filt"
+            sort_suffix = ".srt"
             index_suffix = ".bai"
 
-            if "view" in list(self.params.keys()):
+            if "view" in self.params:
 
                 output_type = "bam" if re.search("\-\w*b", self.params["view"]) else "sam"
                 outfile = ".".join([os.path.basename(active_file), output_type])
@@ -216,11 +260,12 @@ class Step_samtools(Step):
 
 {env_path} view \\{params}
 \t-o {outfile} \\
-\t{active_file} 
+\t{active_file} {region} 
 
 """.format(env_path=self.get_script_env_path(),
                    active_file=active_file,
                    params="" if not self.params["view"] else "\n\t" + self.params["view"] + " \\",
+                   region="" if not "region" in self.params else "\\\n\t" + self.params["region"],
                    outfile=use_dir + outfile)
 
                 active_file = use_dir + outfile
@@ -245,17 +290,20 @@ class Step_samtools(Step):
                 # else, create local link to BAM and set active file accordingly
                 self.script += """\
 ##########
-# Making local link to original bam file:
+# Making local link to original bam file: (-f to force)
 #----------
-cp -s {active_file} {here}
+cp -fs {active_file} {here}
 
 """.format(active_file=active_file,
-           here=use_dir)
-                active_file = sample_dir + os.path.basename(active_file)
+               here=use_dir)
+
+                active_file = use_dir + os.path.basename(active_file)
+                self.sample_data[sample]["bam"] = sample_dir + os.path.basename(active_file)
 
             # The following can be merged into the main 'view' section
             if "filter_by_tag" in list(self.params.keys()):
-                outfile = os.path.basename(active_file) + filter_suffix
+                # outfile = os.path.basename(active_file) + filter_suffix
+                outfile = filter_suffix.join(os.path.splitext(os.path.basename(active_file)))
 
                 self.script += """\
 ###########
@@ -275,7 +323,6 @@ cp -s {active_file} {here}
 """.format(env_path=self.get_script_env_path(),
            active_file=active_file,
            query=self.params["filter_by_tag"],
-           filt_suff=filter_suffix,
            outfile=use_dir+outfile,
            rm_unfilt="# Removing unfiltered BAM\nrm -rf "+active_file if "del_unfiltered" in list(self.params.keys()) else "")
 
@@ -288,7 +335,8 @@ cp -s {active_file} {here}
             if "sort" in list(self.params.keys()):
                 if "bam" not in self.sample_data[sample]:
                     raise AssertionExcept("Can't run 'sort', as no BAM is defined", sample)
-                outfile = os.path.basename(active_file) + sort_suffix
+                # outfile = os.path.basename(active_file) + sort_suffix
+                outfile = sort_suffix.join(os.path.splitext(os.path.basename(active_file)))
 
                 self.script += """\
 ###########
@@ -325,8 +373,8 @@ cp -s {active_file} {here}
            params="" if not self.params["index"] else "\n\t" + self.params["index"] + " \\",
            active_file=active_file)
 
-                self.sample_data[sample]["index"] = sample_dir + os.path.basename(active_file) + index_suffix
-                self.stamp_file(self.sample_data[sample]["index"])
+                self.sample_data[sample]["bam.index"] = sample_dir + os.path.basename(active_file) + index_suffix
+                self.stamp_file(self.sample_data[sample]["bam.index"])
 
 
             for comm in ["flagstat","stats","idxstats"]:
@@ -347,8 +395,8 @@ cp -s {active_file} {here}
            comm=comm,
            outfile=use_dir+outfile)
 
-                    self.sample_data[sample][comm] = sample_dir + outfile
-                    self.stamp_file(self.sample_data[sample][comm])
+                    self.sample_data[sample]["bam."+comm] = sample_dir + outfile
+                    self.stamp_file(self.sample_data[sample]["bam."+comm])
 
             # Adding code for fastq or fasta extraction from bam:
             for type in (set(self.params.keys()) & set(["fasta","fastq"])):
@@ -402,4 +450,7 @@ rm -rf {sam}
 
             self.local_finish(use_dir,sample_dir)
             self.create_low_level_script()
+
+
+
 
