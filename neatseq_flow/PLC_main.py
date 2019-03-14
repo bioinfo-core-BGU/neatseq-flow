@@ -553,6 +553,13 @@ class NeatSeqFlow(object):
                     # Writing header :)
                     tag_fh.write("""
 \n\n
+# _____   __              _____ ________                      ________________                  
+# ___  | / /_____ ______ ___  /___  ___/_____ ______ _        ___  ____/___  /______ ___      __
+# __   |/ / _  _ \_  __ `/_  __/_____ \ _  _ \_  __ `/__________  /_    __  / _  __ \__ | /| / /
+# _  /|  /  /  __// /_/ / / /_  ____/ / /  __// /_/ / _/_____/_  __/    _  /  / /_/ /__ |/ |/ / 
+# /_/ |_/   \___/ \__,_/  \__/  /____/  \___/ \__, /          /_/       /_/   \____/ ____/|__/  
+#                                             /_/                                             
+
 # This is the executable script for tag {tag}
 # It was created on {date} by NeatSeq-Flow version {version}
 # See http://neatseq-flow.readthedocs.io/en/latest/
