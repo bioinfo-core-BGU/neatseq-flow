@@ -388,9 +388,10 @@ trap_with_arg func_trap {step} {stepname} {stepID} {level} $HOSTNAME $JOB_ID SIG
                 sys.stderr.write("Are you sure you want to use 'activate' with a 'csh' based script?.\n")
         
         script = """
-# Adding environment activation/deactivation command:
+# Adding environment activation/deactivation command (trys activating the environment 10 times):
 
-while :; do if source {activate_path} {environ}; then break; else sleep 2; fi; done;
+while [[ $lc -lt 10 ]]; do if source {activate_path} {environ}; then break; else sleep 2; lc=$(( $lc+1 )); fi; done;
+[[ $lc < 10 ]]
 
 """.format(activate_path = activate_path,
              environ = environ if type == "activate" else "") 
