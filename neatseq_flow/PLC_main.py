@@ -54,7 +54,7 @@ class NeatSeqFlow(object):
         except Exception as raisedex:
             print("An exception has occurred in sample file reading. Double check!")
             if raisedex.args[0] == "Issues in samples":
-                sys.exit()
+                return
             raise
 
         try:
@@ -63,10 +63,12 @@ class NeatSeqFlow(object):
         except Exception as raisedex:
             
             if raisedex.args[0] == "Issues in parameters":
-                sys.exit()
+                print(raisedex.args[0])
+                return
             elif len(raisedex.args)>1:
                 if raisedex.args[1] in ["Variables", "parameters"]:
-                    sys.exit(raisedex.args[0])
+                    print(raisedex.args[0])
+                    return
                     # raise
                 else:  # Unknown
                     # sys.stderr.write("unknown exception type")

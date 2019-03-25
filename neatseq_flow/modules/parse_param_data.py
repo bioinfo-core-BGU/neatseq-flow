@@ -62,29 +62,33 @@ def parse_param_file(filename):
     try:
         return get_param_data_YAML(file_conts)
         # pp(get_param_data_YAML(file_conts))
-        
+    # Note: For some reason, yaml returns the error line number as double the actual line number.
+    # I couldn't figure out why. Therefore, dividing by 2 and extracting the problematic line manually.
     except ConstructorError as exc:
         error_comm = ""
         if hasattr(exc, 'problem_mark'):
-            mark = exc.problem_mark
-            error_comm = "Error position: ({l}:{c})\n{snippet}".format(l=mark.line+1,
-                                                                       c=mark.column+1,
-                                                                       snippet=mark.get_snippet())
-        raise Exception("{error}\nPossible duplicate value passed".format(error=error_comm), "parameters")
+            line = int(exc.problem_mark.line/2)
+            column = exc.problem_mark.column
+            error_comm = "Error position: ({l}:{c})\n{snippet}\n{space}^".format(l=line+1,
+                                                                                 c=column+1,
+                                                                                 snippet=file_conts[line],
+                                                                                 space=" "*column)
+        raise Exception("{error}\nPossible duplicate value passed!".format(error=error_comm), "parameters")
+
     except yaml.YAMLError as exc:
+        error_comm = ""
         if hasattr(exc, 'problem_mark'):
-            mark = exc.problem_mark
-            print("Error position: (%s:%s)" % (mark.line+1, mark.column+1))
-            print(mark.get_snippet())
-        
-        # Comment out the following line to enable classic param file format.
-        # Not recommended.
-        raise Exception("Failed to read YAML file. Make sure your parameter file is a correctly formatted YAML document.", "parameters")
+            line = int(exc.problem_mark.line/2)
+            column = exc.problem_mark.column
+            error_comm = "Error position: ({l}:{c})\n{snippet}{space}^".format(l=line+1,
+                                                                                 c=column+1,
+                                                                                 snippet=file_conts[line],
+                                                                                 space=" "*column)
+        raise Exception("{error}\nFailed to read YAML file. Make sure your parameter file is a correctly formatted "
+                        "YAML document.".format(error=error_comm), "parameters")
+
     except:
-        raise #Exception("Unrecognised exception reading the parameter file.", "parameters")
-    
-    # print "YAML failed. trying classic"
-    # return get_param_data(file_conts)
+        raise
 
 def ordered_load(stream, Loader=yaml.Loader, object_pairs_hook=OrderedDict):
     class OrderedLoader(Loader):
