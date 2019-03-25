@@ -54,8 +54,7 @@ def check_newlines(filelines):
     # Assert that the list of lines containing "\r" charaters is empty.
     lines_with_CRs = [line for line in filelines if re.search("\r",line)]
     if lines_with_CRs:
-        print("The sample and parameter files must not contain carriage returns. Convert newlines to UNIX style!\n")
-        raise Exception("Issues in samples", "samples")
+        raise Exception("Issues in samples", "The sample and parameter files must not contain carriage returns. Convert newlines to UNIX style!\n")
 
 def parse_sample_file(filename):
     """Parses a file from filename
@@ -199,7 +198,14 @@ def get_tabular_sample_data_lines(filelines):
     # Read CSV data with csv package. Store in return_results
     linedata = StringIO("\n".join(title_line)) #("\n".join([line[1] for line in title_line])))
     reader = csv.reader(linedata, dialect='excel-tab')
-    title = [row[1] for row in reader][0]  # Get first element, 2nd (index 1) column:
+    try:
+        # title = [row[1] for row in reader][0]  # Get first element, 2nd (index 1) column:
+        title = [row for row in reader][0]
+        title = title[1]   # Not doing in one line with previous so that title can be used in exception...
+    except IndexError:
+        raise Exception("Issues in samples", "Title line does not have a tab-separated value! ('{line}')\n".
+                        format(line=title[0]))
+
     # Removing trailing spaces and converting whitespace to underscore
     if re.search("\s+", title):
         # print "in here"
