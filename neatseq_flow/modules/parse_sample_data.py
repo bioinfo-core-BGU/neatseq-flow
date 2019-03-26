@@ -16,14 +16,6 @@ from io import StringIO
 from pprint import pprint as pp
 import re
 
-FASTQ_FILE_TPYES = ['Single', 'Forward', 'Reverse']
-FASTA_FILE_TYPES = ['Nucleotide','Protein']
-ALIGNMENT_FILE_TYPES = ['SAM','BAM','REFERENCE']
-VARIANT_FILE_TYPES = ['VCF','G.VCF']
-RECOGNIZED_FILE_TYPES = FASTQ_FILE_TPYES + FASTA_FILE_TYPES + ALIGNMENT_FILE_TYPES + VARIANT_FILE_TYPES 
-GLOBAL_SAMPLE_LIST = ['Title', 'Sample', 'Single', 'Sample_Control'] + RECOGNIZED_FILE_TYPES
-
-from  neatseq_flow.modules.global_defs import ZIPPED_EXTENSIONS, ARCHIVE_EXTENSIONS, KNOWN_FILE_EXTENSIONS
 
 
 def remove_comments(filelines):
@@ -82,41 +74,11 @@ def parse_sample_file(filename):
 def get_sample_data(filelines):
     """return lines relevant to the sample data, if exist
     """
-    
-    sample_file_type = guess_sample_data_format(filelines)
-    if (sample_file_type == "Classic"):
-        sys.exit("The classic sample file format is no longer supported. Please use the tab-separated format only.")
-        # return get_classic_sample_data(filelines)
-    elif (sample_file_type == "Tabular"):   
-        return get_tabular_sample_data(filelines)
-    else:
-        sys.exit("There is a problem with the sample file format. Make sure all lines begin with keywords.")
 
-def guess_sample_data_format(filelines):
-    """Guess the format of sample data. Could be tsv (preferable but not defined yet) or old pipeline format
-    """
-    # Remove comments:  CANCELLED. Tabular format has #SampleID as header line prefix!
-    # filelines = remove_comments(filelines)
-    # Get all unique first words on line (=set)
-    # This can contain parameter file stuff as well, when they are merged!
-    myset = {re.split("\s+", line, maxsplit=1)[0] for line in filelines}
-    # Changing to lower case:
-    myset = set([x.lower() for x in myset])
-    recognized_file_types = set([x.lower() for x in RECOGNIZED_FILE_TYPES])
-    
-    # pp(set(recognized_file_types))
-    # Check if one of the following words exists in the set by checking the intersection of the sets:
-    if(({"title", "sample"} <= myset) & \
-        (len(myset & set(recognized_file_types))>=1)):    
-        # 1. Does myset contain Title and Sample?
-        # 2. Does myset include at least one of the RECOGNIZED_FILE_TYPES?
-        return "Classic";
-    elif ({"title","#sampleid"} <= myset) or ({"title","#type"} <= myset):
-        # 1. If myset contains Title and #SampleID
-        return "Tabular"
-    else:
-        sys.exit("Unknown sample file format. Make sure you have a 'Title' line in the sample file.")
-    
+    # This is a stub from when we supported a different sample_data format.
+    return get_tabular_sample_data(filelines)
+
+
 def parse_sample_control_data(Sample_Control, sample_names):
     """ Parse lines containing sample-control relationships for ChIP-seq protocols
     """
@@ -161,9 +123,11 @@ def get_tabular_sample_data(filelines):
                         for line
                         in raw_data["Sample_data"]
                         if line[0]==sample]
+        # Checking sample name does not have a space in it
         if re.search(pattern=" ", string=sample):
             raise Exception("Issues in samples", "Sample name should not contain a space! ('{sample}')".
                             format(sample=sample))
+        # Checking all lines have at least three values:
         for line_i in range(len(sample_lines)):
             line=sample_lines[line_i]
             if len(line)<2:
@@ -174,6 +138,12 @@ def get_tabular_sample_data(filelines):
     # pp(sample_data)
     
     if "Project_data" in raw_data:
+        # Checking all lines have at least two values:
+        for line_i in range(len(raw_data["Project_data"])):
+            line=raw_data["Project_data"][line_i]
+            if len(line)<2:
+                raise Exception("Issues in project data", "Line #{linei} in project data does not have two "
+                                                     "values! ".format(linei=line_i+1))
         sample_data["project_data"] = parse_tabular_project_data(raw_data["Project_data"])
     else:
         # Create an empty project_data slot in case an instance needs it before it has been created
@@ -324,22 +294,7 @@ def parse_tabular_project_data(proj_lines):
             # sample_x_dict[line[0]] = [get_full_path(line[1])]
             sample_x_dict[line[0]] = [line[1]]
 
-    # pp(sample_x_dict)
-    # sys.exit()
-
     return sample_x_dict
-
-# def get_full_path(path):
-#     """ Creates a full path from the given path. This is done in one of two ways:
-#         1. If it is a URL, IDENTIFIED BY THE PROTOCOL (or scheme): leave it unchanged
-#         2. Otherwise: use expanduser and abspath on the path IF IT IS NOT ABSOLUTE ALREADY
-#     """
-#
-#     url = urlparse(path)
-#     if not url.scheme:   # Regular path
-#         if not os.path.isabs(path):
-#             return os.path.abspath(os.path.expanduser(path))
-#     return path
 
 def parse_grouping_file(grouping_file):
     """
