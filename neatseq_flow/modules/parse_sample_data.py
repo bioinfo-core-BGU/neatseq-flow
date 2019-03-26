@@ -156,10 +156,21 @@ def get_tabular_sample_data(filelines):
         # with parse_tabular_sample_data()
         # Note: Sample name is removed from element 0 (line[1:]) so that function
         # parse_tabular_sample_data() can be used for project wide table, too.
-        sample_data[sample] = parse_tabular_sample_data([line[1:]
-                                                         for line
-                                                         in raw_data["Sample_data"]
-                                                         if line[0]==sample])
+
+        sample_lines = [line[1:]
+                        for line
+                        in raw_data["Sample_data"]
+                        if line[0]==sample]
+        if re.search(pattern=" ", string=sample):
+            raise Exception("Issues in samples", "Sample name should not contain a space! ('{sample}')".
+                            format(sample=sample))
+        for line_i in range(len(sample_lines)):
+            line=sample_lines[line_i]
+            if len(line)<2:
+                raise Exception("Issues in samples", "Sample line #{linei} for sample {sample} does not have three "
+                                                     "values! ".format(linei=line_i+1,sample=sample))
+
+        sample_data[sample] = parse_tabular_sample_data(sample_lines)
     # pp(sample_data)
     
     if "Project_data" in raw_data:
@@ -276,21 +287,20 @@ def parse_tabular_sample_data(sample_lines):
     sample_x_dict = dict()
 
     for line in sample_lines:
-        # line_data = re.split("\s+", line)
 
-        # print line_data[1]
-        if line[0] in list(sample_x_dict.keys()):
-            # If type exists, append path to list
-            # sample_x_dict[line[0]].append(get_full_path(line[1]))
-            sample_x_dict[line[0]].append(line[1])
+        try:
+            if line[0] in list(sample_x_dict.keys()):
+                # If type exists, append path to list
+                # sample_x_dict[line[0]].append(get_full_path(line[1]))
+                sample_x_dict[line[0]].append(line[1])
 
-        else:
-            # If not, create list with path
-            # sample_x_dict[line[0]] = [get_full_path(line[1])]
-            sample_x_dict[line[0]] = [line[1]]
-
-    # pp(sample_x_dict)
-    # sys.exit()
+            else:
+                # If not, create list with path
+                # sample_x_dict[line[0]] = [get_full_path(line[1])]
+                sample_x_dict[line[0]] = [line[1]]
+        except IndexError:
+            raise Exception("Issues in samples", "Sample line does not have three values! ('{line}')\n".
+                            format(line=line))
 
     return(sample_x_dict)
 
