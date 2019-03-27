@@ -236,7 +236,6 @@ class Step(object):
         # beginning with module= and instance=, according to awk regular expression definitions!
         self.jid_name_sep = ".."
 
-
         self.use_provenance = True
         # -----------------------------
         # Place for testing parameters:
@@ -545,15 +544,7 @@ Dependencies: {depends}""".format(name=self.name,
     def get_base_sample_data(self):
         """ Get base_sample_data
         """
-        # print [step.get_step_name()
-        #        for step
-        #        in self.get_base_step_list()] if self.get_base_step_list() else None
-        # print self.get_step_name(), " new: ", {stepname:self.main_pl_obj.global_sample_data[stepname]
-        #        for stepname
-        #        in self.get_depend_list()}
-        # print self.get_step_name(), " old: ", self.base_sample_data
 
-        # return self.base_sample_data
         return {stepname:self.main_pl_obj.global_sample_data[stepname]
                for stepname
                in self.get_depend_list()}
@@ -1332,8 +1323,6 @@ Sample slots:
         except KeyError:
             self.params["qsub_params"] = self.pipe_data["qsub_params"]
         else:
-                
-
             # Updating step 'qsub_params' with global 'qsub_params', but with step params taking precedence!
             # 'opts' needs special attention. Needs to be 'updated' independently.
             # 1. deepcopy global qsub params
@@ -1501,9 +1490,13 @@ Sample slots:
                     self.write_warning("You provided extra 'conda' parameters. They will be ignored!")
                 
                 # print self.params["conda"]
-                self.params["conda"] = manage_conda_params(self.params["conda"])
-                # print self.params["conda"]
-                # sys.exit()
+                try:
+                    self.params["conda"] = manage_conda_params(self.params["conda"])
+                except Exception as raisedex:
+                    if len(raisedex.args)>=2 and raisedex.args[1] == "parameters":
+                        raise AssertionExcept(raisedex.args[0], step=self.get_step_name())
+                    else:
+                        raise raisedex
 
                 # Add bin at end of path
                 self.params["conda"]["path"] = os.path.join(self.params["conda"]["path"],"bin")    

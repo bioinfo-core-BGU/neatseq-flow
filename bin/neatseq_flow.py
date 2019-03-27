@@ -93,12 +93,14 @@ if args.sample_file is None or args.param_file is None:
 # Converting list of parameter files into comma-separated list. This is deciphered by the neatseq_flow class.
 args.param_file = ",".join(args.param_file)
 
-
-NeatSeqFlow(sample_file   = args.sample_file,
-            param_file    = args.param_file,
-            grouping_file = args.mapping,
-            home_dir      = args.home_dir,
-            message       = args.message,
-            runid         = args.runid,
-            verbose       = args.verbose,
-            list_modules  = args.list_modules)
+try:
+    NeatSeqFlow(sample_file   = args.sample_file,
+                param_file    = args.param_file,
+                grouping_file = args.mapping,
+                home_dir      = args.home_dir,
+                message       = args.message,
+                runid         = args.runid,
+                verbose       = args.verbose,
+                list_modules  = args.list_modules)
+except SystemExit:
+    pass

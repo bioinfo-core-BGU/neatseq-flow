@@ -241,7 +241,15 @@ class NeatSeqFlow(object):
         # Create step instances:
         sys.stdout.write("Making step instances...\n")
         sys.stdout.flush()
-        self.make_step_instances()
+
+        try:
+            self.make_step_instances()
+
+        except AssertionExcept as assertErr:
+            print(assertErr.get_error_str())
+            print("An error has occurred. See comment above.\n")
+            self.cleanup()
+            return
 
         # Makes a step-order file. Is used for real-time sorting opf steps (e.g. recovery script)
         self.create_step_order_file()
@@ -602,20 +610,20 @@ class NeatSeqFlow(object):
             raise
 
         # Run constructor:
-        try:
-            new_step = StepClass(name=step_name,
-                                 step_type=step_type,
-                                 params=step_params,
-                                 pipe_data=self.pipe_data,
-                                 module_path=step_module_path,
-                                 caller=self)
+        # try:
+        new_step = StepClass(name=step_name,
+                             step_type=step_type,
+                             params=step_params,
+                             pipe_data=self.pipe_data,
+                             module_path=step_module_path,
+                             caller=self)
 
-            return new_step
-        except AssertionExcept as assertErr:
-            print(assertErr.get_error_str())
-            print(("An error has occurred in step initialization (type: %s). See comment above.\n" % step_type))
-            self.cleanup()
-            sys.exit()
+        return new_step
+        # except AssertionExcept as assertErr:
+        #     print(assertErr.get_error_str())
+        #     print(("An error has occurred in step initialization (type: %s). See comment above.\n" % step_type))
+        #     self.cleanup()
+        #     sys.exit()
 
             
     def set_qstat_path(self):
