@@ -605,9 +605,10 @@ class NeatSeqFlow(object):
             StepClass = getattr(importlib.import_module(step_module_loc), 'Step_'+step_type)
             # exec "from %s import %s as StepClass" % (step_module_loc,'Step_' + step_type)
         except ImportError:
-            print("An error has occurred loading module %s.\n" % step_module_loc)
-            print("CMD: from %s import %s as StepClass\n" % (step_module_loc,'Step_' + step_type))
-            raise
+            raise AssertionExcept("""\
+An error has occurred loading module {loc}.
+CMD: from {loc} import {type} as StepClass""".format(loc=step_module_loc,type='Step_' + step_type),
+                                  step=step_name)
 
         # Run constructor:
         # try:

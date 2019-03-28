@@ -145,7 +145,7 @@ class Step(object):
             try:
                 level = next(dir_generator)    # Try getting another level    
             except StopIteration:
-                sys.exit("Step %s not found in regular path or user defined paths." % mod_t)
+                raise AssertionExcept("Step %s not found in regular path or user defined paths." % mod_t)
         
 
         # Backup module to backups dir:
