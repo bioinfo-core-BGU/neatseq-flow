@@ -18,6 +18,60 @@ from .scriptconstructor import *
 class ScriptConstructorLocal(ScriptConstructor):
 
     @classmethod
+    def get_helper_script(cls, pipe_data):
+        """ Returns the code for the helper script
+        """
+        script = super(ScriptConstructorLocal, cls).get_helper_script(pipe_data)
+        script = re.sub("## locksed command entry point", r"""locksed  "s:^\\($3\\).*:# \\1\\t$err_code:" $run_index""",
+                        script)
+        script = re.sub("## maxvmem calc entry point", 'maxvmem="-";', script)
+
+        # Add job_limit function:
+        if "job_limit" in pipe_data:
+            script += """\
+    job_limit={job_limit}
+
+    wait_limit() {{
+        while : ; do
+            # Count active (PID), child-level (merge..merge1..sample..runid) jobs
+            numrun=$(grep  '\sPID\s' $run_index | grep -P ".*\.\..*\.\..*\.\." | wc -l);
+            maxrun=$(sed -ne "s/limit=\([0-9]*\).*/\\1/p" $job_limit);
+            sleeptime=$(sed -ne "s/.*sleep=\([0-9]*\).*/\\1/p" $job_limit);
+            [[ $numrun -ge $maxrun ]] || break;
+            sleep $sleeptime;
+        done
+    }}
+    """.format(job_limit=pipe_data["job_limit"])
+        #        numrun=$(awk 'BEGIN {{jobsc=0}} /^\w/ {{jobsc=jobsc+1}} END {{print jobsc}}' $run_index);
+        #        numrun=$(grep -c '\sPID\s'  $run_index);
+
+        return script
+
+    @classmethod
+    def get_exec_script(cls, pipe_data):
+        """ Not used for SGE. Returning None"""
+
+        script = super(ScriptConstructorLocal, cls).get_exec_script(pipe_data)
+
+        # Adding PID after hold in run_index
+        script = re.sub("(locksed.*hold)", r"\1\\t$$", script)
+
+        script += """\
+
+iscsh=$(grep "csh" <<< $script_path)
+if [ -z $iscsh ]; then
+    bash $script_path &
+else
+    csh $script_path &
+fi
+
+# gpid=$(ps -o pgid= $! | grep -o '[0-9]*')
+locksed "s:\($qsubname\).*$:\\1\\tPID\\t$!:" $run_index
+
+"""
+        return script
+
+    @classmethod
     def get_utilities_script(cls, pipe_data):
 
         util_script = super(ScriptConstructorLocal, cls).get_utilities_script(pipe_data)
@@ -74,59 +128,7 @@ function recover_run {{
 
         return util_script + recover_script
 
-    @classmethod
-    def get_helper_script(cls, pipe_data):
-        """ Returns the code for the helper script
-        """
-        script = super(ScriptConstructorLocal, cls).get_helper_script(pipe_data)
-        script = re.sub("## locksed command entry point", r"""locksed  "s:^\\($3\\).*:# \\1\\t$err_code:" $run_index""", script)
-        script = re.sub("## maxvmem calc entry point", 'maxvmem="-";', script)
 
-        # Add job_limit function:
-        if "job_limit" in pipe_data:
-            script += """\
-job_limit={job_limit}
-
-wait_limit() {{
-    while : ; do
-        # Count active (PID), child-level (merge..merge1..sample..runid) jobs
-        numrun=$(grep  '\sPID\s' $run_index | grep -P ".*\.\..*\.\..*\.\." | wc -l);
-        maxrun=$(sed -ne "s/limit=\([0-9]*\).*/\\1/p" $job_limit);
-        sleeptime=$(sed -ne "s/.*sleep=\([0-9]*\).*/\\1/p" $job_limit);
-        [[ $numrun -ge $maxrun ]] || break;
-        sleep $sleeptime;
-    done
-}}
-""".format(job_limit=pipe_data["job_limit"])
-#        numrun=$(awk 'BEGIN {{jobsc=0}} /^\w/ {{jobsc=jobsc+1}} END {{print jobsc}}' $run_index);
-#        numrun=$(grep -c '\sPID\s'  $run_index);
-
-
-        return script
-
-    @classmethod
-    def get_exec_script(cls, pipe_data):
-        """ Not used for SGE. Returning None"""
-
-        script = super(ScriptConstructorLocal, cls).get_exec_script(pipe_data)
-
-        # Adding PID after hold in run_index
-        script = re.sub("(locksed.*hold)",r"\1\\t$$", script)
-
-        script += """\
-
-iscsh=$(grep "csh" <<< $script_path)
-if [ -z $iscsh ]; then
-    bash $script_path &
-else
-    csh $script_path &
-fi
-
-# gpid=$(ps -o pgid= $! | grep -o '[0-9]*')
-locksed "s:\($qsubname\).*$:\\1\\tPID\\t$!:" $run_index
-
-"""
-        return script
 
     @classmethod
     def get_run_index_clean_script(cls, pipe_data):
@@ -283,8 +285,6 @@ class HighScriptConstructorLocal(ScriptConstructorLocal,HighScriptConstructor):
 # Sleeping while jobs exceed limit
 wait_limit
         """
-                # .format(limit_file=self.pipe_data["job_limit"],
-                #    run_index=self.pipe_data["run_index"])
 
         # TODO: Add output from stdout and stderr
 

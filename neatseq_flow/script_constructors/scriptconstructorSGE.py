@@ -133,15 +133,17 @@ function tail_curr_log {
 
 function kill_all_PL_jobs {
     currid=$(tail -n1  logs/version_list.txt | xargs | cut -f1)
-    qstat -j *$currid \\
-        | grep -e job_number \\
-        | cut -f2 -d ":" \\
-        | while read jid; \\
-          do qdel $jid; \\
-          done
-
+    qdel *$currid 
 }
 """
+
+    # currid=$(tail -n1  logs/version_list.txt | xargs | cut -f1)
+    # qstat -j *$currid \\
+    #     | grep -e job_number \\
+    #     | cut -f2 -d ":" \\
+    #     | while read jid; \\
+    #       do qdel $jid; \\
+    #       done
 
         return util_script + recover_script + util_functions
 
@@ -335,7 +337,7 @@ wait_limit
         script = """
 # ---------------- Code for {script_id} ------------------
 {job_limit}
-echo '{qdel_line}' >> {step_kill_file}
+# echo '{qdel_line}' >> {step_kill_file}
 # Adding qsub command:
 qsub {script_name}
 
@@ -348,7 +350,15 @@ qsub {script_name}
         return script
 
     def get_script_postamble(self):
-                            
+        """ Local script postamble is same as general postamble with addition of sed command to mark as finished in run_index
+        """
+
+        # Write the kill command to the kill script
+        try:
+            self.kill_obj.write_kill_cmd(self)
+        except AttributeError:
+            pass
+
         # Get general postamble
         postamble = super(HighScriptConstructorSGE, self).get_script_postamble()
 
@@ -364,6 +374,14 @@ csh {depends_script_name}
         return script
 
     def main_script_kill_commands(self, kill_script_filename_main):
+        """
+        Adds a qdel command for the high-level script in the main kill_file.
+        The purpose is to kill all high-level scripts before deleting low level scripts to stop the high-levels script
+        from releasing more low-level scripts before deletion is complete
+        TODO: May no be necessary, If qdel * deletes all jobs at once. Have to check
+        :param kill_script_filename_main:
+        :return:
+        """
 
         f = open(kill_script_filename_main, 'r')
         kill_file = f.read()
@@ -441,4 +459,21 @@ class KillScriptConstructorSGE(ScriptConstructorSGE,KillScriptConstructor):
         """ Return main kill-script postamble"""
 
         return ""
+
+    def write_kill_cmd(self, caller_script):
+        """
+
+        :return:
+        """
+
+        # Create one killing routine for all instance jobs:
+        script = """\
+qdel {step}{sep}{name}*{run_index}
+
+""".format(run_index = self.pipe_data["run_code"],
+           step=caller_script.step,
+           name=caller_script.name,
+           sep=caller_script.master.jid_name_sep)
+
+        self.filehandle.write(script)
 
