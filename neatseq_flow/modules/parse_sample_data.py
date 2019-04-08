@@ -59,7 +59,7 @@ def parse_sample_file(filename):
         filename = os.path.realpath(os.path.expanduser(filename_raw))
 
         if not os.path.isfile(filename):
-            sys.exit("Sample file %s does not exist.\n" % filename)
+            raise Exception("Issues in samples", "Sample file %s does not exist.\n" % filename)
         with open(filename, encoding='utf-8') as fileh:
             file_conts += fileh.readlines()
                 
@@ -242,7 +242,7 @@ def get_tabular_sample_data_lines(filelines):
     sample_control = remove_comments(sample_control)
 
     if sample_control and not "Sample_data" in return_results:
-        sys.exit("Sample-control info defined, but sample definition is absent!")
+        raise Exception("Sample-control info defined, but sample definition is absent!")
     if sample_control:  # ChIP-seq data exists:
         linedata = StringIO("\n".join(sample_control))
         reader = csv.reader(linedata, dialect='excel-tab')

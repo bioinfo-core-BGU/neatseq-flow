@@ -52,7 +52,7 @@ def parse_param_file(filename):
         filename = os.path.realpath(os.path.expanduser(filename_raw))
 
         if not os.path.isfile(filename):
-            sys.exit("Parameter file %s does not exist.\n" % filename)
+            raise Exception("Issues in parameters", "Parameter file %s does not exist.\n" % filename)
 
         with open(filename, encoding='utf-8') as fileh:
             file_conts += fileh.readlines()

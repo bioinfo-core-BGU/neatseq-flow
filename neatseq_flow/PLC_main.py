@@ -64,7 +64,7 @@ class NeatSeqFlow(object):
         except Exception as raisedex:
             
             if raisedex.args[0] == "Issues in parameters":
-                print(raisedex.args[0])
+                print(raisedex.args[1])
                 return
             elif len(raisedex.args)>1:
                 if raisedex.args[1] in ["Variables", "parameters"]:
@@ -84,9 +84,11 @@ class NeatSeqFlow(object):
 
         if "grouping_file" in self.sample_data["project_data"]:
             if grouping_file:
-                sys.exit("You passed both --mapping via CLI and 'grouping_file' in the sample_file.")
+                print("ERROR: You passed both --mapping via CLI and 'grouping_file' in the sample_file.")
+                return
             if len(self.sample_data["project_data"]["grouping_file"]) >1:
-                sys.exit("You passed multiple grouping_files in the sample_file.")
+                print("ERROR: You passed multiple grouping_files in the sample_file.")
+                return
             else:
                 # If mapping file passed via sample file, transfer into grouping_file and remove from sample data
                 sys.stderr.write("Mapping file passed via samples file!\n")
@@ -96,7 +98,8 @@ class NeatSeqFlow(object):
         if grouping_file:
             if isinstance(grouping_file,list):
                 if len(grouping_file)>1:
-                    sys.exit("Please pass only one grouping file")
+                    print("Please pass only one grouping file")
+                    return
                 else:
                     grouping_file=grouping_file[0]
 
@@ -104,7 +107,8 @@ class NeatSeqFlow(object):
                 mapping_data = parse_grouping_file(grouping_file)
             except Exception as raisedex:
                 if raisedex.args[0] == "Issues in grouping":
-                    sys.exit(raisedex.args[1])
+                    print(raisedex.args[1])
+                    return
                 else:
                     raise
             # Merge sample_data with mapping_data:
