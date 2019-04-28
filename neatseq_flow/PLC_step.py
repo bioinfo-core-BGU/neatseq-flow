@@ -869,10 +869,22 @@ Dependencies: {depends}""".format(name=self.name,
         # Creating script. If 'create_spec_preliminary_script' is not defined or returns nothing,
         # return from here without doing anything
         self.script = ""
-        try:
-            self.create_spec_preliminary_script()
-        except AttributeError:
+
+
+
+        # Using hasattr rather than try..except.. so that AttributeErrors in create_spec_preliminary_script() will be
+        # reported. With the try..except.. approach, if an AttributeError is thrown by the code in
+        # create_spec_preliminary_script(), it will be ignored and the wrapping_up script will be assumed to be empty
+        # - wrong behaviour...
+        if not hasattr(self, 'create_spec_preliminary_script'):
             return
+        self.create_spec_preliminary_script()
+
+
+        # try:
+        #     self.create_spec_preliminary_script()
+        # except AttributeError:
+        #     return
 
         if not self.script.strip():  # If script is empty, do not create a wrapper function
             return
@@ -923,10 +935,15 @@ Dependencies: {depends}""".format(name=self.name,
         # Creating script. If 'create_spec_wrapping_up_script' is not defined or returns nothing,
         # return from here without doing anything
         self.script = ""
-        try:
-            self.create_spec_wrapping_up_script()
-        except AttributeError:
+
+        # Using hasattr rather than try..except.. so that AttributeErrors in create_spec_wrapping_up_script() will be
+        # reported. With the try..except.. approach, if an AttributeError is thrown by the code in
+        # create_spec_wrapping_up_script(), it will be ignored and the wrapping_up script will be assumed to be empty
+        # - wrong behaviour...
+        if not hasattr(self, 'create_spec_wrapping_up_script'):
+            # print(self.get_step_name()+" has no wrapping function")
             return
+        self.create_spec_wrapping_up_script()
 
         if not self.script.strip():  # If script is empty, do not create a wrapper function
             return
@@ -1292,7 +1309,8 @@ Sample slots:
 
         # Add "script_path" line - it must exist
         if not isinstance(self.params["script_path"],str):
-            raise AssertionExcept("'script_path' is not a string!")
+            raise AssertionExcept("'script_path' is not a string! Did you mean to use 'get_setenv_part()' rather "
+                                  "than 'get_script_env_path()'?")
         script_const += "%s \\\n\t" % self.params["script_path"]
 
         return script_const

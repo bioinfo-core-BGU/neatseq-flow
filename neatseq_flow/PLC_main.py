@@ -915,7 +915,7 @@ Date\tStep\tName\tScript\tFile\tmd5sum\n
         filenames = param_file.split(",")
         i = 0
         for filename in filenames:
-            shutil.copyfile(filename, "%s%s_params_%d.txt" % (self.pipe_data["backups_dir"],
+            shutil.copyfile(filename, "%s%s_params_%d.yaml" % (self.pipe_data["backups_dir"],
                                                                 self.pipe_data["run_code"],
                                                                 i))
             i += 1
