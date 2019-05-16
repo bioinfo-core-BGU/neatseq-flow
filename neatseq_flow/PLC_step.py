@@ -1721,9 +1721,10 @@ Sample slots:
                 [level in self.get_category_levels(sample_dict["category"]) for level in sample_dict["levels"]]):
             bad_levels = ", ".join([level for level in sample_dict["levels"] if
                                     level not in self.get_category_levels(sample_dict["category"])])
-            raise AssertionExcept("Level '{lev}' is not defined for "
-                                  "category '{cat}'".format(lev=bad_levels,
-                                                            cat=sample_dict["category"]))
+            raise AssertionExcept(step=self.get_step_name(),
+                                  comment="Level '{lev}' is not defined for "
+                                          "category '{cat}'".format(lev=bad_levels,
+                                                                    cat=sample_dict["category"]))
         # Create new sample list:
         samples = list()
         for level in sample_dict["levels"]:
