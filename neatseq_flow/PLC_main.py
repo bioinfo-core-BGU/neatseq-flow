@@ -290,19 +290,6 @@ class NeatSeqFlow(object):
             # sys.exit()
             self.cleanup()
             return
-        # except KeyError as keyexc:
-        #     t1 = format_exc()
-        #     print("------------------------------")
-        #     print(t1.split("\n")[-3])
-        #     print("------------------------------")
-        #     parse_error = re.search(string=t1.split("\n")[-3], pattern="self\.sample_data\[(.*?)\]\[(.*?)\]")
-        #     try:
-        #         key_lev, file_type = parse_error.groups()
-        #     except AttributeError as attr_err:
-        #         raise keyexc
-        #     print(key_lev, file_type)
-        #     print("------------------------------")
-        #     raise Ass
 
         # Make main script:
         self.make_main_pipeline_script()
