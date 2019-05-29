@@ -73,7 +73,11 @@ wait_limit() {{
         util_script = super(ScriptConstructorSGE, cls).get_utilities_script(pipe_data)
 
         # # Steps:
-        # 1. Find failed steps in log file
+        # 0. Get list of running jobs from qstat
+        # 1. Find failed steps in log file:
+            # a. if a job has started AND IS NOT running, add to suspects list
+            # b. if the SAME job finished successfully, remove from suspects list -> failed list
+            # c. Print instance name of failed list
         # 2. Find downstream steps in depend_file
         # 3. Get qsub commands from main script
         # 4. Execute the qsub command
@@ -81,24 +85,22 @@ wait_limit() {{
         recover_script = """
 # Recover a failed execution
 function recover_run {{
+    runlist=$(qstat | cut -f1 -d" " | tr "\n" " ") 
     cat {log_file} \\
         | awk -v runlist="$runlist"  '{{  if(NR<=9) {{next}};
                     if($3=="Started" && $11 ~ "OK" && index(runlist,$9)==0) {{
                         jobs[$6]=$5; ids[$6]=$9;
-                        running[$6]=0
-                        if(index(runlist,ids[key])>0) {{running[$6]=1;}} 
                     }}
                     if($3=="Finished" && $11 ~ "OK" && $9==ids[$6]) {{
                         delete jobs[$6]; 
                         delete ids[$6]; 
-                        delete running[$6]
                     }}
                 }}
                 END {{
                     for (key in jobs) {{
                         print jobs[key]
                     }}
-                }}' \
+                }}' \\
         | while read step; do \\
             echo $step; \\
             grep $step {depend_file} | cut -f2; 
