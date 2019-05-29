@@ -81,17 +81,24 @@ wait_limit() {{
         recover_script = """
 # Recover a failed execution
 function recover_run {{
+    runlist=$(qstat | cut -f1 -d" " | tr "\n" " ") 
     cat {log_file} \\
-        | awk '{{  if(NR<=9) {{next}}; 
-                    if($3=="Started" && $11 ~ "OK") {{jobs[$6]=$5;}}
-                    if($3=="Finished" && $11 ~ "OK") {{delete jobs[$6]}}
+        | awk -v runlist="$runlist"  '{{  if(NR<=9) {{next}};
+                    if($3=="Started" && $11 ~ "OK") {{jobs[$6]=$5; ids[$6]=$9;}}
+                    if($3=="Finished" && $11 ~ "OK") {{delete jobs[$6]; delete ids[$6];}}
                 }}
                 END {{
-                    for (key in jobs) {{ 
-                        print jobs[key]
-                    }} 
+                    for (key in jobs) {{
+                        to_run[jobs[key]]=1
+                    }}
+                    for (key in jobs) {{
+                        if(index(runlist,ids[key])>0) {{delete to_run[jobs[key]];}}
+                    }}
+                    for (key in to_run) {{
+                        print key
+                    }}
 
-                }}'  \\
+                }}' \
         | while read step; do \\
             echo $step; \\
             grep $step {depend_file} | cut -f2; 

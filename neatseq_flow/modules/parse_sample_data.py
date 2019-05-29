@@ -307,7 +307,7 @@ def parse_grouping_file(grouping_file):
 
     if not os.path.isfile(grouping_file):
         # sys.exit("Grouping file {file} does not exist.\n".format(file=grouping_file))
-        raise Exception("Issues in grouping", "Grouping file {file} does not exist.Unidentified extension in source\n".format(file=grouping_file))
+        raise Exception("Issues in grouping", "Grouping file {file} does not exist.\n".format(file=grouping_file))
 
     with open(grouping_file, encoding='utf-8') as csvfile:
         file_conts = csvfile.readlines()

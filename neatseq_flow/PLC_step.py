@@ -398,9 +398,13 @@ Dependencies: {depends}""".format(name=self.name,
         if base_step_list != [] and not all([isinstance(x,Step) for x in base_step_list]):
             raise AssertionExcept("Invalid base list\n", step = self.get_step_name())
         
-        try:
-            self.base_step_list
-        except AttributeError:
+        # try:
+        #     self.base_step_list
+        # except AttributeError:
+        if hasattr(self, "base_step_list"):
+            pass
+            raise AssertionExcept("Somehow base_step is defined more than once", self.get_step_name())
+        else:
             # Good. Does not exist
             # Set merge base_step to None and all others to base_step
             # While at it, update sample_data according to new base_step
@@ -410,8 +414,8 @@ Dependencies: {depends}""".format(name=self.name,
                 # sys.stderr.write("setting sample data for %s \n" % self.name)
                 # self.set_sample_data(self.base_step_list[0].get_sample_data())
                 self.set_sample_data()  # Uses self.base_step_list
-        else:
-            raise AssertionExcept("Somehow base_step is defined more than once", self.get_step_name())
+        # else:
+        #     raise AssertionExcept("Somehow base_step is defined more than once", self.get_step_name())
         
     def get_base_step_list(self):
         try:
@@ -648,14 +652,18 @@ Dependencies: {depends}""".format(name=self.name,
                 self.stash_sample_list(self.get_sample_list_by_category(self.params["sample_list"]))
 
         # Trying running step specific sample initiation script:
-        try:
-            if not self.skip_step_sample_initiation:
+        if not hasattr(self,"skip_step_sample_initiation") or not self.skip_step_sample_initiation:
+            # Skip sample initiation if skip_step_sample_initiation is not defined or is false
+        # try:
+        #     if not self.skip_step_sample_initiation:
+            try:
                 self.step_sample_initiation()
-        except AttributeError:
-            pass    # It dosen't have to be defined.
-        except AssertionExcept as assertErr: 
-            assertErr.set_step_name(self.get_step_name())
-            raise assertErr
+
+        # except AttributeError:
+        #     pass    # It dosen't have to be defined.
+            except AssertionExcept as assertErr:
+                assertErr.set_step_name(self.get_step_name())
+                raise assertErr
 
         # # self.create_provenance()
         # print self.get_step_name()
