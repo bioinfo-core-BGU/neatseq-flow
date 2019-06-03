@@ -108,12 +108,12 @@ function recover_run {{
           done \\
         | sort -u \\
         | while read step; do \\
-            echo $step
+            echo $step 1>&2
             grep $step {main} | egrep -v "^#|^echo";
           done \\
         | sort -u \\
         > {recover_script}
-    echo -e "\\nWritten recovery code to file {recover_script}\\n\\n" 
+    echo -e "\\nWritten recovery code. Execute with:\\nbash {recover_script}\\n\\n" 
 }}
                 """.format(log_file=pipe_data["log_file"],
                            depend_file=pipe_data["dependency_index"],
