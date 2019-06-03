@@ -85,6 +85,7 @@ wait_limit() {{
         recover_script = """
 # Recover a failed execution
 function recover_run {{
+    echo -e "The following steps will be re-executed:"
     runlist=$(qstat | cut -f1 -d" " | tr "\\n" " ") 
     cat {log_file} \\
         | awk -v runlist="$runlist"  '{{  if(NR<=9) {{next}};
@@ -107,6 +108,7 @@ function recover_run {{
           done \\
         | sort -u \\
         | while read step; do \\
+            echo $step
             grep $step {main} | egrep -v "^#|^echo";
           done \\
         | sort -u \\
