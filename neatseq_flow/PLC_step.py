@@ -239,18 +239,8 @@ class Step(object):
         self.use_provenance = True
         # -----------------------------
         # Place for testing parameters:
-        # try:
-        #     self.params["script_path"]
-        # except KeyError:
-        #     sys.exit("You must supply a script_path parameter in %s\n" % self.name)
-        print("got here")
-        print(self.params.keys())
         if "script_path" not in self.params.keys():
             raise AssertionExcept("You must supply a script_path parameter in %s\n" % self.name)
-        print("after")
-
-
-
 
         self.base_dir = os.sep.join([self.pipe_data["data_dir"], self.step, self.name, ''])
         # Move to general init function:
