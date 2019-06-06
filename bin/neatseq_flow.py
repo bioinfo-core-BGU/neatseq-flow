@@ -70,7 +70,7 @@ if args.delete:
         path2del = "{home}{sep}{dir}".format(home=args.home_dir,
                                                       sep=os.sep,
                                                       dir=dir2del)
-        sys.stdout.write("Deleting " + path2del)
+        sys.stdout.write("Deleting {path}\n".format(path=path2del))
         rmtree(path2del)
     sys.stdout.write("Removed all NeatSeq-Flow directories in \n" + args.home_dir)
     sys.exit()
