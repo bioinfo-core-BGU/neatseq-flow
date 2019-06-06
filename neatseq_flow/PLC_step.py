@@ -240,7 +240,7 @@ class Step(object):
         # -----------------------------
         # Place for testing parameters:
         if "script_path" not in self.params.keys():
-            raise AssertionExcept("You must supply a script_path parameter in %s\n" % self.name)
+            raise AssertionExcept("You must supply a 'script_path' parameter in %s\n" % self.name)
 
         self.base_dir = os.sep.join([self.pipe_data["data_dir"], self.step, self.name, ''])
         # Move to general init function:

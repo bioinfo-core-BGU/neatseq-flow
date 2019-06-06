@@ -46,6 +46,7 @@ parser.add_argument("-r", "--runid", help="Don't create new run ID. Use this one
 # parser.add_argument("-c","--convert2yaml", help="Convert parameter file to yaml format?", action='store_true')
 parser.add_argument("-l", "--clean", help="Remove old workflow directories except for 'data'", action='store_true')
 parser.add_argument("--clean-all", help="Remove all old workflow directories", action='store_true')
+parser.add_argument("--delete", help="Delete all NeatSeq-Flow folders in workflow directory (see --home_dir)", action='store_true')
 parser.add_argument("-V", "--verbose", help="Print admonitions?", action='store_true')
 parser.add_argument("-v", "--version", help="Print version and exit.", action='store_true')
 parser.add_argument("--list_modules", help="List modules available in modules_paths.", action='store_true')
@@ -64,7 +65,21 @@ if args.sample_file is None or args.param_file is None:
     parser.print_help()
     sys.exit()
 
-    
+if args.delete:
+    text = input("Are you sure you want to delete the workflow in {home_dir}?\n('yes' to approve) > ".format(home_dir = args.home_dir))
+
+    if not text.lower() == "yes":
+        sys.exit()
+    from shutil import rmtree
+    for dir2del in "scripts data objects stderr stdout logs backups".split(" "):
+        # rmtree("{home}{sep}{dir}".format(home=args.home_dir,
+        #                                  sep=os.sep,
+        #                                  dir=dir2del))
+        print("will delete {home}{sep}{dir}".format(home=args.home_dir,
+                                     sep=os.sep,
+                                     dir=dir2del))
+    sys.stdout.write("Removed all NeatSeq-Flow directories in " + args.home_dir)
+
 if args.clean:
     # if args.home_dir != os.getcwd():
     text = input("Are you sure you want to delete the workflow in {home_dir}?\n('yes' to approve) > ".format(home_dir = args.home_dir))
