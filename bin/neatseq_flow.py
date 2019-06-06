@@ -53,18 +53,13 @@ parser.add_argument("--list_modules", help="List modules available in modules_pa
 
 args = parser.parse_args()
 
-
+# Showing version and leaving, if required
 if args.version:
     print("NeatSeq-Flow version %s" % __version__)
     print("Installation location: %s" % os.path.dirname(os.path.realpath(__file__)))
     sys.exit()
 
-    
-if args.sample_file is None or args.param_file is None:
-    print("Please supply sample and parameter files...\n")
-    parser.print_help()
-    sys.exit()
-
+# Deleting all dirs and leaving, if required
 if args.delete:
     text = input("Are you sure you want to delete the workflow in {home_dir}?\n('yes' to approve) > ".format(home_dir = args.home_dir))
 
@@ -80,6 +75,13 @@ if args.delete:
                                      dir=dir2del))
     sys.stdout.write("Removed all NeatSeq-Flow directories in " + args.home_dir)
 
+# Testing sample and parameter files were passed
+if args.sample_file is None or args.param_file is None:
+    print("Please supply sample and parameter files...\n")
+    parser.print_help()
+    sys.exit()
+
+# Cleaning
 if args.clean:
     # if args.home_dir != os.getcwd():
     text = input("Are you sure you want to delete the workflow in {home_dir}?\n('yes' to approve) > ".format(home_dir = args.home_dir))
