@@ -67,13 +67,13 @@ if args.delete:
         sys.exit()
     from shutil import rmtree
     for dir2del in "scripts data objects stderr stdout logs backups".split(" "):
-        # rmtree("{home}{sep}{dir}".format(home=args.home_dir,
-        #                                  sep=os.sep,
-        #                                  dir=dir2del))
-        print("will delete {home}{sep}{dir}".format(home=args.home_dir,
-                                     sep=os.sep,
-                                     dir=dir2del))
-    sys.stdout.write("Removed all NeatSeq-Flow directories in " + args.home_dir)
+        path2del = "{home}{sep}{dir}".format(home=args.home_dir,
+                                                      sep=os.sep,
+                                                      dir=dir2del)
+        sys.stdout.write("Deleting " + path2del)
+        rmtree(path2del)
+    sys.stdout.write("Removed all NeatSeq-Flow directories in \n" + args.home_dir)
+    sys.exit()
 
 # Testing sample and parameter files were passed
 if args.sample_file is None or args.param_file is None:
