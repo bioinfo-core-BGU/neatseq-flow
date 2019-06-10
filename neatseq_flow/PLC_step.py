@@ -1287,7 +1287,12 @@ Sample slots:
         if "precode" in list(self.params.keys()):         # Add optional code
             script_const += "%s \n" % self.params["precode"]
 
-        if "setenv" in list(self.params.keys()):         # Add optional environmental variables.
+        # Add optional environmental variables.
+        # Permit passing the definitions both with setenv and with export
+        # If passed with export, convert to setenv and proceed as normal
+        if "export" in list(self.params.keys()):
+            self.params["setenv"] = self.params["export"]
+        if "setenv" in list(self.params.keys()):  # Add optional environmental variables.
             if not isinstance(self.params["setenv"], list):
                 self.params["setenv"] = [self.params["setenv"]]
             for setenv in self.params["setenv"]:         # Add optional environmental variables.

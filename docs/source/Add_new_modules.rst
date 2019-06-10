@@ -23,9 +23,11 @@ Adding New Modules
 Introduction
 ================
 
-In order to incorporate in a wrokflow analysis programs which do not yet have modules, one can proceed in two ways:
+In NeatSeq-Flow, the workflow parameter file describes the steps to be perfomred in the workflow. Each step involves executing a command-line program on the file types managed by the workflow. The description of each step is in the form of a YAML-format block defining the program to be used and the arguments that should be passed tp the program. Occasionally, steps include executing further, downstream analyses following execution of the main program. The definition block is concise and readable in that much of the nuts-and-bolts of data input and output are managed behind the scenes in the step **Module**.
 
-1. **Use the generic module**
+However, often no module exists for a program we would like to include in our workflow. In order to incorporate analysis programs which do not yet have modules, one can proceed in two ways:
+
+1. **Use one of the generic modules**
 
    This method is preferable for quickly getting a working workflow without the need to create a new module for the program. However, it requires the specification of several additional parameters in the workflow design step, and is less recommended for programs that are planned to be re-used many times, in different scenarios, in the future.  
 
@@ -36,7 +38,9 @@ In order to incorporate in a wrokflow analysis programs which do not yet have mo
    
    It is our hope that the community of users will provide access to a wide range of modules, making the process of developing new workflows more straightforward for non-programmers.
 
-   This section provides detailed instructions for writing modules. The idea is to use the ``sample_data`` dictionary for input and output files while leaving as many of the other parameters as possible to the user. This will enable as much flexibility as possible while relieving the user of the need to track input and output files.
+   This section provides detailed instructions for writing modules.
+
+.. The idea is to use the ``sample_data`` dictionary for input and output files while leaving as many of the other parameters as possible to the user. This will enable as much flexibility as possible while relieving the user of the need to track input and output files.
    
 .. Note:: It is recommended to go over the :ref:`how_neatseqflow_works` page before writing new modules.
    
@@ -44,25 +48,68 @@ In order to incorporate in a wrokflow analysis programs which do not yet have mo
 Steps in writing **NeatSeq-Flow** modules
 ===========================================
 
+Modules are python objects which NeatSeq-Flow can find and load into it's script-generating engine. The module is loaded only if a step in the workflow uses it, *i.e.* the module name is passed via the ``module`` filed in the step YAML-block.
+
+The following conditions have to be met for NeatSeq-Flow to find and load the module:
+
+#. The module is stored in a file called ``<module_name>.py`` where ``<module_name>`` is the module name.
+#. The class defined in the file is called ``Step_<module_name>``.
+#. The file is located in a directory containing an empty ``__init__.py`` file.
+#. This directory is in the directories list passed to **NeatSeq-Flow** through the ``module_path`` global parameter (see :ref:`parameter_file_definition`).
+
+Generally speaking, modules are called in three contexts by NeatSeq-Flow:
+
+#. The class function ``step_specific_init()`` is called when the class is constructed.
+#. Function ``step_sample_initiation()`` is called when the class is exposed to the ``sample_data`` dictionary of file types available to the class.
+#. Function ``build_scripts()`` is then called to actually perform the script-building.
+
+The two first function should be used for input checking. Making sure the user supplied all the required parameters, and giving clear error messages when not, will make it easier for the user to quickly get the module up-and-running.
+
+The easiest way to write a new module is to use one of the template files and make only the analysis-program-specific modifications.
+
 Preparing the module file
 -----------------------------
 
-#. Choose a name for the module. *e.g.* ``bowtie2_mapper``
+#. Choose a name for the module. *e.g.* ``bowtie2_mapper``. **Make sure the name is not already in use**.
 #. Decide which level the module will work on: samples or project-wide?
 
     - Use the |sample_template| if it works on the sample level.
     - Use the |project_template| if it works on the project level.
+    - Use the |general_template| if it can work on both levels.
+
+.. Note::
 
 #. Change the name of the template file to to ``<module_name>.py``. 
 #. Make sure the file is within a directory which includes an empty ``__init__.py`` file. This directory is passed to **NeatSeq-Flow** through the ``module_path`` global parameter (see :ref:`parameter_file_definition`)
 #. Change the class name to ``Step_<module_name>`` in the line beginning with ``class Step_...``. Make sure ``<module_name>`` here is identical to the one you used in the filename above.
 
 
-Things to modify in the actual code
+Places to modify in the actual code
 -------------------------------------
 
-#. In ``step_specific_init()``, set ``self.shell`` to `csh` or `bash`, depending on the shell language you want your scripts to be coded in (It is best to use ``bash`` because it will work with CONDA. See |conda|).
-#. In ``step_sample_initiation()`` method, you can do things on the ``sample_data`` structure before actual script preparing, such as assertion checking (:ref:`assert_and_warn`) to make sure the data the step requires exists in the ``sample_data`` structure.
+Function step_specific_init()
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+As mentioned above, this function is where the parameters the user has passed via the YAML-block are checked.
+
+The parameters are containd in a dictionary called ``self.params``. For example, the program path is contained in ``self.params["script_path"]`` and redirected arguments are included in ``self.params["redirects"]``.
+
+Making sure the YAML block is correctly formatted saves the user time - the error message will be displayed before all script generation is done by NeatSeq-Flow.
+
+Additionally, clearly worded error messages will make it easier for the user to understand what he did wrong.
+
+#. Set ``self.shell`` to `csh` or `bash`, depending on the shell language you want your scripts to be coded in (It is best to use ``bash`` because it will work with CONDA. See |conda|).
+#. Check the user has passed all the parameters you expect him to pass. You do not have to check the general NeatSeq-Flow syntax, such as ``module`` and ``script_path`` fields. For example, if you expect the user to supply a ``type2use`` field, chack ``type2use`` exists in ``self.params`` and raise an ``AssertionException`` (see :ref:`assert_and_warn`) if not.
+
+Function step_sample_initiation()
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+This function is called after previous steps have made their modifications on the file-type dictionary, ``self.sample_data``.
+
+Here, it is recommended to put code checking all file types the module expects to exist really exist. *e.g.* the ``samtools`` module checks that a ``bam`` or ``sam`` file exist in the scope required by the user. NeatSeq-Flow has automatic file-type checking but having dedicated tests with clear error messages makes it easier for the user to pinpoint the problem.
+
+For raising errors, please use the assertion-checking machinery (:ref:`assert_and_warn`) to make sure the error messages are displayed in NeatSeq-Flow fashion.
+
 #. ``build_scripts()`` is the actual place to put the step script building code. See :ref:`build_scripts_help`.
 #. ``make_sample_file_index()`` is a place to put code that produces an index file of the files produced by this step (BLAST uses this function, so you can check it out in ``blast.py``)
 #. In ``create_spec_preliminary_script()`` you create the code for a script that will be run before all other step scripts are executed. If not defined or returns nothing, it will be ignored (i.e. you can set it to ``pass``). This is useful if you need to prepare a database, for example, before the other scripts use it.
@@ -77,14 +124,24 @@ Things to modify in the actual code
 
 .. _build_scripts_help:
 
-Instructions for ``build_scripts()`` function
-------------------------------------------------
+Function ``build_scripts()``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-- If sample-level scripts are required, the function should contain a loop:
+This is the place to put the step script building code.
+
+Building the script is done in three stages:
+
+#. Clear the script in ``self.script``.
+#. Assemble the command(s) to be executed in ``self.script``.
+#. Create the final script for execution.
+
+- If the script is assembled per-sample, the three steps above should be repeated for each sample, in a loop:
 
   .. code-block:: python
 
     for sample in self.sample_data["samples"]:
+
+.. Attention:: For modules that can operate both on project-scope and sample-scope files, you can use a single loop for both options. See |general_template| for how this is done.
 
 - Set ``self.script`` to contain the command/s executed by the script (This will go inside the ``for`` loop for sample-level steps)
 
@@ -141,7 +198,7 @@ Instructions for ``build_scripts()`` function
   .. csv-table:: Slots for commonly used files
       :header: "File type", "Scope", "Slot"
 
-      "f  astq", "Sample", ``sample_data[<sample>]['fastq.F|fastq.R|fastq.S']``
+      "fastq", "Sample", ``sample_data[<sample>]['fastq.F|fastq.R|fastq.S']``
       "fasta", "Sample", ``sample_data[<sample>]['fasta.nucl|fasta.prot']``
       "fasta", "Project", ``sample_data["project_data"]['fasta.nucl|fasta.prot']``
       "SAM", "Sample", ``sample_data[<sample>]['sam']``
@@ -156,7 +213,7 @@ Instructions for ``build_scripts()`` function
 
 - You can add more than one command in the ``self.script`` variable if the two commands are typically executed together. See ``samtools`` module for an example.
  
-- The function should end with the following line (within the sample-loop, if one exists):
+- Creating the final executable script is done by adding the following line (within the sample-loop, if one exists):
 
   .. code-block:: python
 
@@ -223,5 +280,5 @@ If you only want to warn the user about a certain issue, rather than failing, yo
 
 .. note:: As for ``AssertionExcept``, the ``sample`` argument is optional.
 
-.. Tip:: When calling ``AssertionExcept`` and ``self.write_warning``, setting ``sample`` to ``"project_data"`` will have the same effect as not passing ``sample``. See the
+.. Tip:: When calling ``AssertionExcept`` and ``self.write_warning``, setting ``sample`` to ``"project_data"`` will have the same effect as not passing ``sample``.
 
