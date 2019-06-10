@@ -38,12 +38,42 @@ If you see the following lines in the ``Terminal`` box, then the scripts were ge
 Using the command line
 --------------------------
 
+With CONDA
+~~~~~~~~~~~~
+
+
+#. Activate the NeatSeq_Flow conda environment:
+
+    .. code-block:: bash
+
+        bash
+        source activate NeatSeq_Flow
+
+#. Execute the following command to tell **NeatSeq-Flow** where the base conda installation is located:
+
+   .. code-block:: bash
+
+      export CONDA_BASE=$(conda info --root)
+
+#. Run NeatSeq_Flow command-line version:
+
+   .. code-block:: bash
+
+      neatseq_flow.py \
+         --sample_file sample_data.nsfs \
+         --param_file parameters.yaml \
+         --message "My NeatSeq-Flow WF using conda"
+
+
+Without CONDA
+~~~~~~~~~~~~~~
+
 Executing **NeatSeq-Flow**'s script generator is done as follows (make sure ``python`` and ``neatseq_flow.py`` are in your search path)::
 
-    python neatseq_flow.py                      \
-        -s sample_file.nsfs                     \
-        -p param_file1.nsfp,param_file2.nsfp    \
-        -m "message"                            \
+    python neatseq_flow.py   \
+        -s sample_file.nsfs  \
+        -p param_file.nsfp   \
+        -m "message"         \
         -d /path/to/workflow/directory
 
 If you get ``Finihed successfully...`` then the scripts were generated successfully.
@@ -53,6 +83,7 @@ If you get ``Finihed successfully...`` then the scripts were generated successfu
 - **NeatSeq-Flow** does not require installation. If you have a local copy, append the full path to ``neatseq_flow.py``.
 - It is not compulsory to pass a message via ``-m`` but it is highly recommended for documentation and reproducibility.
 - if ``-d`` is omitted, the current directory will be used as the workflow location.
+
 
 
 Step 2: Executing the workflow

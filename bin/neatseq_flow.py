@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 
 """ Create the pipeline scripts
@@ -46,25 +46,42 @@ parser.add_argument("-r", "--runid", help="Don't create new run ID. Use this one
 # parser.add_argument("-c","--convert2yaml", help="Convert parameter file to yaml format?", action='store_true')
 parser.add_argument("-l", "--clean", help="Remove old workflow directories except for 'data'", action='store_true')
 parser.add_argument("--clean-all", help="Remove all old workflow directories", action='store_true')
+parser.add_argument("--delete", help="Delete all NeatSeq-Flow folders in workflow directory (see --home_dir)", action='store_true')
 parser.add_argument("-V", "--verbose", help="Print admonitions?", action='store_true')
 parser.add_argument("-v", "--version", help="Print version and exit.", action='store_true')
 parser.add_argument("--list_modules", help="List modules available in modules_paths.", action='store_true')
 
 args = parser.parse_args()
 
-
+# Showing version and leaving, if required
 if args.version:
     print("NeatSeq-Flow version %s" % __version__)
     print("Installation location: %s" % os.path.dirname(os.path.realpath(__file__)))
     sys.exit()
 
-    
+# Deleting all dirs and leaving, if required
+if args.delete:
+    text = input("Are you sure you want to delete the workflow in {home_dir}?\n('yes' to approve) > ".format(home_dir = args.home_dir))
+
+    if not text.lower() == "yes":
+        sys.exit()
+    from shutil import rmtree
+    for dir2del in "scripts data objects stderr stdout logs backups".split(" "):
+        path2del = "{home}{sep}{dir}".format(home=args.home_dir,
+                                                      sep=os.sep,
+                                                      dir=dir2del)
+        sys.stdout.write("Deleting {path}\n".format(path=path2del))
+        rmtree(path2del)
+    sys.stdout.write("Removed all NeatSeq-Flow directories in \n" + args.home_dir)
+    sys.exit()
+
+# Testing sample and parameter files were passed
 if args.sample_file is None or args.param_file is None:
     print("Please supply sample and parameter files...\n")
     parser.print_help()
     sys.exit()
 
-    
+# Cleaning
 if args.clean:
     # if args.home_dir != os.getcwd():
     text = input("Are you sure you want to delete the workflow in {home_dir}?\n('yes' to approve) > ".format(home_dir = args.home_dir))
@@ -93,12 +110,14 @@ if args.sample_file is None or args.param_file is None:
 # Converting list of parameter files into comma-separated list. This is deciphered by the neatseq_flow class.
 args.param_file = ",".join(args.param_file)
 
-
-NeatSeqFlow(sample_file   = args.sample_file,
-            param_file    = args.param_file,
-            grouping_file = args.mapping,
-            home_dir      = args.home_dir,
-            message       = args.message,
-            runid         = args.runid,
-            verbose       = args.verbose,
-            list_modules  = args.list_modules)
+try:
+    NeatSeqFlow(sample_file   = args.sample_file,
+                param_file    = args.param_file,
+                grouping_file = args.mapping,
+                home_dir      = args.home_dir,
+                message       = args.message,
+                runid         = args.runid,
+                verbose       = args.verbose,
+                list_modules  = args.list_modules)
+except SystemExit:
+    pass

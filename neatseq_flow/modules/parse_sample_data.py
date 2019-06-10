@@ -16,14 +16,6 @@ from io import StringIO
 from pprint import pprint as pp
 import re
 
-FASTQ_FILE_TPYES = ['Single', 'Forward', 'Reverse']
-FASTA_FILE_TYPES = ['Nucleotide','Protein']
-ALIGNMENT_FILE_TYPES = ['SAM','BAM','REFERENCE']
-VARIANT_FILE_TYPES = ['VCF','G.VCF']
-RECOGNIZED_FILE_TYPES = FASTQ_FILE_TPYES + FASTA_FILE_TYPES + ALIGNMENT_FILE_TYPES + VARIANT_FILE_TYPES 
-GLOBAL_SAMPLE_LIST = ['Title', 'Sample', 'Single', 'Sample_Control'] + RECOGNIZED_FILE_TYPES
-
-from  neatseq_flow.modules.global_defs import ZIPPED_EXTENSIONS, ARCHIVE_EXTENSIONS, KNOWN_FILE_EXTENSIONS
 
 
 def remove_comments(filelines):
@@ -54,8 +46,7 @@ def check_newlines(filelines):
     # Assert that the list of lines containing "\r" charaters is empty.
     lines_with_CRs = [line for line in filelines if re.search("\r",line)]
     if lines_with_CRs:
-        print("The sample and parameter files must not contain carriage returns. Convert newlines to UNIX style!\n")
-        raise Exception("Issues in samples", "samples")
+        raise Exception("Issues in samples", "The sample and parameter files must not contain carriage returns. Convert newlines to UNIX style!\n")
 
 def parse_sample_file(filename):
     """Parses a file from filename
@@ -68,7 +59,7 @@ def parse_sample_file(filename):
         filename = os.path.realpath(os.path.expanduser(filename_raw))
 
         if not os.path.isfile(filename):
-            sys.exit("Sample file %s does not exist.\n" % filename)
+            raise Exception("Issues in samples", "Sample file %s does not exist.\n" % filename)
         with open(filename, encoding='utf-8') as fileh:
             file_conts += fileh.readlines()
                 
@@ -83,41 +74,11 @@ def parse_sample_file(filename):
 def get_sample_data(filelines):
     """return lines relevant to the sample data, if exist
     """
-    
-    sample_file_type = guess_sample_data_format(filelines)
-    if (sample_file_type == "Classic"):
-        sys.exit("The classic sample file format is no longer supported. Please use the tab-separated format only.")
-        # return get_classic_sample_data(filelines)
-    elif (sample_file_type == "Tabular"):   
-        return get_tabular_sample_data(filelines)
-    else:
-        sys.exit("There is a problem with the sample file format. Make sure all lines begin with keywords.")
 
-def guess_sample_data_format(filelines):
-    """Guess the format of sample data. Could be tsv (preferable but not defined yet) or old pipeline format
-    """
-    # Remove comments:  CANCELLED. Tabular format has #SampleID as header line prefix!
-    # filelines = remove_comments(filelines)
-    # Get all unique first words on line (=set)
-    # This can contain parameter file stuff as well, when they are merged!
-    myset = {re.split("\s+", line, maxsplit=1)[0] for line in filelines}
-    # Changing to lower case:
-    myset = set([x.lower() for x in myset])
-    recognized_file_types = set([x.lower() for x in RECOGNIZED_FILE_TYPES])
-    
-    # pp(set(recognized_file_types))
-    # Check if one of the following words exists in the set by checking the intersection of the sets:
-    if(({"title", "sample"} <= myset) & \
-        (len(myset & set(recognized_file_types))>=1)):    
-        # 1. Does myset contain Title and Sample?
-        # 2. Does myset include at least one of the RECOGNIZED_FILE_TYPES?
-        return "Classic";
-    elif ({"title","#sampleid"} <= myset) or ({"title","#type"} <= myset):
-        # 1. If myset contains Title and #SampleID
-        return "Tabular"
-    else:
-        sys.exit("Unknown sample file format. Make sure you have a 'Title' line in the sample file.")
-    
+    # This is a stub from when we supported a different sample_data format.
+    return get_tabular_sample_data(filelines)
+
+
 def parse_sample_control_data(Sample_Control, sample_names):
     """ Parse lines containing sample-control relationships for ChIP-seq protocols
     """
@@ -157,13 +118,32 @@ def get_tabular_sample_data(filelines):
         # with parse_tabular_sample_data()
         # Note: Sample name is removed from element 0 (line[1:]) so that function
         # parse_tabular_sample_data() can be used for project wide table, too.
-        sample_data[sample] = parse_tabular_sample_data([line[1:]
-                                                         for line
-                                                         in raw_data["Sample_data"]
-                                                         if line[0]==sample])
+
+        sample_lines = [line[1:]
+                        for line
+                        in raw_data["Sample_data"]
+                        if line[0]==sample]
+        # Checking sample name does not have a space in it
+        if re.search(pattern=" ", string=sample):
+            raise Exception("Issues in samples", "Sample name should not contain a space! ('{sample}')".
+                            format(sample=sample))
+        # Checking all lines have at least three values:
+        for line_i in range(len(sample_lines)):
+            line=sample_lines[line_i]
+            if len(line)<2:
+                raise Exception("Issues in samples", "Sample line #{linei} for sample {sample} does not have three "
+                                                     "values! ".format(linei=line_i+1,sample=sample))
+
+        sample_data[sample] = parse_tabular_sample_data(sample_lines)
     # pp(sample_data)
     
     if "Project_data" in raw_data:
+        # Checking all lines have at least two values:
+        for line_i in range(len(raw_data["Project_data"])):
+            line=raw_data["Project_data"][line_i]
+            if len(line)<2:
+                raise Exception("Issues in project data", "Line #{linei} in project data does not have two "
+                                                     "values! ".format(linei=line_i+1))
         sample_data["project_data"] = parse_tabular_project_data(raw_data["Project_data"])
     else:
         # Create an empty project_data slot in case an instance needs it before it has been created
@@ -199,7 +179,14 @@ def get_tabular_sample_data_lines(filelines):
     # Read CSV data with csv package. Store in return_results
     linedata = StringIO("\n".join(title_line)) #("\n".join([line[1] for line in title_line])))
     reader = csv.reader(linedata, dialect='excel-tab')
-    title = [row[1] for row in reader][0]  # Get first element, 2nd (index 1) column:
+    try:
+        # title = [row[1] for row in reader][0]  # Get first element, 2nd (index 1) column:
+        title = [row for row in reader][0]
+        title = title[1]   # Not doing in one line with previous so that title can be used in exception...
+    except IndexError:
+        raise Exception("Issues in samples", "Title line does not have a tab-separated value! ('{line}')\n".
+                        format(line=title[0]))
+
     # Removing trailing spaces and converting whitespace to underscore
     if re.search("\s+", title):
         # print "in here"
@@ -255,7 +242,7 @@ def get_tabular_sample_data_lines(filelines):
     sample_control = remove_comments(sample_control)
 
     if sample_control and not "Sample_data" in return_results:
-        sys.exit("Sample-control info defined, but sample definition is absent!")
+        raise Exception("Sample-control info defined, but sample definition is absent!")
     if sample_control:  # ChIP-seq data exists:
         linedata = StringIO("\n".join(sample_control))
         reader = csv.reader(linedata, dialect='excel-tab')
@@ -270,21 +257,20 @@ def parse_tabular_sample_data(sample_lines):
     sample_x_dict = dict()
 
     for line in sample_lines:
-        # line_data = re.split("\s+", line)
 
-        # print line_data[1]
-        if line[0] in list(sample_x_dict.keys()):
-            # If type exists, append path to list
-            # sample_x_dict[line[0]].append(get_full_path(line[1]))
-            sample_x_dict[line[0]].append(line[1])
+        try:
+            if line[0] in list(sample_x_dict.keys()):
+                # If type exists, append path to list
+                # sample_x_dict[line[0]].append(get_full_path(line[1]))
+                sample_x_dict[line[0]].append(line[1])
 
-        else:
-            # If not, create list with path
-            # sample_x_dict[line[0]] = [get_full_path(line[1])]
-            sample_x_dict[line[0]] = [line[1]]
-
-    # pp(sample_x_dict)
-    # sys.exit()
+            else:
+                # If not, create list with path
+                # sample_x_dict[line[0]] = [get_full_path(line[1])]
+                sample_x_dict[line[0]] = [line[1]]
+        except IndexError:
+            raise Exception("Issues in samples", "Sample line does not have three values! ('{line}')\n".
+                            format(line=line))
 
     return(sample_x_dict)
 
@@ -308,22 +294,7 @@ def parse_tabular_project_data(proj_lines):
             # sample_x_dict[line[0]] = [get_full_path(line[1])]
             sample_x_dict[line[0]] = [line[1]]
 
-    # pp(sample_x_dict)
-    # sys.exit()
-
     return sample_x_dict
-
-# def get_full_path(path):
-#     """ Creates a full path from the given path. This is done in one of two ways:
-#         1. If it is a URL, IDENTIFIED BY THE PROTOCOL (or scheme): leave it unchanged
-#         2. Otherwise: use expanduser and abspath on the path IF IT IS NOT ABSOLUTE ALREADY
-#     """
-#
-#     url = urlparse(path)
-#     if not url.scheme:   # Regular path
-#         if not os.path.isabs(path):
-#             return os.path.abspath(os.path.expanduser(path))
-#     return path
 
 def parse_grouping_file(grouping_file):
     """
@@ -336,7 +307,7 @@ def parse_grouping_file(grouping_file):
 
     if not os.path.isfile(grouping_file):
         # sys.exit("Grouping file {file} does not exist.\n".format(file=grouping_file))
-        raise Exception("Issues in grouping", "Grouping file {file} does not exist.Unidentified extension in source\n".format(file=grouping_file))
+        raise Exception("Issues in grouping", "Grouping file {file} does not exist.\n".format(file=grouping_file))
 
     with open(grouping_file, encoding='utf-8') as csvfile:
         file_conts = csvfile.readlines()

@@ -145,7 +145,7 @@ class Step(object):
             try:
                 level = next(dir_generator)    # Try getting another level    
             except StopIteration:
-                sys.exit("Step %s not found in regular path or user defined paths." % mod_t)
+                raise AssertionExcept("Step %s not found in regular path or user defined paths." % mod_t)
         
 
         # Backup module to backups dir:
@@ -236,14 +236,11 @@ class Step(object):
         # beginning with module= and instance=, according to awk regular expression definitions!
         self.jid_name_sep = ".."
 
-
         self.use_provenance = True
         # -----------------------------
         # Place for testing parameters:
-        try:
-            self.params["script_path"]
-        except KeyError:
-            sys.exit("You must supply a script_path parameter in %s\n" % self.name)
+        if "script_path" not in self.params.keys():
+            raise AssertionExcept("You must supply a 'script_path' parameter in %s\n" % self.name)
 
         self.base_dir = os.sep.join([self.pipe_data["data_dir"], self.step, self.name, ''])
         # Move to general init function:
@@ -283,7 +280,7 @@ class Step(object):
         #    modifications to sample_data are performed in self.step_sample_initiation().
         #    In the step_specific_init() function no changes to sample_data are possible because it is not set yet
         #    at that stage!
-        if "SKIP" in self.params:
+        if "SKIP" in self.params and self.params["SKIP"] is not False:
             self.skip_scripts = True
             self.skip_step_sample_initiation = True
             # This is so that modifications to sample_data requested in
@@ -291,7 +288,7 @@ class Step(object):
         else:
             self.skip_scripts = False   
             self.skip_step_sample_initiation = False
-            
+
         # Catch exceptions of type AssertionExcept raised by the specific initiation code
         try:
             self.step_specific_init()
@@ -399,9 +396,13 @@ Dependencies: {depends}""".format(name=self.name,
         if base_step_list != [] and not all([isinstance(x,Step) for x in base_step_list]):
             raise AssertionExcept("Invalid base list\n", step = self.get_step_name())
         
-        try:
-            self.base_step_list
-        except AttributeError:
+        # try:
+        #     self.base_step_list
+        # except AttributeError:
+        if hasattr(self, "base_step_list"):
+            pass
+            raise AssertionExcept("Somehow base_step is defined more than once", self.get_step_name())
+        else:
             # Good. Does not exist
             # Set merge base_step to None and all others to base_step
             # While at it, update sample_data according to new base_step
@@ -411,8 +412,8 @@ Dependencies: {depends}""".format(name=self.name,
                 # sys.stderr.write("setting sample data for %s \n" % self.name)
                 # self.set_sample_data(self.base_step_list[0].get_sample_data())
                 self.set_sample_data()  # Uses self.base_step_list
-        else:
-            raise AssertionExcept("Somehow base_step is defined more than once", self.get_step_name())
+        # else:
+        #     raise AssertionExcept("Somehow base_step is defined more than once", self.get_step_name())
         
     def get_base_step_list(self):
         try:
@@ -530,6 +531,12 @@ Dependencies: {depends}""".format(name=self.name,
         assert isinstance(step_number, int)
         self.step_number = "{:0>2}".format(step_number)
 
+    def get_step_number(self):
+        """ Sets the number of the step in the step list.
+            Is used in naming the scripts, so that they can be sorted with 'll'
+        """
+        return self.step_number
+
     def get_script_name(self):
         return self.main_script_obj.script_name
 
@@ -539,15 +546,7 @@ Dependencies: {depends}""".format(name=self.name,
     def get_base_sample_data(self):
         """ Get base_sample_data
         """
-        # print [step.get_step_name()
-        #        for step
-        #        in self.get_base_step_list()] if self.get_base_step_list() else None
-        # print self.get_step_name(), " new: ", {stepname:self.main_pl_obj.global_sample_data[stepname]
-        #        for stepname
-        #        in self.get_depend_list()}
-        # print self.get_step_name(), " old: ", self.base_sample_data
 
-        # return self.base_sample_data
         return {stepname:self.main_pl_obj.global_sample_data[stepname]
                for stepname
                in self.get_depend_list()}
@@ -651,14 +650,18 @@ Dependencies: {depends}""".format(name=self.name,
                 self.stash_sample_list(self.get_sample_list_by_category(self.params["sample_list"]))
 
         # Trying running step specific sample initiation script:
-        try:
-            if not self.skip_step_sample_initiation:
+        if not hasattr(self,"skip_step_sample_initiation") or not self.skip_step_sample_initiation:
+            # Skip sample initiation if skip_step_sample_initiation is not defined or is false
+        # try:
+        #     if not self.skip_step_sample_initiation:
+            try:
                 self.step_sample_initiation()
-        except AttributeError:
-            pass    # It dosen't have to be defined.
-        except AssertionExcept as assertErr: 
-            assertErr.set_step_name(self.get_step_name())
-            raise assertErr
+
+        # except AttributeError:
+        #     pass    # It dosen't have to be defined.
+            except AssertionExcept as assertErr:
+                assertErr.set_step_name(self.get_step_name())
+                raise assertErr
 
         # # self.create_provenance()
         # print self.get_step_name()
@@ -872,10 +875,22 @@ Dependencies: {depends}""".format(name=self.name,
         # Creating script. If 'create_spec_preliminary_script' is not defined or returns nothing,
         # return from here without doing anything
         self.script = ""
-        try:
-            self.create_spec_preliminary_script()
-        except AttributeError:
+
+
+
+        # Using hasattr rather than try..except.. so that AttributeErrors in create_spec_preliminary_script() will be
+        # reported. With the try..except.. approach, if an AttributeError is thrown by the code in
+        # create_spec_preliminary_script(), it will be ignored and the wrapping_up script will be assumed to be empty
+        # - wrong behaviour...
+        if not hasattr(self, 'create_spec_preliminary_script'):
             return
+        self.create_spec_preliminary_script()
+
+
+        # try:
+        #     self.create_spec_preliminary_script()
+        # except AttributeError:
+        #     return
 
         if not self.script.strip():  # If script is empty, do not create a wrapper function
             return
@@ -926,10 +941,15 @@ Dependencies: {depends}""".format(name=self.name,
         # Creating script. If 'create_spec_wrapping_up_script' is not defined or returns nothing,
         # return from here without doing anything
         self.script = ""
-        try:
-            self.create_spec_wrapping_up_script()
-        except AttributeError:
+
+        # Using hasattr rather than try..except.. so that AttributeErrors in create_spec_wrapping_up_script() will be
+        # reported. With the try..except.. approach, if an AttributeError is thrown by the code in
+        # create_spec_wrapping_up_script(), it will be ignored and the wrapping_up script will be assumed to be empty
+        # - wrong behaviour...
+        if not hasattr(self, 'create_spec_wrapping_up_script'):
+            # print(self.get_step_name()+" has no wrapping function")
             return
+        self.create_spec_wrapping_up_script()
 
         if not self.script.strip():  # If script is empty, do not create a wrapper function
             return
@@ -1267,7 +1287,12 @@ Sample slots:
         if "precode" in list(self.params.keys()):         # Add optional code
             script_const += "%s \n" % self.params["precode"]
 
-        if "setenv" in list(self.params.keys()):         # Add optional environmental variables.
+        # Add optional environmental variables.
+        # Permit passing the definitions both with setenv and with export
+        # If passed with export, convert to setenv and proceed as normal
+        if "export" in list(self.params.keys()):
+            self.params["setenv"] = self.params["export"]
+        if "setenv" in list(self.params.keys()):  # Add optional environmental variables.
             if not isinstance(self.params["setenv"], list):
                 self.params["setenv"] = [self.params["setenv"]]
             for setenv in self.params["setenv"]:         # Add optional environmental variables.
@@ -1295,7 +1320,8 @@ Sample slots:
 
         # Add "script_path" line - it must exist
         if not isinstance(self.params["script_path"],str):
-            raise AssertionExcept("'script_path' is not a string!")
+            raise AssertionExcept("'script_path' is not a string! Did you mean to use 'get_setenv_part()' rather "
+                                  "than 'get_script_env_path()'?")
         script_const += "%s \\\n\t" % self.params["script_path"]
 
         return script_const
@@ -1326,8 +1352,6 @@ Sample slots:
         except KeyError:
             self.params["qsub_params"] = self.pipe_data["qsub_params"]
         else:
-                
-
             # Updating step 'qsub_params' with global 'qsub_params', but with step params taking precedence!
             # 'opts' needs special attention. Needs to be 'updated' independently.
             # 1. deepcopy global qsub params
@@ -1495,9 +1519,13 @@ Sample slots:
                     self.write_warning("You provided extra 'conda' parameters. They will be ignored!")
                 
                 # print self.params["conda"]
-                self.params["conda"] = manage_conda_params(self.params["conda"])
-                # print self.params["conda"]
-                # sys.exit()
+                try:
+                    self.params["conda"] = manage_conda_params(self.params["conda"])
+                except Exception as raisedex:
+                    if len(raisedex.args)>=2 and raisedex.args[1] == "parameters":
+                        raise AssertionExcept(raisedex.args[0], step=self.get_step_name())
+                    else:
+                        raise raisedex
 
                 # Add bin at end of path
                 self.params["conda"]["path"] = os.path.join(self.params["conda"]["path"],"bin")    
@@ -1704,9 +1732,10 @@ Sample slots:
                 [level in self.get_category_levels(sample_dict["category"]) for level in sample_dict["levels"]]):
             bad_levels = ", ".join([level for level in sample_dict["levels"] if
                                     level not in self.get_category_levels(sample_dict["category"])])
-            raise AssertionExcept("Level '{lev}' is not defined for "
-                                  "category '{cat}'".format(lev=bad_levels,
-                                                            cat=sample_dict["category"]))
+            raise AssertionExcept(step=self.get_step_name(),
+                                  comment="Level '{lev}' is not defined for "
+                                          "category '{cat}'".format(lev=bad_levels,
+                                                                    cat=sample_dict["category"]))
         # Create new sample list:
         samples = list()
         for level in sample_dict["levels"]:

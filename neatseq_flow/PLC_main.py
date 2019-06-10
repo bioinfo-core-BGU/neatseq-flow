@@ -20,6 +20,7 @@ from copy import *
 from pprint import pprint as pp
 from datetime import datetime
 from collections import OrderedDict
+from traceback import format_exc
 
 from .modules.parse_sample_data import parse_sample_file,parse_grouping_file
 from .modules.parse_param_data import parse_param_file
@@ -53,8 +54,9 @@ class NeatSeqFlow(object):
             self.sample_data = parse_sample_file(sample_file)
         except Exception as raisedex:
             print("An exception has occurred in sample file reading. Double check!")
-            if raisedex.args[0] == "Issues in samples":
-                sys.exit()
+            if re.match(string=raisedex.args[0],pattern="Issues in"):
+                print(raisedex.args[1])
+                return
             raise
 
         try:
@@ -63,10 +65,12 @@ class NeatSeqFlow(object):
         except Exception as raisedex:
             
             if raisedex.args[0] == "Issues in parameters":
-                sys.exit()
+                print(raisedex.args[1])
+                return
             elif len(raisedex.args)>1:
                 if raisedex.args[1] in ["Variables", "parameters"]:
-                    sys.exit(raisedex.args[0])
+                    print(raisedex.args[0])
+                    return
                     # raise
                 else:  # Unknown
                     # sys.stderr.write("unknown exception type")
@@ -81,9 +85,11 @@ class NeatSeqFlow(object):
 
         if "grouping_file" in self.sample_data["project_data"]:
             if grouping_file:
-                sys.exit("You passed both --mapping via CLI and 'grouping_file' in the sample_file.")
+                print("ERROR: You passed both --mapping via CLI and 'grouping_file' in the sample_file.")
+                return
             if len(self.sample_data["project_data"]["grouping_file"]) >1:
-                sys.exit("You passed multiple grouping_files in the sample_file.")
+                print("ERROR: You passed multiple grouping_files in the sample_file.")
+                return
             else:
                 # If mapping file passed via sample file, transfer into grouping_file and remove from sample data
                 sys.stderr.write("Mapping file passed via samples file!\n")
@@ -93,7 +99,8 @@ class NeatSeqFlow(object):
         if grouping_file:
             if isinstance(grouping_file,list):
                 if len(grouping_file)>1:
-                    sys.exit("Please pass only one grouping file")
+                    print("Please pass only one grouping file")
+                    return
                 else:
                     grouping_file=grouping_file[0]
 
@@ -101,7 +108,8 @@ class NeatSeqFlow(object):
                 mapping_data = parse_grouping_file(grouping_file)
             except Exception as raisedex:
                 if raisedex.args[0] == "Issues in grouping":
-                    sys.exit(raisedex.args[1])
+                    print(raisedex.args[1])
+                    return
                 else:
                     raise
             # Merge sample_data with mapping_data:
@@ -233,12 +241,26 @@ class NeatSeqFlow(object):
         self.create_kill_scripts_dir()
 
         # Save name for dependency ensuring script
-        self.pipe_data["depends_script_name"] = self.pipe_data["scripts_dir"] + "98.Ensure_high_depends.csh"
+        self.pipe_data["depends_script_name"] = self.pipe_data["scripts_dir"] + "BB.Ensure_high_depends.csh"
 
         # Create step instances:
         sys.stdout.write("Making step instances...\n")
         sys.stdout.flush()
-        self.make_step_instances()
+
+        try:
+            self.make_step_instances()
+
+        except AssertionExcept as assertErr:
+            print(assertErr.get_error_str())
+            print("An error has occurred. See comment above.\n")
+            self.cleanup()
+            return
+
+        # Makes a step-order file. Is used for real-time sorting opf steps (e.g. recovery script)
+        self.create_step_order_file()
+
+        # Make utilities script (requires step order file)
+        self.create_utilities_script()
 
         # Create a dictionary for storing all step sample data
         self.make_global_sample_data_container()
@@ -360,28 +382,55 @@ class NeatSeqFlow(object):
         """ Run the actual script building
         """
 
+
+
+
         # For each step name (step_n), set sample_data based on the steps base(s) and then create scripts
         for step_n in self.step_list:
-           
-            # step_name = step_n.get_step_name()
-            # step_step = step_n.get_step_step()
+            try:
 
-            # Find base step(s) for current step: (If does not exist return None)
-            base_name_list = step_n.get_base_step_name()    
+                # step_name = step_n.get_step_name()
+                # step_step = step_n.get_step_step()
 
-            # For merge, 1st step, this will be true, passing the original sample_data to the step:
-            if base_name_list is None:
-                step_n.set_sample_data(self.sample_data)
-                step_n.set_base_step([])
-            # For the others, finds the instance(s) of the base step(s) and
-            # calls set_base_step() with the list of bases:
-            else:
-                # Note: set_base_step() takes a list of step objects, not names.
-                # Finding them is done by the .index() method.
-                step_n.set_base_step([self.step_list[self.step_list_index.index(base_name)] for base_name in base_name_list])
+                # Find base step(s) for current step: (If does not exist return None)
+                base_name_list = step_n.get_base_step_name()
 
-            # Do the actual script building for step_n
-            step_n.create_all_scripts()
+                # For merge, 1st step, this will be true, passing the original sample_data to the step:
+                if base_name_list is None:
+                    step_n.set_sample_data(self.sample_data)
+                    step_n.set_base_step([])
+                # For the others, finds the instance(s) of the base step(s) and
+                # calls set_base_step() with the list of bases:
+                else:
+                    # Note: set_base_step() takes a list of step objects, not names.
+                    # Finding them is done by the .index() method.
+                    step_n.set_base_step([self.step_list[self.step_list_index.index(base_name)] for base_name in base_name_list])
+
+                # Do the actual script building for step_n
+                step_n.create_all_scripts()
+
+            # Catching cases where a module refers to a file type that does not exist. This is so that the module
+            # developer does not have to check all file types he might need.
+            # All other exceptions will be raised as-is for debiugging by module developer.
+            except KeyError as keyexc:
+                t1 = format_exc()
+                t1 = t1.split("\n")[-3]
+                # In last line but one, see if the exception is in a reference to self.sample_data. If so, extract type
+                # and raise AssertionExcept.
+                parse_error = re.search(string=t1, pattern="self\.sample_data\[(.*?)\]\[(.*?)\]")
+                if parse_error is not None:
+                    key_lev, file_type = parse_error.groups()
+                    raise AssertionExcept("Type {type} does not exists! Check scope and previous steps.".
+                                          format(type=file_type),
+                                          step=step_n.get_step_name())
+                if re.search(string=t1, pattern="self\.params"):
+                    print(t1)
+                    dict_path = re.findall(string=t1, pattern="\[(.*?)\]")
+                    raise AssertionExcept("You have to define the following key in the parameter file: {type} ".
+                                          format(type="->".join(dict_path)),
+                                          step=step_n.get_step_name())
+
+                raise keyexc
 
     def make_depends_dict(self):
         """ Creates and returns the basic depend_dict structure
@@ -501,7 +550,7 @@ class NeatSeqFlow(object):
 # __   |/ / _  _ \_  __ `/_  __/_____ \ _  _ \_  __ `/__________  /_    __  / _  __ \__ | /| / /
 # _  /|  /  /  __// /_/ / / /_  ____/ / /  __// /_/ / _/_____/_  __/    _  /  / /_/ /__ |/ |/ / 
 # /_/ |_/   \___/ \__,_/  \__/  /____/  \___/ \__, /          /_/       /_/   \____/ ____/|__/  
-#                                             /_/                                             
+#                                               /_/                                             
 
 # This is the main executable script of this pipeline
 # It was created on {date} by NeatSeq-Flow version {version}
@@ -547,6 +596,13 @@ class NeatSeqFlow(object):
                     # Writing header :)
                     tag_fh.write("""
 \n\n
+# _____   __              _____ ________                      ________________                  
+# ___  | / /_____ ______ ___  /___  ___/_____ ______ _        ___  ____/___  /______ ___      __
+# __   |/ / _  _ \_  __ `/_  __/_____ \ _  _ \_  __ `/__________  /_    __  / _  __ \__ | /| / /
+# _  /|  /  /  __// /_/ / / /_  ____/ / /  __// /_/ / _/_____/_  __/    _  /  / /_/ /__ |/ |/ / 
+# /_/ |_/   \___/ \__,_/  \__/  /____/  \___/ \__, /          /_/       /_/   \____/ ____/|__/  
+#                                               /_/                                             
+
 # This is the executable script for tag {tag}
 # It was created on {date} by NeatSeq-Flow version {version}
 # See http://neatseq-flow.readthedocs.io/en/latest/
@@ -581,25 +637,26 @@ class NeatSeqFlow(object):
             StepClass = getattr(importlib.import_module(step_module_loc), 'Step_'+step_type)
             # exec "from %s import %s as StepClass" % (step_module_loc,'Step_' + step_type)
         except ImportError:
-            print("An error has occurred loading module %s.\n" % step_module_loc)
-            print("CMD: from %s import %s as StepClass\n" % (step_module_loc,'Step_' + step_type))
-            raise
+            raise AssertionExcept("""\
+An error has occurred loading module {loc}.
+CMD: from {loc} import {type} as StepClass""".format(loc=step_module_loc,type='Step_' + step_type),
+                                  step=step_name)
 
         # Run constructor:
-        try:
-            new_step = StepClass(name=step_name,
-                                 step_type=step_type,
-                                 params=step_params,
-                                 pipe_data=self.pipe_data,
-                                 module_path=step_module_path,
-                                 caller=self)
+        # try:
+        new_step = StepClass(name=step_name,
+                             step_type=step_type,
+                             params=step_params,
+                             pipe_data=self.pipe_data,
+                             module_path=step_module_path,
+                             caller=self)
 
-            return new_step
-        except AssertionExcept as assertErr:
-            print(assertErr.get_error_str())
-            print(("An error has occurred in step initialization (type: %s). See comment above.\n" % step_type))
-            self.cleanup()
-            sys.exit()
+        return new_step
+        # except AssertionExcept as assertErr:
+        #     print(assertErr.get_error_str())
+        #     print(("An error has occurred in step initialization (type: %s). See comment above.\n" % step_type))
+        #     self.cleanup()
+        #     sys.exit()
 
             
     def set_qstat_path(self):
@@ -711,8 +768,7 @@ class NeatSeqFlow(object):
         """ This function creates the 97.helper_funcs.sh script
             In includes functions to be execute for trapping error and SIGUSR2 signals 
         """
-        
-        self.pipe_data["helper_funcs"] = self.pipe_data["scripts_dir"] + "97.helper_funcs.sh"
+        self.pipe_data["helper_funcs"] = self.pipe_data["scripts_dir"] + "CC.helper_funcs.sh"
 
         modname = "neatseq_flow.script_constructors.scriptconstructor{executor}".\
             format(executor=self.pipe_data["Executor"])
@@ -727,12 +783,23 @@ class NeatSeqFlow(object):
             print("Make sure the script constructor defines class method 'get_helper_script()'")
             raise
 
+    def create_utilities_script(self):
+        """ This function creates the 97.helper_funcs.sh script
+            In includes functions to be execute for trapping error and SIGUSR2 signals
+        """
+
+        modname = "neatseq_flow.script_constructors.scriptconstructor{executor}". \
+            format(executor=self.pipe_data["Executor"])
+        classname = "ScriptConstructor{executor}".format(executor=self.pipe_data["Executor"])
+        scriptclass = getattr(importlib.import_module(modname), classname)
+
         try:
             utilities_script = scriptclass.get_utilities_script(self.pipe_data)
             if utilities_script:
-                with open(self.pipe_data["scripts_dir"] + "96.utilities.sh", "w") as script_fh:
+                with open(self.pipe_data["scripts_dir"] + "DD.utilities.sh", "w") as script_fh:
                     script_fh.write(utilities_script)
         except:
+            raise
             pass
 
 
@@ -811,14 +878,31 @@ Date\tStep\tName\tScript\tFile\tmd5sum\n
 
         # Set script_index filename in pipe_data
         # Used for connecting qsub_names with script paths and more
-        self.pipe_data["dependency_index"] = "".join([self.pipe_data["objects_dir"], "dependency_index_",
-                                                      self.pipe_data["run_code"] ,
+        self.pipe_data["dependency_index"] = "".join([self.pipe_data["objects_dir"], "dependency_index",
+                                                      # self.pipe_data["run_code"] ,
                                                       ".txt"])
 
         with open(self.pipe_data["dependency_index"], "w") as depends_f:
             for step_i in self.depend_dict:
                 for depend_i in self.depend_dict[step_i]:
                     depends_f.write("\t".join([depend_i, step_i])+"\n")
+
+    def create_step_order_file(self):
+        """
+
+        :return:
+        """
+
+        # Creating a step order file. Contains the step number (as appears in script name) and high-level jid name
+        # E.g. merge..merge1..20190313090409
+        self.pipe_data["step_order"] = "".join([self.pipe_data["objects_dir"], "step_order.txt"])
+
+        with open(self.pipe_data["step_order"], "w") as depends_f:
+            for step_i in self.step_list:
+                depends_f.write("{num}\t{name}\n".format(num=step_i.get_step_number(),
+                                                         name=step_i.jid_name_sep.join([step_i.get_step_step(),
+                                                                                        step_i.get_step_name(),
+                                                                                        self.run_code])))
 
     def get_dict_encoding(self):
         """ Returns a dict representation of the pipeline.
@@ -859,7 +943,7 @@ Date\tStep\tName\tScript\tFile\tmd5sum\n
         filenames = param_file.split(",")
         i = 0
         for filename in filenames:
-            shutil.copyfile(filename, "%s%s_params_%d.txt" % (self.pipe_data["backups_dir"],
+            shutil.copyfile(filename, "%s%s_params_%d.yaml" % (self.pipe_data["backups_dir"],
                                                                 self.pipe_data["run_code"],
                                                                 i))
             i += 1
@@ -1055,6 +1139,7 @@ library(reshape2); library(googleVis); args <- commandArgs(trailingOnly =T);log_
         nodes_list = []
         nodes_list_step = []
         step_colors_index = dict()
+        tag_list = []
         # For each step, create text encoding of connection between it and all it's base steps.
         # Print links_part to see what it looks like
         for step in self.step_list:
@@ -1086,16 +1171,21 @@ library(reshape2); library(googleVis); args <- commandArgs(trailingOnly =T);log_
                     
                 
         skipped_props = ", style = dashed" # Additional properties for skipped steps.
-        
+
+        # Getting a list of tags
+        tag_list.extend(step.get_step_tag())
+
         # sys.exit()
         links_part = "\n".join(links_part)
-        nodes_part = "\n".join(["{node_num} [label = '@@{node_num}', fillcolor = {step_col} {skipped}]".format( \
+        nodes_part = "\n".join(["{node_num} [label = '@@{node_num}', fillcolor = {step_col} {skipped}]".format(
                                 node_num = 1+counter,
-                                step_col = "gray" if "SKIP" in self.step_list[self.step_list_index.index(step)].params else step_colors_index[nodes_list_step[counter]], \
-                                skipped  = skipped_props if "SKIP" in self.step_list[self.step_list_index.index(step)].params else "")
-                                    for counter,step in enumerate(nodes_list)])
+                                step_col = "gray" if self.step_list[self.step_list_index.index(step)].skip_scripts
+                                                  else step_colors_index[nodes_list_step[counter]],
+                                skipped=skipped_props if self.step_list[self.step_list_index.index(step)].skip_scripts
+                                                      else "")
+                                for counter,step in enumerate(nodes_list)])
         footnote_part = "\n".join(["[%d]: '%s\\\\n(%s)'" % (1+counter, step, nodes_list_step[counter])
-                                    for counter,step in enumerate(nodes_list)])
+                                   for counter,step in enumerate(nodes_list)])
        
         Gviz_text =  """
 # Check if required packages are installed:
@@ -1113,6 +1203,8 @@ library(htmlwidgets)
 myviz <- grViz("
 digraph a_nice_graph {{
       
+tooltip = 'Graph for workflow {title}'
+
 # node definitions with substituted label text
 node [shape = egg, style = filled, fontname = Helvetica]
 {nodes_p}
@@ -1373,6 +1465,6 @@ saveWidget(myviz,file = "{out_file_name}",selfcontained = F, title="{title}")
         """
         # Make script file
         # For each step, call the removal command
-        with open(self.pipe_data["scripts_dir"] + "95.remove_intermediates.sh", "w") as script_fh:
+        with open(self.pipe_data["scripts_dir"] + "EE.remove_intermediates.sh", "w") as script_fh:
             for instance in self.step_list:
                 script_fh.writelines(instance.get_rm_intermediate_line())

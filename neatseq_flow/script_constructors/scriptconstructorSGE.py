@@ -73,44 +73,54 @@ wait_limit() {{
         util_script = super(ScriptConstructorSGE, cls).get_utilities_script(pipe_data)
 
         # # Steps:
-        # 1. Find failed steps in log file
+        # 0. Get list of running jobs from qstat
+        # 1. Find failed steps in log file:
+            # a. if a job has started AND IS NOT running, add to suspects list
+            # b. if the SAME job finished successfully, remove from suspects list -> failed list
+            # c. Print instance name of failed list
         # 2. Find downstream steps in depend_file
         # 3. Get qsub commands from main script
         # 4. Execute the qsub command
 
-        recover_script = util_script + """
+        recover_script = """
 # Recover a failed execution
 function recover_run {{
+    echo -e "The following steps will be re-executed:"
+    runlist=$(qstat | cut -f1 -d" " | tr "\\n" " ") 
     cat {log_file} \\
-        | awk '{{  if(NR<=9) {{next}}; 
-                    if($3=="Started" && $11 ~ "OK") {{jobs[$6]=$5;}}
-                    if($3=="Finished" && $11 ~ "OK") {{delete jobs[$6]}}
+        | awk -v runlist="$runlist"  '{{  if(NR<=9) {{next}};
+                    if($3=="Started" && $11 ~ "OK" && index(runlist,$9)==0) {{
+                        jobs[$6]=$5; ids[$6]=$9;
+                    }}
+                    if($3=="Finished" && $11 ~ "OK" && $9==ids[$6]) {{
+                        delete jobs[$6]; 
+                        delete ids[$6]; 
+                    }}
                 }}
                 END {{
-                    for (key in jobs) {{ 
+                    for (key in jobs) {{
                         print jobs[key]
-                    }} 
-                
-                }}'  \\
+                    }}
+                }}' \\
         | while read step; do \\
             echo $step; \\
             grep $step {depend_file} | cut -f2; 
           done \\
         | sort -u \\
         | while read step; do \\
-            grep $step {main} | egrep -v "^#|^echo" | cut -f2 -d" ";
+            echo $step 1>&2
+            grep $step {main} | egrep -v "^#|^echo";
           done \\
         | sort -u \\
-        | while read line; do \\
-            echo $line;
-            qsub $line; \\
-          done
+        > {recover_script}
+    echo -e "\\nWritten recovery code. Execute with:\\nbash {recover_script}\\n\\n" 
 }}
-        """.format(log_file=pipe_data["log_file"],
-                   depend_file=pipe_data["dependency_index"],
-                   main=pipe_data["scripts_dir"] + "00.workflow.commands.sh")
+                """.format(log_file=pipe_data["log_file"],
+                           depend_file=pipe_data["dependency_index"],
+                           main=pipe_data["scripts_dir"] + "00.workflow.commands.sh",
+                           recover_script=pipe_data["scripts_dir"] + "AA.Recovery_script.sh")
 
-        return recover_script + """
+        util_functions = """
 # Show active jobs
 function show_PL_jobs { 
     currid=$(tail -n1  logs/version_list.txt | xargs | cut -f1)
@@ -134,15 +144,20 @@ function tail_curr_log {
 
 function kill_all_PL_jobs {
     currid=$(tail -n1  logs/version_list.txt | xargs | cut -f1)
-    qstat -j *$currid \\
-        | grep -e job_number \\
-        | cut -f2 -d ":" \\
-        | while read jid; \\
-          do qdel $jid; \\
-          done
-
+    qdel *$currid 
 }
 """
+
+    # currid=$(tail -n1  logs/version_list.txt | xargs | cut -f1)
+    # qstat -j *$currid \\
+    #     | grep -e job_number \\
+    #     | cut -f2 -d ":" \\
+    #     | while read jid; \\
+    #       do qdel $jid; \\
+    #       done
+
+        return util_script + recover_script + util_functions
+
 
     def get_command(self):
         """ Return the command for executing this script
@@ -333,7 +348,7 @@ wait_limit
         script = """
 # ---------------- Code for {script_id} ------------------
 {job_limit}
-echo '{qdel_line}' >> {step_kill_file}
+# echo '{qdel_line}' >> {step_kill_file}
 # Adding qsub command:
 qsub {script_name}
 
@@ -346,7 +361,15 @@ qsub {script_name}
         return script
 
     def get_script_postamble(self):
-                            
+        """ Local script postamble is same as general postamble with addition of sed command to mark as finished in run_index
+        """
+
+        # Write the kill command to the kill script
+        try:
+            self.kill_obj.write_kill_cmd(self)
+        except AttributeError:
+            pass
+
         # Get general postamble
         postamble = super(HighScriptConstructorSGE, self).get_script_postamble()
 
@@ -362,6 +385,14 @@ csh {depends_script_name}
         return script
 
     def main_script_kill_commands(self, kill_script_filename_main):
+        """
+        Adds a qdel command for the high-level script in the main kill_file.
+        The purpose is to kill all high-level scripts before deleting low level scripts to stop the high-levels script
+        from releasing more low-level scripts before deletion is complete
+        TODO: May no be necessary, If qdel * deletes all jobs at once. Have to check
+        :param kill_script_filename_main:
+        :return:
+        """
 
         f = open(kill_script_filename_main, 'r')
         kill_file = f.read()
@@ -439,4 +470,21 @@ class KillScriptConstructorSGE(ScriptConstructorSGE,KillScriptConstructor):
         """ Return main kill-script postamble"""
 
         return ""
+
+    def write_kill_cmd(self, caller_script):
+        """
+
+        :return:
+        """
+
+        # Create one killing routine for all instance jobs:
+        script = """\
+qdel {step}{sep}{name}*{run_index}
+
+""".format(run_index = self.pipe_data["run_code"],
+           step=caller_script.step,
+           name=caller_script.name,
+           sep=caller_script.master.jid_name_sep)
+
+        self.filehandle.write(script)
 
