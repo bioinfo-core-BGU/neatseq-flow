@@ -2,7 +2,7 @@
 """ A class defining a pipeline.
 
 This class takes input files: samples and parameters, and creates a qsub pipeline, including dependencies
-Actual work is done by calling other class types: PLCStep and PLCName
+Actual work is done by calling other class types: PLC_step
 """
 
 __author__ = "Menachem Sklarz"
@@ -50,6 +50,7 @@ class NeatSeqFlow(object):
         sys.stdout.write("Reading files...\n")
         sys.stdout.flush()
 
+        # Reading sample_file
         try:
             self.sample_data = parse_sample_file(sample_file)
         except Exception as raisedex:
@@ -58,12 +59,10 @@ class NeatSeqFlow(object):
                 print(raisedex.args[1])
                 return
             raise
-
+        # Reading parameter file
         try:
             self.param_data = parse_param_file(param_file)
-
         except Exception as raisedex:
-            
             if raisedex.args[0] == "Issues in parameters":
                 print(raisedex.args[1])
                 return
@@ -77,12 +76,10 @@ class NeatSeqFlow(object):
                     raise
             else:
                 raise
-            # sys.stderr.write("An exception has occurred in parameter file reading. Double check!")
-            # raise
         except:
             raise
 
-
+        # Grouping file can be passed via CLI or via sample data file. Checking it isn't passed both ways.
         if "grouping_file" in self.sample_data["project_data"]:
             if grouping_file:
                 print("ERROR: You passed both --mapping via CLI and 'grouping_file' in the sample_file.")
@@ -120,17 +117,6 @@ class NeatSeqFlow(object):
                     sys.exit("sample {smp} does no exist in grouping data".format(smp=sample))
                 self.sample_data[sample]["grouping"] = mapping_data[sample]
 
-        if list_modules:
-            sys.stdout.write("Finding modules...\n")
-            sys.stdout.flush()
-            module_list = self.find_modules()
-            print("Modules available in the supplied module_paths:\n------------------------------\n")
-            print("\n".join(["- {mod} ({dirs})".format(mod=module,dirs=",".join(list(set(module_list[module]))))
-                             for module #,dir_list
-                             in sorted(module_list)]))
-
-            return
-
         sys.stdout.write("Preparing objects...\n")
         sys.stdout.flush()
 
@@ -165,14 +151,6 @@ class NeatSeqFlow(object):
 
         self.pipe_data["verbose"] = verbose
 
-        # Making a step name index (dict of form {step_name:step_type})
-        # Storing in self.name_index
-        self.make_names_index()
-
-        # Expanding dependencies based on "base" parameter:
-        # Storing in self.depend_dict 
-        self.expand_depends()
-
         # Create run code to identify the scripts etc.
         # Date+rand num (to preserve order of pipelines)
         if runid:
@@ -205,7 +183,27 @@ class NeatSeqFlow(object):
 
         # Define conda parameters
         self.define_conda_params()
-        
+
+        # Searching for available modules and returning the list
+        if list_modules:
+            sys.stdout.write("Finding modules...\n")
+            sys.stdout.flush()
+            module_list = self.find_modules()
+            print("Modules available in the supplied module_paths:\n------------------------------\n")
+            print("\n".join(["- {mod} ({dirs})".format(mod=module,dirs=",".join(list(set(module_list[module]))))
+                             for module #,dir_list
+                             in sorted(module_list)]))
+
+            return
+
+        # Making a step name index (dict of form {step_name:step_type})
+        # Storing in self.name_index
+        self.make_names_index()
+
+        # Expanding dependencies based on "base" parameter:
+        # Storing in self.depend_dict
+        self.expand_depends()
+
         # Create directory structure:
         sys.stdout.write("Creating directory structure...\n")
         sys.stdout.flush()
