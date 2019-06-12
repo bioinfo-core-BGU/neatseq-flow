@@ -1558,7 +1558,7 @@ Sample slots:
         :return: List of levels in category
         """
         try:
-            return list({self.sample_data[sample]["grouping"][category]
+            return list({self.sample_data[sample]["..grouping.."][category]
                          for sample
                          in self.sample_data["samples"]})
         except KeyError:
@@ -1570,7 +1570,7 @@ Sample slots:
         return [sample
                 for sample
                 in self.sample_data["samples"]
-                if self.sample_data[sample]["grouping"][category] == cat_level]
+                if self.sample_data[sample]["..grouping.."][category] == cat_level]
 
 
     def create_group_slots(self, category):
@@ -1707,7 +1707,7 @@ Sample slots:
         bad_samples = [sample
                        for sample
                        in self.sample_data["samples"]
-                       if "grouping" not in self.sample_data[sample]]
+                       if "..grouping.." not in self.sample_data[sample]]
         if bad_samples:
             raise AssertionExcept("For some reason, sample '{smp}' does not have "
                                   "grouping data".format(smp=", ".join(bad_samples)))
@@ -1715,7 +1715,7 @@ Sample slots:
         bad_samples = [sample
                        for sample
                        in self.sample_data["samples"]
-                       if sample_dict["category"] not in self.sample_data[sample]["grouping"]]
+                       if sample_dict["category"] not in self.sample_data[sample]["..grouping.."]]
         if bad_samples:
             raise AssertionExcept(
                 "Sample '{smp}' does not have '{cat}' category".format(smp=", ".join(bad_samples),

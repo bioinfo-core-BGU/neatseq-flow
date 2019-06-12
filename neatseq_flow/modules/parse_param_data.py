@@ -372,6 +372,10 @@ def test_and_modify_global_params(global_params):
     # Setting default Executor to SGE:
     if "Executor" not in global_params:
         global_params["Executor"] = "SGE"
+    # Setting default Default_wait to 10:
+    if "Default_wait" not in global_params:
+        global_params["Default_wait"] = 10
+
     # Testing executor is one of defined types:
     if global_params["Executor"] not in list(SUPPORTED_EXECUTORS.keys()):
         print("Executor {executor} is not one of " \

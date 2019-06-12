@@ -182,7 +182,7 @@ class Step_merge(Step):
         self.file_tag = "merge"
 
         # TODO: Find a better way for doing this
-        self.conserved_sample_types = ["type","grouping"]
+        self.conserved_sample_types = ["type","..grouping.."]
 
         # Load YAML of file type stored in merge_file_types.yml
         with open(os.path.join(os.path.dirname(os.path.realpath(__file__)),"merge_file_types.yml"),"r") as fileh:

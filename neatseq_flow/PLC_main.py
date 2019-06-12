@@ -58,7 +58,7 @@ class NeatSeqFlow(object):
             if re.match(string=raisedex.args[0],pattern="Issues in"):
                 print(raisedex.args[1])
                 return
-            raise
+            raise raisedex
         # Reading parameter file
         try:
             self.param_data = parse_param_file(param_file)
@@ -115,7 +115,7 @@ class NeatSeqFlow(object):
             for sample in self.sample_data["samples"]:
                 if sample not in mapping_data:
                     sys.exit("sample {smp} does no exist in grouping data".format(smp=sample))
-                self.sample_data[sample]["grouping"] = mapping_data[sample]
+                self.sample_data[sample]["..grouping.."] = mapping_data[sample]
 
         sys.stdout.write("Preparing objects...\n")
         sys.stdout.flush()
@@ -123,20 +123,19 @@ class NeatSeqFlow(object):
         # Prepare dictionary for pipe data
         self.pipe_data = dict()
 
-        # Is not currently used. Saves order of steps in parameter file.
-        self.pipe_data["usr_step_order"] = self.param_data["usr_step_order"]
-        del(self.param_data["usr_step_order"])
+        # # Is not currently used. Saves order of steps in parameter file.
+        # self.pipe_data["usr_step_order"] = self.param_data["usr_step_order"]
+        # del(self.param_data["usr_step_order"])
 
         # Saving Executor in pipe_data
         self.pipe_data["Executor"] = self.param_data["Global"]["Executor"]
-        # Determine type of sample: SE, PE or mixed:
-        # Removed usage of sample type. Rarely used and compliactes matters with sample grouping
-        self.determine_sample_types()
 
         # if home_dir is None or empty, set to cwd, else leave as is
         self.pipe_data["home_dir"] = home_dir if home_dir else os.getcwd()
         # Assert that the dir is a valid existing directory:
-        assert os.path.isdir(self.pipe_data["home_dir"]), "Directory %s does not exist!\n" % self.pipe_data["home_dir"]
+        if not os.path.isdir(self.pipe_data["home_dir"]):
+            sys.stderr.write("Directory %s does not exist!\n" % self.pipe_data["home_dir"])
+            return
         self.pipe_data["home_dir"] = os.path.realpath(self.pipe_data["home_dir"])
 
         # Store message:
@@ -166,7 +165,7 @@ class NeatSeqFlow(object):
                     sys.exit("First run. Please do not set 'runid' to 'curr'")
 
             if re.search("\s",runid):
-                sys.exit("--runid should not contain whitespacve characters")
+                sys.exit("--runid should not contain whitespace characters")
             self.run_code = runid
         else:
             self.run_code = datetime.now().strftime("%Y%m%d%H%M%S")  # (Is always used as a string)
@@ -175,6 +174,10 @@ class NeatSeqFlow(object):
             self.pipe_data["Default_wait"] = self.param_data["Global"]["Default_wait"]
         if "job_limit" in list(self.param_data["Global"].keys()):
             self.pipe_data["job_limit"] = self.param_data["Global"]["job_limit"]
+
+        # Determine type of sample: SE, PE or mixed:
+        # Removed usage of sample type. Rarely used and complicates matters with sample grouping
+        self.determine_sample_types()
 
         self.manage_qsub_params()
 
@@ -192,7 +195,7 @@ class NeatSeqFlow(object):
             print("Modules available in the supplied module_paths:\n------------------------------\n")
             print("\n".join(["- {mod} ({dirs})".format(mod=module,dirs=",".join(list(set(module_list[module]))))
                              for module #,dir_list
-                             in sorted(module_list)]))
+                             in sorted(module_list, key=str.lower)]))   # Sort by alphabetical order ignoring case.
 
             return
 
@@ -768,8 +771,10 @@ CMD: from {loc} import {type} as StepClass""".format(loc=step_module_loc,type='S
         """
         self.pipe_data["helper_funcs"] = self.pipe_data["scripts_dir"] + "CC.helper_funcs.sh"
 
+        # modname: the module path for current executor
         modname = "neatseq_flow.script_constructors.scriptconstructor{executor}".\
             format(executor=self.pipe_data["Executor"])
+        # classname: the name of the class for current executor
         classname = "ScriptConstructor{executor}".format(executor=self.pipe_data["Executor"])
 
         try:
