@@ -58,7 +58,7 @@ Install and execute NeatSeq-Flow **with Conda**
 
    .. code-block:: bash
 
-      wget http://neatseq-flow.readthedocs.io/en/latest/extra/NeatSeq_Flow_conda_env.yaml
+      curl -LO http://neatseq-flow.readthedocs.io/en/latest/extra/NeatSeq_Flow_conda_env.yaml
 
 #. Create an environment:
 

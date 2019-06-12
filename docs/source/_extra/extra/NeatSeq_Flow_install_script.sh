@@ -28,7 +28,7 @@ if [[ $1 =~ ^te ]]; then
     # Make a directory for conda installation
     mkdir NeatSeq_Flow_install; cd NeatSeq_Flow_install;
     # Download and execute conda installer into current directory:
-    wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh
+    curl -LO https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh
     CURRENT_DIR=$(readlink -f .)
     sh Miniconda3-latest-Linux-x86_64.sh -b -f -p $CURRENT_DIR
     PREFIX="$CURRENT_DIR/bin"
@@ -42,7 +42,7 @@ elif [[ $1 =~ ^pe ]]; then
         echo -e "miniconda already installed in " $PREFIX ". Using existing installation."
     else
         # Download and execute conda installer into current directory:
-        wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh
+        curl -LO https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh
         sh Miniconda3-latest-Linux-x86_64.sh -b -f
         echo "Adding miniconda to path in .bashrc"
         echo export PATH=\"$PREFIX:\$PATH\" >> $HOME/.bashrc
@@ -60,11 +60,11 @@ conda install -y -c anaconda git
 
 
 # Get NeatSeq_Flow installer and create environment:
-wget http://neatseq-flow.readthedocs.io/en/latest/extra/NeatSeq_Flow_conda_env.yaml
+curl -LO http://neatseq-flow.readthedocs.io/en/latest/extra/NeatSeq_Flow_conda_env.yaml
 conda env create --force -p $CONDA_DIR/envs/NeatSeq_Flow -f NeatSeq_Flow_conda_env.yaml
 
 ## Get NeatSeq_Flow_GUI installer and create environment:
-#wget https://raw.githubusercontent.com/bioinfo-core-BGU/NeatSeq-Flow-GUI/master/NeatSeq_Flow_GUI_installer.yaml
+#curl -LO https://raw.githubusercontent.com/bioinfo-core-BGU/NeatSeq-Flow-GUI/master/NeatSeq_Flow_GUI_installer.yaml
 #conda env create --force -f NeatSeq_Flow_GUI_installer.yaml
 
 
@@ -106,7 +106,7 @@ neatseq_flow.py --help
 
 # To deactivate the environment:
 
-conda deactivate
+source deactivate
 
 CONTINUE
 

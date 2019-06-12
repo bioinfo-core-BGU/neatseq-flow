@@ -105,7 +105,7 @@ Everything will be installed in a directory called ``NeatSeq_Flow_install`` in y
    .. code-block:: bash
 
     cd $HOME
-    wget https://raw.githubusercontent.com/bioinfo-core-BGU/neatseq-flow/master/docs/source/_extra/extra/NeatSeq_Flow_install_script.sh
+    curl -LO https://raw.githubusercontent.com/bioinfo-core-BGU/neatseq-flow/master/docs/source/_extra/extra/NeatSeq_Flow_install_script.sh
     bash NeatSeq_Flow_install_script.sh temp
     export PATH=$HOME'/NeatSeq_Flow_install/bin:'$PATH
     

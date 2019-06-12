@@ -36,7 +36,7 @@ Install Conda
 
    .. code-block:: bash
 
-        wget https://repo.continuum.io/miniconda/Miniconda2-latest-Linux-x86_64.sh
+        curl -LO https://repo.continuum.io/miniconda/Miniconda2-latest-Linux-x86_64.sh
         sh Miniconda2-latest-Linux-x86_64.sh
 
    **During conda’s installation: type *yes* to add conda to the PATH**
@@ -63,7 +63,7 @@ Install NeatSeq-Flow
 
    .. code-block:: bash
    
-        wget https://raw.githubusercontent.com/bioinfo-core-BGU/neatseq-flow-tutorial/master/NeatSeq_Flow_Tutorial_Install.yaml
+        curl -LO https://raw.githubusercontent.com/bioinfo-core-BGU/neatseq-flow-tutorial/master/NeatSeq_Flow_Tutorial_Install.yaml
 
 3. Create the **NeatSeq_Flow_Tutorial** conda environment:
 
@@ -75,13 +75,13 @@ Install NeatSeq-Flow
 
    .. code-block:: bash
    
-      wget https://raw.githubusercontent.com/bioinfo-core-BGU/NeatSeq-Flow-GUI/master/doc/Tutorial_Parameter_file.yaml
+      curl -LO https://raw.githubusercontent.com/bioinfo-core-BGU/NeatSeq-Flow-GUI/master/doc/Tutorial_Parameter_file.yaml
 
 5. Download the **Tutorial Work-Flow Sample file**
 
    .. code-block:: bash
 
-      wget https://raw.githubusercontent.com/bioinfo-core-BGU/neatseq-flow-tutorial/master/Samples_conda.nsfs
+      curl -LO https://raw.githubusercontent.com/bioinfo-core-BGU/neatseq-flow-tutorial/master/Samples_conda.nsfs
 
 Install NeatSeq-Flow-GUI
 ------------------------
@@ -90,7 +90,7 @@ Install NeatSeq-Flow-GUI
 
    .. code-block:: bash
 
-      wget https://raw.githubusercontent.com/bioinfo-core-BGU/NeatSeq-Flow-GUI/master/NeatSeq_Flow_GUI_installer.yaml
+      curl -LO https://raw.githubusercontent.com/bioinfo-core-BGU/NeatSeq-Flow-GUI/master/NeatSeq_Flow_GUI_installer.yaml
 
 2. Create the **NeatSeq_Flow_GUI** conda environment:
 

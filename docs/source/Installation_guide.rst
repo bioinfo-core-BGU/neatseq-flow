@@ -118,7 +118,7 @@ For Linux 64bit, in the terminal:
 
 .. code-block:: bash
 
-        wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh
+        curl -LO https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh
         sh Miniconda3-latest-Linux-x86_64.sh
 
 **During conda’s installation: type *yes* to add conda to the PATH**
@@ -140,7 +140,7 @@ Install **NeatSeq-Flow**
 
    .. code-block:: bash
 
-        wget http://neatseq-flow.readthedocs.io/en/latest/extra/NeatSeq_Flow_conda_env.yaml
+        curl -LO http://neatseq-flow.readthedocs.io/en/latest/extra/NeatSeq_Flow_conda_env.yaml
 
 #. Create the **NeatSeq_Flow** conda environment:
 
