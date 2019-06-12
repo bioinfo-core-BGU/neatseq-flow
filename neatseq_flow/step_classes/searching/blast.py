@@ -1,6 +1,6 @@
 # -*- coding: UTF-8 -*-
 """ 
-``blast_new`` - Alternative implementation
+``blast``
 ----------------------------------------------------
 
 :Authors: Menachem Sklarz
@@ -12,16 +12,20 @@ The search can be either on a sample fasta or on a project-wide fasta.
 It can use the fasta as a database or as a query.
 If used as a database, you must call the makeblastdb module prior to this step.
 
-both ``-query`` and ``-db`` must be passed in the redirected parameters. They should be set to one of the following values:
+both ``query`` and ``db`` parameters must be passed. They should be set to one of the following values:
 
-* ``sample`` - The ``-query`` or ``-db`` should be taken from the sample scope
+.. csv-table::
+    :header: "Value", "Description"
+    :widths: 7, 15
 
-* ``project`` - The ``-query`` or ``-db`` should be taken from the project scope
-  
-* **A path** - A path to a ``fasta`` file or ``makeblastdb`` database to use in the parameter as-is.
+    "``sample``", "The ``query`` or ``db`` should be taken from the sample scope"
+    "``project``", "The ``query`` or ``db`` should be taken from the project scope"
+    "**A path**", "A path to a *fasta* file or ``makeblastdb`` database to use as-is"
 
-The type of fasta and database to use are set with the ``querytype`` and ``dbtype`` parameters, respectively. ``dbtype`` must be set if ``-db`` is set to ``sample`` or ``project``. **``querytype`` must be set regardless.** It will determine the type of blast report (*i.e.* whether it will be stored in ``blast.nucl`` or ``blast.prot``)
+The type of fasta and database to use are set with the ``querytype`` and ``dbtype`` parameters, respectively.
 
+* ``dbtype`` must be set if ``db`` is set to ``sample`` or ``project``.
+* ``querytype`` **must be set regardless.** It will determine the type of blast report (*i.e.* whether it will be stored in ``blast.nucl`` or ``blast.prot``)
 
     
 Requires:
@@ -47,7 +51,15 @@ Requires:
 
         * ``sample_data[<sample>]["blastdb.nucl"|"blastdb.prot"]``
 
-    
+.. csv-table::
+    :header: "File type", "Scope", "Comments"
+    :widths: 15, 10, 10
+
+    "``fasta.nucl``", "sample/project", "If ``query`` is ``sample`` or ``project`` and ``querytype`` is ``nucl``"
+    "``fasta.prot``", "sample/project", "If ``query`` is ``sample`` or ``project`` and ``querytype`` is ``prot``"
+    "``blastdb.nucl``", "sample/project", "If ``db`` is ``sample`` or ``project`` and ``dbtype`` is ``nucl``"
+    "``blastdb.prot``", "sample/project", "If ``db`` is ``sample`` or ``project`` and ``dbtype`` is ``prot``"
+
     
 Output:
 ~~~~~~~~~~~~~
@@ -61,6 +73,14 @@ Output:
     
     * ``sample_data["blast.nucl"|"blast.prot"]``
     * ``sample_data["blast"]``
+
+.. csv-table::
+    :header: "File type", "Scope", "Comments"
+    :widths: 15, 10, 10
+
+    "``blast.nucl``", "sample/project", "Blast report if ``querytype`` is ``nucl``"
+    "``blast.prot``", "sample/project", "Blast report if ``querytype`` is ``prot``"
+    "``blast``", "sample/project", "Blast report, regardless of ``querytype``"
 
 
 Parameters that can be set        
@@ -86,12 +106,12 @@ External query, project-wise *nucl*-type database (must be proceeded by ``makebl
 
 
     tbl_blst_int:
-        module:             blast_new
+        module:             blast
         base:               mkblst1
         script_path:        {Vars.Programs.blast.Bin}/blastn
-        dbtype:             nucl
         query:              /path/to/query.fasta
         db:                 project
+        dbtype:             nucl
         redirects:
             -evalue:        0.0001
             -max_target_seqs: 5
@@ -102,12 +122,12 @@ External query, project-wise *nucl*-type database (must be proceeded by ``makebl
 Sample specific *prot*-type fasta, external database::
 
     tbl_blst_ext:
-        module:             blast_new
+        module:             blast
         base:               prokka1
         script_path:        {Vars.Programs.blast.Bin}/blastp
+        query: sample
         querytype:          prot
         db:                 {Vars.Genome.blast_index}
-        query: sample
         redirects:
             -evalue: 0.0001
             
@@ -128,7 +148,7 @@ __author__ = "Menachem Sklarz"
 __version__ = "1.6.0"
 
 
-class Step_blast_new(Step):
+class Step_blast(Step):
     
     auto_redirs = "-db -query".split(" ")
 
@@ -358,9 +378,7 @@ class Step_blast_new(Step):
         with open(self.base_dir + "BLAST_files_index.txt", "w") as index_fh:
             index_fh.write("Sample\tBLAST_report\n")
             for sample in self.sample_data["samples"]:      # Getting list of samples out of samples_hash
-                index_fh.write("%s\t%s\n" % (sample,self.sample_data[sample]["blast." + self.fasta2use]))
+                index_fh.write("%s\t%s\n" % (sample,self.sample_data[sample]["blast." + self.params["querytype"]]))
                 
         self.sample_data["project_data"]["BLAST_files_index"] = self.base_dir + "BLAST_files_index.txt"
-        
-  
         

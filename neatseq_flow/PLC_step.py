@@ -457,29 +457,30 @@ Dependencies: {depends}""".format(name=self.name,
     def __gt__(self,other):
         """ See doc string for __lt__
         """
-        
-        if self.name in other.get_depend_list():
-            return False
-        if other.name in self.get_depend_list():
-            return True
-        #=======================================================================
-        # # Returning order by order in param file:
-        # print "in __gt__: other index %s (%s)\nself index %s (%s)\n" % (self.pipe_data["step_order"].index(other.name), other.name, self.pipe_data["step_order"].index(self.name),self.name)
-        # if self.pipe_data["step_order"].index(other.name) > self.pipe_data["step_order"].index(self.name):
-        #     return False
-        # if self.pipe_data["step_order"].index(other.name) < self.pipe_data["step_order"].index(self.name):
-        #     return True
-        #=======================================================================
 
-        if len(self.get_depend_list()) > len(other.get_depend_list()):
-            return True
-        if len(self.get_depend_list()) < len(other.get_depend_list()):
-            return False
-        if self.get_step_name() > other.get_step_name():
-            return True
-        if self.get_step_name() < other.get_step_name():
-            return False
-        return NotImplemented 
+        return not self.__lt__(other)
+        # if self.name in other.get_depend_list():
+        #     return False
+        # if other.name in self.get_depend_list():
+        #     return True
+        # #=======================================================================
+        # # # Returning order by order in param file:
+        # # print "in __gt__: other index %s (%s)\nself index %s (%s)\n" % (self.pipe_data["step_order"].index(other.name), other.name, self.pipe_data["step_order"].index(self.name),self.name)
+        # # if self.pipe_data["step_order"].index(other.name) > self.pipe_data["step_order"].index(self.name):
+        # #     return False
+        # # if self.pipe_data["step_order"].index(other.name) < self.pipe_data["step_order"].index(self.name):
+        # #     return True
+        # #=======================================================================
+        #
+        # if len(self.get_depend_list()) > len(other.get_depend_list()):
+        #     return True
+        # if len(self.get_depend_list()) < len(other.get_depend_list()):
+        #     return False
+        # if self.get_step_name() > other.get_step_name():
+        #     return True
+        # if self.get_step_name() < other.get_step_name():
+        #     return False
+        # return NotImplemented 
         
         
     def finalize_contruction(self):

@@ -496,7 +496,9 @@ class NeatSeqFlow(object):
         """
         # The list of steps is created using a helper function, make_step_type_instance.
         # See definition of make_step_type_instance to see how step type is determined and imported...
-        self.step_list = [self.make_step_type_instance(step_n) for step_n in self.get_step_names()]
+        self.step_list = [self.make_step_type_instance(step_n)
+                          for step_n
+                          in self.get_step_names()]
 
         self.sort_step_list()
 
@@ -1376,7 +1378,7 @@ saveWidget(myviz,file = "{out_file_name}",selfcontained = F, title="{title}")
             #     script_fh.write(helper_script)
         except:
 
-            print("Make sure the script constructor defines class method 'get_helper_script()'")
+            print("Make sure the script constructor defines class method 'get_exec_script()'")
             raise
 
     def create_run_index_cleaning_script(self):

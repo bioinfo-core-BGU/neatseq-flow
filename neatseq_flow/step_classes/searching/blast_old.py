@@ -1,6 +1,6 @@
 # -*- coding: UTF-8 -*-
 """ 
-``blast`` :sup:`*`
+``blast_old`` :sup:`*` - Old module. Use ``blast`` instead
 -----------------------------------------------------------------
 
 :Authors: Menachem Sklarz
@@ -74,7 +74,7 @@ Lines for parameter file
 External query, project-wise fasta database (must be proceeded by ``makeblastdb`` module)::
 
     blastOnAssembl:
-        module: blast
+        module: blast_old
         base: mkblst1
         script_path: /path/to/bin/blastn
         fasta2use: nucl
@@ -91,7 +91,7 @@ External query, project-wise fasta database (must be proceeded by ``makeblastdb`
 Sample specific fasta, external database::
 
     sprot:
-        module: blast
+        module: blast_old
         base: sample_assembl
         script_path: /path/to/blastx
         redirects:
@@ -120,7 +120,7 @@ __author__ = "Menachem Sklarz"
 __version__ = "1.6.0"
 
 
-class Step_blast(Step):
+class Step_blast_old(Step):
     
     
     def step_specific_init(self):
