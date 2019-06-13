@@ -58,7 +58,7 @@ The script performs the following:
 
    .. code-block:: bash
 
-           curl -LO http://neatseq-flow.readthedocs.io/en/latest/extra/NeatSeq_Flow_install_script.sh > NeatSeq_Flow_install_script.sh
+           curl -LO http://neatseq-flow.readthedocs.io/en/latest/extra/NeatSeq_Flow_install_script.sh
            bash NeatSeq_Flow_install_script.sh temp
 
 **Permanent installation**

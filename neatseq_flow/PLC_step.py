@@ -229,6 +229,7 @@ class Step(object):
         self.path = module_path
 
         # Storing reference to main pipeline object:
+        # Not good practice. Not used much anymore
         self.main_pl_obj = caller
 
         # The following will be used to separate elements in the jid names.
@@ -547,10 +548,35 @@ Dependencies: {depends}""".format(name=self.name,
     def get_base_sample_data(self):
         """ Get base_sample_data
         """
+        # Original::
+        # return {stepname:self.main_pl_obj.global_sample_data[stepname]
+        #        for stepname
+        #        in self.get_depend_list()}
 
-        return {stepname:self.main_pl_obj.global_sample_data[stepname]
-               for stepname
-               in self.get_depend_list()}
+
+        # Recursive version
+        # 1. If no bases exist. return empty dictionary
+        # 2. Create empty return dictionary base_sample_data
+        # 3. For each base:
+        #    a. add {base.name:base.sample_data} to base_sample_data
+        #    b. Update base_sample_data with a DEEPCOPY of the base.get_base_sample_data()
+        if not self.base_step_list:
+            return dict()
+        base_sample_data = dict()
+        for step_obj in self.base_step_list:
+            base_sample_data[step_obj.get_step_name()] = deepcopy(step_obj.sample_data)
+            base_sample_data.update(deepcopy(step_obj.get_base_sample_data()))
+        return base_sample_data
+
+        # # Create a dictionary containing the sample data of the bases
+        # # Created on demand only. Creating deepcopies to avoid downstream modules from updating dependencies
+        # # using 'index()' on 'sample_list_index' to retrieve the base name instance. Then, copying the sample_data and putting in dict
+        # base_sample_data = {stepname:deepcopy(self.main_pl_obj.step_list[self.main_pl_obj.step_list_index.index(stepname)].get_sample_data())
+        #        for stepname
+        #        in self.get_depend_list()}
+        # # pp(base_sample_data)
+        # # sys.exit()
+        # return base_sample_data
 
     def get_base_instance(self, base_n):
         """
@@ -561,12 +587,16 @@ Dependencies: {depends}""".format(name=self.name,
         if base_n not in self.get_depend_list():
             raise AssertionExcept("No base '{base}' defined!".format(base=base_n))
         else:
+            # for step_inst in self.base_step_list:
+            #     if step_inst.get_step_name == base_n:
+            #         return step
+            # TODO: Try using a recursion to find the dependency among the bases. Will save using main_pl_obj which is then no longer used and can be discarded...
             return self.main_pl_obj.step_list[self.main_pl_obj.step_list_index.index(base_n)]
 
 
     def sample_data_merge(self, sample_data, other_sample_data, other_step_name):
         """ Merge a different sample_data dict into this step's sample_data
-            Used for cyclic sungrebe - basing a step on more than one base.
+            Used for cyclic NeatSeq-Flow - basing a step on more than one base.
         """
         # new_smpdt = deepcopy(smpdt)
 
@@ -1111,7 +1141,7 @@ Dependencies: {depends}""".format(name=self.name,
                 assertErr.set_step_name(self.get_step_name())
                 raise assertErr
         # Add sample_data to collection of sample_data dicts in main class:
-        self.main_pl_obj.global_sample_data[self.get_step_name()] = deepcopy(self.sample_data)
+        # self.main_pl_obj.global_sample_data[self.get_step_name()] = deepcopy(self.sample_data)
         # Updating provenance data:
         if self.use_provenance:
             self.update_provenance()

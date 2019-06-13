@@ -35,9 +35,9 @@ class NeatSeqFlow(object):
     def __init__(self,
                  sample_file,
                  param_file,
-                 grouping_file=None,
-                 home_dir = None,
-                 message = None,
+                 grouping_file = None,
+                 home_dir      = None,
+                 message       = None,
                  runid = None,
                  verbose = False,
                  list_modules = False):
@@ -264,7 +264,7 @@ class NeatSeqFlow(object):
         self.create_utilities_script()
 
         # Create a dictionary for storing all step sample data
-        self.make_global_sample_data_container()
+        # self.make_global_sample_data_container()
 
         # Check instance names for possible cyclic names
         # This can happen when a instance name is a prefix of a different instance name.
@@ -382,10 +382,6 @@ class NeatSeqFlow(object):
     def build_scripts(self):
         """ Run the actual script building
         """
-
-
-
-
         # For each step name (step_n), set sample_data based on the steps base(s) and then create scripts
         for step_n in self.step_list:
             try:
@@ -405,7 +401,9 @@ class NeatSeqFlow(object):
                 else:
                     # Note: set_base_step() takes a list of step objects, not names.
                     # Finding them is done by the .index() method.
-                    step_n.set_base_step([self.step_list[self.step_list_index.index(base_name)] for base_name in base_name_list])
+                    step_n.set_base_step([self.step_list[self.step_list_index.index(base_name)]
+                                          for base_name
+                                          in base_name_list])
 
                 # Do the actual script building for step_n
                 step_n.create_all_scripts()
@@ -1454,13 +1452,13 @@ saveWidget(myviz,file = "{out_file_name}",selfcontained = F, title="{title}")
     def update_step_sample_data(self,step_name, sample_data):
         pass
 
-    def make_global_sample_data_container(self):
-        """
-
-        :return:
-        """
-        self.global_sample_data = {step:{} for step in self.get_step_names()}
-        return self.global_sample_data
+    # def make_global_sample_data_container(self):
+    #     """
+    #
+    #     :return:
+    #     """
+    #     self.global_sample_data = {step:{} for step in self.get_step_names()}
+    #     return self.global_sample_data
 
     def create_rm_intermediate_script(self):
         """
