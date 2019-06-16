@@ -153,10 +153,10 @@ Running **NeatSeq-Flow**
 
 #. Activate the NeatSeq_Flow conda environment:
 
-    .. code-block:: bash
+   .. code-block:: bash
 
-        bash
-        source activate NeatSeq_Flow
+      bash
+      source activate NeatSeq_Flow
 
 #. Execute the following command to tell **NeatSeq-Flow** where the base conda installation is located:
 
@@ -172,9 +172,9 @@ Running **NeatSeq-Flow**
 
 #. Run NeatSeq_Flow_GUI:
 
-    .. code-block:: bash
+   .. code-block:: bash
 
-        NeatSeq_Flow_GUI.py
+      NeatSeq_Flow_GUI.py
 
 #. Alternatively, run NeatSeq_Flow command-line version:
 

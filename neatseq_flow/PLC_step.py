@@ -228,9 +228,9 @@ class Step(object):
 
         self.path = module_path
 
-        # Storing reference to main pipeline object:
-        # Not good practice. Not used much anymore
-        self.main_pl_obj = caller
+        # # Storing reference to main pipeline object:
+        # # Not good practice. Not used much anymore
+        # self.main_pl_obj = caller
 
         # The following will be used to separate elements in the jid names.
         # If you change this, you have to change it in scriptconstructor, in the lines
@@ -580,18 +580,39 @@ Dependencies: {depends}""".format(name=self.name,
 
     def get_base_instance(self, base_n):
         """
-        Returns the base_dir for step base_n. base_n must be a base of current step!
+        Returns the base_dir for step base_n. base_n must be a dependency of current step!
+        RECURSION!! Is used to find ancestor objects in depencency list!!
         :param base_n:
         :return: the base_dir for step base_n.
         """
+        # # Old version, using reference to PLC_main:
+        # if base_n not in self.get_depend_list():
+        #     raise AssertionExcept("No base '{base}' defined!".format(base=base_n))
+        # else:
+        #     # for step_inst in self.base_step_list:
+        #     #     if step_inst.get_step_name == base_n:
+        #     #         return step
+        #     # TODO: Try using a recursion to find the dependency among the bases. Will save using main_pl_obj which is then no longer used and can be discarded...
+        #     return self.main_pl_obj.step_list[self.main_pl_obj.step_list_index.index(base_n)]
+
+        # print("----------------")
+        # print("{base} in {step}".format(base=base_n,step=self.get_step_name()))
+        # print([base.get_step_name() for base in self.get_base_step_list()])
+
+        # New version, drilling bases for their bases:
         if base_n not in self.get_depend_list():
             raise AssertionExcept("No base '{base}' defined!".format(base=base_n))
-        else:
-            # for step_inst in self.base_step_list:
-            #     if step_inst.get_step_name == base_n:
-            #         return step
-            # TODO: Try using a recursion to find the dependency among the bases. Will save using main_pl_obj which is then no longer used and can be discarded...
-            return self.main_pl_obj.step_list[self.main_pl_obj.step_list_index.index(base_n)]
+
+        # First, go over direct bases and check them for required base:
+        for base_obj in self.get_base_step_list():
+            if base_obj.get_step_name() == base_n:
+                return base_obj
+        # Then, drill down dependencies to search for the base:
+        for base_obj in self.get_base_step_list():
+            return base_obj.get_base_instance(base_n)
+
+        return None
+
 
 
     def sample_data_merge(self, sample_data, other_sample_data, other_step_name):
