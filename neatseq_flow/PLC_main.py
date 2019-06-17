@@ -219,11 +219,12 @@ class NeatSeqFlow(object):
         # Create script_index and run_index files
         # These (will be)[are] used by the in-house NeatSeq-Flow job controller for non-qsub based clusters
         self.create_job_index_files()
+
         # Create script for cleaning up run_index file:
         self.create_run_index_cleaning_script()
 
-        # Create reverse dependency index
-        self.create_reverse_depends_file()
+        # # Create reverse dependency index
+        # self.create_reverse_depends_file()
 
         # Create file with functions for trapping error:
         self.create_bash_helper_funcs()
@@ -276,7 +277,7 @@ class NeatSeqFlow(object):
 
         # Make the qdel script:
         self.create_kill_scripts()
-        
+
         # Do the actual script building:
         # Also, catching assetion exceptions raised by class build_scripts() and 
         sys.stdout.write("Building scripts...\n")
@@ -300,6 +301,9 @@ class NeatSeqFlow(object):
 
         # Make the qalter script:
         self.create_qalter_script()
+
+        # Create reverse dependency index
+        self.create_reverse_depends_file()
 
         # Make intermediate removal script
         self.create_rm_intermediate_script()
@@ -860,6 +864,13 @@ Timestamp\tEvent\tModule\tInstance\tJob name\tLevel\tHost\tJob ID\tMax mem\tStat
         # Clearing file:
         open(self.pipe_data["depend_index"], "w").close()
 
+        self.pipe_data["dependency_index"] = "".join([self.pipe_data["objects_dir"], "dependency_index",
+                                                      # self.pipe_data["run_code"] ,
+                                                      ".txt"])
+        # Clearing file:
+        open(self.pipe_data["dependency_index"], "w").close()
+
+
     def create_registration_file(self):
         """
         """
@@ -879,16 +890,21 @@ Date\tStep\tName\tScript\tFile\tmd5sum\n
         :return:
         """
 
+        # pp(self.depend_dict)
+
+        # print(self.step_list[self.step_list_index.index("pipe_gen_43")].get_dependency_glob_jid_list())
+        # sys.exit()
         # Set script_index filename in pipe_data
         # Used for connecting qsub_names with script paths and more
-        self.pipe_data["dependency_index"] = "".join([self.pipe_data["objects_dir"], "dependency_index",
-                                                      # self.pipe_data["run_code"] ,
-                                                      ".txt"])
+        # self.pipe_data["dependency_index"] = "".join([self.pipe_data["objects_dir"], "dependency_index",
+        #                                               # self.pipe_data["run_code"] ,
+        #                                               ".txt"])
 
         with open(self.pipe_data["dependency_index"], "w") as depends_f:
             for step_i in self.depend_dict:
+                step_inst = self.step_list[self.step_list_index.index(step_i)]
                 for depend_i in self.depend_dict[step_i]:
-                    depends_f.write("\t".join([depend_i, step_i])+"\n")
+                    depends_f.write("\t".join([depend_i, step_i, step_inst.get_glob_jid_list()])+"\n")
 
     def create_step_order_file(self):
         """
