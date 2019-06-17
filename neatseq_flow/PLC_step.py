@@ -581,6 +581,19 @@ Dependencies: {depends}""".format(name=self.name,
     def get_base_instance(self, base_n):
         """
         Returns the base_dir for step base_n. base_n must be a dependency of current step!
+        I seprataed this from get_base_instance_recursive() so that exception raising is done only at top level of recursion.
+        base_n MUST be in self dependency_list but it does NOT have to be in dependency_lists of all it's bases!
+        :param base_n:
+        :return: the base_dir for step base_n.
+        """
+        if base_n not in self.get_depend_list():
+            raise AssertionExcept("No base '{base}' defined!".format(base=base_n))
+
+        return self.get_base_instance_recursive(base_n)
+
+    def get_base_instance_recursive(self, base_n):
+        """
+        Returns the base_dir for step base_n. base_n must be a dependency of current step!
         RECURSION!! Is used to find ancestor objects in depencency list!!
         :param base_n:
         :return: the base_dir for step base_n.
@@ -600,20 +613,21 @@ Dependencies: {depends}""".format(name=self.name,
         # print([base.get_step_name() for base in self.get_base_step_list()])
 
         # New version, drilling bases for their bases:
+        # First, if base not in ancestors, return None
         if base_n not in self.get_depend_list():
-            raise AssertionExcept("No base '{base}' defined!".format(base=base_n))
-
-        # First, go over direct bases and check them for required base:
+            return None
+        # Second, go over direct bases and check them for required base:
         for base_obj in self.get_base_step_list():
             if base_obj.get_step_name() == base_n:
                 return base_obj
-        # Then, drill down dependencies to search for the base:
+        # Finally, drill down dependencies to search for the base:
         for base_obj in self.get_base_step_list():
-            return base_obj.get_base_instance(base_n)
+            base_inst = base_obj.get_base_instance_recursive(base_n)
+            if base_inst is not None:
+                return base_inst
 
+        # Should'nt get to this point, but who knows?
         return None
-
-
 
     def sample_data_merge(self, sample_data, other_sample_data, other_step_name):
         """ Merge a different sample_data dict into this step's sample_data
