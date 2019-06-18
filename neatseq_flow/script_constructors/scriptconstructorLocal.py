@@ -444,14 +444,40 @@ rm -rf {run_index}.killall
         :return:
         """
 
+#         # Create one killing routine for all instance jobs:
+#         script = """\
+# line2kill=$(grep '^{step}{sep}{name}' {run_index} | awk '{{print $3}}')
+# line2kill=(${{line2kill//,/ }})
+# for item1 in "${{line2kill[@]}}"; do
+#     echo running "kill -- -$(ps -o pgid= $item1 | grep -o '[0-9]'*)"
+#     kill -- -$(ps -o pgid= $item1 | grep -o '[0-9]'*)
+# done
+#
+# """.format(run_index = self.pipe_data["run_index"],
+#            step=caller_script.step,
+#            name=caller_script.name,
+#            sep=caller_script.master.jid_name_sep)
+#
+#         self.filehandle.write(script)
+
+
         # Create one killing routine for all instance jobs:
         script = """\
-line2kill=$(grep '^{step}{sep}{name}' {run_index} | awk '{{print $3}}')
-line2kill=(${{line2kill//,/ }})
-for item1 in "${{line2kill[@]}}"; do 
-    echo running "kill -- -$(ps -o pgid= $item1 | grep -o '[0-9]'*)"
-    kill -- -$(ps -o pgid= $item1 | grep -o '[0-9]'*)
-done
+
+# 1. Find lines for step instance
+# 2. Keep only lines containing hold or PID
+# 3. Keep 3rd column - the pid
+# 4. Create kill commands on pgids
+# 5. Uniqify - several commands will have same pgid!
+# 6. Execute commands
+grep '^{step}{sep}{name}' {run_index} \\
+    | sed -En '/\\t(PID|hold)\\t/p' \\
+    | cut -f3 \\
+    | while read item1; do
+        echo $(ps -o pgid= $item1 | grep -o '[0-9]'*)
+        done \
+    | sort -u \
+    | xargs -I {{}} sh -c "kill -- -{{}}"
 
 """.format(run_index = self.pipe_data["run_index"],
            step=caller_script.step,
@@ -459,7 +485,6 @@ done
            sep=caller_script.master.jid_name_sep)
 
         self.filehandle.write(script)
-
 
 
 
