@@ -259,6 +259,12 @@ class Step(object):
                                                     
         # Setting qsub options in step parameters:
         self.manage_qsub_opts()
+
+        # Transferring addiotional parameters from pipe_data
+        for toparams in ["setenv","export"]:
+            if toparams in self.pipe_data and toparams not in self.params:
+                self.params[toparams] = self.pipe_data[toparams]
+
        
         self.jid_list = []        # Initialize a list to store the list of jids of the current step
         self.glob_jid_list = []   # An experimental feature to enable shorter depend lists

@@ -170,10 +170,13 @@ class NeatSeqFlow(object):
         else:
             self.run_code = datetime.now().strftime("%Y%m%d%H%M%S")  # (Is always used as a string)
         self.pipe_data["run_code"] = self.run_code
-        if "Default_wait" in list(self.param_data["Global"].keys()):
-            self.pipe_data["Default_wait"] = self.param_data["Global"]["Default_wait"]
-        if "job_limit" in list(self.param_data["Global"].keys()):
-            self.pipe_data["job_limit"] = self.param_data["Global"]["job_limit"]
+
+        # Putting following global types in pipe_data:
+        for topipedata in ["Default_wait", "job_limit","setenv","export"]:
+            if topipedata in self.param_data["Global"]:
+                self.pipe_data[topipedata] = self.param_data["Global"][topipedata]
+        # if "job_limit" in list(self.param_data["Global"].keys()):
+        #     self.pipe_data["job_limit"] = self.param_data["Global"]["job_limit"]
 
         # Determine type of sample: SE, PE or mixed:
         # Removed usage of sample type. Rarely used and complicates matters with sample grouping
