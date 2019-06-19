@@ -260,10 +260,19 @@ class Step(object):
         # Setting qsub options in step parameters:
         self.manage_qsub_opts()
 
+        # 'export' is synoymous with 'setenv'. Converting 'export' to 'setenv'
+        if "export" in self.params and "setenv" in self.params:
+            raise AssertionExcept("You supplied both 'export' and 'setenv'. They are synonymous. Please use one or the other!", step=self.get_step_name())
+        if "export" in self.params:
+            self.params["setenv"] = self.params["export"]
+            del (self.params["export"])
         # Transferring addiotional parameters from pipe_data
-        for toparams in ["setenv","export"]:
-            if toparams in self.pipe_data and toparams not in self.params:
-                self.params[toparams] = self.pipe_data[toparams]
+        if "export" in self.pipe_data:
+            self.pipe_data["setenv"] = self.pipe_data["export"]
+            del(self.pipe_data["export"])
+        if "setenv" in self.pipe_data:
+            if "setenv" not in self.params:
+                self.params["setenv"] = self.pipe_data["setenv"]
 
        
         self.jid_list = []        # Initialize a list to store the list of jids of the current step
@@ -1347,9 +1356,9 @@ Sample slots:
 
         # Add optional environmental variables.
         # Permit passing the definitions both with setenv and with export
-        # If passed with export, convert to setenv and proceed as normal
-        if "export" in list(self.params.keys()):
-            self.params["setenv"] = self.params["export"]
+        # If passed with export, convert to setenv and proceed as normal - removed. Dealing with this separately in __init__!
+        # if "export" in list(self.params.keys()):
+        #     self.params["setenv"] = self.params["export"]
         if "setenv" in list(self.params.keys()):  # Add optional environmental variables.
             if not isinstance(self.params["setenv"], list):
                 self.params["setenv"] = [self.params["setenv"]]
