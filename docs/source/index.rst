@@ -112,7 +112,7 @@ Web Site Contents:
 
    User_Manual
    Repository_links
-   Add_new_modules
+..   Add_new_modules
 ..   cheat_sheet
 ..   glossary
 

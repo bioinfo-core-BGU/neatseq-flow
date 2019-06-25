@@ -345,7 +345,7 @@ def param_data_testing_step_wise(param_data):
 
     # Test that all steps have base steps and that the base steps are defined
     for step in list(param_data.keys()):
-        if step=="merge":
+        if step=="Import":
             next
         else:
             for name in list(param_data[step].keys()):

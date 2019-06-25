@@ -237,7 +237,9 @@ class Step(object):
         # beginning with module= and instance=, according to awk regular expression definitions!
         self.jid_name_sep = ".."
 
+        # TODO: Set use_provenance to True only if and step has "stop_and_show" defined.
         self.use_provenance = True
+
         # -----------------------------
         # Place for testing parameters:
         if "script_path" not in self.params.keys():
@@ -423,7 +425,7 @@ Dependencies: {depends}""".format(name=self.name,
             # Set merge base_step to None and all others to base_step
             # While at it, update sample_data according to new base_step
             self.base_step_list = base_step_list if base_step_list else None
-            # Do the following only if base_step is not None (= there is a base step. all except merge)
+            # Do the following only if base_step is not None (= there is a base step. all except Import)
             if self.base_step_list:
                 # sys.stderr.write("setting sample data for %s \n" % self.name)
                 # self.set_sample_data(self.base_step_list[0].get_sample_data())
@@ -665,7 +667,7 @@ Dependencies: {depends}""".format(name=self.name,
         # Preparing dict to store sample_data of bases:
         # This is not usually used but might be handy when you need more than one bam, for instance (see below)
 
-        if sample_data is not None:     # When passing sample_data (i.e. for merge)
+        if sample_data is not None:     # When passing sample_data (i.e. for Import)
             # Copying sample_data. Just '=' would create a kind of reference
             self.sample_data = deepcopy(sample_data)
             # # Also starting a new provenance dictionary
@@ -688,7 +690,6 @@ Dependencies: {depends}""".format(name=self.name,
                                                              base_step.get_provenance(),
                                                              base_step.get_step_name())
                     self.sample_data_original = deepcopy(self.sample_data)
-
 
         # This part is experimental and not 100% complete. Changes will probably occur in the future.
         # 1. Convert "exclude_sample_list" to "sample_list":
@@ -1216,7 +1217,7 @@ Module path: {path}
                     # print self.sample_data["project_data"].keys()
                     # print self.provenance["project_data"].keys()
                     # print "~~~~~~~~~~~~~~~~~~~~~"
-                    raise AssertionExcept("Weird error!")
+                    raise # AssertionExcept("Weird error!")
 
             else:
                 # Creating string of project data not including provenance
@@ -1251,7 +1252,6 @@ Project slots:
                 # 1. uniq_sample_lists is a list of sample lists, each list having the same provenance
                 # 2. For each of the lists in uniq_sample_lists, print the list of samples and a formatted version of the provenance
                 sample_slots_text = "\n\n".join(["Samples: {samples}\nSlots:\n{slots}".
-                                                # format(samples=", ".join(sorted(value) if len(value)<2 else sorted(value[0:1])+["..."]),   #
                                                 format(samples=", ".join(sorted(value)),  #
                                                        slots="\n".join(["- {key} ({prov})".
                                                                        format(key=key,
@@ -1363,10 +1363,11 @@ Sample slots:
             if not isinstance(self.params["setenv"], list):
                 self.params["setenv"] = [self.params["setenv"]]
             for setenv in self.params["setenv"]:         # Add optional environmental variables.
-                if self.shell=="csh":
-                    script_const += "setenv %s \n" % setenv
-                elif self.shell=="bash":
-                    script_const += "export %s \n" % setenv
+                if setenv is not None:
+                    if self.shell=="csh":
+                        script_const += "setenv %s \n" % setenv
+                    elif self.shell=="bash":
+                        script_const += "export %s \n" % setenv
 
                     
             script_const += "\n\n"
@@ -1666,17 +1667,20 @@ Sample slots:
                        for sample
                        in self.sample_data["samples"]
                        if sample not in self.sample_data_original["samples"]]:
-            # print "sample -->", sample
+            # Collect keys for sample from provenance (or create provenance for sample)...
             all_keys = list()
             if sample in self.provenance:
                 all_keys = itertools.chain(all_keys,list(self.provenance[sample].keys()))
             else:
                 self.provenance[sample] = dict()
+            # ... and from current sample data
             if sample in self.sample_data:
                 all_keys = itertools.chain(all_keys,list(self.sample_data[sample].keys()))
+            # For all types, indicate creation in provenance by adding ">".step_name
             for key in all_keys:
                 self.provenance[sample][key] = [">"+self.get_step_name()]
-        # Samples removed in current step
+
+        # Samples removed in current step: Same as above but indicate termination instead
         for sample in [sample
                        for sample
                        in self.sample_data_original["samples"]
@@ -1694,45 +1698,59 @@ Sample slots:
         sample_and_proj_list = list(set(self.sample_data["samples"]) &
                                     set(self.sample_data_original["samples"]) |
                                     set(["project_data"]))
-        # # sample_and_proj_list.append("project_data")
-        # print "--------- %s ---------------------" % self.get_step_name()
-        # print sample_and_proj_list
-        # print "P> ",self.provenance["project_data"].keys()
-        # print "S> ",self.sample_data["project_data"].keys()
-        # print "O> ",self.sample_data_original["project_data"].keys()
-        # print "------------------------------"
 
         for sample in sample_and_proj_list:
             all_keys = list()
+            # Collect all types ever defined for sample: (1) From provenance, (2) from sample_data, (3) from original sample data
             if sample in self.provenance:
                 all_keys = itertools.chain(all_keys,list(self.provenance[sample].keys()))
             if sample in self.sample_data:
                 all_keys = itertools.chain(all_keys,list(self.sample_data[sample].keys()))
             if sample in self.sample_data_original:
                 all_keys = itertools.chain(all_keys,list(self.sample_data_original[sample].keys()))
+
             # Gey unique keys!
             all_keys = list(set(all_keys))
-
             for key in all_keys:
-                if key in self.sample_data[sample] and key in self.sample_data_original[sample]:
-                    if self.sample_data[sample][key] != self.sample_data_original[sample][key]:
-                        self.provenance[sample][key].append(self.get_step_name())
-                elif key in self.sample_data[sample]: # And not in original!
-                    self.provenance[sample][key] = [">"+self.get_step_name()]
+                # If key is in new sample_data:
+                if key in self.sample_data[sample]:
+                    # If key is not defined in provenance yet, define it.
+                    # (Not sure this is required, but who knows?
+                    if key not in self.provenance[sample]:
+                        self.provenance[sample][key] = []
+                    # And key is in old sample_data
+                    if key in self.sample_data_original[sample]:
+                        # If previously the key has bee removed (provenance ends with "|")
+                        if self.provenance[sample][key][-1][-1] == "|":    # laste character of last value in provenance is "|"
+                            self.provenance[sample][key].append(self.get_step_name())
+                        # If the key has changed during current step:
+                        elif self.sample_data[sample][key] != self.sample_data_original[sample][key]:
+                            # Add this step to type provenance
+                            self.provenance[sample][key].append(self.get_step_name())
+                        else:
+                            pass
+                    # If key is in current step (and not in original!)
+                    else: #key in self.sample_data[sample]:
+                        # Add step name to provenance with ">" indicating creation
+                        self.provenance[sample][key] = [">"+self.get_step_name()]
+                # If key is in original sample_data (but not in current!)
                 elif key in self.sample_data_original[sample]:  # And not in current!
+                    # Add step name to provenance with "|" indicating termination
                     self.provenance[sample][key].append(self.get_step_name()+"|")
                 else:
                     pass
 
     def create_provenance(self):
         """
-        Create a provenance dict based on sample_da
+        Create a provenance dict based on sample_data
         :return:
         """
 
         self.provenance = dict()
+        # Get sample list and add "project_data":
         sample_and_proj_list = deepcopy(self.sample_data["samples"])
         sample_and_proj_list.append("project_data")
+        # For each sample, store
         for sample in sample_and_proj_list:
             self.provenance[sample] = {key:[">"+self.get_step_name()] for key in self.sample_data[sample]}
 

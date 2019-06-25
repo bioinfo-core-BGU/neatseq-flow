@@ -136,7 +136,7 @@ For Linux 64bit, in the terminal:
 Install **NeatSeq-Flow**
 --------------------------
 
-#. Download the **NeatSeq Flow** installer file:
+#. Download the **NeatSeq-Flow** |conda_env|:
 
    .. code-block:: bash
 

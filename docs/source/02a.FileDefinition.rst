@@ -106,6 +106,12 @@ All global parameters are set within a ``Global_params`` block in YAML format.
     ``env``
         The name of the environment to use. If absent or left empty, **NeatSeq-Flow** will extract the name from the ``CONDA_DEFAULT_ENV`` environment variable, which contains the name of the active conda environment.
 
+``setenv``
+    Enables setting environment variables for all steps in the workflow. Is equivalent to setting ``setenv`` in all steps (see :ref:`setenv in step parameters <setenv_export>`.).
+
+``export``
+    Synonymous with ``setenv``.
+
 Following is an example of a global-parameters block::
     
     Global_params:
@@ -211,8 +217,13 @@ Other parameters you can set for each step to control the execution of the step 
 ``intermediate``
     Will add a line to script ``scripts/95.remove_intermediates.sh`` for deleting the results of this step. If the data produced by this step is not required in the long term, add this flag and when you are done with the project, you can execute ``scripts/95.remove_intermediates.sh`` to remove all intermediate files.
 
+.. _setenv_export:
+
 ``setenv``
-    Set various environment variables for the duration of script execution. This is useful when the software executed by the script requires setting specific environment variables which you do not want to set globally on all nodes.
+    Set various environment variables for the duration of script execution. This is useful when the software executed by the script requires setting specific environment variables which you do not want to set globally on all nodes. The step ``setenv`` takes precedence over gobal ``setenv`` settings. If ``setenv`` is empty, no variables will be set in scripts even when a global ``setenv`` is set.
+
+``export``
+    Sysnoymous with ``setenv``. Can be used interchangeably.
 
 .. Note:: For ``bash`` scripts, ``export`` will automatically be used instead of ``setenv``.
 

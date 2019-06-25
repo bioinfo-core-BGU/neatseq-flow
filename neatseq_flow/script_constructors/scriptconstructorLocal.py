@@ -33,7 +33,7 @@ class ScriptConstructorLocal(ScriptConstructor):
 
     wait_limit() {{
         while : ; do
-            # Count active (PID), child-level (merge..merge1..sample..runid) jobs
+            # Count active (PID), child-level (Import..Import1..sample..runid) jobs
             numrun=$(grep  '\sPID\s' $run_index | grep -P ".*\.\..*\.\..*\.\." | wc -l);
             maxrun=$(sed -ne "s/limit=\([0-9]*\).*/\\1/p" $job_limit);
             sleeptime=$(sed -ne "s/.*sleep=\([0-9]*\).*/\\1/p" $job_limit);

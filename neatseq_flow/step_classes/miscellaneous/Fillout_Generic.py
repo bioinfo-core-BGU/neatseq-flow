@@ -17,7 +17,7 @@ File and directory names are embedded in the script by describing the file or di
 ***************
 
 Include 4 colon-separated fields: (a) scope, (b) slot, (c) separator and (d) base.
-For example: ``{{sample:fastq.F:,:merge1}}`` is replaced with sample ``fastq.F`` files from ``merge1`` instance, seperated by commas (only for project scope scripts, of course).
+For example: ``{{sample:fastq.F:,:Import1}}`` is replaced with sample ``fastq.F`` files from ``Import1`` instance, seperated by commas (only for project scope scripts, of course).
 Leave fields empty if you do not want to pass a value, e.g. ``{{sample:fastq.F}}`` is replaced with the sample ``fastq.F`` file.
 
 2. Sample and project names:
@@ -39,7 +39,7 @@ You can include two directories in your command:
     "``{{base_dir}}``", "Returns the base directory for the step."
     "``{{dir}}``", "Returns the active directory of the script. For project-scope scripts, this is identical to ``base_dir``. For sample scope scripts, this will be a direcotry within ``base_dir`` for sample related files."
 
-.. Tip:: You can obtain the ``base_dir`` or ``dir`` values for a base step, by including the name of the base in the 4th colon separated position, just as you'd do for the file slots. *e.g.* ``{{base_dir:::merge1}}`` will return the ``base_dir`` for step ``merge1`` and ``{{dir:::merge1}}`` will return the ``dir`` for the current sample for step ``merge1``.
+.. Tip:: You can obtain the ``base_dir`` or ``dir`` values for a base step, by including the name of the base in the 4th colon separated position, just as you'd do for the file slots. *e.g.* ``{{base_dir:::Import1}}`` will return the ``base_dir`` for step ``Import1`` and ``{{dir:::Import1}}`` will return the ``dir`` for the current sample for step ``Import1``.
 
 
 
@@ -110,11 +110,11 @@ Demonstration of embedding various files and titles in a script file::
         script_path: |
             project:                    {{project}}
             fasta.nucl in project:         {{project:fasta.nucl}}
-            fasta.nucl in project from base merge1:   {{project:fasta.nucl::merge1}}
+            fasta.nucl in project from base Import1:   {{project:fasta.nucl::Import1}}
 
             sample names:             {{sample::,}}
             fastq.F in sample:     {{sample:fastq.F}}
-            fastq.F in sample from base merge1:     {{sample:fastq.F::merge1}}
+            fastq.F in sample from base Import1:     {{sample:fastq.F::Import1}}
 
             output:fasta.nucl:    {{o:fasta.nucl}}
         output:

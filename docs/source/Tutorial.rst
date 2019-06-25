@@ -441,6 +441,7 @@ To Run the Tutorial Work-Flow in a command line Interface:
             .. code-block:: bash
 
                 bash scripts/99.kill_all.sh
+
 Contact
 -------
 

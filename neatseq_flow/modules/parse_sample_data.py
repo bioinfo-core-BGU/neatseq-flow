@@ -298,7 +298,7 @@ def parse_tabular_project_data(proj_lines):
 
 def parse_grouping_file(grouping_file):
     """
-    Converts a tab-separated grouping (or mapping) file into a ditcionary format which can then be merged
+    Converts a tab-separated grouping (or mapping) file into a ditcionary format which can then be Importd
     into sample_data
     :param grouping_file: A path to the grouping file
     :return: mapping_data in by-sample dictionary format
