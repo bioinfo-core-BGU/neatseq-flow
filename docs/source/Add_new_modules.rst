@@ -327,6 +327,78 @@ There are 5 use-cases for the program:
 
 We will start by building a module for use cases 1, 2 and 4. Later, we will improve the module to also enable 3 and 5.
 
+Getting ready
+------------------
+
+Before actually programming the module, we would like to prepare the files for testing our new module.
+
+As expected, we will call our new module ``minimap2``. We will use this name repeatedly in the following sections, and it is important to be consistent with the spelling.
+
+#. Install and activate a NeatSeq-Flow conda environment
+#. Make a directory for the project:
+
+   .. code-block:: bash
+
+      mkdir minimap2_module
+      cd minimap2_module/
+
+#. Make a temporary python directory for the module and transfer the file into it:
+
+   .. code-block:: bash
+
+      mkdir module_dir
+      touch module_dir/__init__.py
+
+#. Download the |general_template|, rename it to ``minimap2.py`` and move it into the ``module_dir``:
+
+   .. code-block:: bash
+
+      curl -L https://raw.githubusercontent.com/bioinfo-core-BGU/neatseq-flow/master/docs/source/_extra/extra/NeatSeqFlow_ModuleTemplate.py > minimap2.py
+      mv minimap2.py module_dir/
+
+#. We need a sample file which has a project-scope fasta file as a reference and sample-scope read files, in fastq format, to align to the reference. This is the simplest use-case of minimap2. Later, we will develop the module further and enable other sample file configurations.
+
+   Download :download:`a similar sample file from here <https://raw.githubusercontent.com/bioinfo-core-BGU/neatseq-flow-modules/master/Workflows/sample_sets/PE_tabular.nsfs>` or create your own sample file. It should look like this (make sure the fields are TAB-separated!):
+
+   .. code-block:: bash
+
+      Title	minimap2_devel
+
+
+      #Type	Path
+      Nucleotide	/path/to/nucl.fna
+
+      #SampleID	Type	Path
+      Sample1	Forward	/path/to/Sample1.Forward.fq
+      Sample1	Reverse	/path/to/Sample1.Reverse.fq
+      Sample2	Single	/path/to/Sample2.Single.fq
+
+#. Finally, we need a parameter file to play around with.
+
+   #. Copy the :download:`Basic Preparation parameter file <https://raw.githubusercontent.com/bioinfo-core-BGU/neatseq-flow-modules/master/Workflows/Basic_Preparation.yaml>` (if using the link, you have to rename the file to ``minimap2_parameters.yaml``):
+
+   .. code-block:: bash
+
+      curl -L https://raw.githubusercontent.com/bioinfo-core-BGU/neatseq-flow-modules/master/Workflows/Basic_Preparation.yaml > minimap2_parameters.yaml
+
+   #. Open the ``minimap2_parameters.yaml`` file in a text editor of choice, or with the GUI.
+   #. Keep the ``Global_params`` and and ``Vars`` sections. You can remove the ``Documentation`` section.
+   #. In the ``Step_params`` section, keep only the ``merge1`` section.
+   #. Add a YAML-block for the ``minimap2`` module parameters:
+
+      #. The instance name is arbitrary. I will call it ``Minimap2_basic``.
+      #. The module name is up to us. We will call it ``minimap2``.
+      #. The base is the import step, ``merge1`` in this case.
+      #. The ``script_path`` section is less important for the moment. Set it to ``/path/to/minimap2``
+
+   .. code-block:: bash
+
+      Minimap2_basic:
+          module:         minimap2
+          base:           merge1
+          script_path:    /path/to/minimap2
+
+
 
 Determine input files
 -------------------------
