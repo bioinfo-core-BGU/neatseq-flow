@@ -111,15 +111,15 @@ The workflow can be executed fully automatically; on a step-by-step basis or for
 
 2. **Step-wise execution**
 
-   Each line in ``scripts/00.workflow.commands.sh`` calls a step-wise script in ``scripts/``, *e.g.* ``scripts/01.merge_merge1.sh``, which contains a list of ``qsub`` commands executing the individual scripts on each sample.
+   Each line in ``scripts/00.workflow.commands.sh`` calls a step-wise script in ``scripts/``, *e.g.* ``scripts/01.Import_merge1.sh``, which contains a list of ``qsub`` commands executing the individual scripts on each sample.
 
    The following command will execute only the ``merge1`` step::
 
-      qsub scripts/01.merge_merge1.sh
+      qsub scripts/01.Import_merge1.sh
 
 3. **Sample-wise execution**
 
-   The individual sample-level scripts are stored in folders within ``scripts/``. *e.g* all ``merge1`` scripts are stored in ``scripts/01.merge_merge1/``. To execute the step only for a specific sample, execute the relevant script from within the individual script folder.
+   The individual sample-level scripts are stored in folders within ``scripts/``. *e.g* all ``merge1`` scripts are stored in ``scripts/01.Import_merge1/``. To execute the step only for a specific sample, execute the relevant script from within the individual script folder.
 
 
 

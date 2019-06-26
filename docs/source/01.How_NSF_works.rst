@@ -60,7 +60,7 @@ Some of the modules take their inputs and put their outputs in the sample-specif
 
 Creating a workflow is then like assembling a puzzle. Each instance of a module must have an ancestor module (``base`` module) that puts files in the slots required by the module. *e.g.* when the ``samtools`` module is executed, it expects to find a SAM file in ``sample_data[<sample>]["sam"]``. It, in turn, produces a BAM and puts it in ``sample_data[<sample>]["bam"]`` for use by other modules that are based on it.
 
-Sometimes, module instances *overwrite* existing slots. This **does not mean the files will be overwritten**. It only means that access to these slots in downstream instances will refer to the newer files. *e.g.* the ``trimmo`` module puts its outputs in the same slots as the ``merge`` module. Therefore, a ``fastqc_html`` instance based on the ``merge`` instance will use the files created by ``merge`` while a ``fastqc_html`` instance based on the ``trimmo`` instance will use the files created by ``trimmo``.
+Sometimes, module instances *overwrite* existing slots. This **does not mean the files will be overwritten**. It only means that access to these slots in downstream instances will refer to the newer files. *e.g.* the ``trimmo`` module puts its outputs in the same slots as the ``Import`` module. Therefore, a ``fastqc_html`` instance based on the ``Import`` instance will use the files created by ``Import`` while a ``fastqc_html`` instance based on the ``trimmo`` instance will use the files created by ``trimmo``.
 
 .. note:: This might seem complicated, but once you get used to the dictionary structure you will see how flexible the whole thing really is.
 

@@ -172,7 +172,7 @@ class NeatSeqFlow(object):
         self.pipe_data["run_code"] = self.run_code
 
         # Putting following global types in pipe_data:
-        for topipedata in ["Default_wait", "job_limit","setenv","export"]:
+        for topipedata in ["Default_wait", "job_limit","setenv"]:
             if topipedata in self.param_data["Global"]:
                 self.pipe_data[topipedata] = self.param_data["Global"][topipedata]
         # if "job_limit" in list(self.param_data["Global"].keys()):
@@ -415,6 +415,7 @@ class NeatSeqFlow(object):
             # developer does not have to check all file types he might need.
             # All other exceptions will be raised as-is for debiugging by module developer.
             except KeyError as keyexc:
+                print(step_n)
                 t1 = format_exc()
                 t1 = t1.split("\n")[-3]
                 # In last line but one, see if the exception is in a reference to self.sample_data. If so, extract type
@@ -447,7 +448,7 @@ class NeatSeqFlow(object):
 
     def expand_depends(self):
         """ Extract base info for each step from parameters and expand the dependency info
-            i.e. if base(samtools)=['Bowtie_mapper'], expand it to ['Import','Bowtie_mapper']
+            i.e. if base(samtools)=['Bowtie_mapper'], expand it to ['merge','Bowtie_mapper']
         """
         step_data = self.get_step_param_data()
         # Get the base list for each step.
@@ -485,7 +486,7 @@ class NeatSeqFlow(object):
 
     def sort_step_list(self):
         """ This function sorts the step list
-            By default uses the list.sort function on the step list, which sorts the steps by level, i.e. all direct Import dependents first, then their dependents, etc.
+            By default uses the list.sort function on the step list, which sorts the steps by level, i.e. all direct merge dependents first, then their dependents, etc.
             A different sorting scheme can be added here for depth-wise sorting, for instance.
         """
         
@@ -900,7 +901,7 @@ Date\tStep\tName\tScript\tFile\tmd5sum\n
         """
 
         # Creating a step order file. Contains the step number (as appears in script name) and high-level jid name
-        # E.g. Import..Import1..20190313090409
+        # E.g. merge..merge1..20190313090409
         self.pipe_data["step_order"] = "".join([self.pipe_data["objects_dir"], "step_order.txt"])
 
         with open(self.pipe_data["step_order"], "w") as depends_f:

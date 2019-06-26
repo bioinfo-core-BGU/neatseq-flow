@@ -1,0 +1,40 @@
+# extension    script_path or [script_path,pipe,zip_ext]
+.txt:    cat
+.tsv:    cat
+.csv:    cat
+.fasta:  cat
+.faa:    cat
+.fna:    cat
+.fa:     cat
+.fastq:  cat
+.fq:     cat
+.gz:     [gzip -cd, null, True]
+.zip:    [echo, 'xargs -d " " -I % sh -c "unzip -p %"', True]
+.bz2:    [bzip -cd, null, True]
+.dsrc2:  [echo , 'xargs -d " " -I % sh -c "dsrc2 d -s %"', True]
+.dsrc:   [echo , 'xargs -d " " -I % sh -c "dsrc d -s %"', True]
+.gtf:     cat
+.gff:     cat
+.gff3:     cat
+# The following require knowing non-standard paths, such as samtools. Must be passed through script_path
+# .sam:    cat       
+# .bam:    cat
+# .vcf:    cat
+# .g.vcf:  cat
+# .Unknown compressed formats. Ignoring for the time being
+# .F
+# .lz
+# .lzma
+# .lzo
+# .rz
+# .sfark
+# .sz
+# .xz
+# .z
+# .Z
+# .infl
+# Might have headers!
+# .txt:    cat
+# .csv:    cat
+
+

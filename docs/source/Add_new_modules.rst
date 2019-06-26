@@ -12,7 +12,7 @@ Adding New Modules
 
 
 .. contents:: Page Contents:
-   :depth: 2
+   :depth: 3
    :local:
    :backlinks: top
 
@@ -398,9 +398,7 @@ As expected, we will call our new module ``minimap2``. We will use this name rep
           base:           merge1
           script_path:    /path/to/minimap2
 
-
-
-Determine input files
+Choosing input files
 -------------------------
 
 Usually, ``minimap2`` takes 2 arguments: The reference and the sequences to align. For paired end reads in separate files, it takes 3 arguments:
@@ -409,20 +407,260 @@ Usually, ``minimap2`` takes 2 arguments: The reference and the sequences to alig
 
       minimap2 -ax sr ref.fa read1.fq read2.fq > aln.sam     # paired-end alignment
 
-We will not try guessing where to take the input from. The user will have to determine the source of the reference file with ``reference:`` and the source of the reads with ``scope``.
+We will not try guessing where to take the input from. The user will have to specify the source of the reference file with ``reference:`` and the source of the reads with ``scope``.
 
 The reference is always a nucleotide fasta file, stored in ``fasta.nucl``. The reads can be either fasta or fastq files.
 
-Usually, the user will align sample-scope reads to a project-scope reference, so that will be the default behaviour. The user will be able to change that behaviour by specifying the following parameters in the instance YAML-block:
+**Usually, the user will align sample-scope reads to a project-scope reference**, so that will be the default behaviour. The user will be able to change that behaviour by specifying the following parameters in the instance YAML-block:
 
 * ``reference``: Can be a path for a reference external to the workflow, or ``sample`` to use a sample-scope ``fasta.nucl`` file, or ``project`` to use a project-scope ``fasta.nucl`` file (= the default).
 * ``scope``: Can be set to ``sample`` to use sample-scope reads (the default) or to ``project`` to use a project-scope reads.
+* ``type2use``: Will determine whether the reads are in *fasta* or *fastq* format.
 
-The reads can be either in ``fastq`` format or in ``fasta`` format.
+The reads can be either in ``fastq`` format or in ``fasta`` format. This can cause an issue when both reference and reads are project-scope fasta file! In the advance section below, we will try solving this issue. For now, we will not allow such a configuration.
 
-It does not make sense to try aligning project-scope reads to
-The ``reference`` can be either a path to a reference, or ``sample`` for a
+It does not make sense to try aligning project-scope reads to a sample-scope reference. Therefore, we'll add a test for this scenario and stop execution if it occurs.
 
-Determine output file type
--------------------------------
+.. list-table:: Permitted scenarios
+   :header-rows: 1
+
+   * - Reference scope
+     - Reads type
+     - Reads scope
+   * - External path
+     - fasta/fastq
+     - sample/project
+   * - project
+     - fasta
+     - sample
+   * - project
+     - fastq
+     - sample/project
+   * - sample
+     - fastq
+     - sample
+
+Add the following lines to the parameter file ``minimap2_parameters.yaml``, to suit the sample data configuration:
+
+   .. code-block:: bash
+
+        reference:      project
+        scope:          sample
+        type2use:       fastq
+
+Determining output type
+-----------------------------
+
+According to the ``minimap2`` manual, passing a ``-a`` argument will make ``minimap2`` produce it's output in ``sam`` format, otherwise, the default, is a ``paf`` format. The ``-a`` argument can be passed by the user via the ``redirects`` YAML-block. We will have to look for it there and set the output file type appropriately!
+
+Defining the module code
+-----------------------------
+
+Open the ``minimap2.py`` file in an editor of choice.
+
+#. The file begins with a skeleton of a module deocumentation. Later on you can fill in the empty fields but for now just change ``MODULE_NAME`` to ``minimap2``.
+#. Then, proceed to the definition of the module class. Find the line containing ``class Step_MODULENAME`` and change it to:
+
+   .. code-block:: python
+
+      class Step_minimap2(Step):
+
+#. Delete the line defining ``auto_redirs``. It is not relevant for this module.
+#. Finally, scroll to the definition of the ``step_specific_init()`` method.
+
+Defining the ``step_specific_init()`` method
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. Important:: Before we proceed, let's make sure NeatSeq-Flow can find and use the ``minimap2`` module we have begun defining.
+
+       .. code-block:: bash
+
+          neatseq_flow.py -s sample_data.nsfs -p minimap2_parameters.yaml
+
+    You should get the following error:
+
+       .. code-block:: bash
+
+            Reading files...
+            WARNING: The following module paths do not exist and will be removed from search path: ../neatseq_flow_modules
+            Preparing objects...
+            Creating directory structure...
+            Making step instances...
+            Step minimap2 not found in regular path or user defined paths.
+            An error has occurred. See comment above.
+
+    The problem is that we have not told NeatSeq-Flow where to look for the new module! In line 7 of the parameter file, change the ``module_path`` definition to the full path to the ``module_dir`` you created above.
+
+       .. code-block:: bash
+
+          module_path:     /full/path/to/module_dir
+
+    If you execute NeatSeq-Flow again, you should get a python ``SyntaxError``. That's great - it means the module was found!
+
+The ``step_specific_init()`` function comes with a test on ``scope``. We'll leave it and the line defining the shell as *bash*.
+
+Replace the section titled ``Various assertions`` with the following test:
+
+   .. code-block:: python
+
+        # Check type2use is defined and is fasta or fastq
+        if "type2use" not in self.params:
+            raise AssertionExcept("Please provide 'type2use' parameter!")
+        if self.params["type2use"] not in ["fastq","fasta"]:
+            raise AssertionExcept("'type2use' must be either 'fasta' or 'fastq'!")
+        # Check reference is defined
+        if "reference" not in self.params:
+            raise AssertionExcept("Please provide 'reference' parameter!")
+        # Check the various scenarios and combinations of reference, scope and type2use
+        if self.params["reference"] == "project":
+            if self.params["type2use"] == "fasta" and self.params["scope"] == "project":
+                raise AssertionExcept("You can't have both project-scope 'reference' and project-scope reads!")
+        elif self.params["reference"] == "sample":
+            if self.params["scope"] == "project":
+                raise AssertionExcept("You can't have sample-scope 'reference' and project-scope reads!")
+            if self.params["type2use"] == "fasta":
+                raise AssertionExcept("You can't have both sample-scope 'reference' and sample-scope fasta reads!")
+
+Rerun NeatSeq-Flow and you will get a ``SyntaxError`` from a later part of the module definition. So let's fix it:
+
+Defining the ``step_sample_initiation()`` method
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+In this function, we should check that the inputs we are expecting exist in the ``self.sample_data`` dictionary. For now, we'll use the default NeatSeq-Flow error checking mechanism. Just comment out the section titled ``# Testing a condition on each sample``.
+
+.. Attention:: The first section in function ``step_sample_initiation()`` sets ``self.sample_list`` to a list of samples, depending on ``scope``. This is important because the ``build_scripts()`` function loops over ``self.sample_list``. Therefore, you do not need to provide a special treatment for different scopes in ``build_scripts()``. See implementation :ref:`below <build_scripts>`.
+
+Rerun NeatSeq-Flow and you will get a NeatSeq-Flow error message as follows::
+
+    In Minimap2_basic (project scope): Type "INPUT_FILE_TYPE" does not exists! Check scope and previous steps.
+    An error has occurred. See comment above.
+    Printing current JSON and exiting
+
+This is OK. We have to work on the actual script building part!
+
+.. _build_scripts:
+
+Defining the ``build_scripts()`` method
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The template comes with:
+
+#. a loop on samples (as mentioned above, the sample list depends on the definition of ``scope``!)
+#. a definition of ``sample_dir`` containing a directory path for the sample output files.
+#. a call to ``set_spec_script_name()`` which must be there. An explanation is beyond the scope of this tutorial.
+#. a call to ``local_start()``, which defines a ``use_dir`` which is a directory path in which the outputs will actually be written (see explanation on ``local_start()`` elsewhere)
+#. finall, it also initializes ``self.script`` with ``self.script = ""``
+
+Now, we will define three variables:
+
+* ``referenece`` containing the path to the reference.
+* ``reads`` containing a path (or paths) to the reads files.
+* ``output`` containing the name of the output file.
+
+In the section beginning with the comment ``# Define location and prefix for output files``, add the following lines to define the output file name (pay attention to indentation!):
+
+   .. code-block:: python
+
+        output_prefix = sample + ".minimap2"
+        output_suffix = "sam" if "-a" in self.params["redir_params"] else "paf"
+        output = ".".join([output_prefix,output_suffix])
+
+**Note**:
+
+* We decide on ``output_suffix`` based on the existence of ``-a`` in the ``self.params["redir_params"]`` dictionary keys!
+* ``output`` is the filename without the directory path. That part is added later, by context.
+
+**Defining the reference:**
+
+Add these lines after the definition of the ``output``:
+
+   .. code-block:: python
+
+        # Define reference
+        if self.params["reference"] == "project":
+            reference = self.sample_data["project_data"]["fasta.nucl"]
+        elif self.params["reference"] == "sample":
+            reference = self.sample_data[sample]["fasta.nucl"]
+        else:
+            reference = self.params["reference"]
+
+We set ``reference`` to the project fasta file, sample fasta file or path passed in the parameters, depending on the value of the ``reference`` parameter in ``self.params``.
+
+**Defining the reads:**
+
+The following lines will set the ``reads`` variable, depending on the value of ``type2use`` and on the types of reads files defined for the sample:
+
+   .. code-block:: python
+
+        # Define reads:
+        if self.params["type2use"]=="fasta":
+            reads = self.sample_data[sample]["fasta.nucl"]
+        else: # self.params["type2use"]=="fastq":
+            if "fastq.S" in self.sample_data[sample]:
+                reads = self.sample_data[sample]["fastq.S"]
+            else:
+                reads = "{F} {R}".format(F=self.sample_data[sample]["fastq.F"],
+                                         R=self.sample_data[sample]["fastq.R"])
+
+If you want to check everything is alright, you can add the following lines and execute NeatSeq-Flow:
+
+   .. code-block:: python
+
+        print("reference: "+reference)
+        print("reads: "+reads)
+        print("output: "+use_dir+output)
+        sys.exit()
+
+You should get the definition of ``reference``, ``reads`` and ``output`` for the first sample. You can check various combinations of parameters in the parameter file and their effects on the output. When done, comment out the ``sys.exit()`` line.
+
+**Building the script**
+
+This can be done in to python flavours. It depends on your personal taste, so I will show both:
+
+The following lines should replace the section after the comment ``# Get constant part of script:`` (line of code beginning with ``self.script +=``).
+
+   .. code-block:: python
+
+        self.script += self.get_script_const()
+        self.script += "%s \\\n\t" % reference
+        self.script += "%s \\\n\t" % reads
+        self.script += "> %s \n\n" % (use_dir+output)
+
+What this does is to add the following strings to ``self.script``:
+
+#. The constant part including environment variable definition, ``script_path`` and ``redirects``.
+#. the reference
+#. the reads
+#. the full path to the output file.
+
+Alternatively, the same can be achieved with the following code:
+
+   .. code-block:: python
+
+        self.script += """
+        {const} {reference} \\
+            {reads} \\
+            > {outp}
+                    """.format(const=self.get_script_const(),
+                               reference=reference,
+                               reads=reads,
+                               outp=use_dir+output)
+
+**Putting output file ``sample_data``**
+
+Finally, we need to place the output file in the ``sample_data`` dictionary so that downstream module instances can get the path and do further work on it.
+
+After the ``# Put the output file/s in the sample_data dictionary`` comment, replace the two lines of code with the following lines:
+
+   .. code-block:: python
+
+        self.sample_data[sample][output_suffix] = sample_dir + output
+        self.stamp_file(self.sample_data[sample][output_suffix])
+
+We set the ``output_suffix`` slot for ``sample`` to the output file within ``sample_dir``. Remember that ``output_suffix`` is either ``sam`` or ``paf``. The ``sam`` slot is recognized by other modules, ``samtools`` for instance. So you can now put a ``samtools`` module instance downstream to your ``minimap2`` instance to perform sorting and indexing on the ``sam`` file, *e.g.*.
+
+The second command makes the bash script record the resulting files md5 checksum in the workflow's ``logs/file_registration.txt`` file.
+
+That's it. We're done with the basic version of the new ``minimap2`` module!!
+
 

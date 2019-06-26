@@ -41,7 +41,7 @@ The workflow consists of the following steps:
     :header: "Step", "Module", "Program"
     :widths: 15, 10, 10
 
-    "Merge","merge","-"
+    "Merge","Import","-"
     "Fastqc_Merge","fastqc_html","fastqc"
     "Trimmomatic","trimmo","trimmomatic"
     "FastQC_Trimmomatic","fastqc_html","fastqc"

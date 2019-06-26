@@ -263,15 +263,17 @@ class Step(object):
         self.manage_qsub_opts()
 
         # 'export' is synoymous with 'setenv'. Converting 'export' to 'setenv'
-        if "export" in self.params and "setenv" in self.params:
-            raise AssertionExcept("You supplied both 'export' and 'setenv'. They are synonymous. Please use one or the other!", step=self.get_step_name())
-        if "export" in self.params:
-            self.params["setenv"] = self.params["export"]
-            del (self.params["export"])
-        # Transferring addiotional parameters from pipe_data
-        if "export" in self.pipe_data:
-            self.pipe_data["setenv"] = self.pipe_data["export"]
-            del(self.pipe_data["export"])
+        # Cancelling use of export because it is not self-explanatory!
+        # if "export" in self.params and "setenv" in self.params:
+        #     raise AssertionExcept("You supplied both 'export' and 'setenv'. They are synonymous. Please use one or the other!", step=self.get_step_name())
+        # if "export" in self.params:
+        #     self.params["setenv"] = self.params["export"]
+        #     del (self.params["export"])
+        # # Transferring addiotional parameters from pipe_data
+        # if "export" in self.pipe_data:
+        #     self.pipe_data["setenv"] = self.pipe_data["export"]
+        #     del(self.pipe_data["export"])
+        # Copy global 'setenv' to params for step, only if it not defined separately for the step
         if "setenv" in self.pipe_data:
             if "setenv" not in self.params:
                 self.params["setenv"] = self.pipe_data["setenv"]
