@@ -106,6 +106,9 @@ All global parameters are set within a ``Global_params`` block in YAML format.
     ``env``
         The name of the environment to use. If absent or left empty, **NeatSeq-Flow** will extract the name from the ``CONDA_DEFAULT_ENV`` environment variable, which contains the name of the active conda environment.
 
+``setenv``
+    Enables setting environment variables for all steps in the workflow. Is equivalent to setting ``setenv`` in all steps (see :ref:`setenv in step parameters <setenv_export>`.).
+
 Following is an example of a global-parameters block::
     
     Global_params:
@@ -182,7 +185,7 @@ Required parameters for each step
     The name of the module of which this step is an instance. 
     
 ``base``
-    The name of the step on which the current step is based (not required for the `merge` step, which is always first and single). ``base`` can be a YAML formatted list of base steps.
+    The name of the step on which the current step is based (not required for the `Import` step, which is always first and single). ``base`` can be a YAML formatted list of base steps.
 
 ``script_path``
     The **full path** to the script executed by this step. 
@@ -211,8 +214,10 @@ Other parameters you can set for each step to control the execution of the step 
 ``intermediate``
     Will add a line to script ``scripts/95.remove_intermediates.sh`` for deleting the results of this step. If the data produced by this step is not required in the long term, add this flag and when you are done with the project, you can execute ``scripts/95.remove_intermediates.sh`` to remove all intermediate files.
 
+.. _setenv_export:
+
 ``setenv``
-    Set various environment variables for the duration of script execution. This is useful when the software executed by the script requires setting specific environment variables which you do not want to set globally on all nodes.
+    Set various environment variables for the duration of script execution. This is useful when the software executed by the script requires setting specific environment variables which you do not want to set globally on all nodes. The step ``setenv`` takes precedence over gobal ``setenv`` settings. If ``setenv`` is empty, no variables will be set in scripts even when a global ``setenv`` is set.
 
 .. Note:: For ``bash`` scripts, ``export`` will automatically be used instead of ``setenv``.
 
@@ -309,7 +314,7 @@ Sample file definition
 
 .. Attention:: It is recommended to provide full paths to the files listed in the sample file. However, if relative paths are provided, **NeatSeq-Flow** will attempt to expand them to full paths, using the current directory as the base directory. 
 
-.. Important:: When passing URLs as sample locations (see documentation for ``merge`` module), it is **compulsory** to append the protocol, or scheme, at the beginning of the URL.
+.. Important:: When passing URLs as sample locations (see documentation for ``Import`` module), it is **compulsory** to append the protocol, or scheme, at the beginning of the URL.
 
     * Good: ``ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR453/SRR453032/SRR453032_1.fastq.gz``
     * Bad:  ``ftp.sra.ebi.ac.uk/vol1/fastq/SRR453/SRR453032/SRR453032_1.fastq.gz``
@@ -352,7 +357,7 @@ An example of a sample table follows::
     Sample2	Forward	/full/path/to/Sample2_R1_001.fastq.gz
     Sample2	Reverse	/full/path/to/Sample2_R2_001.fastq.gz
 
-The following file types are recognized by **NeatSeq-Flow** and will be automatically merged into the correct position in the file index (indicated in the second column):
+The following file types are recognized by **NeatSeq-Flow** and will be automatically imported into the correct position in the file index (indicated in the second column):
 
 .. csv-table:: File types recognized by **NeatSeq-Flow**
     :header: "Source", "Target"
@@ -365,11 +370,17 @@ The following file types are recognized by **NeatSeq-Flow** and will be automati
     "Protein","fasta.prot"
     "SAM","sam"
     "BAM","bam"
-    "REFERENCE     ","reference     "
+    "REFERENCE","reference"
     "VCF","vcf"
     "G.VCF","g.vcf"           
+    "GTF", "gtf"
+    "GFF", "gff"
+    "GFF3","gff3"
+    "manifest","qiime2.manifest"
+    "barcodes","barcodes"
 
-Other types can be included, as well. For how to merge them correctly into **NeatSeq-Flow**, see the documentation for ``merge`` module.
+
+Other types can be included, as well. For how to import them correctly into **NeatSeq-Flow**, see the documentation for ``Import`` module.
     
 .. Note::
     1. Each line represents one file. For samples with multiple files, add lines with the same sample name.

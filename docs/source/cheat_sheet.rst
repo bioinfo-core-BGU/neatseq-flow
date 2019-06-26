@@ -85,7 +85,7 @@ Global parameters section
 ------------------------------
 
 .. list-table:: Global parameters
-   :widths: auto
+   :widths: 50 50
    :header-rows: 1
 
    * - Parameter
@@ -109,6 +109,9 @@ Global parameters section
                      limit=1000 sleep=60
    * - ``conda``
      - ``path`` and ``env``, defining the path to the environment you want to use and its name (:ref:`see here <conda_param_definition>`).
+   * - ``setenv``
+     - Setting in global parameters is equivalent to setting ``setenv`` in all steps (see section `Additional parameters`_.
+
 
 .. Attention:: The default executor is SGE. For SLURM, ``sbatch`` is used instead of ``qsub``, *e.g.*  ``Qsub_nodes`` defines the nodes to be used by sbatch.
 
@@ -168,7 +171,7 @@ Required parameters
    * - ``module``
      - The name of the module of which this step is an instance.
    * - ``base``
-     - The name of the step(s) on which the current step is based (not required for the merge step, which is always first and single)
+     - The name of the step(s) on which the current step is based (not required for the ``Import`` step, which is always first and single)
    * - ``script_path``
      - The full path to the script executed by this step.
 
@@ -205,17 +208,17 @@ Additional parameters
    * - ``intermediate``
      - Will add a line to scripts/95.remove_intermediates.sh for deleting the results of this step
    * - ``setenv``
-     - Set various environment variables for the duration of script execution.
+     - Set various environment variables for the duration of script execution. A string with format ``ENV="value for env1" ENV2="new value for env2"``
    * - ``precode``
      - Additional code to be added before the actual script. Rarely used
    * - ``scope``
      - Use sample- or project-wise files. Check per-module documentation for whether and how this parameter is defined
    * - ``sample_list``
-     - Limit this step to a subset of the samples.
+     - Limit this step to a subset of the samples. See section `Sample list`_.
    * - ``conda``
      - Is used to define step specific conda parameters. The syntax is the same as for the global conda definition (see here).
    * - ``arg_separator``
-     - Set teh delimiter between program argument and value, *e.g.* '=' (Default: ‘ ‘)
+     - Set the delimiter between program argument and value, *e.g.* '=' (Default: ‘ ‘)
    * - ``local``
      - Use a local directory for intermediate files before copying results to final destination in data dir.
 
@@ -231,7 +234,7 @@ Redirected parameters are specified within a ``redirects:`` block. The parameter
 Sample list
 ~~~~~~~~~~~~~~
 
-The sample list can be expressed in two ways:
+The sample list enables limiting the instance scripts to a subset of the samples. It can be expressed in two ways:
 
 1. A YAML list or a comma-separated list of sample names:
 
@@ -240,7 +243,7 @@ The sample list can be expressed in two ways:
       sample_list: [sample1, sample2]
 
 
-2. By category and level:
+2. By levels of a category (see section `Mapping file`_):
 
    .. code-block:: bash
 
@@ -254,7 +257,7 @@ For using all but a subset of samples, use ``exclude_sample_list`` instead of ``
 Mapping file
 ===============
 
-Passed to NeatSeq-Flow with ``-g``.
+Passed to NeatSeq-Flow with ``--mapping``.
 
 A tab-separated table with at least two columns:
 
@@ -262,7 +265,7 @@ A tab-separated table with at least two columns:
 2. First category name
 3. Additional categories…
 
-::
+Example::
 
    #SampleID	Category1	Category2
    Sample1	A	C
@@ -275,7 +278,7 @@ A tab-separated table with at least two columns:
 Flow control
 -------------
 
-``merge``
+``Import``
 ============
 
 Basic mode
@@ -286,15 +289,15 @@ NeatSeq-Flow will attempt to guess all the parameters it requires.
 Example::
 
     Merge_files:
-        module:         merge
+        module:         Import
         script_path:
 
 Advanced mode
 ----------------
 
-Define source and target slots and how to merge the files. Attempts to guess information left out by the user.
+Define source and target slots and how to concatenate the files. Attempts to guess information left out by the user.
 
-.. list-table:: ``merge`` parameters
+.. list-table:: ``Import`` parameters
    :header-rows: 1
 
    * - Parameter
@@ -304,7 +307,7 @@ Define source and target slots and how to merge the files. Attempts to guess inf
    * - ``trg``
      - target slot
    * - ``ext``
-     - merged file extension.
+     - concatenated file extension.
    * - ``scope``
      - the scope of the file
    * - ``script_path``
@@ -328,18 +331,18 @@ Define source and target slots and how to merge the files. Attempts to guess inf
 Example::
 
     merge_data:
-        module:         merge
-        src:            [Forward, Reverse, Nucl]
-        trg:            [fastq.F, fastq.R, fasta.nucl]
-        script_path:    [..import.., cat, 'curl -L']
-        ext:            [null,null, txt]
-        scope:          project
+        module:         Import
+        src:            [Forward,    Reverse, Nucl]
+        trg:            [fastq.F,    fastq.R, fasta.nucl]
+        script_path:    [..import.., cat,     'curl -L']
+        ext:            [null,       null,    txt]
+        scope:          [sample,     sample,  project]
 
 
 ``manage_types``
 ====================
 
-Import raw data files into the data/ directory. For multiple files per type, also merges them into a single file.
+Import raw data files into the data/ directory.
 
 .. list-table:: ``manage_types`` values
    :header-rows: 1
@@ -348,7 +351,7 @@ Import raw data files into the data/ directory. For multiple files per type, als
      - Possible values
      - Description
    * - operation
-     - add|del|mv|cp
+     - add | del | mv | cp
      - The operation to perform on the file type.
    * - scope
      - project|sample
@@ -377,7 +380,7 @@ Example::
      type: [fasta.nucl, fasta.nucl, fastq.F, bam]
      type_trg:   [transcripts.nucl, None ,fastq.main, None]
      scope_trg:   sample
-     path:   /path/to/mapping.bam
+     path:   [None, None, None, /path/to/mapping.bam]
 
 ``merge_table``
 =====================
@@ -390,13 +393,13 @@ Used for concatenating tables from samples into one project table, or for concat
    * - Parameter
      - Description
    * - header
-     -  The number of header lines the files contain.
+     - The number of header lines the files contain.
    * - add_filename
-     -  Set to append  the source filename to each line in the resulting file.
+     - Set to append  the source filename to each line in the resulting file.
    * - ext
-     -  The extension to use in the resulting file. If not specified, uses merged file exts.
+     - The extension to use in the resulting file. If not specified, uses merged file exts.
    * - scope
-     -  project or group, if group, you must also specify category.
+     - project or group, if group, you must also specify category.
 
 
 Example::
@@ -408,3 +411,20 @@ Example::
        type:  [blast.prot,fasta.nucl]
        header: 0
        ext:  [out,fna]
+
+
+----------------
+Reserved words
+----------------
+
+When writing new modules, the following words are conserved and should not be used for as parameters:
+
+* module
+* base
+* script_path
+* setenv
+* redirect
+* qsub_params
+* tag
+* conda
+* precode

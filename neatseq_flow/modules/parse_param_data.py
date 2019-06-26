@@ -345,8 +345,11 @@ def param_data_testing_step_wise(param_data):
 
     # Test that all steps have base steps and that the base steps are defined
     for step in list(param_data.keys()):
-        if step=="merge":
+        if step=="Import":
             next
+        elif step=="merge":
+            issue_warning += "%s. Module 'merge' is no longer defined. Please use module 'Import' instead\n" % (issue_count)
+            issue_count += 1
         else:
             for name in list(param_data[step].keys()):
                 if "base" not in list(param_data[step][name].keys()):

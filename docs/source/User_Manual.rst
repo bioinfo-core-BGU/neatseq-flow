@@ -15,4 +15,5 @@ NeatSeq-Flow User Manual
    07.monitor
    generic_modules
    01.How_NSF_works
+   Add_new_modules
    cheat_sheet

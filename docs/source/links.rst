@@ -10,8 +10,10 @@
 .. .. |project_template|   replace:: :download:`project template <_static/NeatSeqFlow_ModuleTemplate_Project.py>`
 .. |sample_template|    replace:: :download:`sample template <https://raw.githubusercontent.com/bioinfo-core-BGU/neatseq-flow/master/docs/source/_extra/extra/NeatSeqFlow_ModuleTemplate_Sample.py>`
 .. |project_template|   replace:: :download:`project template <https://raw.githubusercontent.com/bioinfo-core-BGU/neatseq-flow/master/docs/source/_extra/extra/NeatSeqFlow_ModuleTemplate_Project.py>`
-.. |general_template|   replace:: :download:`project template <https://raw.githubusercontent.com/bioinfo-core-BGU/neatseq-flow/master/docs/source/_extra/extra/NeatSeqFlow_ModuleTemplate.py>`
-.. |conda_env|          replace:: :download:`conda environment file <_static/NeatSeq_Flow_conda_env.yaml>`
+.. |general_template|   replace:: :download:`general template <https://raw.githubusercontent.com/bioinfo-core-BGU/neatseq-flow/master/docs/source/_extra/extra/NeatSeqFlow_ModuleTemplate.py>`
+.. |conda_env|          replace:: :download:`conda environment file <https://raw.githubusercontent.com/bioinfo-core-BGU/neatseq-flow/master/docs/source/_extra/extra/NeatSeq_Flow_conda_env.yaml>`
+.. .. |conda_env|          replace:: :download:`conda environment file <_static/>`
+.. .. |conda_env|          replace:: :download:`conda environment file <_static/NeatSeq_Flow_conda_env.yaml>`
 
 
 

@@ -170,10 +170,13 @@ class NeatSeqFlow(object):
         else:
             self.run_code = datetime.now().strftime("%Y%m%d%H%M%S")  # (Is always used as a string)
         self.pipe_data["run_code"] = self.run_code
-        if "Default_wait" in list(self.param_data["Global"].keys()):
-            self.pipe_data["Default_wait"] = self.param_data["Global"]["Default_wait"]
-        if "job_limit" in list(self.param_data["Global"].keys()):
-            self.pipe_data["job_limit"] = self.param_data["Global"]["job_limit"]
+
+        # Putting following global types in pipe_data:
+        for topipedata in ["Default_wait", "job_limit","setenv"]:
+            if topipedata in self.param_data["Global"]:
+                self.pipe_data[topipedata] = self.param_data["Global"][topipedata]
+        # if "job_limit" in list(self.param_data["Global"].keys()):
+        #     self.pipe_data["job_limit"] = self.param_data["Global"]["job_limit"]
 
         # Determine type of sample: SE, PE or mixed:
         # Removed usage of sample type. Rarely used and complicates matters with sample grouping
@@ -396,7 +399,7 @@ class NeatSeqFlow(object):
                 # Find base step(s) for current step: (If does not exist return None)
                 base_name_list = step_n.get_base_step_name()
 
-                # For merge, 1st step, this will be true, passing the original sample_data to the step:
+                # For Import, 1st step, this will be true, passing the original sample_data to the step:
                 if base_name_list is None:
                     step_n.set_sample_data(self.sample_data)
                     step_n.set_base_step([])
@@ -416,6 +419,7 @@ class NeatSeqFlow(object):
             # developer does not have to check all file types he might need.
             # All other exceptions will be raised as-is for debiugging by module developer.
             except KeyError as keyexc:
+                print(step_n)
                 t1 = format_exc()
                 t1 = t1.split("\n")[-3]
                 # In last line but one, see if the exception is in a reference to self.sample_data. If so, extract type
@@ -442,7 +446,7 @@ class NeatSeqFlow(object):
         step_data = self.get_step_param_data()
         # Get the base list for each step.
         self.depend_dict = {name:deepcopy(step_data[self.name_index[name]][name]["base"])
-                                if self.name_index[name] != "merge"
+                                if self.name_index[name] != "Import"
                                 else [""] for name in list(self.name_index.keys())}
         return self.depend_dict
 

@@ -4,11 +4,13 @@
 
 [![Documentation Status](https://readthedocs.org/projects/neatseq-flow/badge/?version=latest)](http://neatseq-flow.readthedocs.io/en/latest/?badge=latest)
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
-[![Github All Releases](https://img.shields.io/github/downloads/sklarz-bgu/neatseq-flow/total.svg)]()
-![GitHub release](https://img.shields.io/github/release/sklarz-bgu/neatseq-flow.svg)
+![GitHub release](https://img.shields.io/github/release-pre/sklarz-bgu/neatseq-flow.svg)
+>>>>>>> devel
 ![GitHub repo size](https://img.shields.io/github/repo-size/sklarz-bgu/neatseq-flow.svg)
 ![GitHub top language](https://img.shields.io/github/languages/top/sklarz-bgu/neatseq-flow.svg)
 ![GitHub last commit](https://img.shields.io/github/last-commit/sklarz-bgu/neatseq-flow.svg)
+
+<!--- [![Github All Releases](https://img.shields.io/github/downloads/sklarz-bgu/neatseq-flow/total.svg)]() -->
 
 
 # Background
