@@ -301,7 +301,7 @@ If you only want to warn the user about a certain issue, rather than failing, yo
 Example: ``minimap2`` module
 ===========================================
 
-:ref:`minimap2 <https://github.com/lh3/minimap2>` is *A versatile pairwise aligner for genomic and spliced nucleotide sequences*. We will use it as an example for creating a new module for an analysis program.
+`minimap2 <https://github.com/lh3/minimap2>`_ is *A versatile pairwise aligner for genomic and spliced nucleotide sequences*. We will use it as an example for creating a new module for an analysis program.
 
 In the ``minimap2`` manual, it says:
 
