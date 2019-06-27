@@ -904,11 +904,22 @@ Date\tStep\tName\tScript\tFile\tmd5sum\n
         #                                               # self.pipe_data["run_code"] ,
         #                                               ".txt"])
 
+
+        # Writes dependencies in a format that can enable deleting downstream jobs in case of failure
+        # (not implemented yet!). In the resulting file, if step in column1 fails, delete steps based on RE in column3
+        # The RE returned is not a formal RE, i.e. '*' should be replaced with '.*' for real RE. The glob version works
+        # with qdel. The RE is required for grep in Local mode and possibly for SLURM
+        # Algorithm:
+        # For each step, step_i:
+        #   If the step is skipped, continue with next step
+        #   For each ancestor of the step, depend_i (i.e., step upstream to step_i):
+        #      print "depend_i  step_i  glob_jid_list of step_i
         with open(self.pipe_data["dependency_index"], "w") as depends_f:
             for step_i in self.depend_dict:
                 step_inst = self.step_list[self.step_list_index.index(step_i)]
-                for depend_i in self.depend_dict[step_i]:
-                    depends_f.write("\t".join([depend_i, step_i, step_inst.get_glob_jid_list()])+"\n")
+                if not step_inst.skip_scripts:
+                    for depend_i in self.depend_dict[step_i]:
+                        depends_f.write("\t".join([depend_i, step_i, step_inst.get_glob_jid_list()[0]])+"\n")
 
     def create_step_order_file(self):
         """
