@@ -109,9 +109,12 @@ func_trap() {{
     if [ $jobid == 'ND' ]; then
         jobid=$$
     fi        
-
+    
+    exec 220>>{log_file}
+    flock -w 4000 220
     echo -e $(date '+%d/%m/%Y %H:%M:%S')'\\tFinished\\t'$1'\\t'$2'\\t'$3'\\t'$4'\\t'$5'\\t'$6'\\t'$maxvmem'\\t[0;31m'$err_code'[m' >> {log_file}; 
-
+    flock -u 220
+    
     ## locksed command entry point
     exit 1;
 }}         
@@ -138,8 +141,11 @@ log_echo() {{
         jobid=$$
     fi        
 
-    echo -e $(date '+%d/%m/%Y %H:%M:%S')'\\t'$7'\\t'$1'\\t'$2'\\t'$3'\\t'$4'\\t'$5'\\t'$jobid'\\t'$maxvmem'\\t[0;32mOK[m' >> {log_file};
 
+    exec 220>>{log_file}
+    flock -w 4000 220
+    echo -e $(date '+%d/%m/%Y %H:%M:%S')'\\t'$7'\\t'$1'\\t'$2'\\t'$3'\\t'$4'\\t'$5'\\t'$jobid'\\t'$maxvmem'\\t[0;32mOK[m' >> {log_file};
+    flock -u 220
 }}
 
 locksed() {{
@@ -533,11 +539,17 @@ class LowScriptConstructor(ScriptConstructor):
         if state == "Start":
             script = """\
 # Adding kill command to kill commands file.
-echo '{kill_cmd}' >> {qdel_file}\n""".format(kill_cmd = kill_cmd, qdel_file = self.script_path)
+exec 230>>{qdel_file}
+flock -w 4000 230
+echo '{kill_cmd}' >> {qdel_file}
+flock -u 230\n""".format(kill_cmd = kill_cmd, qdel_file = self.script_path)
         elif state == "Stop":
             script = """\
 # Removing kill command from kill commands file.
-sed -i -e 's:^{kill_cmd}$:#&:' {qdel_file}\n""".format(kill_cmd = re.escape(kill_cmd), 
+exec 230>>{qdel_file}
+flock -w 4000 230
+sed -i -c -e 's:^{kill_cmd}$:#&:' {qdel_file} 
+flock -u 230\n""".format(kill_cmd = re.escape(kill_cmd), 
                                 qdel_file = self.params["kill_script_path"])
         else:
             raise AssertionExcept("Bad type value in add_qdel_lines()", step = self.name)
