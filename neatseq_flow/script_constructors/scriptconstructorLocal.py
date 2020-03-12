@@ -30,21 +30,43 @@ class ScriptConstructorLocal(ScriptConstructor):
         if "job_limit" in pipe_data:
             script += """\
     job_limit={job_limit}
+    holdlimit=$(nproc)
+    holdlimit=$( echo "0.5*$holdlimit/1" | bc )
 
     wait_limit() {{
         while : ; do
-            # Count active (PID), child-level (Import..Import1..sample..runid) jobs
-            numrun=$(grep  '\sPID\s' $run_index | grep -P ".*\.\..*\.\..*\.\." | wc -l);
+            # Count hold jobs
+            numhold=$(grep -v "^#" $run_index | grep -w -c "hold") || true;
             maxrun=$(sed -ne "s/limit=\([0-9]*\).*/\\1/p" $job_limit);
             sleeptime=$(sed -ne "s/.*sleep=\([0-9]*\).*/\\1/p" $job_limit);
-            [[ $numrun -ge $maxrun ]] || break;
+            [[ $numhold -ge $holdlimit ]] || break;
+            # Count active (PID) jobs
+            numrun=$(grep -v "^#" $run_index | grep -w -c "PID") || true;
+            [[ $numrun -ge $maxrun ]] || [[ $numhold -ge $holdlimit ]] || break;
             sleep $sleeptime;
         done
     }}
     """.format(job_limit=pipe_data["job_limit"])
         #        numrun=$(awk 'BEGIN {{jobsc=0}} /^\w/ {{jobsc=jobsc+1}} END {{print jobsc}}' $run_index);
         #        numrun=$(grep -c '\sPID\s'  $run_index);
+        else:
+            pipe_data["job_limit"]=''
+            script += """\
 
+    sleeptime={sleeptime}
+    holdlimit=$(nproc)
+    holdlimit=$( echo "0.5*$holdlimit/1" | bc )
+    
+    wait_limit() {{
+        while : ; do
+            # Count hold jobs
+            numhold=$(grep -v "^#" $run_index | grep -w -c "hold" ) || true;
+            [[ $numhold -ge $holdlimit ]] || break;
+            sleep $sleeptime;
+        done
+    }}
+    """.format(sleeptime=pipe_data["Default_wait"])
+    
         return script
 
     @classmethod
@@ -55,18 +77,22 @@ class ScriptConstructorLocal(ScriptConstructor):
 
         # Adding PID after hold in run_index
         script = re.sub("(locksed.*hold)", r"\1\\t$$", script)
-
+        
+        script = re.sub("(# local )", r"", script)
+        
         script += """\
 
-iscsh=$(grep "csh" <<< $script_path)
-if [ -z $iscsh ]; then
-    bash $script_path &
-else
-    csh $script_path &
-fi
+# iscsh=$(grep "csh" <<< $script_path)
+# if [ -z $iscsh ]; then
+    # bash $script_path &
+# else
+    # csh $script_path &
+# fi
 
-# gpid=$(ps -o pgid= $! | grep -o '[0-9]*')
-locksed "s:\($qsubname\).*$:\\1\\tPID\\t$!:" $run_index
+# # gpid=$(ps -o pgid= $! | grep -o '[0-9]*')
+# locksed "s:\($qsubname\).*$:\\1\\tPID\\t$!\\t$pe:" $run_index
+
+runlock $qsubname $run_index $script_path $pe
 
 """
         return script
@@ -177,7 +203,6 @@ bash {nsf_exec} {script_id} 1> {stdout} 2> {stderr} & \n\n""".\
         if self.master.dependency_jid_list:
             qsub_header += "#$ -hold_jid %s " % ",".join(self.master.dependency_jid_list)
 
-            
         return qsub_header
 
     def get_log_lines(self, state="Started", status="\033[0;32mOK\033[m"):
@@ -283,7 +308,7 @@ class HighScriptConstructorLocal(ScriptConstructorLocal,HighScriptConstructor):
         if "job_limit" in list(self.pipe_data.keys()):
             job_limit = """\
 # Sleeping while jobs exceed limit
-wait_limit
+# wait_limit
         """
 
         # TODO: Add output from stdout and stderr
@@ -377,7 +402,12 @@ class LowScriptConstructorLocal(ScriptConstructorLocal, LowScriptConstructor):
 
         
         general_header = super(LowScriptConstructorLocal, self).get_script_header(**kwargs)
-
+        
+        qsub_opt = '-pe'
+        if qsub_opt in self.params["qsub_params"]["opts"]:
+            general_header += "\n#$ {key} {val}\n".format(key=qsub_opt, val=self.params["qsub_params"]["opts"][qsub_opt]) 
+        else:
+            general_header += "\n#$ {key} {val}\n".format(key=qsub_opt, val='1') 
         return general_header + "\n\n"
 
     def write_script(self):

@@ -109,9 +109,11 @@ func_trap() {{
     if [ $jobid == 'ND' ]; then
         jobid=$$
     fi        
-
+    
+    exec 220>>{log_file}.lock
+    flock -w 5000 220 || exit 1
     echo -e $(date '+%d/%m/%Y %H:%M:%S')'\\tFinished\\t'$1'\\t'$2'\\t'$3'\\t'$4'\\t'$5'\\t'$6'\\t'$maxvmem'\\t[0;31m'$err_code'[m' >> {log_file}; 
-
+    flock -u 220
     ## locksed command entry point
     exit 1;
 }}         
@@ -137,9 +139,12 @@ log_echo() {{
     if [ $jobid == 'ND' ]; then
         jobid=$$
     fi        
-
+    
+    exec 220>>{log_file}.lock
+    flock -w 5000 220 || exit 1
     echo -e $(date '+%d/%m/%Y %H:%M:%S')'\\t'$7'\\t'$1'\\t'$2'\\t'$3'\\t'$4'\\t'$5'\\t'$jobid'\\t'$maxvmem'\\t[0;32mOK[m' >> {log_file};
-
+    flock -u 220
+    
 }}
 
 locksed() {{
@@ -148,13 +153,66 @@ locksed() {{
     # Setting script as done in run index:
     sedlock=${{2}}.lock
     exec 200>$sedlock
-    flock -w 4000 200 || exit 1
+    flock -w 4003 200 || exit 1
 
     # echo do sed 
     sed -i -e "$1" $2
 
     # echo unlock
     flock -u 200
+}}
+
+
+Checkresources() {{
+    # $1: sed command
+    # $2: file
+    # $3: needed resources
+    # $4: max resource
+    ok2run=-1
+    sedlock=${{2}}.lock
+    exec 200>$sedlock
+    flock -w 0.1 200 || ok2run=0
+    if (( $ok2run != 0 )); then
+        # flock -w 4002 200 || exit 1
+        # Check for resources used
+        cpu_used=$(grep -v "^#" $2 | awk '{{ SUM += $4}} END {{ print SUM }}' )
+        # Check for available resources 
+        if [ $(($cpu_used + $3)) -le $4 ]; then
+            # echo do sed 
+                sed -i -e "$1" $2
+            ok2run=1
+        fi
+        
+        # echo unlock
+        flock -u 200
+    fi
+    echo $ok2run
+}}
+
+
+runlock() {{
+    # $1: qsubname
+    # $2: file
+    # $3: shell command
+    # $4: needed resources
+    # Setting script as done in run index:
+    sedlock=${{2}}.lock
+    exec 200>$sedlock
+    flock -w 4001 200 || exit 1
+    
+    iscsh=$(grep "csh" <<< $3)
+    if [ -z $iscsh ]; then
+        bash $3 &
+    else
+        csh $3 &
+    fi
+
+    # echo do sed 
+    sed -i -e "s:\($1\).*$:\\1\\tPID\\t$!\\t$4:"  $2
+    
+    # echo unlock
+    flock -u 200
+    
 }}
 
 """.format(log_file=pipe_data["log_file"],
@@ -180,6 +238,10 @@ run_index="{run_index}"
 
 echo "Running job: " $qsubname
 
+# local if [[ $HOSTNAME != *-LOCAL_RUN ]]; then
+# local     HOSTNAME+="-LOCAL_RUN"
+# local fi
+
 # Setting trap
 trap_with_arg func_trap $module $instance $qsubname Queue $HOSTNAME $$ SIGUSR2 ERR INT TERM
 
@@ -195,6 +257,16 @@ echo "Running script: " $script_path
 # 2. Marking in run_index as running
 
 locksed "s:# \($qsubname\).*:\\1\\thold:" $run_index
+
+
+
+# Getting script needed resources 
+# local NCPUS=$(nproc)
+# local NCPUS=$( echo "0.8*$NCPUS/1" | bc )
+# local pe=$(grep '#$ -pe' $script_path | grep -o '[0-9]*')
+# local if [[ -z "$pe" ]]; then
+# local     pe=0
+# local fi
 
 # 3. Getting script dependencies
 
@@ -230,20 +302,36 @@ do
     overlap=0
     result=""
 
-    for item1 in "${{hold_jids[@]}}"; do
-        for item2 in "${{running[@]}}"; do
-            if [[ $item1 = $item2 ]]; then
-                echo "Job $item1 is running. Waiting..."
-                overlap=1
-            fi
-        done
+    # for item1 in "${{hold_jids[@]}}"; do
+        # for item2 in "${{running[@]}}"; do
+            # if [[ $item1 = $item2 ]]; then
+                # echo "Job $item1 is running. Waiting..."
+                # overlap=1
+                # break 2
+            # fi
+        # done
+    # done
+    
+    for item1 in "${{running[@]}}"; do
+        if printf '%s\\n' ${{hold_jids[@]}} | grep -q -P ^$item1$ ; then
+            echo "Job $item1 is running. Waiting..."
+            overlap=1
+            break
+        fi
     done
+    
     # echo "Overlap: $overlap"
     if (( $overlap == 0 )); then
-        flag=1
+        # Check for available resources 
+        # local if (( $(Checkresources "s:\($qsubname\).*$:\\1\\tPID\\t$$\\t$pe:" $run_index $pe $NCPUS) == 1 )); then
+            flag=1
+        # local fi
     fi
-#    echo -n "."
-    sleep 3
+    
+    if (( $flag  == 0 )); then
+    #    echo -n "."
+        sleep 3
+    fi
 done
 
 # 5. Execute script:
@@ -533,11 +621,17 @@ class LowScriptConstructor(ScriptConstructor):
         if state == "Start":
             script = """\
 # Adding kill command to kill commands file.
-echo '{kill_cmd}' >> {qdel_file}\n""".format(kill_cmd = kill_cmd, qdel_file = self.script_path)
+exec 230>>{qdel_file}.lock
+flock -w 6000 230  || exit 1
+echo '{kill_cmd}' >> {qdel_file}
+flock -u 230\n""".format(kill_cmd = kill_cmd, qdel_file = self.script_path)
         elif state == "Stop":
             script = """\
 # Removing kill command from kill commands file.
-sed -i -e 's:^{kill_cmd}$:#&:' {qdel_file}\n""".format(kill_cmd = re.escape(kill_cmd), 
+exec 230>>{qdel_file}.lock
+flock -w 6000 230  || exit 1
+sed -i -e 's:^{kill_cmd}$:#&:' {qdel_file}
+flock -u 230\n""".format(kill_cmd = re.escape(kill_cmd), 
                                 qdel_file = self.params["kill_script_path"])
         else:
             raise AssertionExcept("Bad type value in add_qdel_lines()", step = self.name)
