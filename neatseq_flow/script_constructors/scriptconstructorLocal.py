@@ -36,7 +36,7 @@ class ScriptConstructorLocal(ScriptConstructor):
     wait_limit() {{
         while : ; do
             # Count hold jobs
-            numhold=$(grep -v "^#" $run_index | grep -w -c "hold") || true;
+            numhold=$(grep -v "^#" $run_index | grep -P ".*\.\..*\.\..*\.\." | grep -w -c "hold") || true;
             maxrun=$(sed -ne "s/limit=\([0-9]*\).*/\\1/p" $job_limit);
             sleeptime=$(sed -ne "s/.*sleep=\([0-9]*\).*/\\1/p" $job_limit);
             [[ $numhold -ge $holdlimit ]] || break;
@@ -60,7 +60,7 @@ class ScriptConstructorLocal(ScriptConstructor):
     wait_limit() {{
         while : ; do
             # Count hold jobs
-            numhold=$(grep -v "^#" $run_index | grep -w -c "hold" ) || true;
+            numhold=$(grep -v "^#" $run_index | grep -P ".*\.\..*\.\..*\.\." | grep -w -c "hold" ) || true;
             [[ $numhold -ge $holdlimit ]] || break;
             sleep $sleeptime;
         done
