@@ -250,7 +250,9 @@ instance=$(awk 'BEGIN {{FS="[.][.]";}} {{print $2}}' <<< $qsubname)
 
 log_echo $module $instance $qsubname Queue $HOSTNAME $$ Started
 
-script_path=$(awk -v qsname="$qsubname" '$0 ~ qsname".*" {{print $2}}' $script_index)
+script_path=($(awk -v qsname="$qsubname" '$0 ~ qsname".*" {{print $2}}' $script_index))
+
+script_path=${{script_path[-1]}}
 
 echo "Running script: " $script_path
 
