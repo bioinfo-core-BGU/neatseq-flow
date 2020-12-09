@@ -659,7 +659,7 @@ flock -u 230\n""".format(kill_cmd = re.escape(kill_cmd),
 
         for filename in self.master.stamped_files:
             script += """
-if [ -e {filename} ]; then {echo_cmd} `date '+%%d/%%m/%%Y %%H:%%M:%%S'` '\\t{step}\\t{stepname}\\t{stepID}\\t' `md5sum {filename}` >> {file}; fi
+if [ -f {filename} ]; then {echo_cmd} `date '+%%d/%%m/%%Y %%H:%%M:%%S'` '\\t{step}\\t{stepname}\\t{stepID}\\t' `md5sum {filename}` >> {file}; fi
 """.format(echo_cmd=echo_cmd,
             filename=filename,
             step=self.step,
