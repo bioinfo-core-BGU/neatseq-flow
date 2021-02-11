@@ -129,7 +129,11 @@ class NeatSeqFlow(object):
 
         # Saving Executor in pipe_data
         self.pipe_data["Executor"] = self.param_data["Global"]["Executor"]
-
+        
+        # Set the md5sub parameter
+        if 'md5sum' in self.param_data["Global"].keys():
+            self.pipe_data["md5sum"] = self.param_data["Global"]["md5sum"]
+        
         # if home_dir is None or empty, set to cwd, else leave as is
         self.pipe_data["home_dir"] = home_dir if home_dir else os.getcwd()
         # Assert that the dir is a valid existing directory:

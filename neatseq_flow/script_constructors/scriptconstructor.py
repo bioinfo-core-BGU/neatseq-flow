@@ -643,34 +643,50 @@ flock -u 230\n""".format(kill_cmd = re.escape(kill_cmd),
     def get_stamped_file_register(self):
         """
         """
+        md5sum = True
+        if "md5sum" in self.pipe_data:
+            if self.pipe_data['md5sum'].upper() == 'FALSE':
+                md5sum = False
+            else:
+                md5sum = True
         
-        if not self.master.stamped_files:
-            return ""
-
-        script = "######\n# Registering files with md5sum:\n"
-
-        # Bash needs the -e flag to render \t as tabs.
-        if self.shell=="csh":
-            echo_cmd = "echo"
-        elif self.shell=="bash":
-            echo_cmd = "echo -e"
-        else:
-            pass
-
-        for filename in self.master.stamped_files:
-            script += """
-if [ -f {filename} ]; then {echo_cmd} `date '+%%d/%%m/%%Y %%H:%%M:%%S'` '\\t{step}\\t{stepname}\\t{stepID}\\t' `md5sum {filename}` >> {file}; fi
-""".format(echo_cmd=echo_cmd,
-            filename=filename,
-            step=self.step,
-            stepname=self.name,
-            stepID=self.script_id,
-            file=self.pipe_data["registration_file"])
-        
-        script += "#############\n\n"
+        if "md5sum" in self.params:
+            if self.params['md5sum'].upper() == 'FALSE':
+                md5sum = False
+            else:
+                md5sum = True
             
-        return script
+        if not self.master.stamped_files:
+            md5sum = False
+            #return ""
+        
+        if md5sum:
+            script = "######\n# Registering files with md5sum:\n"
+            
+            # Bash needs the -e flag to render \t as tabs.
+            if self.shell=="csh":
+                echo_cmd = "echo"
+            elif self.shell=="bash":
+                echo_cmd = "echo -e"
+            else:
+                pass
 
+            for filename in self.master.stamped_files:
+                script += """
+    if [ -e {filename} ]; then {echo_cmd} `date '+%%d/%%m/%%Y %%H:%%M:%%S'` '\\t{step}\\t{stepname}\\t{stepID}\\t' `md5sum {filename}` >> {file}; fi
+    """.format(echo_cmd=echo_cmd,
+                filename=filename,
+                step=self.step,
+                stepname=self.name,
+                stepID=self.script_id,
+                file=self.pipe_data["registration_file"])
+            
+            script += "#############\n\n"
+                
+            return script
+        else:
+            return ""
+    
     def test_executed(self, state="Start"):
         """
         If 'rerun' is set to 'no' in params, test for existance of stamped files:
