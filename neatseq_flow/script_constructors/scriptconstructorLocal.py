@@ -168,7 +168,13 @@ sed -i -E -e 's/^([^#][^[[:space:]]+).*/# \\1/g' -e 's/^(# [^[[:space:]]+).*/\\1
     def get_command(self):
         """ Returnn the command for executing the this script
         """
-        
+        # Make a step specific subdir for stderr and stdout
+        stderr_dir = os.path.join( self.pipe_data["stderr_dir"], "_".join([self.step,self.name]) ) + os.sep
+        stdout_dir = os.path.join( self.pipe_data["stdout_dir"], "_".join([self.step,self.name]) ) + os.sep
+        if not os.path.isdir(stderr_dir):
+            os.makedirs(stderr_dir) 
+        if not os.path.isdir(stdout_dir):
+            os.makedirs(stdout_dir)         
         script = ""
 
         if "slow_release" in list(self.params.keys()):
@@ -178,8 +184,8 @@ sed -i -E -e 's/^([^#][^[[:space:]]+).*/# \\1/g' -e 's/^(# [^[[:space:]]+).*/\\1
 bash {nsf_exec} {script_id} 1> {stdout} 2> {stderr} & \n\n""".\
                 format(script_id = self.script_id,
                        nsf_exec = self.pipe_data["exec_script"],
-                       stderr = "{dir}{id}.e".format(dir=self.pipe_data["stderr_dir"], id=self.script_id),
-                       stdout = "{dir}{id}.o".format(dir=self.pipe_data["stdout_dir"], id=self.script_id))
+                       stderr = "{dir}{id}.e".format(dir=stderr_dir, id=self.script_id),
+                       stdout = "{dir}{id}.o".format(dir=stdout_dir, id=self.script_id))
 
         return script
 

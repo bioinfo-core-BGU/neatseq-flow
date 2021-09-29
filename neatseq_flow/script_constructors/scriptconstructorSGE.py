@@ -182,7 +182,15 @@ qsub {script_path}
         """ Make the first few lines for the scripts
             Is called for high level, low level and wrapper scripts
         """
-
+        
+        # Make a step specific subdir for stderr and stdout
+        stderr_dir = os.path.join( self.pipe_data["stderr_dir"], "_".join([self.step,self.name]) ) + os.sep
+        stdout_dir = os.path.join( self.pipe_data["stdout_dir"], "_".join([self.step,self.name]) ) + os.sep
+        if not os.path.isdir(stderr_dir):
+            os.makedirs(stderr_dir) 
+        if not os.path.isdir(stdout_dir):
+            os.makedirs(stdout_dir) 
+        
         qsub_shell = "#!/bin/%(shell)s\n#$ -S /bin/%(shell)s" % {"shell": self.shell}
         # Make hold_jids line only if there are jids (i.e. self.get_dependency_jid_list() != [])
         if self.master.dependency_jid_list:
@@ -195,8 +203,8 @@ qsub {script_path}
             qsub_holdjids = ""
 
         qsub_name =    "#$ -N %s " % (self.script_id)
-        qsub_stderr =  "#$ -e %s" % self.pipe_data["stderr_dir"]
-        qsub_stdout =  "#$ -o %s" % self.pipe_data["stdout_dir"]
+        qsub_stderr =  "#$ -e %s" % stderr_dir
+        qsub_stdout =  "#$ -o %s" % stdout_dir
         # qsub_queue =   "#$ -q %s" % self.params["qsub_params"]["queue"]
 
         script_header = "\n".join([qsub_shell,

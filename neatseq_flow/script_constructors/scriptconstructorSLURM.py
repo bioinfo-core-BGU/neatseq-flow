@@ -94,15 +94,23 @@ bash {nsf_exec} {script_id} &\n\n""".format(script_id = self.script_id,
         """ Make the first few lines for the scripts
             Is called for high level, low level and wrapper scripts
         """
-
+        
+        # Make a step specific subdir for stderr and stdout
+        stderr_dir = os.path.join( self.pipe_data["stderr_dir"], "_".join([self.step,self.name]) ) + os.sep
+        stdout_dir = os.path.join( self.pipe_data["stdout_dir"], "_".join([self.step,self.name]) ) + os.sep
+        if not os.path.isdir(stderr_dir):
+            os.makedirs(stderr_dir) 
+        if not os.path.isdir(stdout_dir):
+            os.makedirs(stdout_dir) 
+        
         qsub_header = """\
 #!/bin/{shell}
 #SBATCH --job-name {jobname}
 #SBATCH -e {stderr_dir}{jobname}.e%J
 #SBATCH -o {stdout_dir}{jobname}.o%J
 """.format(shell      = self.shell, \
-           stderr_dir = self.pipe_data["stderr_dir"],
-           stdout_dir = self.pipe_data["stdout_dir"],
+           stderr_dir = stderr_dir,
+           stdout_dir = stdout_dir,
            jobname    = self.script_id) 
         if  self.params["qsub_params"]["queue"]:
             qsub_header +=   "#SBATCH --partition %s\n" % self.params["qsub_params"]["queue"]
