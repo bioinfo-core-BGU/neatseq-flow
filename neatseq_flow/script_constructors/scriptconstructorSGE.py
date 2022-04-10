@@ -48,16 +48,20 @@ class ScriptConstructorSGE(ScriptConstructor):
 job_limit={job_limit}
 
 wait_limit() {{
+    sleep $(echo "scale=2 ; {sleep} / 1 " | bc);
     while : ; do 
-        numrun=$({qstat} -u $USER | wc -l ); 
-        maxrun=$(sed -ne "s/limit=\([0-9]*\).*/\\1/p" $job_limit); 
+        numrun=$({qstat} -xml -u $USER | grep "running" | wc -l || true ); 
+        numpend=$(/storage/SGE6U8/bin/lx24-amd64/qstat -xml -u $USER | grep "<state>qw</state>" | wc -l || true );
+        maxrun=$(sed -ne "s/limit=\([0-9]*\).*/\\1/p" $job_limit);
+        maxpend=$(echo "scale=0 ; $maxrun / 3 " | bc);
         sleeptime=$(sed -ne "s/.*sleep=\([0-9]*\).*/\\1/p" $job_limit); 
-        [[ $numrun -ge $maxrun ]] || break; 
+        [[ $numrun -ge $maxrun || $numpend -ge $maxpend ]] || break; 
         sleep $sleeptime; 
     done
 }}
-""".format(job_limit=pipe_data["job_limit"],
-           qstat=pipe_data["qsub_params"]["qstat_path"])
+""".format(sleep     = pipe_data["Default_wait"],
+           job_limit = pipe_data["job_limit"],
+           qstat     = pipe_data["qsub_params"]["qstat_path"])
 
         return script
 
@@ -109,7 +113,7 @@ function recover_run {{
         | sort -u \\
         | while read step; do \\
             echo $step 1>&2
-            grep $step {main} | egrep -v "^#|^echo";
+            grep "_"$step"\." {main} | egrep -v "^#|^echo";
           done \\
         | sort -u \\
         > {recover_script}
@@ -324,8 +328,9 @@ class HighScriptConstructorSGE(ScriptConstructorSGE,HighScriptConstructor):
         if "job_limit" in list(self.pipe_data.keys()):
             job_limit = """
 # Sleeping while jobs exceed limit
-wait_limit
-"""
+# wait_limit
+sleep {sleep}
+""".format(sleep = self.pipe_data["Default_wait"])
         # TODO: Add output from stdout and stderr
 
         script = """

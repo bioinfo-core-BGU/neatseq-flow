@@ -113,8 +113,8 @@ class NeatSeqFlow(object):
             if set(mapping_data.keys()) - set(self.sample_data["samples"]):
                 sys.stderr.write("Extra samples in grouping data!\n")
             for sample in self.sample_data["samples"]:
-                if sample not in mapping_data:
-                    sys.exit("sample {smp} does no exist in grouping data".format(smp=sample))
+                if sample not in set(mapping_data.keys()):
+                    sys.stderr.write("sample {smp} does no exist in grouping data".format(smp=sample))
                 self.sample_data[sample]["..grouping.."] = mapping_data[sample]
 
         sys.stdout.write("Preparing objects...\n")
