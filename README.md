@@ -147,7 +147,10 @@ The installation process described above installs the following three NeatSeq-Fl
 
 # Contact
 
-Please contact Menachem Sklarz at: [sklarz@bgu.ac.il](mailto:sklarz@bgu.ac.il)
+Please contact 
+
+Liron Levin at:     [levinl@bgu.ac.il](mailto:levinl@bgu.ac.il)
+Menachem Sklarz at: [sklarz@bgu.ac.il](mailto:sklarz@bgu.ac.il)
 
 # Citation
 
