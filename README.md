@@ -131,6 +131,12 @@ The easiest way to install is using **Conda**, Conda will install NeatSeq-Flow a
        neatseq_flow.py --help
     ``` 
 
+### Using Docker
+
+  Running the NeatSeq-Flow Platform on Windows/Mac Using a Docker Container
+  Follow the instructions here:
+    [NeatSeq-Flow Using Docker](https://github.com/bioinfo-core-BGU/NeatSeq-Flow-Using-Docker) 
+
 
 # Additional repositories
 
