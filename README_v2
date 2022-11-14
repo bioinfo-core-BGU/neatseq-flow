@@ -50,86 +50,28 @@ Check out the [Tutorial](http://neatseq-flow.readthedocs.io/en/latest/Example_WF
 
 ## Installing NeatSeq-Flow
 
-The easiest way to install is using **Conda**, Conda will install NeatSeq-Flow and NeatSeq-Flow-GUI with all its dependencies* in one go: 
+The easiest way to install is with the installation script (The following instructions are for **temporary installation**. [See here](https://neatseq-flow.readthedocs.io/en/latest/Installation_guide.html#installing) for details)
 
-  - First if you don't have **Conda**, [install it!](https://conda.io/miniconda.html) 
-  - Then in the terminal:
-    1. Create the **NeatSeq_Flow** conda environment:
-    ```Bash
-      conda env create levinl/neatseq_flow
-    ```  
+Everything will be installed in a directory called `NeatSeq_Flow_install`. To uninstall NeatSeq-Flow, just delete the directory.
 
+    curl -sl https://raw.githubusercontent.com/bioinfo-core-BGU/neatseq-flow/master/docs/source/_extra/extra/NeatSeq_Flow_install_script.sh | bash -s -- temp
 
+ 
 ## Executing NeatSeq-Flow
 
 1. Activate the environment
 
-   1. Activate the **NeatSeq_Flow** conda environment:
-    ```Bash
-      bash
-      source activate NeatSeq_Flow
-      export CONDA_BASE=$(conda info --root)
-    ```
-    2. Run **NeatSeq_Flow_GUI**:
-    ```Bash 
-       NeatSeq_Flow_GUI.py
-    ```
-    3. For more option:
-    ```Bash 
-        NeatSeq_Flow_GUI.py -h
-        usage: NeatSeq_Flow_GUI.py [-h] [--Server] [--PORT CHAR] [--HOST CHAR] [--SSL]
-                           [--SSH_HOST CHAR] [--SSH_PORT CHAR] [--USER CHAR]
-                           [--PASSW CHAR] [--USERSFILE CHAR]
-                           [--UNLOCK_USER_DIR] [--WOKFLOW_DIR CHAR]
-                           [--CONDA_BIN CHAR] [--LOG_DIR CHAR]
+        PATH="$PWD/NeatSeq_Flow_install/bin:$PATH"
+        source activate NeatSeq_Flow
+        export CONDA_BASE=$(conda info --root)
 
-        NeatSeq-Flow GUI By Liron Levin
+1. Run the graphical user interface:
 
-        optional arguments:
-          -h, --help          show this help message and exit
-          --Server            Run as Server
-          --PORT CHAR         Use this port in which to run the app, If not set will
-                              search for open port (Works only When --Server is set)
-          --HOST CHAR         The host name/ip to serve the app, If not set, will try
-                              to identify automatically (Works only When --Server is
-                              set)
-          --SSL               Use SSL (Only When --Server is set)
-          --SSH_HOST CHAR     Connect using SSH to a remote host, NeatSeq-Flow needs
-                              to be installed on the remote host (Works only When
-                              --Server is set)
-          --SSH_PORT CHAR     When --SSH_HOST is set use this ssh port to connect to a
-                              remote host.
-          --USER CHAR         User Name For This Serve (Works only When --Server is
-                              set)
-          --PASSW CHAR        Password For This Serve (Works only When --Server is
-                              set)
-          --USERSFILE CHAR    The location of a Users file in which a list of users,
-                              E-mails addresses and Users directories are separated by
-                              one space (as:USER user@example.com /USER/DIR). The
-                              login password will be send to the user e-mail after
-                              filling its user name and the password generated at the
-                              beginning of the run (Works only When --Server is set).
-                              You will need a Gmail account to send the password to
-                              the users (you will be prompt to type in your Gmail
-                              address and password)
-          --UNLOCK_USER_DIR   Don't Lock Users to their Directory Or to the Current
-                              Working Directory
-          --WOKFLOW_DIR CHAR  A Path to a Directory containing work-flow files to
-                              choose from at log-in. Works only When --Server is set.
-                              If --SSH_HOST is set, the Path needs to be in the remote
-                              host.
-          --CONDA_BIN CHAR    A path to a the CONDA bin location. If --SSH_HOST is
-                              set, the Path needs to be in the remote host.
-          --LOG_DIR CHAR      A path to a directory to save log files about users
-                              statistics. Only woks If --Server is set. In any way the
-                              path needs to be at the local host.
-    ```
+        NeatSeq_Flow_GUI.py
 
 1. Alternatively, run NeatSeq_Flow command-line version:
 
-    ```Bash 
-       neatseq_flow.py --help
-    ``` 
+        neatseq_flow.py --help
 
 
 # Additional repositories
