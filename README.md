@@ -50,7 +50,7 @@ Check out the [Tutorial](http://neatseq-flow.readthedocs.io/en/latest/Example_WF
 
 ## Installing NeatSeq-Flow
 
-The easiest way to install is using **Conda**, Conda will install NeatSeq-Flow and NeatSeq-Flow-GUI with all its dependencies* in one go: 
+The easiest way to install is using **Conda**, Conda will install NeatSeq-Flow and NeatSeq-Flow-GUI with all its dependencies **in one go**: 
 
   - First if you don't have **Conda**, [install it!](https://conda.io/miniconda.html) 
   - Then in the terminal:
