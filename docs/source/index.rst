@@ -50,6 +50,7 @@
 
 
    #. :ref:`quick_start`: install and try NeatSeq-Flow
+   
    * GitHub: `NeatSeq-Flow <https://github.com/bioinfo-core-BGU/neatseq-flow>`_
    * GitHub: `NeatSeq-Flow GUI <https://github.com/bioinfo-core-BGU/NeatSeq-Flow-GUI>`_
    * `A short movie demonstrating the GUI <https://raw.githubusercontent.com/bioinfo-core-BGU/NeatSeq-Flow-GUI/master/doc/NeatSeq-Flow-GUI.gif>`_
@@ -86,7 +87,7 @@ Quick Start:
 ------------
 
  Installing Using Conda will install NeatSeq-Flow-GUI with all its dependencies in one go: 
-  - First if you don't have **Conda**, `install it!<https://conda.io/miniconda.html>`_ 
+  - First if you don't have **Conda**, `install it! <https://conda.io/miniconda.html>`_
   - Then in the terminal:
 
     1. Create the **NeatSeq_Flow** conda environment:
