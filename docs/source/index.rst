@@ -49,7 +49,7 @@
 .. topic:: Important links
 
 
-   * :ref:`Quick start: install and try NeatSeq-Flow <quick_start>`
+   * :ref:`Quick start': install and try NeatSeq-Flow
    * GitHub: `NeatSeq-Flow <https://github.com/bioinfo-core-BGU/neatseq-flow>`_
    * GitHub: `NeatSeq-Flow GUI <https://github.com/bioinfo-core-BGU/NeatSeq-Flow-GUI>`_
    * `A short movie demonstrating the GUI <https://raw.githubusercontent.com/bioinfo-core-BGU/NeatSeq-Flow-GUI/master/doc/NeatSeq-Flow-GUI.gif>`_
@@ -81,9 +81,35 @@ Available Modules and Workflows
 | Installation and usage instructions, along with full documentation of the modules and workflows, are available at `NeatSeq-Flow's Module and Workflow Repository <https://neatseq-flow.readthedocs.io/projects/neatseq-flow-modules/en/latest/>`_.
 
 
-Quick Start
------------
+Quick Start:
+------------
+ Installing Using Conda will install NeatSeq-Flow-GUI with all its dependencies* in one go: 
+  - First if you don't have **Conda**, [install it!](https://conda.io/miniconda.html) 
+  - Then in the terminal:
+    1. Create the **NeatSeq_Flow** conda environment:
+    .. code-block:: bash
 
+       conda env create levinl/neatseq_flow
+
+    2. Activate the **NeatSeq_Flow** conda environment:
+    `. code-block:: bash
+
+      bash
+      source activate NeatSeq_Flow
+      
+      
+    3. Run **NeatSeq_Flow_GUI**:
+    `. code-block:: bash
+
+      NeatSeq_Flow_GUI.py --Server
+
+    4. Use the information in the terminal:
+        <img align="right" src="https://github.com/bioinfo-core-BGU/NeatSeq-Flow-GUI/raw/master/doc/NeatSeq-Flow_Server.jpg" width="450">
+        - Copy the IP address to a web-browser - (red line)
+        - A login window should appear
+        - Copy the "User Name" (blue line) from the terminal to the "User Name" form in the login window
+        - Copy the "Password" (yellow line) from the terminal to the "Password" form in the login window
+        - Click on the "Login" button.
 
 
 
