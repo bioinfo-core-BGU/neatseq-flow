@@ -87,6 +87,7 @@ Quick Start:
  Installing Using Conda will install NeatSeq-Flow-GUI with all its dependencies in one go: 
   - First if you don't have **Conda**, `install it!<https://conda.io/miniconda.html>`_ 
   - Then in the terminal:
+
     1. Create the **NeatSeq_Flow** conda environment:
 
     .. code-block:: bash
