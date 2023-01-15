@@ -49,7 +49,7 @@
 .. topic:: Important links
 
 
-   * :ref:`quick_start`: install and try NeatSeq-Flow
+   #. :ref:`quick_start`: install and try NeatSeq-Flow
    * GitHub: `NeatSeq-Flow <https://github.com/bioinfo-core-BGU/neatseq-flow>`_
    * GitHub: `NeatSeq-Flow GUI <https://github.com/bioinfo-core-BGU/NeatSeq-Flow-GUI>`_
    * `A short movie demonstrating the GUI <https://raw.githubusercontent.com/bioinfo-core-BGU/NeatSeq-Flow-GUI/master/doc/NeatSeq-Flow-GUI.gif>`_
@@ -80,6 +80,7 @@ Available Modules and Workflows
 | The complete set of currently available modules and workflows is downloadable from |github|.
 | Installation and usage instructions, along with full documentation of the modules and workflows, are available at `NeatSeq-Flow's Module and Workflow Repository <https://neatseq-flow.readthedocs.io/projects/neatseq-flow-modules/en/latest/>`_.
 
+.. _quick_start:
 
 Quick Start:
 ------------
@@ -108,7 +109,7 @@ Quick Start:
       NeatSeq_Flow_GUI.py --Server
 
     4. Use the information in the terminal:
-        <img align="right" src="https://github.com/bioinfo-core-BGU/NeatSeq-Flow-GUI/raw/master/doc/NeatSeq-Flow_Server.jpg" width="450">
+
         .. figure:: https://github.com/bioinfo-core-BGU/NeatSeq-Flow-GUI/raw/master/doc/NeatSeq-Flow_Server.jpg
            :align: right
            :width: 350
