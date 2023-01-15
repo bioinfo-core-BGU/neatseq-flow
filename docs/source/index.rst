@@ -84,8 +84,8 @@ Available Modules and Workflows
 Quick Start:
 ------------
 
- Installing Using Conda will install NeatSeq-Flow-GUI with all its dependencies* in one go: 
-  - First if you don't have **Conda**, [install it!](https://conda.io/miniconda.html) 
+ Installing Using Conda will install NeatSeq-Flow-GUI with all its dependencies in one go: 
+  - First if you don't have **Conda**, `install it!<https://conda.io/miniconda.html>`_ 
   - Then in the terminal:
     1. Create the **NeatSeq_Flow** conda environment:
 
@@ -108,6 +108,10 @@ Quick Start:
 
     4. Use the information in the terminal:
         <img align="right" src="https://github.com/bioinfo-core-BGU/NeatSeq-Flow-GUI/raw/master/doc/NeatSeq-Flow_Server.jpg" width="450">
+        .. figure:: https://github.com/bioinfo-core-BGU/NeatSeq-Flow-GUI/raw/master/doc/NeatSeq-Flow_Server.jpg
+           :align: right
+           :width: 350
+
         - Copy the IP address to a web-browser - (red line)
         - A login window should appear
         - Copy the "User Name" (blue line) from the terminal to the "User Name" form in the login window
