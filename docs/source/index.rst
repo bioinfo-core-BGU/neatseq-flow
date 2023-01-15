@@ -49,7 +49,7 @@
 .. topic:: Important links
 
 
-   #. :ref:`quick_start`: install and try NeatSeq-Flow
+   *. :ref:`quick_start` install and try NeatSeq-Flow
    
    * GitHub: `NeatSeq-Flow <https://github.com/bioinfo-core-BGU/neatseq-flow>`_
    * GitHub: `NeatSeq-Flow GUI <https://github.com/bioinfo-core-BGU/NeatSeq-Flow-GUI>`_
