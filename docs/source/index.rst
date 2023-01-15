@@ -49,7 +49,7 @@
 .. topic:: Important links
 
 
-   * :ref:`Quick start: install and try NeatSeq-Flow <gui_tutorial>`
+   * `Quick start: install and try NeatSeq-Flow <Quick Start>`
    * GitHub: `NeatSeq-Flow <https://github.com/bioinfo-core-BGU/neatseq-flow>`_
    * GitHub: `NeatSeq-Flow GUI <https://github.com/bioinfo-core-BGU/NeatSeq-Flow-GUI>`_
    * `A short movie demonstrating the GUI <https://raw.githubusercontent.com/bioinfo-core-BGU/NeatSeq-Flow-GUI/master/doc/NeatSeq-Flow-GUI.gif>`_
@@ -81,6 +81,12 @@ Available Modules and Workflows
 | Installation and usage instructions, along with full documentation of the modules and workflows, are available at `NeatSeq-Flow's Module and Workflow Repository <https://neatseq-flow.readthedocs.io/projects/neatseq-flow-modules/en/latest/>`_.
 
 
+Quick Start
+-----------
+
+
+
+
 Authors
 ---------
 
@@ -89,7 +95,7 @@ Authors
 * Michal Gordon
 * Vered Chalifa-Caspi
 
-`Bioinformatics Core Facility`_, NIBN, Ben-Gurion University of the Negev, Beer-Sheva, Israel.
+`Bioinformatics Core Facility`_, llse Katz Institute for Nanoscale Science and Technology, Ben-Gurion University of the Negev, Beer-Sheva, Israel
 
 
 Cite NeatSeq-Flow
@@ -100,8 +106,8 @@ Cite NeatSeq-Flow
 Contact Us
 ----------
 
-| Menachem Sklarz
-| Email: `sklarz@bgu.ac.il <mailto:sklarz@bgu.ac.il?subject=Inquiry\ about\ NeatSeq-Flow>`_
+| Liron Levin
+| Email: `levinl@bgu.ac.il <mailto:levinl@bgu.ac.il?subject=Inquiry\ about\ NeatSeq-Flow>`_
 
 
 
