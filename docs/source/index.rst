@@ -97,7 +97,8 @@ Quick Start:
        conda env create levinl/neatseq_flow
 
     2. Activate the **NeatSeq_Flow** conda environment:
-    `. code-block:: bash
+
+    .. code-block:: bash
 
       bash
       source activate NeatSeq_Flow
