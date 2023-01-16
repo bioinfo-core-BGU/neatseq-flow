@@ -17,7 +17,6 @@
 .. image:: https://img.shields.io/badge/License-GPLv3-blue.svg
    :target: https://www.gnu.org/licenses/gpl-3.0
 
-.. image:: https://img.shields.io/github/downloads/sklarz-bgu/neatseq-flow/total.svg
 
 .. image:: https://img.shields.io/github/release/sklarz-bgu/neatseq-flow.svg
 
