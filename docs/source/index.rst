@@ -49,7 +49,7 @@
 .. topic:: Important links
 
 
-   *. :ref:`quick_start` install and try NeatSeq-Flow
+   * :ref:`quick_start` install and try NeatSeq-Flow
    
    * GitHub: `NeatSeq-Flow <https://github.com/bioinfo-core-BGU/neatseq-flow>`_
    * GitHub: `NeatSeq-Flow GUI <https://github.com/bioinfo-core-BGU/NeatSeq-Flow-GUI>`_
@@ -86,7 +86,7 @@ Available Modules and Workflows
 Quick Start:
 ------------
 
- Installing Using Conda will install NeatSeq-Flow-GUI with all its dependencies in one go: 
+ Installing Using Conda will install NeatSeq-Flow with all its dependencies in one go: 
   - First if you don't have **Conda**, `install it! <https://conda.io/miniconda.html>`_
   - Then in the terminal:
 
@@ -122,7 +122,20 @@ Quick Start:
         - Copy the "Password" (yellow line) from the terminal to the "Password" form in the login window
         - Click on the "Login" button.
 
+    5. Managing Users:
+        - It is possible to mange users using SSH, NeatSeq-Flow will try to login by ssh to a host using the provided "User Name" and "Password".
+        - The ssh host can be local or remote.
+        - Note: If using a remote host, NeatSeq-Flow needs to be installed on the remote host and the analysis will be run on the remote host by the user that logged-in
+    
+   .. code-block:: bash
 
+     NeatSeq_Flow_GUI.py --Server --SSH_HOST 127.0.0.1
+
+    6. For more option:
+    
+   .. code-block:: bash
+
+     NeatSeq_Flow_GUI.py -h
 
 Authors
 ---------
