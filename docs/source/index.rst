@@ -172,7 +172,6 @@ Web Site Contents:
 
    About
    Tutorial
-   Installation_guide
 
 .. toctree::
    :maxdepth: 1
