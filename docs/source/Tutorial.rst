@@ -237,7 +237,54 @@ Activate the GUI
 
     .. code-block:: bash
 
-      NeatSeq_Flow_GUI.py -h
+        NeatSeq_Flow_GUI.py -h
+        
+        usage: NeatSeq_Flow_GUI.py [-h] [--Server] [--PORT CHAR] [--HOST CHAR] [--SSL]
+                           [--SSH_HOST CHAR] [--SSH_PORT CHAR] [--USER CHAR]
+                           [--PASSW CHAR] [--USERSFILE CHAR]
+                           [--UNLOCK_USER_DIR] [--WOKFLOW_DIR CHAR]
+                           [--CONDA_BIN CHAR] [--LOG_DIR CHAR]
+
+        NeatSeq-Flow GUI By Liron Levin
+
+        optional arguments:
+          -h, --help          show this help message and exit
+          --Server            Run as Server
+          --PORT CHAR         Use this port in which to run the app, If not set will
+                              search for open port (Works only When --Server is set)
+          --HOST CHAR         The host name/ip to serve the app, If not set, will try
+                              to identify automatically (Works only When --Server is
+                              set)
+          --SSL               Use SSL (Only When --Server is set)
+          --SSH_HOST CHAR     Connect using SSH to a remote host, NeatSeq-Flow needs
+                              to be installed on the remote host (Works only When
+                              --Server is set)
+          --SSH_PORT CHAR     When --SSH_HOST is set use this ssh port to connect to a
+                              remote host.
+          --USER CHAR         User Name For This Serve (Works only When --Server is
+                              set)
+          --PASSW CHAR        Password For This Serve (Works only When --Server is
+                              set)
+          --USERSFILE CHAR    The location of a Users file in which a list of users,
+                              E-mails addresses and Users directories are separated by
+                              one space (as:USER user@example.com /USER/DIR). The
+                              login password will be send to the user e-mail after
+                              filling its user name and the password generated at the
+                              beginning of the run (Works only When --Server is set).
+                              You will need a Gmail account to send the password to
+                              the users (you will be prompt to type in your Gmail
+                              address and password)
+          --UNLOCK_USER_DIR   Don't Lock Users to their Directory Or to the Current
+                              Working Directory
+          --WOKFLOW_DIR CHAR  A Path to a Directory containing work-flow files to
+                              choose from at log-in. Works only When --Server is set.
+                              If --SSH_HOST is set, the Path needs to be in the remote
+                              host.
+          --CONDA_BIN CHAR    A path to a the CONDA bin location. If --SSH_HOST is
+                              set, the Path needs to be in the remote host.
+          --LOG_DIR CHAR      A path to a directory to save log files about users
+                              statistics. Only woks If --Server is set. In any way the
+                              path needs to be at the local host.
 
 
 Load a Work-Flow Parameter File
@@ -245,8 +292,8 @@ Load a Work-Flow Parameter File
 
 1. **Load a Parameter file:**
 
-   .. figure:: https://raw.githubusercontent.com/bioinfo-core-BGU/NeatSeq-Flow-GUI/master/doc/Load_WorkFlow_parameter_file.gif
-      :target: https://raw.githubusercontent.com/bioinfo-core-BGU/NeatSeq-Flow-GUI/master/doc/Load_WorkFlow_parameter_file.gif
+   .. figure::https://raw.githubusercontent.com/bioinfo-core-BGU/NeatSeq-Flow-Using-Docker/master/doc/Load_WorkFlow_parameter_file.gif
+      :target: https://raw.githubusercontent.com/bioinfo-core-BGU/NeatSeq-Flow-Using-Docker/master/doc/Load_WorkFlow_parameter_file.gif
 
    - In the 'Work-Flow' Tab click on the 'Load WorkFlow' button, then choose the work-flow's parameter file 'Tutorial_Parameter_file.yaml' and click open.
 
@@ -290,10 +337,8 @@ Configure the Cluster information
 Run the Work-Flow
 **************************************
 
-.. figure:: https://raw.githubusercontent.com/bioinfo-core-BGU/NeatSeq-Flow-GUI/master/doc/Generate_scripts.gif
-   :target: https://raw.githubusercontent.com/bioinfo-core-BGU/NeatSeq-Flow-GUI/master/doc/Generate_scripts.gif
-
-**If NeatSeq-Flow is installed using conda (as in this Tutorial):** Choose the conda environment of which NeatSeq-Flow installed in.
+.. figure:: https://raw.githubusercontent.com/bioinfo-core-BGU/NeatSeq-Flow-Using-Docker/master/doc/Generate_scripts.gif
+   :target: https://raw.githubusercontent.com/bioinfo-core-BGU/NeatSeq-Flow-Using-Docker/master/doc/Generate_scripts.gif
 
 **If NeatSeq-Flow is installed Locally:** Choose the neatseq_flow.py script location.
 
@@ -306,10 +351,13 @@ Run the Work-Flow
 
 **To run the Work-Flow click on the 'Run scripts' button**
 
-.. figure:: https://raw.githubusercontent.com/bioinfo-core-BGU/NeatSeq-Flow-GUI/master/doc/Run_Monitor.gif
-   :target: https://raw.githubusercontent.com/bioinfo-core-BGU/NeatSeq-Flow-GUI/master/doc/Run_Monitor.gif
+.. figure:: https://raw.githubusercontent.com/bioinfo-core-BGU/NeatSeq-Flow-Using-Docker/master/doc/Run_scripts.gif
+   :target: https://raw.githubusercontent.com/bioinfo-core-BGU/NeatSeq-Flow-Using-Docker/master/doc/Run_scripts.gif
 
-**It is possible to monitor the Work-Flow progress by clicking the 'Run Monitor' button**
+**It is possible to monitor the Work-Flow progress by clicking the 'Run Monitor' button
+
+.. figure:: https://raw.githubusercontent.com/bioinfo-core-BGU/NeatSeq-Flow-Using-Docker/master/doc/Run_Monitor.gif
+   :target: https://raw.githubusercontent.com/bioinfo-core-BGU/NeatSeq-Flow-Using-Docker/master/doc/Run_Monitor.gif
 
 
 .. Note:: It is possible to terminate the current run by clicking on the 'Kill Run' button.
