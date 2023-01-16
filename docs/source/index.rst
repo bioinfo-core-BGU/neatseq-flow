@@ -126,15 +126,17 @@ Quick Start:
         - The ssh host can be local or remote.
         - Note: If using a remote host, NeatSeq-Flow needs to be installed on the remote host and the analysis will be run on the remote host by the user that logged-in
     
-   .. code-block:: bash
+    .. code-block:: bash
 
-     NeatSeq_Flow_GUI.py --Server --SSH_HOST 127.0.0.1
+      NeatSeq_Flow_GUI.py --Server --SSH_HOST 127.0.0.1
+
 
     6. For more option:
-    
-   .. code-block:: bash
 
-     NeatSeq_Flow_GUI.py -h
+    .. code-block:: bash
+
+      NeatSeq_Flow_GUI.py -h
+
 
 Authors
 ---------
