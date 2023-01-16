@@ -91,30 +91,17 @@ Required programs
 Install NeatSeq-Flow
 -------------------------------
 
-In this Tutorial we will install NeatSeq-Flow and all it's dependencies in one go with a provided bash script.
+ Installing Using Conda will install NeatSeq-Flow with all its dependencies in one go: 
+  - First if you don't have **Conda**, `install it! <https://conda.io/miniconda.html>`_
+  - Then in the terminal:
 
-The script performs the following:
+    1. Create the **NeatSeq_Flow** conda environment:
 
-* Miniconda installation
-* ``git`` installation
-* NeatSeq-Flow conda environment creation
+    .. code-block:: bash
 
+       conda env create levinl/neatseq_flow
 
-Everything will be installed in a directory called ``NeatSeq_Flow_install`` in your HOME directory. **To uninstall NeatSeq-Flow**, just delete the directory.
-
-   .. code-block:: bash
-
-    cd $HOME
-    curl -LO https://raw.githubusercontent.com/bioinfo-core-BGU/neatseq-flow/master/docs/source/_extra/extra/NeatSeq_Flow_install_script.sh
-    bash NeatSeq_Flow_install_script.sh temp
-    export PATH=$HOME'/NeatSeq_Flow_install/bin:'$PATH
-    
-.. Note:: To keep conda in your PATH, whenever opening a new terminal type this command:
-       
-       .. code-block:: bash
-       
-            export PATH=$HOME'/NeatSeq_Flow_install/bin:'$PATH
-
+ 
 
 Setup the Tutorial Work-Flow
 ----------------------------------------
@@ -138,20 +125,13 @@ Create a Tutorial directory
 
 Create the Tutorial conda environment
 **********************************************
-This step will download and install all the `Required programs`_ for this Tutorial Work-Flow.
-
-    1. Download the NeatSeq Flow Tutorial installer file:
-
-       .. code-block:: bash
-
-            curl https://raw.githubusercontent.com/bioinfo-core-BGU/neatseq-flow-tutorial/master/NeatSeq_Flow_Tutorial_Install.yaml > NeatSeq_Flow_Tutorial_Install.yaml
-            
+This step will download and install all the `Required programs`_  for this Tutorial Work-Flow.
 
     2. Create the NeatSeq_Flow_Tutorial conda environment:
 
        .. code-block:: bash
 
-            conda env create -f NeatSeq_Flow_Tutorial_Install.yaml
+            conda env create levinl/neatseqflowtutorial
 
 
 Download the Tutorial's Work-Flow parameter file
@@ -199,7 +179,7 @@ Learn How to use the Graphical User Interface
 -----------------------------------------------------
 
 Typically, the installation of both NeatSeq-Flow and its GUI is done on a Linux operating system.
-It is then possible to use the GUI from a Windows computer through a Windows X server such as MobaXterm.
+It is then possible to use the GUI from any computer through a web-browser.
 
 
 **In this part of the Tutorial we will:**
@@ -212,29 +192,128 @@ It is then possible to use the GUI from a Windows computer through a Windows X s
 -  `Configure the Cluster information`_
 -  `Run the Work-Flow`_
 
-Prerequisites
---------------
 
-- The computer where the GUI is installed needs to have a web browser, preferably FireFox.
-- To use the GUI from another computer having a Windows operating system, that computer needs to have a Windows X server, e.g. MobaXterm.
 
 Activate the GUI
 *******************
 
+   1. Activate the **NeatSeq_Flow** conda environment:
 
-1. Activate the **NeatSeq_Flow** conda environment:
+    .. code-block:: bash
 
-   .. code-block:: bash
-   
       bash
       source activate NeatSeq_Flow
-
-2. Run **NeatSeq_Flow_GUI**:
-
-   .. code-block:: bash
-   
-      NeatSeq_Flow_GUI.py
       
+      
+    2. Run **NeatSeq_Flow_GUI**:
+
+    .. code-block:: bash
+
+      NeatSeq_Flow_GUI.py --Server
+
+    3. Use the information in the terminal:
+
+        .. figure:: https://github.com/bioinfo-core-BGU/NeatSeq-Flow-GUI/raw/master/doc/NeatSeq-Flow_Server.jpg
+           :align: right
+           :width: 350
+
+        - Copy the IP address to a web-browser - (red line)
+        - A login window should appear
+        - Copy the "User Name" (blue line) from the terminal to the "User Name" form in the login window
+        - Copy the "Password" (yellow line) from the terminal to the "Password" form in the login window
+        - Click on the "Login" button.
+
+    4. Managing Users:
+        - It is possible to mange users using SSH, NeatSeq-Flow will try to login by ssh to a host using the provided "User Name" and "Password".
+        - The ssh host can be local or remote.
+        - Note: If using a remote host, NeatSeq-Flow needs to be installed on the remote host and the analysis will be run on the remote host by the user that logged-in
+    
+    .. code-block:: bash
+
+      NeatSeq_Flow_GUI.py --Server --SSH_HOST 127.0.0.1
+
+
+    5. For more option:
+
+    .. code-block:: bash
+
+      NeatSeq_Flow_GUI.py -h
+
+
+Load a Work-Flow Parameter File
+**************************************
+
+1. **Load a Parameter file:**
+
+   .. figure:: https://raw.githubusercontent.com/bioinfo-core-BGU/NeatSeq-Flow-GUI/master/doc/Load_WorkFlow_parameter_file.gif
+      :target: https://raw.githubusercontent.com/bioinfo-core-BGU/NeatSeq-Flow-GUI/master/doc/Load_WorkFlow_parameter_file.gif
+
+   - In the 'Work-Flow' Tab click on the 'Load WorkFlow' button, then choose the work-flow's parameter file 'Tutorial_Parameter_file.yaml' and click open.
+
+        
+Configure a Sample file
+**************************************
+
+In the 'Samples' Tab:
+
+1. **Edit The Project Title Name:**
+
+   - You can edit the project title name by clicking on the Project Title name.
+
+2. **Add a Sample/Project File:**
+
+   - You can add a sample/project file by clicking the 'Add Sample File' or 'Add project File' button and choose a file/s.
+
+3. **Load a Sample file:**
+
+   .. figure:: https://raw.githubusercontent.com/bioinfo-core-BGU/NeatSeq-Flow-GUI/master/doc/Load_Sample_file.gif
+      :target: https://raw.githubusercontent.com/bioinfo-core-BGU/NeatSeq-Flow-GUI/master/doc/Load_Sample_file.gif
+
+   - Click on the 'Load Sample File' button, then choose the work-flow's sample file 'Tutorial_Samples_file.nsfs' and click open.
+   - You can edit the names of the samples by clicking on the sample name.
+   - You can remove a sample/project file by clicking the 'Remove' button.
+   - You can change a sample/project file type by clicking the drop-down menu or by editing the type name.
+
+        
+Configure the Cluster information
+**************************************
+
+1. **Edit Field:**
+
+   In the 'Cluster' Tab choose a field name to edit, change the key or value and then click on the 'Edit' button.
+
+2. **Create New Field:**
+
+   - You can create new field by clicking on some existing field name and then click the 'New Field' button.
+   - You can create new sub field by clicking on the existing field to which you want to create a sub field and then click the 'New Sub Field' button.
+        
+Run the Work-Flow
+**************************************
+
+.. figure:: https://raw.githubusercontent.com/bioinfo-core-BGU/NeatSeq-Flow-GUI/master/doc/Generate_scripts.gif
+   :target: https://raw.githubusercontent.com/bioinfo-core-BGU/NeatSeq-Flow-GUI/master/doc/Generate_scripts.gif
+
+**If NeatSeq-Flow is installed using conda (as in this Tutorial):** Choose the conda environment of which NeatSeq-Flow installed in.
+
+**If NeatSeq-Flow is installed Locally:** Choose the neatseq_flow.py script location.
+
+**In order to Generate the Work-Flow scripts:**
+
+1. Select the Sample file.
+2. Select the Work-Flow parameter-file.
+3. Choose the Project Directory to generate the Work-Flow's scripts in (the default is to use the Current Working Directory )
+4. Click on the 'Generate scripts' button.
+
+**To run the Work-Flow click on the 'Run scripts' button**
+
+.. figure:: https://raw.githubusercontent.com/bioinfo-core-BGU/NeatSeq-Flow-GUI/master/doc/Run_Monitor.gif
+   :target: https://raw.githubusercontent.com/bioinfo-core-BGU/NeatSeq-Flow-GUI/master/doc/Run_Monitor.gif
+
+**It is possible to monitor the Work-Flow progress by clicking the 'Run Monitor' button**
+
+
+.. Note:: It is possible to terminate the current run by clicking on the 'Kill Run' button.
+
 
 Learn How to Create a Work-Flow
 **************************************
@@ -320,79 +399,6 @@ Configure the Used Variables in the Work-Flow
    - You can create new sub variable by clicking on the existing variable to which you want to create a sub variable and then click the 'New Sub Field' button.
 
         
-Load a Work-Flow Parameter File
-**************************************
-
-1. **Load a Parameter file:**
-
-   .. figure:: https://raw.githubusercontent.com/bioinfo-core-BGU/NeatSeq-Flow-GUI/master/doc/Load_WorkFlow_parameter_file.gif
-      :target: https://raw.githubusercontent.com/bioinfo-core-BGU/NeatSeq-Flow-GUI/master/doc/Load_WorkFlow_parameter_file.gif
-
-   - In the 'Work-Flow' Tab click on the 'Load WorkFlow' button, then choose the work-flow's parameter file 'Tutorial_Parameter_file.yaml' and click open.
-
-        
-Configure a Sample file
-**************************************
-
-In the 'Samples' Tab:
-
-1. **Edit The Project Title Name:**
-
-   - You can edit the project title name by clicking on the Project Title name.
-
-2. **Add a Sample/Project File:**
-
-   - You can add a sample/project file by clicking the 'Add Sample File' or 'Add project File' button and choose a file/s.
-
-3. **Load a Sample file:**
-
-   .. figure:: https://raw.githubusercontent.com/bioinfo-core-BGU/NeatSeq-Flow-GUI/master/doc/Load_Sample_file.gif
-      :target: https://raw.githubusercontent.com/bioinfo-core-BGU/NeatSeq-Flow-GUI/master/doc/Load_Sample_file.gif
-
-   - Click on the 'Load Sample File' button, then choose the work-flow's sample file 'Tutorial_Samples_file.nsfs' and click open.
-   - You can edit the names of the samples by clicking on the sample name.
-   - You can remove a sample/project file by clicking the 'Remove' button.
-   - You can change a sample/project file type by clicking the drop-down menu or by editing the type name.
-
-        
-Configure the Cluster information
-**************************************
-
-1. **Edit Field:**
-
-   In the 'Cluster' Tab choose a field name to edit, change the key or value and then click on the 'Edit' button.
-
-2. **Create New Field:**
-
-   - You can create new field by clicking on some existing field name and then click the 'New Field' button.
-   - You can create new sub field by clicking on the existing field to which you want to create a sub field and then click the 'New Sub Field' button.
-        
-Run the Work-Flow
-**************************************
-
-.. figure:: https://raw.githubusercontent.com/bioinfo-core-BGU/NeatSeq-Flow-GUI/master/doc/Generate_scripts.gif
-   :target: https://raw.githubusercontent.com/bioinfo-core-BGU/NeatSeq-Flow-GUI/master/doc/Generate_scripts.gif
-
-**If NeatSeq-Flow is installed using conda (as in this Tutorial):** Choose the conda environment of which NeatSeq-Flow installed in.
-
-**If NeatSeq-Flow is installed Locally:** Choose the neatseq_flow.py script location.
-
-**In order to Generate the Work-Flow scripts:**
-
-1. Select the Sample file.
-2. Select the Work-Flow parameter-file.
-3. Choose the Project Directory to generate the Work-Flow's scripts in (the default is to use the Current Working Directory )
-4. Click on the 'Generate scripts' button.
-
-**To run the Work-Flow click on the 'Run scripts' button**
-
-.. figure:: https://raw.githubusercontent.com/bioinfo-core-BGU/NeatSeq-Flow-GUI/master/doc/Run_Monitor.gif
-   :target: https://raw.githubusercontent.com/bioinfo-core-BGU/NeatSeq-Flow-GUI/master/doc/Run_Monitor.gif
-
-**It is possible to monitor the Work-Flow progress by clicking the 'Run Monitor' button**
-
-
-.. Note:: It is possible to terminate the current run by clicking on the 'Kill Run' button.
 
 Learn how to use the Command Line Interface
 ------------------------------------------------
