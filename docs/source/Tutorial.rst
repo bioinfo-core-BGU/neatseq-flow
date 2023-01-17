@@ -186,9 +186,9 @@ It is then possible to use the GUI from any computer through a web-browser.
 
 -  `Activate the GUI`_
 -  `Load a Work-Flow Parameter File`_
+-  `Run the Work-Flow`_
 -  `Configure a Sample file`_
 -  `Configure the Cluster information`_
--  `Run the Work-Flow`_
 -  `Learn How to Create a Work-Flow`_
 -  `Configure the Used Variables in the Work-Flow`_
 
@@ -298,6 +298,35 @@ Load a Work-Flow Parameter File
    - In the 'Work-Flow' Tab click on the 'Load WorkFlow' button, then choose the work-flow's parameter file 'Tutorial_Parameter_file.yaml' and click open.
 
         
+
+Run the Work-Flow
+**************************************
+
+.. figure:: https://raw.githubusercontent.com/bioinfo-core-BGU/NeatSeq-Flow-Using-Docker/master/doc/Generate_scripts.gif
+   :target: https://raw.githubusercontent.com/bioinfo-core-BGU/NeatSeq-Flow-Using-Docker/master/doc/Generate_scripts.gif
+
+**If NeatSeq-Flow is installed Locally:** Choose the neatseq_flow.py script location.
+
+**In order to Generate the Work-Flow scripts:**
+
+1. Select the Sample file.
+2. Select the Work-Flow parameter-file.
+3. Choose the Project Directory to generate the Work-Flow's scripts in (the default is to use the Current Working Directory )
+4. Click on the 'Generate scripts' button.
+
+**To run the Work-Flow click on the 'Run scripts' button**
+
+.. figure:: https://raw.githubusercontent.com/bioinfo-core-BGU/NeatSeq-Flow-Using-Docker/master/doc/Run_scripts.gif
+   :target: https://raw.githubusercontent.com/bioinfo-core-BGU/NeatSeq-Flow-Using-Docker/master/doc/Run_scripts.gif
+
+**It is possible to monitor the Work-Flow progress by clicking the 'Run Monitor' button
+
+.. figure:: https://raw.githubusercontent.com/bioinfo-core-BGU/NeatSeq-Flow-Using-Docker/master/doc/Run_Monitor.gif
+   :target: https://raw.githubusercontent.com/bioinfo-core-BGU/NeatSeq-Flow-Using-Docker/master/doc/Run_Monitor.gif
+
+
+.. Note:: It is possible to terminate the current run by clicking on the 'Kill Run' button.
+
 Configure a Sample file
 **************************************
 
@@ -334,35 +363,6 @@ Configure the Cluster information
    - You can create new field by clicking on some existing field name and then click the 'New Field' button.
    - You can create new sub field by clicking on the existing field to which you want to create a sub field and then click the 'New Sub Field' button.
         
-Run the Work-Flow
-**************************************
-
-.. figure:: https://raw.githubusercontent.com/bioinfo-core-BGU/NeatSeq-Flow-Using-Docker/master/doc/Generate_scripts.gif
-   :target: https://raw.githubusercontent.com/bioinfo-core-BGU/NeatSeq-Flow-Using-Docker/master/doc/Generate_scripts.gif
-
-**If NeatSeq-Flow is installed Locally:** Choose the neatseq_flow.py script location.
-
-**In order to Generate the Work-Flow scripts:**
-
-1. Select the Sample file.
-2. Select the Work-Flow parameter-file.
-3. Choose the Project Directory to generate the Work-Flow's scripts in (the default is to use the Current Working Directory )
-4. Click on the 'Generate scripts' button.
-
-**To run the Work-Flow click on the 'Run scripts' button**
-
-.. figure:: https://raw.githubusercontent.com/bioinfo-core-BGU/NeatSeq-Flow-Using-Docker/master/doc/Run_scripts.gif
-   :target: https://raw.githubusercontent.com/bioinfo-core-BGU/NeatSeq-Flow-Using-Docker/master/doc/Run_scripts.gif
-
-**It is possible to monitor the Work-Flow progress by clicking the 'Run Monitor' button
-
-.. figure:: https://raw.githubusercontent.com/bioinfo-core-BGU/NeatSeq-Flow-Using-Docker/master/doc/Run_Monitor.gif
-   :target: https://raw.githubusercontent.com/bioinfo-core-BGU/NeatSeq-Flow-Using-Docker/master/doc/Run_Monitor.gif
-
-
-.. Note:: It is possible to terminate the current run by clicking on the 'Kill Run' button.
-
-
 Learn How to Create a Work-Flow
 **************************************
 
