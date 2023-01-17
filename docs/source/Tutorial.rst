@@ -185,12 +185,12 @@ It is then possible to use the GUI from any computer through a web-browser.
 **In this part of the Tutorial we will:**
 
 -  `Activate the GUI`_
--  `Learn How to Create a Work-Flow`_
--  `Configure the Used Variables in the Work-Flow`_
 -  `Load a Work-Flow Parameter File`_
 -  `Configure a Sample file`_
 -  `Configure the Cluster information`_
 -  `Run the Work-Flow`_
+-  `Learn How to Create a Work-Flow`_
+-  `Configure the Used Variables in the Work-Flow`_
 
 
 
