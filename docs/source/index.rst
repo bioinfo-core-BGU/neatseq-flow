@@ -179,7 +179,7 @@ Web Site Contents:
 
    User_Manual
    Repository_links
-   `Generic module tutorial <https://neatseq-flow.readthedocs.io/projects/neatseq-flow-modules/en/latest/Module_docs/Generic_module.html>`_
+   * `Generic module tutorial <https://neatseq-flow.readthedocs.io/projects/neatseq-flow-modules/en/latest/Module_docs/Generic_module.html>`_
    Add_new_modules
    cheat_sheet
    glossary
