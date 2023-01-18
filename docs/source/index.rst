@@ -172,8 +172,6 @@ Web Site Contents:
 
    About
    Tutorial
-   
-   `Generic module tutorial <https://neatseq-flow.readthedocs.io/projects/neatseq-flow-modules/en/latest/Module_docs/Generic_module.html>`_
 
 .. toctree::
    :maxdepth: 1
@@ -181,14 +179,11 @@ Web Site Contents:
 
    User_Manual
    Repository_links
-..   Add_new_modules
-..   cheat_sheet
-..   glossary
+   `Generic module tutorial <https://neatseq-flow.readthedocs.io/projects/neatseq-flow-modules/en/latest/Module_docs/Generic_module.html>`_
+   Add_new_modules
+   cheat_sheet
+   glossary
 
-
-
-..   03.output
-..   07.monitor
 
 .. sphinx-build -b html source build
 
