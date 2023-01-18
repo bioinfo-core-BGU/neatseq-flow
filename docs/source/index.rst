@@ -173,7 +173,7 @@ Web Site Contents:
    About
    Tutorial
 
-  * `Generic module tutorial <https://neatseq-flow.readthedocs.io/projects/neatseq-flow-modules/en/latest/Module_docs/Generic_module.html>`_
+`Generic module tutorial <https://neatseq-flow.readthedocs.io/projects/neatseq-flow-modules/en/latest/Module_docs/Generic_module.html>`_
   
   
 .. toctree::
