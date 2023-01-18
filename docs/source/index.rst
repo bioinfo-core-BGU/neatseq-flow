@@ -26,7 +26,7 @@
 
 .. image:: https://img.shields.io/github/last-commit/sklarz-bgu/neatseq-flow.svg
 
-
+.. image:: https://anaconda.org/levinl/neatseq_flow/badges/downloads.svg
 
 .. sidebar:: **What's new**...
 
@@ -172,6 +172,7 @@ Web Site Contents:
 
    About
    Tutorial
+   `Generic module tutorial <https://neatseq-flow.readthedocs.io/projects/neatseq-flow-modules/en/latest/Module_docs/Generic_module.html>`_
 
 .. toctree::
    :maxdepth: 1
