@@ -17,13 +17,6 @@
 .. image:: https://img.shields.io/badge/License-GPLv3-blue.svg
    :target: https://www.gnu.org/licenses/gpl-3.0
 
-
-.. image:: https://img.shields.io/github/release/sklarz-bgu/neatseq-flow.svg
-
-.. image:: https://img.shields.io/github/repo-size/sklarz-bgu/neatseq-flow.svg
-
-.. image:: https://img.shields.io/github/languages/top/sklarz-bgu/neatseq-flow.svg
-
 .. image:: https://img.shields.io/github/last-commit/sklarz-bgu/neatseq-flow.svg
 
 .. image:: https://anaconda.org/levinl/neatseq_flow/badges/downloads.svg
@@ -168,7 +161,7 @@ Web Site Contents:
 
 .. toctree::
    :maxdepth: 1
-   :caption: First steps
+   :caption: First Steps
 
    About
    Tutorial
