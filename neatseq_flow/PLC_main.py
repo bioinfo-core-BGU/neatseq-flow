@@ -109,6 +109,7 @@ class NeatSeqFlow(object):
                     return
                 else:
                     raise
+            
             # Merge sample_data with mapping_data:
             if set(mapping_data.keys()) - set(self.sample_data["samples"]):
                 sys.stderr.write("Extra samples in grouping data!\n")
@@ -287,7 +288,7 @@ class NeatSeqFlow(object):
 
         # Do the actual script building:
         # Also, catching assetion exceptions raised by class build_scripts() and 
-        sys.stdout.write("Building scripts...\n")
+        sys.stdout.write("Building scripts for:\n")
         try:
             self.build_scripts()
             
@@ -396,10 +397,11 @@ class NeatSeqFlow(object):
         # For each step name (step_n), set sample_data based on the steps base(s) and then create scripts
         for step_n in self.step_list:
             try:
-
-                # step_name = step_n.get_step_name()
+                
+                step_name = step_n.get_step_name()
                 # step_step = step_n.get_step_step()
-
+                sys.stdout.write('<span  style="color:purple;">......['+step_name+']</span >'+"\n")
+                
                 # Find base step(s) for current step: (If does not exist return None)
                 base_name_list = step_n.get_base_step_name()
 
