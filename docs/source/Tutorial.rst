@@ -131,7 +131,7 @@ This step will download and install all the `Required programs`_  for this Tutor
 
        .. code-block:: bash
 
-            conda env create levinl/neatseqflowtutorial
+            conda env create levinl/NeatSeq_Flow_Tutorial
 
 
 Download the Tutorial's Work-Flow parameter file
