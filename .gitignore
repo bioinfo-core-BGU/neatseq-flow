@@ -25,3 +25,4 @@ workflows_devel/
 docs/build/**
 *.mine/
 _themes/
+.DS_Store

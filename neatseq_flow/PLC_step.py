@@ -718,10 +718,15 @@ Dependencies: {depends}""".format(name=self.name,
             self.params["sample_list"] = list(set(self.pipe_data["samples"]) - set(self.params["exclude_sample_list"]))
         # 2. Deal with 'sample_list' option:
         if "sample_list" in self.params:
+            # print(self.params["sample_list"])
             # 2a. For 'all_samples', pop the last sample list from stash 'sample_data_history'
             if self.params["sample_list"] == "all_samples":
                 raise AssertionExcept("'all_samples' is no longer supported as valsue for 'sample_list'."
                                       "Use a secondary base to import old samples")
+            elif "samples_with_controls" in self.params["sample_list"]:
+                if "Controls" not in self.sample_data.keys():
+                    raise AssertionExcept("When using 'samples_with_controls', please make sure you have a sample:control table in your sample file.")
+                self.stash_sample_list(list(self.sample_data["Controls"].keys()))
             # 2b. For sample list, stash the new sample list
             elif isinstance(self.params["sample_list"], list):
                 if list(set(self.params["sample_list"]) - set(self.pipe_data["samples"])):
