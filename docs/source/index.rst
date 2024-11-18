@@ -87,7 +87,7 @@ Quick Start:
     .. code-block:: bash
 
        wget https://raw.githubusercontent.com/bioinfo-core-BGU/NeatSeq-Flow-GUI/master/NeatSeq_Flow_GUI_installer.yaml
-       conda env create -f NeatSeq_Flow_Tutorial_Install.yaml
+       conda env create -f NeatSeq_Flow_GUI_installer.yaml
 
     2. Activate the **NeatSeq_Flow** conda environment:
 
