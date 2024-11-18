@@ -19,7 +19,7 @@
 
 .. image:: https://img.shields.io/github/last-commit/sklarz-bgu/neatseq-flow.svg
 
-.. image:: https://anaconda.org/levinl/neatseq_flow/badges/downloads.svg
+# .. image:: https://anaconda.org/levinl/neatseq_flow/badges/downloads.svg
 
 .. sidebar:: **What's new**...
 
@@ -86,7 +86,8 @@ Quick Start:
 
     .. code-block:: bash
 
-       conda env create levinl/neatseq_flow
+       wget https://raw.githubusercontent.com/bioinfo-core-BGU/NeatSeq-Flow-GUI/master/NeatSeq_Flow_GUI_installer.yaml
+       conda env create -f NeatSeq_Flow_Tutorial_Install.yaml
 
     2. Activate the **NeatSeq_Flow** conda environment:
 
