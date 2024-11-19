@@ -178,7 +178,7 @@ Install on Windows with WSL:
       echo $WSL_IP
       NeatSeq_Flow_GUI.py --Server --HOST $WSL_IP
 
- - Open the **Windows** PowerShell Terminal as **administrator**:
+  - Open the **Windows** PowerShell Terminal as **administrator**:
     
 
     5. Run This command in the Terminal while **WSL_IP** needs to be replaced with the Linux IP identified in previous step [the "echo $WSL_IP" result]:
