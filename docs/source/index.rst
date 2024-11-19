@@ -181,16 +181,16 @@ Install on Windows with WSL:
   - Open the **Windows** PowerShell Terminal as **administrator**:
     
 
-    5. Run this command in the terminal while **WSL_IP** needs to be replaced with the Linux IP identified in previous step [the "echo $WSL_IP" result]:
+    6. Run this command in the terminal while **WSL_IP** needs to be replaced with the Linux IP identified in previous step [the "echo $WSL_IP" result]:
 
     .. code-block:: bash
 
       netsh interface portproxy add v4tov4 listenaddress=127.0.0.1 listenport=49190 connectaddress=WSL_IP connectport=49190
 
-    6. Open a web-browser and in the address bar type localhost:49190 
+    7. Open a web-browser and in the address bar type localhost:49190 
         - A login window should appear
 
-    7. Use the information in the **Linux** terminal:
+    8. Use the information in the **Linux** terminal:
 
         .. figure:: https://github.com/bioinfo-core-BGU/NeatSeq-Flow-GUI/raw/master/doc/NeatSeq-Flow_Server.jpg
            :align: right
@@ -200,7 +200,7 @@ Install on Windows with WSL:
         - Copy the "Password" (yellow line) from the terminal to the "Password" form in the login window
         - Click on the "Login" button.
 
-    5. Managing Users:
+    9. Managing Users:
         - It is possible to mange users using SSH, NeatSeq-Flow will try to login by ssh to a host using the provided "User Name" and "Password".
         - The ssh host can be local or remote.
         - Note: If using a remote host, NeatSeq-Flow needs to be installed on the remote host and the analysis will be run on the remote host by the user that logged-in
