@@ -41,7 +41,7 @@ extensions = [
     'sphinx.ext.coverage',
     'sphinx.ext.ifconfig',
     'sphinx.ext.viewcode',
-    'sphinx_rtd_theme'
+    'sphinx_rtd_theme',
     # 'sphinx_tabs.tabs',
 ]
 
