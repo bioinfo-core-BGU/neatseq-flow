@@ -19,7 +19,7 @@
 
 .. image:: https://img.shields.io/github/last-commit/sklarz-bgu/neatseq-flow.svg
 
- .. image:: https://anaconda.org/levinl/neatseq-flow/badges/downloads.svg
+.. image:: https://anaconda.org/levinl/neatseq-flow/badges/downloads.svg
 
 .. sidebar:: **What's new**...
 
@@ -85,9 +85,10 @@ Quick Start:
     1. Create the **NeatSeq_Flow** conda environment:
 
     .. code-block:: bash
-       bash
-       conda install conda-forge::mamba
-       mamba create -n NeatSeq_Flow -c bioconda -c conda-forge levinl::neatseq-flow
+
+      bash
+      conda install conda-forge::mamba
+      mamba create -n NeatSeq_Flow -c bioconda -c conda-forge levinl::neatseq-flow
 
     2. Activate the **NeatSeq_Flow** conda environment:
 
@@ -142,9 +143,10 @@ Install on Windows with WSL:
     1. Install Conda:
 
     .. code-block:: bash
-       wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh
-       sh Miniconda3-latest-Linux-x86_64.sh
-       
+
+      wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh
+      sh Miniconda3-latest-Linux-x86_64.sh
+
     2. Install mamba and Create the **NeatSeq_Flow** conda environment:
 
     .. code-block:: bash
