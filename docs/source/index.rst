@@ -150,9 +150,10 @@ Install on Windows with WSL:
     2. Install mamba and Create the **NeatSeq_Flow** conda environment:
 
     .. code-block:: bash
-       bash
-       conda install conda-forge::mamba
-       mamba create -n NeatSeq_Flow -c bioconda -c conda-forge levinl::neatseq-flow
+       
+      bash
+      conda install conda-forge::mamba
+      mamba create -n NeatSeq_Flow -c bioconda -c conda-forge levinl::neatseq-flow
 
     3. Activate the **NeatSeq_Flow** conda environment:
 
@@ -179,6 +180,7 @@ Install on Windows with WSL:
 
  - Open the **Windows** PowerShell Terminal as **administrator**:
     
+
     5. Run This command in the Terminal while **WSL_IP** needs to be replaced with the Linux IP identified in previous step [the "echo $WSL_IP" result]:
 
     .. code-block:: bash
