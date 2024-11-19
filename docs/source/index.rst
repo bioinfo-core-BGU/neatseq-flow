@@ -132,6 +132,7 @@ Quick Start:
 
       NeatSeq_Flow_GUI.py -h
 
+.. _install_on_windows_with_wsl:
 
 Install on Windows with WSL:
 ------------------------------
