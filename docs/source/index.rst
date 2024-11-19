@@ -42,7 +42,7 @@
 
 
    * :ref:`quick_start` install and try NeatSeq-Flow
-   
+   * :ref:`install_on_windows_with_wsl` install and try NeatSeq-Flow on Windows using WSL
    * GitHub: `NeatSeq-Flow <https://github.com/bioinfo-core-BGU/neatseq-flow>`_
    * GitHub: `NeatSeq-Flow GUI <https://github.com/bioinfo-core-BGU/NeatSeq-Flow-GUI>`_
    * `A short movie demonstrating the GUI <https://raw.githubusercontent.com/bioinfo-core-BGU/NeatSeq-Flow-GUI/master/doc/NeatSeq-Flow-GUI.gif>`_
