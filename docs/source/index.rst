@@ -181,7 +181,7 @@ Install on Windows with WSL:
   - Open the **Windows** PowerShell Terminal as **administrator**:
     
 
-    5. Run This command in the Terminal while **WSL_IP** needs to be replaced with the Linux IP identified in previous step [the "echo $WSL_IP" result]:
+    5. Run this command in the terminal while **WSL_IP** needs to be replaced with the Linux IP identified in previous step [the "echo $WSL_IP" result]:
 
     .. code-block:: bash
 
