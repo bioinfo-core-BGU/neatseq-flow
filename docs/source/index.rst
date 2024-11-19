@@ -135,10 +135,10 @@ Quick Start:
 
 Install on Windows with WSL:
 ------------------------------
- On Windows 10 version 2004 and higher (Build 19041 and higher) or Windows 11 it is possible use both Windows and Linux at the same time on a Windows machine.
+ On Windows 10 version 2004 and higher (Build 19041 and higher) or Windows 11 it is possible to use both Windows and Linux at the same time on a Windows machine.
  NeatSeq-Flow can be install on the Windows Subsystem for Linux (WSL):
- - First install `Linux <https://learn.microsoft.com/en-us/windows/wsl/install>`_ on Windows [it is possible to use the *Microsoft Store* to install `Ubuntu <https://www.microsoft.com/store/productId/9PDXGNCFSCZV?ocid=pdpshare>`_] 
- - Open the Ubuntu app/terminal 
+  - First install `Linux <https://learn.microsoft.com/en-us/windows/wsl/install>`_ on Windows [it is possible to use the *Microsoft Store* to install `Ubuntu <https://www.microsoft.com/store/productId/9PDXGNCFSCZV?ocid=pdpshare>`_] 
+  - Open the Ubuntu app/terminal 
  
     1. Install Conda:
 
