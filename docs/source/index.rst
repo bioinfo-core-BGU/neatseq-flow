@@ -19,7 +19,7 @@
 
 .. image:: https://img.shields.io/github/last-commit/sklarz-bgu/neatseq-flow.svg
 
-# .. image:: https://anaconda.org/levinl/neatseq_flow/badges/downloads.svg
+ .. image:: https://anaconda.org/levinl/neatseq-flow/badges/downloads.svg
 
 .. sidebar:: **What's new**...
 
@@ -85,9 +85,9 @@ Quick Start:
     1. Create the **NeatSeq_Flow** conda environment:
 
     .. code-block:: bash
-
-       wget https://raw.githubusercontent.com/bioinfo-core-BGU/NeatSeq-Flow-GUI/master/NeatSeq_Flow_GUI_installer.yaml
-       conda env create -f NeatSeq_Flow_GUI_installer.yaml
+       bash
+       conda install conda-forge::mamba
+       mamba create -n NeatSeq_Flow -c bioconda -c conda-forge levinl::neatseq-flow
 
     2. Activate the **NeatSeq_Flow** conda environment:
 
@@ -130,6 +130,78 @@ Quick Start:
     .. code-block:: bash
 
       NeatSeq_Flow_GUI.py -h
+
+
+Install on Windows with WSL:
+------------------------------
+ On Windows 10 version 2004 and higher (Build 19041 and higher) or Windows 11 it is possible use both Windows and Linux at the same time on a Windows machine.
+ NeatSeq-Flow can be install on the Windows Subsystem for Linux (WSL):
+ - First install `Linux <https://learn.microsoft.com/en-us/windows/wsl/install>`_ on Windows [it is possible to use the *Microsoft Store* to install `Ubuntu <https://www.microsoft.com/store/productId/9PDXGNCFSCZV?ocid=pdpshare>`_] 
+ - Open the Ubuntu app/terminal 
+ 
+    1. Install Conda:
+
+    .. code-block:: bash
+       wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh
+       sh Miniconda3-latest-Linux-x86_64.sh
+       
+    2. Install mamba and Create the **NeatSeq_Flow** conda environment:
+
+    .. code-block:: bash
+       bash
+       conda install conda-forge::mamba
+       mamba create -n NeatSeq_Flow -c bioconda -c conda-forge levinl::neatseq-flow
+
+    3. Activate the **NeatSeq_Flow** conda environment:
+
+    .. code-block:: bash
+
+      bash
+      source activate NeatSeq_Flow
+      
+      
+    4. Activate SSH service:
+
+    .. code-block:: bash
+
+      sudo ssh-keygen -A
+      sudo service ssh start
+
+    5. Run **NeatSeq_Flow_GUI**:
+
+    .. code-block:: bash
+
+      export WSL_IP=$(ip addr show eth0 | grep inet | awk '{ print $2; }' | sed 's/\/.*$//' | head -n 1)
+      echo $WSL_IP
+      NeatSeq_Flow_GUI.py --Server --HOST $WSL_IP
+
+ - Open the **Windows** PowerShell Terminal as **administrator**:
+    
+    5. Run This command in the Terminal while **WSL_IP** needs to be replaced with the Linux IP identified in previous step [the "echo $WSL_IP" result]:
+
+    .. code-block:: bash
+
+      netsh interface portproxy add v4tov4 listenaddress=127.0.0.1 listenport=49190 connectaddress=WSL_IP connectport=49190
+
+    6. Open a web-browser and in the address bar type localhost:49190 
+        - A login window should appear
+
+    7. Use the information in the **Linux** terminal:
+
+        .. figure:: https://github.com/bioinfo-core-BGU/NeatSeq-Flow-GUI/raw/master/doc/NeatSeq-Flow_Server.jpg
+           :align: right
+           :width: 350
+
+        - Copy the "User Name" (blue line) from the terminal to the "User Name" form in the login window
+        - Copy the "Password" (yellow line) from the terminal to the "Password" form in the login window
+        - Click on the "Login" button.
+
+    5. Managing Users:
+        - It is possible to mange users using SSH, NeatSeq-Flow will try to login by ssh to a host using the provided "User Name" and "Password".
+        - The ssh host can be local or remote.
+        - Note: If using a remote host, NeatSeq-Flow needs to be installed on the remote host and the analysis will be run on the remote host by the user that logged-in
+    
+
 
 
 Authors
