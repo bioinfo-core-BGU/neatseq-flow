@@ -82,7 +82,7 @@ Quick Start:
   - First if you don't have **Conda**, `install it! <https://conda.io/miniconda.html>`_
   - Then in the terminal:
 
-    1. Create the **NeatSeq_Flow** conda environment:
+    1. Install mamba and Create the **NeatSeq_Flow** conda environment:
 
     .. code-block:: bash
 
