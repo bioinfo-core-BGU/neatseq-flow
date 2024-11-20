@@ -99,7 +99,9 @@ Install NeatSeq-Flow
 
     .. code-block:: bash
 
-       conda env create levinl/neatseq_flow
+      bash
+      conda install conda-forge::mamba
+      mamba create -n NeatSeq_Flow -c bioconda -c conda-forge levinl::neatseq-flow
 
  
 
@@ -131,7 +133,8 @@ This step will download and install all the `Required programs`_  for this Tutor
 
        .. code-block:: bash
 
-            conda env create levinl/NeatSeq_Flow_Tutorial
+            wget https://raw.githubusercontent.com/bioinfo-core-BGU/neatseq-flow-tutorial/master/NeatSeq_Flow_Tutorial_Install.yaml
+            conda env create -f NeatSeq_Flow_Tutorial_Install.yaml
 
 
 Download the Tutorial's Work-Flow parameter file
