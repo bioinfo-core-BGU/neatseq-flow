@@ -143,7 +143,11 @@ def get_tabular_sample_data(filelines):
             line=raw_data["Project_data"][line_i]
             if len(line)<2:
                 raise Exception("Issues in project data", "Line #{linei} in project data does not have two "
-                                                     "values! ".format(linei=line_i+1))
+                                "values! ".format(linei=line_i+1))
+            if line[0] in sample_names:
+                raise Exception("Issues in project data", "Line #{linei} in project data seems to contain sample "
+                                "data! Check there's an empty line between project data and "
+                                "sample data, and that you don't have an extra project data header".format(linei=line_i+1))
         sample_data["project_data"] = parse_tabular_project_data(raw_data["Project_data"])
     else:
         # Create an empty project_data slot in case an instance needs it before it has been created
