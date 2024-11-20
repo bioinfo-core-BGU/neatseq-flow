@@ -145,7 +145,7 @@ Install on Windows with WSL:
 
       wsl --install
   
-  - Open the Ubuntu app/terminal:  # [it is possible to use the *Microsoft Store* to install `Ubuntu <https://www.microsoft.com/store/productId/9PDXGNCFSCZV?ocid=pdpshare>`_]
+  - Open the Ubuntu app/terminal:  [it is possible to use the *Microsoft Store* to install `Ubuntu <https://www.microsoft.com/store/productId/9PDXGNCFSCZV?ocid=pdpshare>`_]
  
     1. Install Conda, Make sure to type **YES** for "Do you wish the installer to initialize Miniconda3 by running conda init?":
 
