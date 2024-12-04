@@ -664,7 +664,8 @@ Dependencies: {depends}""".format(name=self.name,
                 else:
                     # For list of active samples, merge the lists:
                     if k == "samples":
-                        sample_data[k] = list(set(sample_data[k]) | set(other_sample_data[k]))
+                        # sample_data[k] = list(set(sample_data[k]) | set(other_sample_data[k]))
+                        sample_data[k] = list(dict.fromkeys(sample_data[k] + other_sample_data[k]))
 
                     # Do nothing, but check not discarding values from other_sample_data
                     if sample_data[k] != other_sample_data[k]:
