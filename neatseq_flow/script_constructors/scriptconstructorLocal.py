@@ -67,6 +67,14 @@ class ScriptConstructorLocal(ScriptConstructor):
     }}
     """.format(sleeptime=pipe_data["Default_wait"])
     
+        path = shutil.which("bc")
+        if path:
+            script = re.sub(" bc ", " " + path + " ", script)
+        else:
+            sys.exit("You need to have the 'bc' program installed")
+    
+    
+    
         return script
 
     @classmethod
@@ -95,6 +103,12 @@ class ScriptConstructorLocal(ScriptConstructor):
 runlock $qsubname $run_index $script_path $pe
 
 """
+        path = shutil.which("bc")
+        if path:
+            script = re.sub(" bc "," " + path + " ", script)
+        else:
+            sys.exit("You need to have the 'bc' program installed")
+    
         return script
 
     @classmethod

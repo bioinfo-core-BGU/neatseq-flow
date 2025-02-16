@@ -131,7 +131,6 @@ log_echo() {{
     
     if [ $7 == 'Finished' ]; then
         ## maxvmem calc entry point
-
     else
         maxvmem="-";
     fi

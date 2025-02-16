@@ -683,6 +683,7 @@ CMD: from {loc} import {type} as StepClass""".format(loc=step_module_loc,type='S
              "QSUB" : "qstat",
              "SLURM" : "squeue",
              "SLURMnew" : "squeue",
+             "PBS"      : "qsub",
              "Local" : ""}
         qstat_cmd = qstat_cmd_dict[self.param_data["Global"]["Executor"]]
 
