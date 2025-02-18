@@ -97,7 +97,7 @@ bash {nsf_exec} {script_id} &\n\n""".format(script_id = self.script_id,
         """
         pass
         # TODO: somehow this has to be the numeric run-0time job id!
-        # return "# scancel JOB_ID \n" #{script_name}".format(script_name = self.script_id)
+        # return "# qdel JOB_ID \n" #{script_name}".format(script_name = self.script_id)
         
     def get_script_header(self):
         """ Make the first few lines for the scripts
@@ -394,19 +394,27 @@ rm -rf {run_index}.killall
 
         :return:
         """
-
+        if "qstat_path" in self.pipe_data["qsub_params"].keys():
+            qstat_path = self.pipe_data["qsub_params"]["qstat_path"]
+            if not qstat_path.endswith("qsub"):
+                qstat_path = os.path.join(qstat_path,"qdel" )
+            else:
+                qstat_path = os.path.join(qstat_path.strip("qsub"),"qdel" )
+        else:
+            qstat_path = "qdel"
         # Create one killing routine for all instance jobs:
         script = """\
 line2kill=$(grep '^{step}{sep}{name}' {run_index} | awk '{{print $3}}')
 line2kill=(${{line2kill//,/ }})
 for item1 in "${{line2kill[@]}}"; do 
-    echo running "scancel --full --signal TERM $item1"
-    scancel --full --signal TERM $item1 
+    echo running "{qdel} $item1"
+    {qdel} $item1 
 done
 
 """.format(run_index = self.pipe_data["run_index"],
            step=caller_script.step,
            name=caller_script.name,
+           qdel=qstat_path,
            sep=caller_script.master.jid_name_sep)
 
         self.filehandle.write(script)
