@@ -30,16 +30,18 @@ STEP_PARAMS_SINGLE_VALUE = ['module','redirects']
 SUPPORTED_EXECUTORS = \
     {"SGE": "-N -e -o -q -hold_jid".split(" "),
      "QSUB": "-N -e -o -q -hold_jid".split(" "),
+     "PBS": "-N -e -o -q".split(" "),
      "SLURM": "-e -o -hold_jid --error --output -J --job-name -p --partition -w".split(" "),
      "SLURMnew": "-e -o -hold_jid --error --output -J --job-name -p --partition -w".split(" "),
      "Local": ""}
 
 EXECUTORS_Q_INFO = \
-    {"SGE": "qstat",
-     "QSUB": "qstat",
-     "SLURM": "squeue",
+    {"SGE"     : "qstat",
+     "QSUB"    : "qstat",
+     "PBS"     : "qstat",
+     "SLURM"   : "squeue",
      "SLURMnew": "squeue",
-     "Local": "-"}
+     "Local"   : "-"}
 
 def parse_param_file(filename):
     """Parses a file from filename
@@ -424,7 +426,8 @@ def test_and_modify_global_params(global_params):
                                           for key, val
                                           in global_params["Qsub_opts"].items()}
         else:
-            sys.exit("'Qsub_opts' in undefined format.")
+            sys.stderr.write("'Qsub_opts' in undefined format or Empty, Will ignore 'Qsub_opts' !!")
+            global_params.pop("Qsub_opts")
 
     # Converting single Qsub_nodes into single element list
     if "Qsub_nodes" in global_params:
