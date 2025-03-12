@@ -48,7 +48,9 @@ class ScriptConstructorSGE(ScriptConstructor):
 job_limit={job_limit}
 
 wait_limit() {{
-    sleep $(echo "scale=2 ; {sleep} / 1 " | bc);
+    # sleep $(echo "scale=2 ; {sleep} / 1 " | bc);
+    sleeptime=$(sed -ne "s/.*sleep=\([0-9]*\).*/\\1/p" $job_limit);
+    sleep $sleeptime;
     while : ; do 
         numrun=$({qstat} -xml -u $USER | grep "running" | wc -l || true ); 
         numpend=$(/storage/SGE6U8/bin/lx24-amd64/qstat -xml -u $USER | grep "<state>qw</state>" | wc -l || true );
