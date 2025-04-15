@@ -400,8 +400,9 @@ class NeatSeqFlow(object):
                 
                 step_name = step_n.get_step_name()
                 # step_step = step_n.get_step_step()
-                sys.stdout.write('<span  style="color:purple;">......['+step_name+']</span >'+"\n")
-                
+                # sys.stdout.write('<span  style="color:purple;">......['+step_name+']</span >'+"\n")
+                sys.stdout.write("\033[31m - " + step_name + "\033[0m\n")
+
                 # Find base step(s) for current step: (If does not exist return None)
                 base_name_list = step_n.get_base_step_name()
 

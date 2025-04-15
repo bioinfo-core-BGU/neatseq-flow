@@ -192,7 +192,9 @@ def get_param_data_YAML(filelines):
 
                 # Remove empty and duplicate strings:
                 if isinstance(yamlname_params["sample_list"], list):
-                    yamlname_params["sample_list"] = list(set([x for x in yamlname_params["sample_list"] if x != ""]))
+                    non_empty_sample_list = [x for x in yamlname_params["sample_list"] if x != ""]
+                    unique_sample_list = list(dict.fromkeys(non_empty_sample_list))
+                    yamlname_params["sample_list"] = unique_sample_list
 
             endparams[param_dict[yamlname]["module"]][yamlname] = yamlname_params
         return endparams
