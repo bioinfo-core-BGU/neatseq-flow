@@ -23,7 +23,7 @@ class ScriptConstructorSLURM(ScriptConstructor):
         """
         script = super(ScriptConstructorSLURM, cls).get_helper_script(pipe_data)
         script = re.sub("## locksed command entry point", r"""locksed  "s:^\\($3\\).*:# \\1\\t$err_code:" $run_index""", script)
-
+        script = re.sub("## maxvmem calc entry point", r"""maxvmem="-";""", script)
         # Add job_limit function:
         if "job_limit" in pipe_data:
             script += """\
