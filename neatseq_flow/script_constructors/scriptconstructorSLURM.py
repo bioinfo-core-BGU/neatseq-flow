@@ -149,7 +149,7 @@ endif
 
             script = """
 # Adding line to log file
-log_echo {step} {stepname} {stepID} {level} $HOSTNAME $JOB_ID $$ {type}
+log_echo {step} {stepname} {stepID} {level} $HOSTNAME $JOB_ID {type}
 
 """.format(**log_cols_dict)
 
