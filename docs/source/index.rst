@@ -160,7 +160,7 @@ Install on Windows with WSL:
        
       bash
       conda install conda-forge::mamba
-      mamba create -n NeatSeq_Flow -c bioconda -c conda-forge levinl::neatseq-flow
+      mamba create -n NeatSeq_Flow -c bioconda -c conda-forge -c anaconda levinl::neatseq-flow
 
     3. Activate the **NeatSeq_Flow** conda environment:
 
