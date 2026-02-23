@@ -131,6 +131,7 @@ log_echo() {{
     
     if [ $7 == 'Finished' ]; then
         ## maxvmem calc entry point
+
     else
         maxvmem="-";
     fi
@@ -497,7 +498,7 @@ while [[ $lc -lt 10 ]]; do if source {activate_path} {environ}; then break; else
     def write_command(self, command):
     
         self.filehandle.write(command)
-                
+        self.filehandle.flush()
 
 # ----------------------------------------------------------------------------------
 # HighScriptConstructor defintion
@@ -568,7 +569,7 @@ trap '' ERR
         """ Adds the closing lines to the script
         """
         self.write_command(self.get_script_postamble())
-
+        self.filehandle.close()
     def get_depends_command(self):
         """
         """
@@ -656,8 +657,27 @@ flock -u 230\n""".format(kill_cmd = re.escape(kill_cmd),
                 md5sum = True
             
         if not self.master.stamped_files:
+                     
+
             md5sum = False
             #return ""
+                                                      
+                             
+                             
+                                
+                                
+             
+                
+
+                                                  
+                         
+                                                                                                                                                
+                             
+                              
+                           
+                               
+                                  
+                                                     
         
         if md5sum:
             script = "######\n# Registering files with md5sum:\n"
