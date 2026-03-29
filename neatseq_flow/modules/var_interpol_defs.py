@@ -6,7 +6,8 @@ __version__ = "1.6.0"
 
 
 
-import re, sys, collections
+import re, sys
+import collections.abc as collections
 from pprint import pprint as pp
 
 # A closure:
